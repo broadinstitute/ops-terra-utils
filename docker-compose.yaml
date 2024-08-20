@@ -1,0 +1,19 @@
+services:
+  app:
+    # for dev
+    build: .
+    privileged: true
+    # or specify your dev sha or local image
+    #image: us-east4-docker.pkg.dev/broad-dsp-monster-hca-dev/monster-dev-env/hca_ingest_compose_dev_env:latest
+    container_name: ops_terra_utils
+    volumes:
+      - $HOME/.config/gcloud:/gcp/config:ro
+    environment:
+      CLOUDSDK_CONFIG: "/gcp/config"
+      GOOGLE_APPLICATION_CREDENTIALS: "/gcp/config/application_default_credentials.json"
+
+    stdin_open: true
+    tty: true
+    ports:
+      - 8080:80
+    entrypoint: /bin/sh

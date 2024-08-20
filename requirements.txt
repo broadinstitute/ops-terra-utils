@@ -1,0 +1,52 @@
+py4j
+pandas-gbq
+seaborn
+# Hold back from the 3.0 upgrade, as it requires the BigQuery Storage API. See
+# further in the Dockerfile for explanation of why BQ Storage is currently uninstalled.
+google-cloud-bigquery<3.0.0
+google-cloud-bigquery-datatransfer
+google-cloud-resource-manager
+statsmodels
+ggplot
+bokeh
+pyfasta
+pdoc3
+biopython
+bx-python
+fastinterval
+matplotlib-venn
+bleach==6.0.0
+cycler
+h5py
+html5lib
+joblib
+patsy
+pymc3
+Cython
+python-dateutil
+pytz==2023.3
+pyvcf3
+theano
+tqdm
+werkzeug
+certifi
+intel-openmp
+mkl
+wheel
+plotnine==0.10.1
+mizani==0.9.2
+google-resumable-media
+google-cloud-storage==2.17.0
+google-auth==2.29.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.1
+azure-identity==1.17.1
+azure-storage-blob==12.21.0
+#adding intel optimized xgboost and intel extension for scikit-learn
+scikit-learn-intelex
+xgboost
+schema
+oauth2client
+backoff
+#older version of nbconvert fail to convert notebooks to html
+nbconvert>=7.7.3
