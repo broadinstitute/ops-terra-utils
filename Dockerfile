@@ -43,11 +43,10 @@ RUN pip3 install --upgrade markupsafe==2.1.2
 
 #install gcsfuse
 RUN export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s` \
- && echo "deb http://packages.cloud.google.com/apt $GCSFUSE_REPO main" | tee /etc/apt/sources.list.d/gcsfuse.list \
+ && echo "deb [signed-by=/usr/share/keyrings/cloud.google.asc] https://packages.cloud.google.com/apt $GCSFUSE_REPO main" | tee /etc/apt/sources.list.d/gcsfuse.list \ 
  && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | tee /usr/share/keyrings/cloud.google.asc \ 
- && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
  && apt-get update \ 
- && apt-get install gcsfuse -yq
+ && apt-get install -yq gcsfuse 
 
 #install azcopy
 RUN curl -sSL -O https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb \ 
@@ -59,10 +58,3 @@ RUN curl -sSL -O https://packages.microsoft.com/config/ubuntu/20.04/packages-mic
 # Enable Intel oneDNN optimizatoin by default
 ENV TF_ENABLE_ONEDNN_OPTS=1
 
-
-
-# # Note: this entrypoint is provided for running Jupyter independently of Leonardo.
-# # When Leonardo deploys this image onto a cluster, the entrypoint is overwritten to enable
-# # additional setup inside the container before execution.  Jupyter execution occurs when the
-# # init-actions.sh script uses 'docker exec' to call run-jupyter.sh.
-#ENTRYPOINT ["/opt/conda/bin/jupyter", "notebook"]
