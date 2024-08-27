@@ -48,5 +48,6 @@ xgboost
 schema
 oauth2client
 backoff
+aiohttp
 #older version of nbconvert fail to convert notebooks to html
 nbconvert>=7.7.3

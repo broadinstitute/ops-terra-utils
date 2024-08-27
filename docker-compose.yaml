@@ -10,7 +10,6 @@ services:
     environment:
       CLOUDSDK_CONFIG: "/gcp/config"
       GOOGLE_APPLICATION_CREDENTIALS: "/gcp/config/application_default_credentials.json"
-
     stdin_open: true
     tty: true
     ports:
