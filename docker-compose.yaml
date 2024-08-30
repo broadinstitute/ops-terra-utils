@@ -1,5 +1,5 @@
 services:
-  app:
+  ops-toolbox:
     # for dev
     build: .
     privileged: true

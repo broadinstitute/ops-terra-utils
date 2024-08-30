@@ -1,7 +1,11 @@
-FROM us.gcr.io/broad-dsp-gcr-public/anvil-rstudio-bioconductor:3.19.0
+FROM us.gcr.io/broad-dsp-gcr-public/terra-jupyter-base:latest
+
+USER root
 
 ENV AZCOPY_BUFFER_GB: 2
 ENV AZCOPY_CONCURRENCY_VALUE: 4
+
+
 
 COPY requirements.txt /etc/terra-docker/
 COPY stand_alone_terra_and_tdr/ /etc/terra_utils
@@ -12,10 +16,10 @@ RUN pip3 -V \
 
 #install azcopy
 RUN curl -sSL -O https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb \ 
- && dpkg -i packages-microsoft-prod.deb \ 
+ && sudo dpkg -i packages-microsoft-prod.deb \ 
  && rm packages-microsoft-prod.deb \ 
- && apt-get update \ 
- && apt-get install azcopy 
+ && sudo apt-get update \ 
+ && sudo apt-get install azcopy 
 
 #install gcloud cli
 ENV GPG_TTY=$(tty)
