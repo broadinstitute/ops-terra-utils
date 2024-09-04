@@ -1,15 +1,30 @@
+x-env: &env
+  volumes:
+    - $HOME/.config/gcloud:/gcp/config:ro
+    - ./stand_alone_terra_and_tdr:/etc/terra_utils_dev
+  environment:
+    CLOUDSDK_CONFIG: "/gcp/config"
+    GOOGLE_APPLICATION_CREDENTIALS: "/gcp/config/application_default_credentials.json"
+
 services:
   ops-toolbox:
+    <<: *env
     # for dev
-    build: .
+    build:
+      dockerfile: ./Dockerfile
     privileged: true
     container_name: ops_terra_utils
-    volumes:
-      - $HOME/.config/gcloud:/gcp/config:ro
-      - ./stand_alone_terra_and_tdr:/etc/terra_utils_dev
-    environment:
-      CLOUDSDK_CONFIG: "/gcp/config"
-      GOOGLE_APPLICATION_CREDENTIALS: "/gcp/config/application_default_credentials.json"
+    stdin_open: true
+    tty: true
+    ports:
+      - 8080:80
+    entrypoint: /bin/sh
+  ops-toolbox-alpine:
+    <<: *env
+    # for dev
+    build:
+      dockerfile: ./ops_docker_utils_alpine/Dockerfile  
+    container_name: ops_terra_utils_alpine
     stdin_open: true
     tty: true
     ports:

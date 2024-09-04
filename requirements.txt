@@ -4,6 +4,7 @@ google-resumable-media
 google-cloud-storage==2.17.0
 google-auth==2.29.0
 google-auth-httplib2==0.2.0
+google-cloud-logging
 google-auth-oauthlib==1.2.1
 azure-identity==1.17.1
 azure-storage-blob==12.21.0
@@ -11,3 +12,5 @@ schema
 oauth2client
 backoff
 aiohttp
+pytz
+pandas

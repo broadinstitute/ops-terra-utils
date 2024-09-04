@@ -25,8 +25,9 @@ RUN apk add \
     musl-dev
 
 RUN ln -sf python3 /usr/bin/python
-RUN pip3 install --break-system-packages --no-cache --upgrade pip setuptools 
 
+ENV PIP_ROOT_USER_ACTION=ignore
+RUN pip3 install --break-system-packages --no-cache --upgrade pip setuptools 
 # download and extract python sources
 #RUN cd /opt \
 #    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \                                              
@@ -43,8 +44,8 @@ RUN pip3 install --break-system-packages --no-cache --upgrade pip setuptools
 COPY requirements.txt /etc/terra-docker/
 COPY stand_alone_terra_and_tdr/ /etc/terra_utils
 
-RUN pip3 install --break-system-packages --no-cache-dir --upgrade pip \
-  && pip3 install --break-system-packages --no-cache-dir --upgrade -r /etc/terra-docker/requirements.txt
+RUN pip3 install --no-cache-dir --upgrade pip \
+  && pip3 install --no-cache-dir --upgrade -r /etc/terra-docker/requirements.txt
 
 #install azcopy
 RUN curl -s -L https://azcopyvnext.azureedge.net/releases/release-10.24.0-20240326/azcopy_linux_amd64_10.24.0.tar.gz | tar xvzf - --strip-components=1 -C /usr/local/bin/ azcopy_linux_amd64_10.24.0/azcopy
@@ -68,9 +69,9 @@ ENV AZCOPY_CONCURRENCY_VALUE: 4
 
 ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
 
-
+ENV PIP_USER=true
 #RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && apt-get update -y && apt-get install google-cloud-cli -y
 
-ENV PIP_USER=true
+
 #install gcloud cli
 ENV GPG_TTY=$(tty)
