@@ -28,25 +28,7 @@ RUN apk add \
 RUN ln -sf python3 /usr/bin/python
 
 
-#RUN adduser -D ops_svc
-#USER ops_svc
-#WORKDIR /home/ops_svc
-#COPY --chown=ops_svc:ops_svc requirements.txt requirements.txt
-#ENV PATH="/home/ops_svc/.local/bin:${PATH}"
-#COPY --chown=ops_svc:ops_svc . .
-
 RUN pip3 install --break-system-packages --no-cache --upgrade pip setuptools 
-
-# download and extract python sources
-#RUN cd /opt \
-#    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \                                              
-#    && tar xzf Python-${PYTHON_VERSION}.tgz
-
-# build python and remove left-over sources
-#RUN cd /opt/Python-${PYTHON_VERSION} \ 
-#    && ./configure --prefix=/usr --enable-optimizations --with-ensurepip=install \
-#    && make install \
-#    && rm /opt/Python-${PYTHON_VERSION}.tgz /opt/Python-${PYTHON_VERSION} -rf
          
 
 
