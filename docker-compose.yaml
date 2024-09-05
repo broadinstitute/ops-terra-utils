@@ -7,7 +7,7 @@ x-env: &env
     GOOGLE_APPLICATION_CREDENTIALS: "/gcp/config/application_default_credentials.json"
 
 services:
-  ops-toolbox:
+  ops-toolbox-terra-notebook:
     <<: *env
     # for dev
     build:

@@ -5,6 +5,7 @@ ARG PYTHON_VERSION=3.11.9
 
 USER root
 ENV PIP_USER=false
+ENV PIP_ROOT_USER_ACTION=ignore
 
 # install build dependencies and needed tools
 RUN apk update 
@@ -26,8 +27,16 @@ RUN apk add \
 
 RUN ln -sf python3 /usr/bin/python
 
-ENV PIP_ROOT_USER_ACTION=ignore
+
+#RUN adduser -D ops_svc
+#USER ops_svc
+#WORKDIR /home/ops_svc
+#COPY --chown=ops_svc:ops_svc requirements.txt requirements.txt
+#ENV PATH="/home/ops_svc/.local/bin:${PATH}"
+#COPY --chown=ops_svc:ops_svc . .
+
 RUN pip3 install --break-system-packages --no-cache --upgrade pip setuptools 
+
 # download and extract python sources
 #RUN cd /opt \
 #    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \                                              
@@ -44,8 +53,8 @@ RUN pip3 install --break-system-packages --no-cache --upgrade pip setuptools
 COPY requirements.txt /etc/terra-docker/
 COPY stand_alone_terra_and_tdr/ /etc/terra_utils
 
-RUN pip3 install --no-cache-dir --upgrade pip \
-  && pip3 install --no-cache-dir --upgrade -r /etc/terra-docker/requirements.txt
+RUN pip install --break-system-packages --no-cache-dir --upgrade pip \
+  && pip install --break-system-packages --no-cache-dir --upgrade -r /etc/terra-docker/requirements.txt
 
 #install azcopy
 RUN curl -s -L https://azcopyvnext.azureedge.net/releases/release-10.24.0-20240326/azcopy_linux_amd64_10.24.0.tar.gz | tar xvzf - --strip-components=1 -C /usr/local/bin/ azcopy_linux_amd64_10.24.0/azcopy
@@ -56,14 +65,6 @@ RUN ldd /usr/local/bin/azcopy
 
 ENV AZCOPY_BUFFER_GB: 2
 ENV AZCOPY_CONCURRENCY_VALUE: 4
- 
-
-
-#RUN curl -sSL https://sdk.cloud.google.com | bash
-#RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
-#RUN mkdir -p /usr/local/gcloud \
-#  && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
-#  && /usr/local/gcloud/google-cloud-sdk/install.sh --quiet
 
 
 

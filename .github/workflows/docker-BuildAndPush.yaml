@@ -1,0 +1,43 @@
+name: Build and Push Docker images to Google Artifact Registry (GAR)
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Login to GCP
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.OPS_ARTIFACT_REGISTRY_SVC_ACCOUNT }}
+
+    - name: Configure Docker to use the Google Artifact Registry
+      run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+    - name: Build and Push Docker Image
+      run: |
+        docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/sanda-dev:$GITHUB_SHA .
+        docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/sanda-dev:$GITHUB_SHA
+      env:
+        PROJECT_ID: ${{ secrets.ARTIFACT_REPO }}
+        REPOSITORY: ${{ secrets.GCP_DEV_REPOSITORY }}
+        GITHUB_SHA: ${{ github.sha }}
+
+    - name: Set image tag to 'latest'
+      run: |
+        docker tag us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/sanda-dev:$GITHUB_SHA us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/sanda-dev:$GITHUB_SHA
+        docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/sanda-dev:$GITHUB_SHA
+      env:
+        PROJECT_ID: ${{ secrets.GCP_DEV_PROJECT_ID }}
+        REPOSITORY: ${{ secrets.GCP_DEV_REPOSITORY }}
+        GITHUB_SHA: ${{ github.sha }}
