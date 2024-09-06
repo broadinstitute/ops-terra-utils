@@ -345,6 +345,15 @@ class TDR:
         # Return job id
         return json.loads(response.text)['id']
 
+    def add_user_to_dataset(self, dataset_id: str, user: str, policy: str) -> None:
+        """Add user to dataset."""
+        if policy not in ["steward", "custodian", "snapshot_creator"]:
+            raise ValueError(f"Policy {policy} is not valid. Must be READER, WRITER, or OWNER")
+        uri = f"{self.TDR_LINK}/datasets/{dataset_id}/policies/{policy}/members"
+        member_dict = {"email": user}
+        logging.info(f"Adding user {user} to dataset {dataset_id} with policy {policy}")
+        self.request_util.run_request(uri=uri, method=POST, data=json.dumps(member_dict))
+
     def _yield_existing_datasets(self, filter: Optional[str] = None, batch_size: int = 100, direction: str = 'asc') -> Any:
         """Get all datasets in TDR. Filter can be dataset name"""
         offset = 0
@@ -580,6 +589,7 @@ class TDR:
             dataset_id = self.get_job_result(job_id)['id']
             logging.info(f"Successfully ran schema updates in dataset {dataset_id}")
             return dataset_id
+
 
 class Terra:
     TERRA_LINK = "https://api.firecloud.org/api"
@@ -1581,6 +1591,7 @@ class InferTDRSchema:
             "columns": column_metadata,
         }
         return tdr_tables_json
+
 
 class GetPermissionsForWorkspaceIngest:
     def __init__(self, terra_workspace: TerraWorkspace, terra: Terra, dataset_info: dict,
