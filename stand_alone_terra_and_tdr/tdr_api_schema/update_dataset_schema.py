@@ -1,6 +1,6 @@
 from schema import Schema, And, Use, Optional, SchemaError
 
-update_schama = Schema({
+update_schema = Schema({
   "description": And(str),
   "changes": And({
     "addTables": Optional([
