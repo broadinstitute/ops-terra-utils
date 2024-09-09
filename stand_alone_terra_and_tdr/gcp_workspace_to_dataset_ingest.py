@@ -22,10 +22,9 @@ CLOUD_TYPE = GCP
 BATCH_SIZE = 700  # The number of rows to ingest at a time
 WAITING_TIME_TO_POLL = 120  # How long to wait between polling for ingest status
 MAX_RETRIES = 5  # The maximum number of retries for a failed request
-MAX_BACKOFF_TIME = 500  # The maximum backoff time for a failed request
+MAX_BACKOFF_TIME = 5 * 60  # The maximum backoff time for a failed request
 TEST_INGEST = False  # Whether to test the ingest by just doing first batch
 FILTER_EXISTING_IDS = False  # Filter for out rows where it already exists within the dataset
-LOAD_TAG = "0d1c9aea-e944-4d19-83c3-8675f6aa062a.sample"  # Load tag used for ingest
 
 
 def get_args():
@@ -66,6 +65,13 @@ def get_args():
         default=MAX_RETRIES,
         help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided"
     )
+    parser.add_argument(
+        "--max_backoff_time",
+        required=False,
+        default=MAX_BACKOFF_TIME,
+        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+    )
+
     return parser.parse_args()
 
 
@@ -80,15 +86,16 @@ if __name__ == "__main__":
     sample_ids_to_ingest = args.sample_ids_to_ingest
     bulk_mode = args.bulk_mode
     max_retries = args.max_retries
+    max_backoff_time = args.max_backoff_time
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
-    request_util = RunRequest(token=token, max_retries=MAX_RETRIES, max_backoff_time=MAX_BACKOFF_TIME)
+    request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     terra_workspace = TerraWorkspace(billing_project=billing_project, workspace_name=workspace_name, request_util=request_util)
     tdr = TDR(request_util=request_util)
 
     # Get sample metrics from Terra
-    sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type="sample")
+    sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=target_table_name)
     logging.info(f"Got {len(sample_metrics)} samples")
 
     # Convert sample dict into list of usable dicts for ingestion
@@ -125,6 +132,6 @@ if __name__ == "__main__":
         update_strategy=update_strategy,
         waiting_time_to_poll=WAITING_TIME_TO_POLL,
         test_ingest=TEST_INGEST,
-        load_tag=LOAD_TAG,
+        load_tag=f"{billing_project}_{workspace_name}-{dataset_id}",
         file_list_bool=False
     ).run()
