@@ -4,9 +4,9 @@ workflow copy_to_new_billing_profile {
     input {
 		String new_billing_profile
 		String orig_dataset_id
-        Int? ingest_batch_size
+		Int? ingest_batch_size
 		String? update_strategy
-        String? new_dataset_name
+		String? new_dataset_name
 		Int? waiting_time_to_poll
 		Boolean? bulk_mode
 		String? docker_name
@@ -19,7 +19,7 @@ workflow copy_to_new_billing_profile {
 		input:
 			new_billing_profile=new_billing_profile,
 			orig_dataset_id=orig_dataset_id,
-        	ingest_batch_size=ingest_batch_size,
+			ingest_batch_size=ingest_batch_size,
 			update_strategy=update_strategy,
 			new_dataset_name=new_dataset_name,
 			waiting_time_to_poll=waiting_time_to_poll,
@@ -33,9 +33,9 @@ task run_copy_to_new_billing_profile {
 		String new_billing_profile
 		String orig_dataset_id
 		String docker_name
-        Int? ingest_batch_size
+		Int? ingest_batch_size
 		String? update_strategy
-        String? new_dataset_name
+		String? new_dataset_name
 		Int? waiting_time_to_poll
 		Boolean? bulk_mode
 	}
@@ -55,3 +55,4 @@ task run_copy_to_new_billing_profile {
 		docker: docker_name
 	}
 }
+	
