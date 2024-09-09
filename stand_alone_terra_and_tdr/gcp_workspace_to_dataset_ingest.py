@@ -60,6 +60,12 @@ def get_args():
              some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces exclusive 
              locking of the dataset (i.e. you can’t run multiple ingests at once)"""
     )
+    parser.add_argument(
+        "--max_retries",
+        required=False,
+        default=MAX_RETRIES,
+        help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided"
+    )
     return parser.parse_args()
 
 
@@ -73,6 +79,7 @@ if __name__ == "__main__":
     update_strategy = args.update_strategy
     sample_ids_to_ingest = args.sample_ids_to_ingest
     bulk_mode = args.bulk_mode
+    max_retries = args.max_retries
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
