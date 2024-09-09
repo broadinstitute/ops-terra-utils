@@ -1,12 +1,24 @@
-from utils import TerraWorkspace, TDR, RunRequest, Token, ConvertTerraTableInfoForIngest, \
-    GCP, Terra, GetPermissionsForWorkspaceIngest, FILE_INVENTORY_DEFAULT_SCHEMA, \
-    SetUpTDRTables, GCPCloudFunctions, FilterAndBatchIngest
 import logging
-from datetime import datetime
+import sys
 import re
 from typing import Optional
-import json
-import sys
+from datetime import datetime
+from argparse import ArgumentParser
+
+from utils import (
+    TerraWorkspace,
+    TDR,
+    RunRequest,
+    Token,
+    ConvertTerraTableInfoForIngest,
+    GCP,
+    Terra,
+    GetPermissionsForWorkspaceIngest,
+    FILE_INVENTORY_DEFAULT_SCHEMA,
+    SetUpTDRTables,
+    GCPCloudFunctions,
+    FilterAndBatchIngest
+)
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -16,17 +28,9 @@ TOKEN_TYPE = GCP  # The cloud type for the token
 CLOUD_TYPE = GCP  # The cloud type for the TDR dataset and workspace
 MAX_RETRIES = 2  # The maximum number of retries for a failed request
 MAX_BACKOFF_TIME = 10  # The maximum backoff time for a failed request
-# The billing project for the workspace to be moved over
-BILLING_PROJECT = "anvil-datastorage"
-WORKSPACE_NAME = "ANVIL_CMG_Yale_GRU"  # The workspace name to move over
-# If None then will create a default dataset name based off workspace name
-DATASET_NAME = None
 # Anvil prod billing profile id
 TDR_BILLING_PROFILE = "e0e03e48-5b96-45ec-baa4-8cc1ebf74c61"
 DATASET_MONITORING = True  # Enable monitoring for dataset
-PHS_ID = "phs000744"  # The PHS ID for the dataset
-# What to use for update_strategy in ingest. replace, append, or update
-UPDATE_STRATEGY = "REPLACE"
 # The number of rows to ingest at a time when ingesting files
 FILE_INGEST_BATCH_SIZE = 500
 # How long to wait between polling for ingest status when ingesting files
@@ -45,6 +49,34 @@ ALREADY_ADDED_TO_AUTH_DOMAIN = True
 DEST_FILE_PATH_FLAT = True
 
 FILE_INVENTORY_TABLE_NAME = "file_inventory"
+
+
+def get_args():
+    parser = ArgumentParser(description="Create and ingest data into a new GCP dataset from a workspace")
+    parser.add_argument("--billing_project", required=True)
+    parser.add_argument("--workspace_name", required=True)
+    parser.add_argument(
+        "--dataset_name",
+        required=False,
+        help="Will default to generating one based on the workspace name if not explicitly provided"
+    )
+    parser.add_argument("--phs_id", required=True)
+    parser.add_argument(
+        "--update_strategy",
+        required=False,
+        choices=["REPLACE", "APPEND", "UPDATE"],
+        default="REPLACE",
+        help="Defaults to REPLACE if not provided"
+    )
+    parser.add_argument(
+        "--bulk_mode",
+        action="store_true",
+        help="""If used, will use bulk mode for ingest. Using bulk mode for TDR Ingest loads data faster when ingesting
+         a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of 
+         some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces exclusive 
+         locking of the dataset (i.e. you can’t run multiple ingests at once)"""
+    )
+    return parser.parse_args()
 
 
 class CreateIngestTableInfo:
@@ -148,7 +180,13 @@ class DataSetName:
         return f"{dataset_prefix}_{dataset_suffix}"
 
 
-def run_filter_and_ingest(table_info_dict: dict, file_to_uuid_dict: Optional[dict] = None) -> None:
+def run_filter_and_ingest(
+        table_info_dict: dict,
+        update_strategy: str,
+        workspace_name: str,
+        dataset_name: str,
+        file_to_uuid_dict: Optional[dict] = None
+) -> None:
     table_name = table_info_dict['table_name']
     ingest_metadata = table_info_dict['ingest_metadata']
     table_unique_id = table_info_dict['table_unique_id']
@@ -176,8 +214,8 @@ def run_filter_and_ingest(table_info_dict: dict, file_to_uuid_dict: Optional[dic
         ingest_batch_size=ingest_batch_size,
         bulk_mode=BULK_MODE,
         cloud_type=CLOUD_TYPE,
-        update_strategy=UPDATE_STRATEGY,
-        load_tag=f"{WORKSPACE_NAME}-{dataset_name}",
+        update_strategy=update_strategy,
+        load_tag=f"{workspace_name}-{dataset_name}",
         test_ingest=TEST_INGEST,
         dest_file_path_flat=DEST_FILE_PATH_FLAT,
         file_to_uuid_dict=file_to_uuid_dict,
@@ -186,12 +224,20 @@ def run_filter_and_ingest(table_info_dict: dict, file_to_uuid_dict: Optional[dic
 
 
 if __name__ == "__main__":
+    args = get_args()
+    billing_project = args.billing_project
+    workspace_name = args.workspace_name
+    provided_dataset_name = args.dataset_name
+    phs_id = args.phs_id
+    update_strategy = args.update_strategy
+    bulk_mode = args.bulk_mode
+
     # Initialize the Terra and TDR classes
     token = Token(cloud=TOKEN_TYPE)
     request_util = RunRequest(
         token=token, max_retries=MAX_RETRIES, max_backoff_time=MAX_BACKOFF_TIME)
     terra_workspace = TerraWorkspace(
-        billing_project=BILLING_PROJECT, workspace_name=WORKSPACE_NAME, request_util=request_util)
+        billing_project=billing_project, workspace_name=workspace_name, request_util=request_util)
     terra = Terra(request_util=request_util)
     tdr = TDR(request_util=request_util)
 
@@ -203,18 +249,18 @@ if __name__ == "__main__":
     workspace_table_names = [table_name for table_name in entity_info.keys()]
 
     # Get final dataset name
-    dataset_name = DataSetName(tdr=tdr, workspace_name=WORKSPACE_NAME,
-                               billing_profile=TDR_BILLING_PROFILE, dataset_name=DATASET_NAME).get_name()
+    dataset_name = DataSetName(tdr=tdr, workspace_name=workspace_name,
+                               billing_profile=TDR_BILLING_PROFILE, dataset_name=provided_dataset_name).get_name()
 
     workspace_properties_dict = {
         "auth_domains": workspace_info['workspace']['authorizationDomain'],
         "consent_name": workspace_info['workspace']["attributes"]["library:dataUseRestriction"] if workspace_info['workspace']["attributes"].get("library:dataUseRestriction") else "",
-        "source_workspaces": [WORKSPACE_NAME]
+        "source_workspaces": [workspace_name]
     }
 
     # Create dict of additional properties for dataset
     additional_properties_dict = {
-        "phsId": PHS_ID,
+        "phsId": phs_id,
         "experimentalSelfHosted": True,
         "dedicatedIngestServiceAccount": True,
         "experimentalPredictableFileIds": True,
@@ -227,7 +273,7 @@ if __name__ == "__main__":
         dataset_name=dataset_name,
         billing_profile=TDR_BILLING_PROFILE,
         schema=FILE_INVENTORY_DEFAULT_SCHEMA,
-        description=f"Ingest of {WORKSPACE_NAME}",
+        description=f"Ingest of {workspace_name}",
         cloud_platform=CLOUD_TYPE,
         additional_properties_dict=additional_properties_dict
     )
@@ -275,7 +321,11 @@ if __name__ == "__main__":
 
     # Ingest just the files first
     run_filter_and_ingest(
-        table_info_dict=tables_to_ingest[FILE_INVENTORY_TABLE_NAME])
+        table_info_dict=tables_to_ingest[FILE_INVENTORY_TABLE_NAME],
+        update_strategy=update_strategy,
+        workspace_name=workspace_name,
+        dataset_name=dataset_name,
+    )
 
     # Get all file info from dataset
     existing_file_inventory_metadata = tdr.get_data_set_table_metrics(
@@ -290,4 +340,9 @@ if __name__ == "__main__":
         # Skip file inventory table which should already be ingested
         if table_name != FILE_INVENTORY_TABLE_NAME:
             run_filter_and_ingest(
-                table_dict, file_to_uuid_dict=file_to_uuid_dict)
+                table_info_dict=table_dict,
+                update_strategy=update_strategy,
+                workspace_name=workspace_name,
+                dataset_name=dataset_name,
+                file_to_uuid_dict=file_to_uuid_dict,
+            )
