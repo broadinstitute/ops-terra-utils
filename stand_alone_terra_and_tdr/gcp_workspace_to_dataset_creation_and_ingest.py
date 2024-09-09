@@ -26,10 +26,10 @@ logging.basicConfig(
 
 TOKEN_TYPE = GCP  # The cloud type for the token
 CLOUD_TYPE = GCP  # The cloud type for the TDR dataset and workspace
-MAX_RETRIES = 2  # The maximum number of retries for a failed request
-MAX_BACKOFF_TIME = 10  # The maximum backoff time for a failed request
+MAX_RETRIES = 5  # The maximum number of retries for a failed request
+MAX_BACKOFF_TIME = 5 * 60  # The maximum backoff time for a failed request (in seconds)
 # Anvil prod billing profile id
-TDR_BILLING_PROFILE = "e0e03e48-5b96-45ec-baa4-8cc1ebf74c61"
+ANVIL_TDR_BILLING_PROFILE = "e0e03e48-5b96-45ec-baa4-8cc1ebf74c61"
 DATASET_MONITORING = True  # Enable monitoring for dataset
 # The number of rows to ingest at a time when ingesting files
 FILE_INGEST_BATCH_SIZE = 500
@@ -76,6 +76,31 @@ def get_args():
          some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces exclusive 
          locking of the dataset (i.e. you can’t run multiple ingests at once)"""
     )
+    parser.add_argument(
+        "--tdr_billing_profile",
+        required=False,
+        default=ANVIL_TDR_BILLING_PROFILE,
+        help="Defaults to the AnVIL-specific TDR billing profile if not provided"
+    )
+    parser.add_argument(
+        "--file_ingest_batch_size",
+        required=False,
+        default=FILE_INGEST_BATCH_SIZE,
+        help=f"The number of rows to ingest at a time. Defaults to {FILE_INGEST_BATCH_SIZE} if not provided"
+    )
+    parser.add_argument(
+        "--max_backoff_time",
+        required=False,
+        default=MAX_BACKOFF_TIME,
+        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+    )
+    parser.add_argument(
+        "--max_retries",
+        required=False,
+        default=MAX_RETRIES,
+        help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided."
+    )
+
     return parser.parse_args()
 
 
@@ -163,7 +188,7 @@ class DataSetName:
         # Duplicating check done again later, but checking if prefix already exists with other date
         existing_datasets = self.tdr.check_if_dataset_exists(
             dataset_name=dataset_prefix,
-            billing_profile=TDR_BILLING_PROFILE
+            billing_profile=self.billing_profile,
         )
         # Check if multiple datasets exist with the same prefix or if dataset exists with different date
         if len(existing_datasets) > 1:
@@ -185,6 +210,7 @@ def run_filter_and_ingest(
         update_strategy: str,
         workspace_name: str,
         dataset_name: str,
+        file_ingest_batch_size: int,
         file_to_uuid_dict: Optional[dict] = None
 ) -> None:
     table_name = table_info_dict['table_name']
@@ -199,7 +225,7 @@ def run_filter_and_ingest(
         ingest_batch_size = METADATA_INGEST_BATCH_SIZE
     else:
         waiting_time_to_poll = FILE_INGEST_WAITING_TIME_TO_POLL
-        ingest_batch_size = FILE_INGEST_BATCH_SIZE
+        ingest_batch_size = file_ingest_batch_size
 
     # Filter out all rows that already exist in the dataset and batch ingests to table
     FilterAndBatchIngest(
@@ -231,11 +257,15 @@ if __name__ == "__main__":
     phs_id = args.phs_id
     update_strategy = args.update_strategy
     bulk_mode = args.bulk_mode
+    tdr_billing_profile = args.tdr_billing_profile
+    file_ingest_batch_size = args.file_ingest_batch_size
+    max_backoff_time = args.max_backoff_time
+    max_retries = args.max_retries
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=TOKEN_TYPE)
     request_util = RunRequest(
-        token=token, max_retries=MAX_RETRIES, max_backoff_time=MAX_BACKOFF_TIME)
+        token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     terra_workspace = TerraWorkspace(
         billing_project=billing_project, workspace_name=workspace_name, request_util=request_util)
     terra = Terra(request_util=request_util)
@@ -250,7 +280,7 @@ if __name__ == "__main__":
 
     # Get final dataset name
     dataset_name = DataSetName(tdr=tdr, workspace_name=workspace_name,
-                               billing_profile=TDR_BILLING_PROFILE, dataset_name=provided_dataset_name).get_name()
+                               billing_profile=tdr_billing_profile, dataset_name=provided_dataset_name).get_name()
 
     workspace_properties_dict = {
         "auth_domains": workspace_info['workspace']['authorizationDomain'],
@@ -271,7 +301,7 @@ if __name__ == "__main__":
     # Check if dataset exists under billing profile and create if not there
     dataset_id = tdr.get_or_create_dataset(
         dataset_name=dataset_name,
-        billing_profile=TDR_BILLING_PROFILE,
+        billing_profile=tdr_billing_profile,
         schema=FILE_INVENTORY_DEFAULT_SCHEMA,
         description=f"Ingest of {workspace_name}",
         cloud_platform=CLOUD_TYPE,
@@ -325,6 +355,7 @@ if __name__ == "__main__":
         update_strategy=update_strategy,
         workspace_name=workspace_name,
         dataset_name=dataset_name,
+        file_ingest_batch_size=file_ingest_batch_size,
     )
 
     # Get all file info from dataset
