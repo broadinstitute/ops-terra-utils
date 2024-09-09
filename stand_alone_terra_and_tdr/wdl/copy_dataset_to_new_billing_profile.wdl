@@ -9,7 +9,11 @@ workflow copy_to_new_billing_profile {
         String? new_dataset_name
 		Int? waiting_time_to_poll
 		Boolean? bulk_mode
+		String? docker_name
 	}
+
+	String docker = select_first([docker_name, "johnscira/test_docker_repo:latest"])
+
 
 	call run_copy_to_new_billing_profile {
 		input:
@@ -19,7 +23,8 @@ workflow copy_to_new_billing_profile {
 			update_strategy=update_strategy,
 			new_dataset_name=new_dataset_name,
 			waiting_time_to_poll=waiting_time_to_poll,
-			bulk_mode=bulk_mode
+			bulk_mode=bulk_mode,
+			docker_name=docker
 	}
 }
 
@@ -27,6 +32,7 @@ task run_copy_to_new_billing_profile {
 	input {
 		String new_billing_profile
 		String orig_dataset_id
+		String docker_name
         Int? ingest_batch_size
 		String? update_strategy
         String? new_dataset_name
@@ -46,6 +52,6 @@ task run_copy_to_new_billing_profile {
 	>>>
 
 	runtime {
-		docker: "johnscira/test_docker_repo:latest"
+		docker: docker_name
 	}
 }
