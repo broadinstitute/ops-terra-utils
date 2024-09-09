@@ -37,7 +37,7 @@ task run_copy_to_new_billing_profile {
 		String? update_strategy
 		String? new_dataset_name
 		Int? waiting_time_to_poll
-		Boolean? bulk_mode
+		Boolean bulk_mode
 	}
 
 	command <<<
