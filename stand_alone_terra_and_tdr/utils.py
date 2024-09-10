@@ -590,26 +590,32 @@ class TDR:
             logging.info(f"Successfully ran schema updates in dataset {dataset_id}")
             return dataset_id
 
-    def get_files_from_snapshot(self, snapshot_id: str, limit: int = 1000):
-        """Returns all the metadata about files in a given snapshot. Not all files can be returned at once, so the API
-        is used repeatedly until all "batches" have been returned"""
+    def _get_response_from_batched_endpoint(self, uri: str, limit: int = 1000):
+        """Helper method for all GET endpoints that require batching. Given the URI and the limit (optional), will
+        loop through batches until all metadata is retrieved. NOTE: when providing the URI, provide only the BASE
+        URI (i.e. without the query params for offset or limit)."""
         batch = 1
         offset = 0
-        all_files = []
+        metadata = []
         while True:
-            logging.info(f"Retrieving {(batch - 1) * limit} to {batch * limit} files in dataset")
-            uri = f"{self.TDR_LINK}/snapshots/{snapshot_id}/files?offset={offset}&limit={limit}"
-            response = self.request_util.run_request(uri=uri, method=GET).json()
+            logging.info(f"Retrieving {(batch - 1) * limit} to {batch * limit} records in metadata")
+            response = self.request_util.run_request(uri=f"{uri}?offset={offset}&limit={limit}", method=GET).json()
 
             # If no more files, break the loop
             if not response:
                 break
 
-            all_files.extend(response)
+            metadata.extend(response)
             # Increment the offset by limit for the next page
             offset += limit
             batch += 1
-        return all_files
+        return metadata
+
+    def get_files_from_snapshot(self, snapshot_id: str, limit: int = 1000):
+        """Returns all the metadata about files in a given snapshot. Not all files can be returned at once, so the API
+        is used repeatedly until all "batches" have been returned"""
+        uri = f"{self.TDR_LINK}/snapshots/{snapshot_id}/files"
+        return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
 
 class Terra:
