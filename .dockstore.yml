@@ -23,3 +23,9 @@ workflows:
     primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/export_data_from_snapshot.wdl
     testParameterFiles:
       - /stand_alone_terra_and_tdr/wdl/export_data_from_snapshot.wdl
+
+  - name: get_files_not_dataset_metadata
+    subclass: WDL
+    primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/get_files_not_dataset_metadata.wdl
+    testParameterFiles:
+      - /stand_alone_terra_and_tdr/wdl/get_files_not_dataset_metadata.wdl
