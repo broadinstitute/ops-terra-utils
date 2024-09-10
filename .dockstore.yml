@@ -18,3 +18,8 @@ workflows:
     testParameterFiles:
       - /stand_alone_terra_and_tdr/wdl/gcp_workspace_to_dataset_ingest.wdl
 
+  - name: export_data_from_snapshot_to_bucket
+    subclass: WDL
+    primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/export_data_from_snapshot.wdl
+    testParameterFiles:
+      - /stand_alone_terra_and_tdr/wdl/export_data_from_snapshot.wdl
