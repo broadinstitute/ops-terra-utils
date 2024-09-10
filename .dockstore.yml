@@ -11,3 +11,10 @@ workflows:
     primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/gcp_workspace_to_dataset_creation_and_ingest.wdl
     testParameterFiles:
       - /stand_alone_terra_and_tdr/wdl/gcp_workspace_to_dataset_creation_and_ingest.wdl
+
+  - name: gcp_workspace_to_dataset_ingest
+    subclass: WDL
+    primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/gcp_workspace_to_dataset_ingest.wdl
+    testParameterFiles:
+      - /stand_alone_terra_and_tdr/wdl/gcp_workspace_to_dataset_ingest.wdl
+
