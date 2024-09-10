@@ -1,31 +1,55 @@
-
-from utils import TDR, RunRequest, Token
 import logging
-import json
-import sys
+from argparse import ArgumentParser
+
+from utils import TDR, RunRequest, Token, GCP
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-DATASET_ID = "0d1c9aea-e944-4d19-83c3-8675f6aa062a"
-CLOUD_TYPE = "gcp"
-MAX_RETRIES = 1
-MAX_BACKOFF_TIME = 10
+CLOUD_TYPE = GCP
+MAX_RETRIES = 5
+MAX_BACKOFF_TIME = 5 * 60
 BATCH_SIZE_TO_LIST_FILES = 25000
 
+
+def get_args():
+    parser = ArgumentParser(description="Get files that are not in the dataset metadata")
+    parser.add_argument("--dataset_id", required=True)
+    parser.add_argument(
+        "--max_retries",
+        required=False,
+        default=MAX_RETRIES,
+        help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided"
+    )
+    parser.add_argument(
+        "--max_backoff_time",
+        required=False,
+        default=MAX_BACKOFF_TIME,
+        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+    )
+
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
+    args = get_args()
+    dataset_id = args.dataset_id
+    max_retries = args.max_retries
+    max_backoff_time = args.max_backoff_time
+
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
-    request_util = RunRequest(token=token, max_retries=MAX_RETRIES, max_backoff_time=MAX_BACKOFF_TIME)
+    request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
     # Get all file uuids from metadata
-    all_metadata_dataset_file_uuids = tdr.get_data_set_file_uuids_from_metadata(dataset_id=DATASET_ID)
+    all_metadata_dataset_file_uuids = tdr.get_data_set_file_uuids_from_metadata(dataset_id=dataset_id)
     # Get all files for dataset
-    files_info = tdr.get_data_set_files(dataset_id=DATASET_ID, limit=BATCH_SIZE_TO_LIST_FILES)
+    files_info = tdr.get_data_set_files(dataset_id=dataset_id, limit=BATCH_SIZE_TO_LIST_FILES)
     file_uuids = [file_dict['fileId'] for file_dict in files_info]
 
-    # Find any file uuids that are unique in file_uuids and all_dataset_file_uuids and return them and where they came from
+    # Find any file uuids that are unique in file_uuids and all_dataset_file_uuids and return them and where
+    # they came from
     unique_file_uuids = set(file_uuids) - set(all_metadata_dataset_file_uuids)
     if unique_file_uuids:
         # Only uuids where it is listed in dataset but not referenced in metadata
@@ -49,5 +73,3 @@ if __name__ == "__main__":
         logging.info(f"Total unique file uuids count: {len(unique_file_uuids)}")
     else:
         logging.info("No unique file uuids found")
-
-
