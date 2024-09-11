@@ -28,8 +28,8 @@ jobs:
 
     - name: Build and Push Docker Images
       run: |
-        docker compose build -t us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops-toolbox-alpine:$GITHUB_SHA ops-toolbox-alpine
-        docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops-toolbox-alpine:$GITHUB_SHA 
+        docker buildx build -t us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA -f ./ops_docker_utils_slim/Dockerfile . 
+        docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA
       env:
         PROJECT_ID: ${{ secrets.ARTIFACT_REPO }}
         REPOSITORY: ${{ secrets.GCP_DEV_REPOSITORY }}
@@ -37,8 +37,8 @@ jobs:
 
     - name: Set image tag to 'latest'
       run: |
-        docker tag us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/sanda-dev:$GITHUB_SHA us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/sanda-dev:$GITHUB_SHA
-        docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/sanda-dev:$GITHUB_SHA
+        docker tag us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:latest
+        docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:latest
       env:
         PROJECT_ID: ${{ secrets.GCP_DEV_PROJECT_ID }}
         REPOSITORY: ${{ secrets.GCP_DEV_REPOSITORY }}
