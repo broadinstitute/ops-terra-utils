@@ -1,8 +1,12 @@
 """Take in billing profile and dataset and recreate the dataset in a new billing profile."""
 
-from utils import BatchIngest, TDR, RunRequest, Token, GCP
+from utils.tdr_util import BatchIngest, TDR
+from utils.request_util import RunRequest
+from utils.token_util import Token
+from utils.general_utils import GCP
 import logging
-import json, sys
+import json
+import sys
 from argparse import ArgumentParser
 
 logging.basicConfig(

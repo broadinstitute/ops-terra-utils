@@ -29,7 +29,7 @@ task GetFilesNotInDataset {
     }
 
     command <<<
-        python /etc/terra_utils/get_files_not_dataset_metadata.py \
+        python /etc/terra_utils/get_files_not_in_dataset_metadata.py \
         --dataset_id  ~{dataset_id} \
         ~{"--max_retries " + max_retries} \
         ~{"--max_backoff_time " + max_backoff_time} \

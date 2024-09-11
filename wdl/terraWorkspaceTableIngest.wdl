@@ -49,7 +49,7 @@ task IngestWorkspaceDataToDataset {
     }
 
     command <<<
-        python /etc/terra_utils/gcp_workspace_to_dataset_ingest.py \
+        python /etc/terra_utils/gcp_workspace_table_to_dataset_ingest.py \
         --billing_project  ~{billing_project} \
         --workspace_name  ~{workspace_name} \
         --dataset_id  ~{dataset_id} \

@@ -1,0 +1,2 @@
+GCP = 'gcp'
+AZURE = 'azure'
