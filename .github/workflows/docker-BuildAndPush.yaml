@@ -28,7 +28,7 @@ jobs:
 
     - name: Build and Push Docker Images
       run: |
-        docker buildx build -t us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA -f ./ops_docker_utils_slim/Dockerfile . 
+        docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA -f ./ops_docker_utils_slim/Dockerfile . 
         docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA
       env:
         PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
