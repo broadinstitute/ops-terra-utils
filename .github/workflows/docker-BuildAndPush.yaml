@@ -31,8 +31,8 @@ jobs:
         docker buildx build -t us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA -f ./ops_docker_utils_slim/Dockerfile . 
         docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA
       env:
-        PROJECT_ID: ${{ secrets.ARTIFACT_REPO }}
-        REPOSITORY: ${{ secrets.GCP_DEV_REPOSITORY }}
+        PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        REPOSITORY: ${{ secrets.ARTIFACT_REPO }}
         GITHUB_SHA: ${{ github.sha }}
 
     - name: Set image tag to 'latest'
@@ -40,6 +40,6 @@ jobs:
         docker tag us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:latest
         docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:latest
       env:
-        PROJECT_ID: ${{ secrets.GCP_DEV_PROJECT_ID }}
-        REPOSITORY: ${{ secrets.GCP_DEV_REPOSITORY }}
+        PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        REPOSITORY: ${{ secrets.ARTIFACT_REPO }}
         GITHUB_SHA: ${{ github.sha }}
