@@ -1,5 +1,5 @@
 version 1.0
-import "gcpUtils.wdl" as gcp_utils
+import "../gcpUtils.wdl" as gcp_utils
 
 
 workflow ExportDataFromSnapshotToBucket {
@@ -24,13 +24,9 @@ workflow ExportDataFromSnapshotToBucket {
             docker_image = docker_image
     }
 
-    Array[Array[String]] mapping_info = read_tsv(GetFileMapping.source_destination_mapping)
-
-    scatter (line in mapping_info) {
-        call gcp_utils.CopyGCPFile
-            input:
-                source_file_path = line[0]
-                destination_file_path = line[1]
+    call gcp_utils.CopyGCPSourceToDestinationFromMappingTsv
+        input:
+            mapping_tsv = GetFileMapping.source_destination_mapping_file
     }
 
 }
@@ -59,7 +55,7 @@ task GetFileMapping {
     }
 
     output {
-        File source_destination_mapping = "file_mapping.tsv"
+        File source_destination_mapping_file = "file_mapping.tsv"
     }
 
 }
