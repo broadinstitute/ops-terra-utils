@@ -3,6 +3,7 @@ workflows:
   - name: CopyDatasetToNewBillingProfile
     subclass: WDL
     primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/copy_dataset_to_new_billing_profile.wdl
+    readMePath: /stand_alone_terra_and_tdr/wdl/copy_dataset_readme.md
     testParameterFiles:
       - /stand_alone_terra_and_tdr/wdl/copy_dataset_to_new_billing_profile.wdl
 
