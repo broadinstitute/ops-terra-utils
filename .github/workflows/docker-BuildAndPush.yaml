@@ -3,7 +3,7 @@ name: Build and Push Docker images to Google Artifact Registry (GAR)
 on:
   pull_request:
     branches:
-      - dev
+      - main
   workflow_dispatch:
 
 
