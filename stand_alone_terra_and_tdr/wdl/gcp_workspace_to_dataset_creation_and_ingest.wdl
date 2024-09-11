@@ -1,6 +1,6 @@
 version 1.0
 
-workflow gcp_workspace_to_dataset_creation_and_ingest {
+workflow GCPWorkspaceToDatasetCreationAndIngest {
     input {
         String billing_project
         String workspace_name
@@ -17,23 +17,23 @@ workflow gcp_workspace_to_dataset_creation_and_ingest {
 
     String docker_image = select_first([docker, "johnscira/test_docker_repo:latest"])
 
-    call run_gcp_workspace_to_dataset {
+    call RunGCPWorkspaceToDataset {
         input:
-            billing_project=billing_project,
-            workspace_name=workspace_name,
-            dataset_name=dataset_name,
-            phs_id=phs_id,
-            update_strategy=update_strategy,
-            bulk_mode=bulk_mode,
-            docker=docker_image,
-            tdr_billing_profile=tdr_billing_profile,
-            file_ingest_batch_size=file_ingest_batch_size,
-            max_backoff_time=max_backoff_time,
-            max_retries=max_retries
+            billing_project = billing_project,
+            workspace_name = workspace_name,
+            dataset_name = dataset_name,
+            phs_id = phs_id,
+            update_strategy = update_strategy,
+            bulk_mode = bulk_mode,
+            docker = docker_image,
+            tdr_billing_profile = tdr_billing_profile,
+            file_ingest_batch_size = file_ingest_batch_size,
+            max_backoff_time = max_backoff_time,
+            max_retries = max_retries
     }
 }
 
-task run_gcp_workspace_to_dataset {
+task RunGCPWorkspaceToDataset {
     input {
         String billing_project
         String workspace_name

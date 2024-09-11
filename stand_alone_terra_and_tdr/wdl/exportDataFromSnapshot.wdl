@@ -1,15 +1,16 @@
 version 1.0
-import "gcp_utils.wdl" as gcp_utils
+import "gcpUtils.wdl" as gcp_utils
 
 
-workflow {
-    input:
+workflow ExportDataFromSnapshotToBucket {
+    input {
         String snapshot_id
         String output_bucket
         String download_type
         Int? max_backoff_time
         Int? max_retries
         String? docker
+    }
 
     String docker_image = select_first([docker, "johnscira/test_docker_repo:latest"])
 
@@ -23,9 +24,13 @@ workflow {
             docker_image = docker_image
     }
 
-    call gcp_utils.CopySourceToDestFromMappingTsv {
-        input:
-            mapping_file = GetFileMapping.source_destination_mapping
+    Array[Array[String]] mapping_info = read_tsv(GetFileMapping.source_destination_mapping)
+
+    scatter (line in mapping_info) {
+        call gcp_utils.CopyGCPFile
+            input:
+                source_file_path = mapping_info[0]
+                destination_file_path = mapping_info[1]
     }
 
 }
