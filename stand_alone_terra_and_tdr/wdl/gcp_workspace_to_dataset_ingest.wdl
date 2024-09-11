@@ -15,7 +15,7 @@ workflow GCPWorkspaceToDatasetIngest {
         String? docker
     }
 
-    String docker_image = select_first([docker, "johnscira/test_docker_repo:latest"])
+    String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
     call IngestWorkspaceDataToDataset {
         input:
@@ -28,7 +28,7 @@ workflow GCPWorkspaceToDatasetIngest {
             sample_ids_to_ingest = sample_ids_to_ingest,
             bulk_mode = bulk_mode,
             max_retries = max_retries,
-            max_backoff_time = max_backoff_time
+            max_backoff_time = max_backoff_time,
             docker_image = docker_image
     }
 }

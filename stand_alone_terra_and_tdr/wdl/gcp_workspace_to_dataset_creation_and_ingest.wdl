@@ -13,9 +13,10 @@ workflow GCPWorkspaceToDatasetCreationAndIngest {
         Int? file_ingest_batch_size
         Int? max_backoff_time
         Int? max_retries
+        String? docker
     }
 
-    String docker_image = select_first([docker, "johnscira/test_docker_repo:latest"])
+    String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
     call RunGCPWorkspaceToDataset {
         input:
@@ -25,7 +26,7 @@ workflow GCPWorkspaceToDatasetCreationAndIngest {
             phs_id = phs_id,
             update_strategy = update_strategy,
             bulk_mode = bulk_mode,
-            docker = docker_image,
+            docker_name = docker_image,
             tdr_billing_profile = tdr_billing_profile,
             file_ingest_batch_size = file_ingest_batch_size,
             max_backoff_time = max_backoff_time,
@@ -41,7 +42,7 @@ task RunGCPWorkspaceToDataset {
         String phs_id
         String? update_strategy
         Boolean bulk_mode
-        String docker
+        String docker_name
         String? tdr_billing_profile
         Int? file_ingest_batch_size
         Int? max_backoff_time
