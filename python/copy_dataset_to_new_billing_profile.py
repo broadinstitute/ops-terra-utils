@@ -7,7 +7,7 @@ from utils.general_utils import GCP
 import logging
 import json
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -17,7 +17,7 @@ DEFAULT_WAITING_TIME_POLL = 120
 DEFAULT_BATCH_SIZE = 500
 
 
-def get_args():
+def get_args() -> Namespace:
     parser = ArgumentParser(description="""Copy dataset to new billing profile""")
     parser.add_argument("--new_billing_profile", required=True)
     parser.add_argument("--orig_dataset_id", required=True)

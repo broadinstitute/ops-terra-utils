@@ -1,7 +1,7 @@
 from typing import Any, Optional
 import json
 import logging
-from request_util import GET, POST, PATCH, PUT
+from .request_util import GET, POST, PATCH, PUT
 from urllib.parse import urlparse
 
 

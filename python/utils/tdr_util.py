@@ -4,18 +4,20 @@ import logging
 import requests
 import re
 from urllib.parse import unquote
-from request_util import GET, POST, DELETE
 import time
 import sys
 from schema import SchemaError
-from tdr_api_schema.create_dataset_schema import create_dataset_schema
-from tdr_api_schema.update_dataset_schema import update_schema
-from general_utils import GCP, AZURE
 from dateutil import parser
 from dateutil.parser import ParserError
 import pandas as pd
 import numpy as np
-from terra_util import Terra, TerraWorkspace
+
+from .request_util import GET, POST, DELETE
+from .tdr_api_schema.create_dataset_schema import create_dataset_schema
+from .tdr_api_schema.update_dataset_schema import update_schema
+from .general_utils import GCP, AZURE
+from .terra_util import Terra, TerraWorkspace
+
 from datetime import datetime, date
 import pytz
 
