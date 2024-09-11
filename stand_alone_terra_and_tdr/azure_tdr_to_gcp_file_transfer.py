@@ -32,7 +32,7 @@ def get_args() -> Namespace:
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-op", "--bucket_output_path", required=False,
                         help="Directory to upload files to within google bucket, cannot be used alongside retain_path_structure option")
-    group.add_argument("-rps", "--retain_path_structure", required=False, default=False,
+    group.add_argument("-rps", "--retain_path_structure", required=False, default=False, action='store_true',
                         help="Option to keep path structure set in TDR from path attribute")
     return parser.parse_args()
 
@@ -75,7 +75,7 @@ class DownloadAzBlob:
         download_output = self.run_az_copy(blob_path=blob_path_with_token, output_path=output_path)
         output_list = download_output.stdout.decode('utf-8').splitlines()
         json_list = [json.loads(obj) for obj in output_list]
-        return output_list
+        return json_list
 
 
 def format_download_output(output_list: list):
@@ -100,19 +100,22 @@ if __name__ == "__main__":
     download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
     for file in file_list:
         access_url = file['fileDetail']['accessUrl']
-        file_download = download_client.run(blob_path=access_url ,output_path='/tmp/')
-        file_download.stdout.split(',')
-        breakpoint()
+        download_path = f"/tmp/{Path(access_url).name}"
+        file_download = download_client.run(blob_path=access_url ,output_path=download_path)
         file_name = Path(access_url).name
+        #construct upload path
         if args.retain_path_structure:
             gcp_upload_path = file['path']
+        elif args.bucket_output_path:
+            formatted_path = Path(args.bucket_output_path)/file_name 
+            gcp_upload_path = str(formatted_path)
         else:
-            output_path = f"/tmp/{file_name}"
-            gcp_upload_path = args.bucket_output_path if args.bucket_output_path else file_name
+            gcp_upload_path = file_name
+        breakpoint()
         logging.info(f"Uploading {file_name} to {gcp_upload_path}")
         upload_blob = gcp_bucket.blob(gcp_upload_path)
-        upload_blob.upload_from_filename(output_path)
+        upload_blob.upload_from_filename(download_path)
         #cleanup file beore next iteration
-        Path(output_path).unlink()
+        Path(download_path).unlink()
 
         
