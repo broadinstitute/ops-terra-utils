@@ -1,42 +1,40 @@
-FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine
+FROM python:3.11.9
 
-
-ARG PYTHON_VERSION=3.11.9
 
 USER root
+# This makes it so pip runs as root, not the user.
 ENV PIP_USER=false
 ENV PIP_ROOT_USER_ACTION=ignore
 
 # install build dependencies and needed tools
-RUN apk update 
-RUN apk add \
+RUN apt-get update 
+RUN apt-get install -yq --no-install-recommends \
     wget \
     curl \
     gcc \
-    python3 --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main \ 
-    py3-pip \ 
+    g++ \ 
+    python3 \ 
+    python3-pip \
+    sudo \ 
     make \
     dpkg \
+    apt-transport-https \ 
     which \
-    bash \ 
     ca-certificates \ 
-    zlib-dev \
-    libffi-dev \
-    openssl-dev \
-    musl-dev
-
-RUN ln -sf python3 /usr/bin/python
-
-
-RUN pip3 install --break-system-packages --no-cache --upgrade pip setuptools 
-         
-
+    gnupg 
 
 COPY requirements.txt /etc/terra-docker/
 COPY stand_alone_terra_and_tdr/ /etc/terra_utils
 
-RUN pip install --break-system-packages --no-cache-dir --upgrade pip \
-  && pip install --break-system-packages --no-cache-dir --upgrade -r /etc/terra-docker/requirements.txt
+
+RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+RUN sudo apt-get update && sudo apt-get install google-cloud-cli -yq
+
+ENV PATH /usr/local/bin:$PATH
+
+RUN sudo pip3 install --upgrade pip\
+  && sudo pip3 install --upgrade -r /etc/terra-docker/requirements.txt
 
 #install azcopy
 RUN curl -s -L https://azcopyvnext.azureedge.net/releases/release-10.24.0-20240326/azcopy_linux_amd64_10.24.0.tar.gz | tar xvzf - --strip-components=1 -C /usr/local/bin/ azcopy_linux_amd64_10.24.0/azcopy

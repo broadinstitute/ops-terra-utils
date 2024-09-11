@@ -1,10 +1,12 @@
-FROM us.gcr.io/broad-dsp-gcr-public/terra-jupyter-base:latest
+FROM us.gcr.io/broad-dsp-gcr-public/terra-jupyter-python:1.1.5
+
 
 USER root
 
 ENV AZCOPY_BUFFER_GB: 2
 ENV AZCOPY_CONCURRENCY_VALUE: 4
 
+ENV HTSLIB_CONFIGURE_OPTIONS="--enable-gcs"
 
 
 COPY requirements.txt /etc/terra-docker/
@@ -26,6 +28,11 @@ ENV GPG_TTY=$(tty)
 
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && apt-get update -y && apt-get install google-cloud-cli -y
 
+
+ENV USER ops_svc
+USER $USER
 ENV PIP_USER=true
 
-USER $USER
+ENV TF_ENABLE_ONEDNN_OPTS=1
+
+ENTRYPOINT ["/opt/conda/bin/jupyter", "notebook"]

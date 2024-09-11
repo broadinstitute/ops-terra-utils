@@ -19,12 +19,12 @@ services:
     ports:
       - 8080:80
     entrypoint: /bin/sh
-  ops-toolbox-alpine:
+  ops-toolbox-slim:
     <<: *env
     # for dev
     build:
-      dockerfile: ./ops_docker_utils_alpine/Dockerfile  
-    container_name: ops_terra_utils_alpine
+      dockerfile: ./ops_docker_utils_slim/Dockerfile  
+    container_name: ops_terra_utils_slim
     stdin_open: true
     tty: true
     ports:
