@@ -1,24 +1,30 @@
 version: 1.2
 workflows:
-  - name: copy_dataset_to_new_billing_profile
+  - name: CopyDatasetToNewBillingProfile
     subclass: WDL
     primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/copy_dataset_to_new_billing_profile.wdl
     testParameterFiles:
       - /stand_alone_terra_and_tdr/wdl/copy_dataset_to_new_billing_profile.wdl
 
-  - name: gcp_workspace_to_dataset_creation_and_ingest
+  - name: GCPWorkspaceTODatasetCreationAndIngest
     subclass: WDL
     primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/gcp_workspace_to_dataset_creation_and_ingest.wdl
     testParameterFiles:
       - /stand_alone_terra_and_tdr/wdl/gcp_workspace_to_dataset_creation_and_ingest.wdl
 
-  - name: gcp_workspace_to_dataset_ingest
+  - name: GCPWorkspaceToDatasetIngest
     subclass: WDL
     primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/gcp_workspace_to_dataset_ingest.wdl
     testParameterFiles:
       - /stand_alone_terra_and_tdr/wdl/gcp_workspace_to_dataset_ingest.wdl
 
-  - name: get_files_not_dataset_metadata
+  - name: exportDataFromSnapshotToBucket
+    subclass: WDL
+    primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/exportDataFromSnapshot.wdl
+    testParameterFiles:
+      - /stand_alone_terra_and_tdr/wdl/exportDataFromSnapshot.wdl
+
+  - name: getFilesNotInDatasetMetadata
     subclass: WDL
     primaryDescriptorPath: /stand_alone_terra_and_tdr/wdl/get_files_not_dataset_metadata.wdl
     testParameterFiles:

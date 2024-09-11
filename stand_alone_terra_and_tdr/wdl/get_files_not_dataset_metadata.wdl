@@ -1,6 +1,6 @@
 version 1.0
 
-workflow {
+workflow GetFilesNotInDatasetMetadata {
     input {
         String dataset_id
         Int? max_retries
@@ -9,17 +9,17 @@ workflow {
 
     String docker_image = select_first([docker, "johnscira/test_docker_repo:latest"])
 
-    call get_files {
+    call GetFilesNotInDataset {
         input:
-            dataset_id=dataset_id,
-            max_retries=max_retries,
-            max_backoff_time=max_backoff_time,
-            docker_image=docker_image
+            dataset_id = dataset_id,
+            max_retries = max_retries,
+            max_backoff_time = max_backoff_time,
+            docker_image = docker_image
     }
 
 }
 
-task get_files {
+task GetFilesNotInDataset {
     input {
         String dataset_id
         Int? max_retries
