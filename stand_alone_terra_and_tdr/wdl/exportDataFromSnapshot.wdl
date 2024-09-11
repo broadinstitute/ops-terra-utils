@@ -29,8 +29,8 @@ workflow ExportDataFromSnapshotToBucket {
     scatter (line in mapping_info) {
         call gcp_utils.CopyGCPFile
             input:
-                source_file_path = mapping_info[0]
-                destination_file_path = mapping_info[1]
+                source_file_path = line[0]
+                destination_file_path = line[1]
     }
 
 }
