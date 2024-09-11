@@ -12,7 +12,7 @@ workflow ExportDataFromSnapshotToBucket {
         String? docker
     }
 
-    String docker_image = select_first([docker, "johnscira/test_docker_repo:latest"])
+    String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
     call GetFileMapping {
         input:
@@ -24,7 +24,7 @@ workflow ExportDataFromSnapshotToBucket {
             docker_image = docker_image
     }
 
-    call gcp_utils.CopyGCPSourceToDestinationFromMappingTsv
+    call gcp_utils.CopyGCPSourceToDestinationFromMappingTsv {
         input:
             mapping_tsv = GetFileMapping.source_destination_mapping_file
     }

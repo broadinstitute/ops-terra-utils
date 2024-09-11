@@ -12,7 +12,7 @@ workflow copy_to_new_billing_profile {
 		String? docker_name
 	}
 
-	String docker = select_first([docker_name, "johnscira/test_docker_repo:latest"])
+	String docker = select_first([docker_name, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
 
 	call run_copy_to_new_billing_profile {
