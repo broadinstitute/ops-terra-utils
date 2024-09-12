@@ -10,7 +10,7 @@ workflow CopyGCPSourceToDestinationFromMappingTsv {
     scatter (line in mapping_info) {
         call CopyGCPFiles {
             input:
-                source_file_path = line[0]
+                source_file_path = line[0],
                 destination_file_path = line[1]
         }
     }
