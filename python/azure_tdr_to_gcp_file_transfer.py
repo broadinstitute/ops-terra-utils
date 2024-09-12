@@ -4,7 +4,9 @@ from google.cloud import storage
 import google.cloud.logging
 
 from argparse import ArgumentParser, Namespace
-from utils import TDR, RunRequest, Token
+from utils.tdr_util import TDR
+from utils.request_util import RunRequest
+from utils.token_util import Token
 from datetime import datetime, timedelta, timezone
 import logging
 import json

@@ -1,9 +1,13 @@
 """Take in billing profile and dataset and recreate the dataset in a new billing profile."""
 
-from utils import BatchIngest, TDR, RunRequest, Token, GCP
+from utils.tdr_util import BatchIngest, TDR
+from utils.request_util import RunRequest
+from utils.token_util import Token
+from utils.general_utils import GCP
 import logging
-import json, sys
-from argparse import ArgumentParser
+import json
+import sys
+from argparse import ArgumentParser, Namespace
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -13,7 +17,7 @@ DEFAULT_WAITING_TIME_POLL = 120
 DEFAULT_BATCH_SIZE = 500
 
 
-def get_args():
+def get_args() -> Namespace:
     parser = ArgumentParser(description="""Copy dataset to new billing profile""")
     parser.add_argument("--new_billing_profile", required=True)
     parser.add_argument("--orig_dataset_id", required=True)

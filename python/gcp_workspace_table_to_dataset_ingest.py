@@ -1,15 +1,10 @@
 import logging
 from argparse import ArgumentParser
-
-from utils import (
-    TerraWorkspace,
-    TDR, RunRequest,
-    Token,
-    ConvertTerraTableInfoForIngest,
-    FilterOutSampleIdsAlreadyInDataset,
-    GCP,
-    BatchIngest
-)
+from utils.general_utils import GCP
+from utils.terra_util import TerraWorkspace
+from utils.tdr_util import TDR, ConvertTerraTableInfoForIngest, FilterOutSampleIdsAlreadyInDataset, BatchIngest
+from utils.token_util import Token
+from utils.request_util import RunRequest
 
 
 logging.basicConfig(

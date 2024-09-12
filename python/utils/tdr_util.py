@@ -1,62 +1,26 @@
-# If Using azure then
-#   pip install azure-identity
-#   pip install azure-storage-blob
-#   pip install wds-client
-
-# If using google cloud then
-#   pip install google-cloud-storage
-
-
-# pip install python-dateutil
-# pip install backoff
-# pip install schema
-
-# If getting azure token use:
-#  pip install azure-identity azure-mgmt-resource
-#     !az login --identity --allow-no-subscriptions
-#     cli_token = !az account get-access-token | jq .accessToken
-#     azure_token = cli_token[0].replace('"', '')
-
-# To get gcp token if doing locally run:
-#   pip install google-auth google-auth-httplib2 google-auth-oauthlib ?
-#    gcloud auth application-default print-access-token
-#
-
-import requests
-import backoff
+from typing import Any, Optional
 import json
-import pytz
-import os
 import logging
-import time
+import requests
 import re
-import httplib2
-import base64
+from urllib.parse import unquote
+import time
 import sys
-from schema import Schema, And, Use, Optional, SchemaError
-
-
+from schema import SchemaError
+from dateutil import parser
+from dateutil.parser import ParserError
 import pandas as pd
 import numpy as np
 
-from tdr_api_schema.create_dataset_schema import create_dataset_schema
-from tdr_api_schema.update_dataset_schema import update_schema
+from .request_util import GET, POST, DELETE
+from .tdr_api_schema.create_dataset_schema import create_dataset_schema
+from .tdr_api_schema.update_dataset_schema import update_schema
+from .general_utils import GCP, AZURE
+from .terra_util import Terra, TerraWorkspace
 
-from urllib.parse import urlparse, unquote
-from typing import Any, Optional
-from datetime import datetime, timedelta, date
-from dateutil import parser
-from dateutil.parser import ParserError
+from datetime import datetime, date
+import pytz
 
-
-GCP = 'gcp'
-AZURE = 'azure'
-
-GET = 'get'
-POST = 'post'
-PUT = 'put'
-PATCH = 'patch'
-DELETE = 'delete'
 
 # Used when creating a new dataset
 FILE_INVENTORY_DEFAULT_SCHEMA = {
@@ -112,148 +76,6 @@ FILE_INVENTORY_DEFAULT_SCHEMA = {
 }
 
 
-class Token:
-    def __init__(self, cloud: Optional[str] = None, token_file: Optional[str] = None):
-        self.cloud = cloud
-        self.expiry = None
-        self.token_string = None
-        # If provided with a file just use the contents of file
-        if token_file:
-            self.token_file = token_file
-            with open(self.token_file) as f:
-                self.token_string = f.read().rstrip()
-        else:
-            self.token_file = None
-            # If not provided with a file must authenticate with either google or azure python libraries
-            if self.cloud == GCP:
-                # Only import libraries if needed
-                from oauth2client.client import GoogleCredentials
-                self.credentials = GoogleCredentials.get_application_default()
-                self.credentials = self.credentials.create_scoped(
-                    [
-                        "https://www.googleapis.com/auth/userinfo.profile",
-                        "https://www.googleapis.com/auth/userinfo.email",
-                        "https://www.googleapis.com/auth/devstorage.full_control"
-                    ]
-                )
-            elif self.cloud == AZURE:
-                # Only import libraries if needed
-                from azure.identity import DefaultAzureCredential
-                self.credentials = DefaultAzureCredential()
-                self.az_token = self.credentials.get_token(
-                    "https://management.azure.com/.default")
-            else:
-                raise ValueError(f"Cloud {self.cloud} not supported. Must be {GCP} or {AZURE}")
-
-    def _get_gcp_token(self) -> str:
-        # Refresh token if it has not been set or if it is expired or close to expiry
-        if not self.token_string or not self.expiry or self.expiry < datetime.now(pytz.UTC) + timedelta(minutes=5):
-            http = httplib2.Http()
-            self.credentials.refresh(http)
-            self.token_string = self.credentials.get_access_token().access_token
-            # Set expiry to use UTC since google uses that timezone
-            self.expiry = self.credentials.token_expiry.replace(tzinfo=pytz.UTC)
-            # Convert expiry time to EST for logging
-            est_expiry = self.expiry.astimezone(pytz.timezone('US/Eastern'))
-            logging.info(f"New token expires at {est_expiry} EST")
-        return self.token_string
-
-    def _get_az_token(self) -> str:
-        # This is not working... Should also check about timezones once it does work
-        if not self.token_string or not self.expiry or self.expiry < datetime.now() - timedelta(minutes=10):
-            self.az_token = self.credentials.get_token(
-                "https://management.azure.com/.default")
-            self.token_string = self.az_token.token
-            self.expiry = datetime.fromtimestamp(self.az_token.expires_on)
-        return self.token_string
-
-    def get_token(self) -> str:
-        # If token file provided then always return contents
-        if self.token_file:
-            return self.token_string
-        elif self.cloud == GCP:
-            return self._get_gcp_token()
-        else:
-            return self._get_az_token()
-
-
-class RunRequest:
-    def __init__(self, token: Any, max_retries: int = 5, max_backoff_time: int = 900):
-        self.max_retries = max_retries
-        self.max_backoff_time = max_backoff_time
-        self.token = token
-
-    @staticmethod
-    def _create_backoff_decorator(max_tries: int, factor: int, max_time: int) -> Any:
-        """Create backoff decorator so we can pass in max_tries."""
-        return backoff.on_exception(
-            backoff.expo,
-            requests.exceptions.RequestException,
-            max_tries=max_tries,
-            factor=factor,
-            max_time=max_time
-        )
-
-    def run_request(self, uri: str, method: str, data: Any = None, params: Optional[dict] = None,
-                    factor: int = 15, content_type: Optional[str] = None,) -> requests.Response:
-        """Run request."""
-        # Create a custom backoff decorator with the provided parameters
-        backoff_decorator = self._create_backoff_decorator(
-            max_tries=self.max_retries,
-            factor=factor,
-            max_time=self.max_backoff_time
-        )
-
-        # Apply the backoff decorator to the actual request execution
-        @backoff_decorator
-        def _make_request() -> requests.Response:
-            if method == GET:
-                response = requests.get(
-                    uri,
-                    headers=self._create_headers(content_type=content_type),
-                    params=params
-                )
-            elif method == POST:
-                response = requests.post(
-                    uri,
-                    headers=self._create_headers(content_type=content_type),
-                    data=data
-                )
-            elif method == DELETE:
-                response = requests.delete(
-                    uri,
-                    headers=self._create_headers(content_type=content_type)
-                )
-            elif method == PATCH:
-                response = requests.patch(
-                    uri,
-                    headers=self._create_headers(content_type=content_type),
-                    data=data
-                )
-            elif method == PUT:
-                response = requests.put(
-                    uri,
-                    headers=self._create_headers(content_type=content_type)
-                )
-            else:
-                raise ValueError(f"Method {method} is not supported")
-            if 300 <= response.status_code or response.status_code < 200:
-                print(response.text)
-                response.raise_for_status()  # Raise an exception for non-200 status codes
-            return response
-
-        return _make_request()
-
-    def _create_headers(self, content_type: Optional[str] = None) -> dict:
-        """Create headers for API calls."""
-        self.token.get_token()
-        headers = {"Authorization": f"Bearer {self.token.token_string}",
-                   "accept": "application/json"}
-        if content_type:
-            headers["Content-Type"] = content_type
-        return headers
-
-
 class TDR:
     TDR_LINK = "https://data.terra.bio/api/repository/v1"
 
@@ -294,16 +116,15 @@ class TDR:
         all_files = []
 
         logging.info(f"Getting all files in dataset {dataset_id} in batches of {limit}")
-        """
         while True:
             logging.info(f"Retrieving {(batch -1) * limit} to {batch * limit} files in dataset")
-            #uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files?offset={offset}&limit={limit}"
-            uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files"
+            uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files?offset={offset}&limit={limit}"
             response = self.request_util.run_request(uri=uri, method=GET)
             files = json.loads(response.text)
 
             # If no more files, break the loop
             if not files:
+                logging.info(f"No more files to retrieve, found {len(all_files)} total files in dataset {dataset_id}")
                 break
 
             all_files.extend(files)
@@ -311,11 +132,13 @@ class TDR:
             offset += limit
             batch += 1
         return all_files
-        """
-        uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files"
-        response = self.request_util.run_request(uri=uri, method=GET)
-        files = json.loads(response.text)
-        return files
+
+    def create_file_dict(self, dataset_id: str, limit: int = 1000) -> dict:
+        """Create a dictionary of all files in a dataset where key is the file uuid."""
+        return {
+            file_dict['fileId']: file_dict
+            for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
+        }
 
     def get_sas_token(self, snapshot_id: str = "", dataset_id: str = "") -> dict:
         if snapshot_id:
@@ -410,6 +233,13 @@ class TDR:
         response = self.request_util.run_request(uri=uri, method=GET)
         return json.loads(response.text)
 
+    def get_table_schema_info(self, dataset_id: str, table_name: str) -> dict:
+        """get schema information on one table within dataste"""
+        dataset_info = self.get_data_set_info(dataset_id=dataset_id, info_to_include=["SCHEMA"])
+        for table in dataset_info["schema"]["tables"]:
+            if table["name"] == table_name:
+                return table
+
     def get_job_result(self, job_id: str) -> dict:
         """retrieveJobResult"""
         uri = f"{self.TDR_LINK}/jobs/{job_id}/result"
@@ -427,8 +257,7 @@ class TDR:
         )
         return json.loads(response.text)
 
-    def get_data_set_table_metrics(self, dataset_id: str, target_table_name: str, query_limit: int = 1000) -> list[
-        dict]:
+    def get_data_set_table_metrics(self, dataset_id: str, target_table_name: str, query_limit: int = 1000) -> list[dict]:
         """Use yield data_set_metrics and get all metrics returned in one list"""
         return [
             metric
@@ -618,204 +447,6 @@ class TDR:
         return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
 
-class Terra:
-    TERRA_LINK = "https://api.firecloud.org/api"
-
-    def __init__(self, request_util: Any):
-        self.request_util = request_util
-
-    def add_user_to_group(self, group: str, email: str, role: str = "member") -> None:
-        url = f"{self.TERRA_LINK}/groups/{group}/{role}/{email}"
-        self.request_util.run_request(
-            uri=url,
-            method=PUT
-        )
-        logging.info(f"Added {email} to group {group} as {role}")
-
-
-class TerraWorkspace:
-    TERRA_LINK = "https://api.firecloud.org/api"
-    LEONARDO_LINK = "https://leonardo.dsde-prod.broadinstitute.org/api"
-    WORKSPACE_LINK = "https://workspace.dsde-prod.broadinstitute.org/api/workspaces/v1"
-
-    def __init__(self, billing_project: str, workspace_name: str, request_util: Any):
-        self.billing_project = billing_project
-        self.workspace_name = workspace_name
-        self.workspace_id = None
-        self.resource_id = None
-        self.storage_container = None
-        self.bucket = None
-        self.wds_url = None
-        self.account_url = None
-        self.request_util = request_util
-
-    def __repr__(self) -> str:
-        return f"{self.billing_project}/{self.workspace_name}"
-
-    def _yield_all_entity_metrics(self, entity: str, total_entities_per_page: int = 40000) -> Any:
-        """Yield all entity metrics from workspace."""
-        url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/entityQuery/{entity}?pageSize={total_entities_per_page}"
-        response = self.request_util.run_request(
-            uri=url,
-            method=GET,
-            content_type='application/json'
-        )
-        first_page_json = response.json()
-        yield first_page_json
-        total_pages = first_page_json["resultMetadata"]["filteredPageCount"]
-        logging.info(
-            f"Looping through {total_pages} pages of data")
-
-        for page in range(2, total_pages + 1):
-            logging.info(f"Getting page {page} of {total_pages}")
-            next_page = self.request_util.run_request(
-                uri=url,
-                method=GET,
-                content_type='application/json',
-                params={"page": page}
-            )
-            yield next_page.json()
-
-    def get_workspace_info(self) -> dict:
-        """Get workspace info."""
-        url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}"
-        logging.info(
-            f"Getting workspace ID for {self.billing_project}/{self.workspace_name}")
-        response = self.request_util.run_request(uri=url, method=GET)
-        return json.loads(response.text)
-
-    def _set_resource_id_and_storage_container(self) -> None:
-        """Get resource ID and storage container."""
-        url = f"{self.WORKSPACE_LINK}/{self.workspace_id}/resources?offset=0&limit=10&resource=AZURE_STORAGE_CONTAINER"
-        logging.info(
-            f"Getting resource ID for {self.billing_project}/{self.workspace_name}")
-        response = self.request_util.run_request(uri=url, method=GET)
-        for resource_entry in response.json()["resources"]:
-            storage_container_name = resource_entry["resourceAttributes"][
-                "azureStorageContainer"]["storageContainerName"]
-            # Check if storage container name is sc- and set resource ID and storage_container_name as bucket
-            if storage_container_name.startswith("sc-"):
-                self.resource_id = resource_entry["metadata"]["resourceId"]
-                self.storage_container = storage_container_name
-                return None
-
-        raise ValueError(
-            f"No resource ID found for {self.billing_project}/{self.workspace_name} - {self.workspace_id}: {json.dumps(response.json(), indent=4)}"
-        )
-
-    def set_azure_terra_variables(self) -> None:
-        """Get all needed variables and set it for the class"""
-        workspace_info = self.get_workspace_info()
-        self.workspace_id = workspace_info["workspace"]["workspaceId"]
-        self._set_resource_id_and_storage_container()
-        self._set_account_url()
-        self._set_wds_url()
-
-    def _set_wds_url(self) -> None:
-        """"Get url for wds."""
-        uri = f"{self.LEONARDO_LINK}/apps/v2/{self.workspace_id}?includeDeleted=false"
-        logging.info(
-            f"Getting WDS URL for {self.billing_project}/{self.workspace_name}")
-        response = self.request_util.run_request(uri=uri, method=GET)
-        for entries in json.loads(response.text):
-            if entries['appType'] == 'WDS' and entries['proxyUrls']['wds'] is not None:
-                self.wds_url = entries['proxyUrls']['wds']
-                return None
-        raise ValueError(
-            f"No WDS URL found for {self.billing_project}/{self.workspace_name} - {self.workspace_id}")
-
-    def get_gcp_workspace_metrics(self, entity_type: str) -> list[dict]:
-        """Get metrics for entity type in workspace."""
-        results = []
-        logging.info(
-            f"Getting {entity_type} metadata for {self.billing_project}/{self.workspace_name}")
-        full_entity_generator = self._yield_all_entity_metrics(
-            entity=entity_type
-        )
-        for page in full_entity_generator:
-            results.extend(page["results"])
-        return results
-
-    def _get_sas_token_json(self, sas_expiration_in_secs: int) -> dict:
-        """Get SAS token JSON."""
-        url = f"{self.WORKSPACE_LINK}/{self.workspace_id}/resources/controlled/azure/storageContainer/{self.resource_id}/getSasToken?sasExpirationDuration={str(sas_expiration_in_secs)}"
-        response = self.request_util.run_request(uri=url, method=POST)
-        return json.loads(response.text)
-
-    def _set_account_url(self) -> None:
-        """Set account URL for Azure workspace."""
-        # Can only get account URL after setting resource ID and from getting a sas token
-        sas_token_json = self._get_sas_token_json(sas_expiration_in_secs=1)
-        parsed_url = urlparse(sas_token_json["url"])
-        # Set url to be https://account_name.blob.core.windows.net
-        self.account_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-
-    def retrieve_sas_token(self, sas_expiration_in_secs: int) -> str:
-        """Retrieve SAS token for workspace."""
-        sas_response_json = self._get_sas_token_json(
-            sas_expiration_in_secs=sas_expiration_in_secs)
-        return sas_response_json["token"]
-
-    def set_workspace_id(self, workspace_info: dict) -> None:
-        """Set workspace ID."""
-        self.workspace_id = workspace_info["workspace"]["workspaceId"]
-
-    def get_workspace_entity_info(self, use_cache: bool = True) -> dict:
-        """Get workspace entity info."""
-        use_cache = 'true' if use_cache else 'false'
-        url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/entities?useCache={use_cache}"
-        response = self.request_util.run_request(uri=url, method=GET)
-        return json.loads(response.text)
-
-    def update_user_acl(
-            self, email: str, access_level: str, can_share: bool = False, can_compute: bool = False
-    ) -> dict:
-        url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl"
-        payload = {
-            "email": email,
-            "accessLevel": access_level,
-            "canShare": can_share,
-            "canCompute": can_compute,
-        }
-        logging.info(
-            f"Updating user {email} to {access_level} in workspace {self.billing_project}/{self.workspace_name}")
-        response = self.request_util.run_request(
-            uri=url,
-            method=PATCH,
-            content_type='application/json',
-            data="[" + json.dumps(payload) + "]"
-        )
-        request_json = response.json()
-        if request_json["usersNotFound"]:
-            # Will be a list of one user
-            user_not_found = request_json["usersNotFound"][0]
-            raise Exception(
-                f'The user {user_not_found["email"]} was not found and access was not updated'
-            )
-        return request_json
-
-    def create_workspace_attributes_ingest_dict(self, workspace_attributes: Optional[dict] = None) -> list[dict]:
-        """Create ingest dictionary for workspace attributes. If attributes passed in should JUST be attributes
-        and not whole workspace info."""
-        # If not provided then call API to get it
-        if not workspace_attributes:
-            workspace_attributes = self.get_workspace_info()['workspace']['attributes']
-        ingest_dict = []
-        for key, value in workspace_attributes.items():
-            # If value is dict just use 'items' as value
-            if isinstance(value, dict):
-                value = value.get("items")
-            # If value is list convert to comma seperated string
-            if isinstance(value, list):
-                value = ', '.join(value)
-            ingest_dict.append(
-                {
-                    'attribute': key,
-                    'value': str(value) if value else None
-                }
-            )
-        return ingest_dict
-
 
 class MonitorTDRJob:
     def __init__(self, tdr: TDR, job_id: str, check_interval: int):
@@ -879,132 +510,6 @@ class StartIngest:
         ingest_response = self.tdr.ingest_dataset(
             dataset_id=self.dataset_id, data=ingest_request)
         return ingest_response["id"]
-
-
-class FilterOutSampleIdsAlreadyInDataset:
-    def __init__(self, ingest_metrics: list[dict], dataset_id: str, tdr: TDR, target_table_name: str,
-                 filter_entity_id: str):
-        self.ingest_metrics = ingest_metrics
-        self.tdr = tdr
-        self.dataset_id = dataset_id
-        self.target_table_name = target_table_name
-        self.filter_entity_id = filter_entity_id
-
-    def run(self) -> list[dict]:
-        # Get all sample ids that already exist in dataset
-        logging.info(
-            f"Getting all {self.filter_entity_id} that already exist in table {self.target_table_name} in dataset {self.dataset_id}")
-        data_set_sample_ids = self.tdr.get_data_set_sample_ids(
-            dataset_id=self.dataset_id,
-            target_table_name=self.target_table_name,
-            entity_id=self.filter_entity_id
-        )
-        # Filter out rows that already exist in dataset
-        filtered_ingest_metrics = [
-            row
-            for row in self.ingest_metrics
-            if str(row[self.filter_entity_id]) not in data_set_sample_ids
-        ]
-        if len(filtered_ingest_metrics) < len(self.ingest_metrics):
-            logging.info(
-                f"Filtered out {len(self.ingest_metrics) - len(filtered_ingest_metrics)} rows that already exist in dataset")
-            if filtered_ingest_metrics:
-                return filtered_ingest_metrics
-            else:
-                logging.info(
-                    "All rows filtered out as they all exist in dataset, nothing to ingest")
-                return []
-        else:
-            logging.info(
-                "No rows were filtered out as they all do not exist in dataset")
-            return filtered_ingest_metrics
-
-
-class AzureBlobDetails:
-    def __init__(self, account_url: str, sas_token: str, container_name: str):
-        from azure.storage.blob import BlobServiceClient
-        self.account_url = account_url
-        self.sas_token = sas_token
-        self.container_name = container_name
-        self.blob_service_client = BlobServiceClient(
-            account_url=self.account_url, credential=self.sas_token)
-
-    def get_blob_details(self, max_per_page: int = 500) -> list[dict]:
-        container_client = self.blob_service_client.get_container_client(
-            self.container_name)
-        details = []
-
-        blob_list = container_client.list_blobs(results_per_page=max_per_page)
-        page = blob_list.by_page()
-
-        page_count = 0
-        for blob_page in page:
-            page_count += 1
-            logging.info(
-                f"Getting page {page_count} of max {max_per_page} blobs")
-            for blob in blob_page:
-                blob_client = container_client.get_blob_client(blob)
-                props = blob_client.get_blob_properties()
-                if not blob.name.endswith('/'):
-                    md5_hash = base64.b64encode(props.content_settings.content_md5).decode(
-                        'utf-8') if props.content_settings.content_md5 else ""
-                    full_path = blob_client.url.replace(
-                        f'?{self.sas_token}', '')
-                    details.append(
-                        {
-                            'file_name': blob.name,
-                            'file_path': full_path,
-                            'content_type': props.content_settings.content_type,
-                            'file_extension': os.path.splitext(blob.name)[1],
-                            'size_in_bytes': props.size,
-                            'md5_hash': md5_hash
-                        }
-                    )
-        return details
-
-
-class GCPCloudFunctions:
-    """List contents of a GCS bucket. Does NOT take in a token and auths as current user"""
-    def __init__(self, bucket_name: str):
-        from google.cloud import storage
-        from mimetypes import guess_type
-        self.bucket_name = bucket_name
-        self.client = storage.Client()
-
-    @staticmethod
-    def process_cloud_path(cloud_path: str) -> dict:
-        platform_prefix, remaining_url = str.split(str(cloud_path), '//')
-        bucket_name = str.split(remaining_url, '/')[0]
-        blob_name = "/".join(str.split(remaining_url, '/')[1:])
-
-        path_components = {'platform_prefix': platform_prefix, 'bucket': bucket_name, 'blob_url': blob_name}
-        return path_components
-
-    def list_bucket_contents(self, file_extensions_to_ignore: list[str] = [],
-                             file_strings_to_ignore: list[str] = []) -> list[dict]:
-        logging.info(f"Listing contents of bucket gs://{self.bucket_name}/")
-        bucket = self.client.get_bucket(self.bucket_name)
-        blobs = bucket.list_blobs()
-
-        file_list = []
-        for blob in blobs:
-            if blob.name.endswith(tuple(file_extensions_to_ignore)):
-                logging.info(f"Skipping file {blob.name}")
-                continue
-            if any(file_string in blob.name for file_string in file_strings_to_ignore):
-                logging.info(f"Skipping file {blob.name}")
-                continue
-            file_info = {
-                "name": os.path.basename(blob.name),
-                "path": blob.name,
-                "content_type": blob.content_type or guess_type(blob.name)[0] or "application/octet-stream",
-                "file_extension": os.path.splitext(blob.name)[1],
-                "size_in_bytes": blob.size,
-                "md5_hash": blob.md5_hash
-            }
-            file_list.append(file_info)
-        logging.info(f"Found {len(file_list)} files in bucket")
-        return file_list
 
 
 class ReformatMetricsForIngest:
@@ -1307,7 +812,7 @@ class BatchIngest:
                  waiting_time_to_poll: int = 60, sas_expire_in_secs: int = 3600, test_ingest: bool = False,
                  load_tag: Optional[str] = None,
                  dest_file_path_flat: bool = False, file_to_uuid_dict: Optional[dict] = None,
-                 schema_info: Optional[dict] = None):
+                 schema_info: Optional[dict] = None, skip_reformat: bool = False):
         self.ingest_metadata = ingest_metadata
         self.tdr = tdr
         self.target_table_name = target_table_name
@@ -1327,6 +832,8 @@ class BatchIngest:
         # Used if you want to provide schema info for tables to make sure values match.
         # Should be dict with key being column name and value being dict with datatype
         self.schema_info = schema_info
+        # Use if input is already formatted correctly for ingest
+        self.skip_reformat = skip_reformat
 
     def _reformat_metadata(self, metrics_batch: list[dict]) -> list[dict]:
         if self.cloud_type == AZURE:
@@ -1364,7 +871,10 @@ class BatchIngest:
                 f"Starting ingest batch {batch_number} of {total_batches} into table {self.target_table_name}")
             metrics_batch = self.ingest_metadata[i:i + self.batch_size]
 
-            reformatted_batch = self._reformat_metadata(metrics_batch)
+            if self.skip_reformat:
+                reformatted_batch = metrics_batch
+            else:
+                reformatted_batch = self._reformat_metadata(metrics_batch)
 
             if self.load_tag:
                 load_tag = self.load_tag
@@ -1715,3 +1225,42 @@ class FilterAndBatchIngest:
                 file_to_uuid_dict=self.file_to_uuid_dict,
                 schema_info=self.schema_info
             ).run()
+
+
+class FilterOutSampleIdsAlreadyInDataset:
+    def __init__(self, ingest_metrics: list[dict], dataset_id: str, tdr: TDR, target_table_name: str,
+                 filter_entity_id: str):
+        self.ingest_metrics = ingest_metrics
+        self.tdr = tdr
+        self.dataset_id = dataset_id
+        self.target_table_name = target_table_name
+        self.filter_entity_id = filter_entity_id
+
+    def run(self) -> list[dict]:
+        # Get all sample ids that already exist in dataset
+        logging.info(
+            f"Getting all {self.filter_entity_id} that already exist in table {self.target_table_name} in dataset {self.dataset_id}")
+        data_set_sample_ids = self.tdr.get_data_set_sample_ids(
+            dataset_id=self.dataset_id,
+            target_table_name=self.target_table_name,
+            entity_id=self.filter_entity_id
+        )
+        # Filter out rows that already exist in dataset
+        filtered_ingest_metrics = [
+            row
+            for row in self.ingest_metrics
+            if str(row[self.filter_entity_id]) not in data_set_sample_ids
+        ]
+        if len(filtered_ingest_metrics) < len(self.ingest_metrics):
+            logging.info(
+                f"Filtered out {len(self.ingest_metrics) - len(filtered_ingest_metrics)} rows that already exist in dataset")
+            if filtered_ingest_metrics:
+                return filtered_ingest_metrics
+            else:
+                logging.info(
+                    "All rows filtered out as they all exist in dataset, nothing to ingest")
+                return []
+        else:
+            logging.info(
+                "No rows were filtered out as they all do not exist in dataset")
+            return filtered_ingest_metrics

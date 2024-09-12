@@ -4,21 +4,13 @@ import re
 from typing import Optional
 from datetime import datetime
 from argparse import ArgumentParser
-
-from utils import (
-    TerraWorkspace,
-    TDR,
-    RunRequest,
-    Token,
-    ConvertTerraTableInfoForIngest,
-    GCP,
-    Terra,
-    GetPermissionsForWorkspaceIngest,
-    FILE_INVENTORY_DEFAULT_SCHEMA,
-    SetUpTDRTables,
-    GCPCloudFunctions,
-    FilterAndBatchIngest
-)
+from utils.general_utils import GCP
+from utils.tdr_util import TDR, ConvertTerraTableInfoForIngest, SetUpTDRTables, GetPermissionsForWorkspaceIngest, \
+    FILE_INVENTORY_DEFAULT_SCHEMA, FilterAndBatchIngest
+from utils.request_util import RunRequest
+from utils.token_util import Token
+from utils.terra_util import TerraWorkspace, Terra
+from utils.gcp_utils import GCPCloudFunctions
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO

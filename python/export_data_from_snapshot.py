@@ -3,8 +3,10 @@ import logging
 import os.path
 from argparse import ArgumentParser
 from collections import Counter
-
-from utils import Token, RunRequest, TDR, GCP
+from utils.token_util import Token
+from utils.tdr_util import TDR
+from utils.request_util import RunRequest
+from utils.general_utils import GCP
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
