@@ -13,7 +13,7 @@ logging.basicConfig(
 CLOUD_TYPE = GCP
 MAX_RETRIES = 5
 MAX_BACKOFF_TIME = 5 * 60
-BATCH_SIZE_TO_LIST_FILES = 25000
+BATCH_SIZE_TO_LIST_FILES = 20000
 
 
 def get_args():
@@ -35,6 +35,13 @@ def get_args():
         "--delete_orphaned_files",
         action="store_true",
         help="Delete files that are not in the dataset metadata but exist in dataset"
+    )
+    parser.add_argument(
+        "--batch_size_to_list_files",
+        action="store",
+        type=int,
+        default=BATCH_SIZE_TO_LIST_FILES,
+        help=f"The batch size to query files in the dataset. Defaults to {BATCH_SIZE_TO_LIST_FILES}"
     )
 
     return parser.parse_args()
