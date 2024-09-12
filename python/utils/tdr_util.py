@@ -15,8 +15,8 @@ import numpy as np
 from .request_util import GET, POST, DELETE
 from .tdr_api_schema.create_dataset_schema import create_dataset_schema
 from .tdr_api_schema.update_dataset_schema import update_schema
-from .general_utils import GCP, AZURE
 from .terra_util import Terra, TerraWorkspace
+from . import GCP, AZURE  # import from __init__.py
 
 from datetime import datetime, date
 import pytz

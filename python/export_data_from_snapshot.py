@@ -6,7 +6,7 @@ from collections import Counter
 from utils.token_util import Token
 from utils.tdr_util import TDR
 from utils.request_util import RunRequest
-from utils.general_utils import GCP
+from utils import GCP
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO

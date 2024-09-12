@@ -1,5 +1,5 @@
 version 1.0
-import "../gcpUtils.wdl" as gcp_utils
+import "../utilities/gcpUtils.wdl" as gcp_utils
 
 
 workflow ExportDataFromSnapshotToBucket {
