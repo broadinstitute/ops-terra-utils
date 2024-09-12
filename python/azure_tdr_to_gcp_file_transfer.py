@@ -94,9 +94,9 @@ if __name__ == "__main__":
     export_info = {'endpoint': args.export_type, 'id': args.target_id}
 
     if args.export_type == 'dataset':
-        file_list = tdr_client.get_data_set_files(dataset_id=args.target_id)
+        file_list = tdr_client.get_data_set_files(dataset_id=args.target_id, batch_query=False)
     elif args.export_type == 'snapshot':
-        file_list = tdr_client.get_snapshot_files(snapshot_id=args.target_id)
+        file_list = tdr_client.get_files_from_snapshot(snapshot_id=args.target_id)
 
 
     download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
