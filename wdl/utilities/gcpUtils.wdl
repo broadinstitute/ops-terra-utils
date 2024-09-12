@@ -24,11 +24,11 @@ task CopyGCPFiles {
     }
 
     command <<<
-        gsutil cp source_file_path destination_file_path
+        gsutil cp ~{source_file_path} ~{destination_file_path}
     >>>
 
     runtime {
-        docker: "gcr.io/gcp-runtimes/ubuntu_16_0_4:latest"
+        docker: "gcr.io/google.com/cloudsdktool/cloud-sdk:latest"
     }
 
 }
