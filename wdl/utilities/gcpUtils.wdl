@@ -24,7 +24,7 @@ task CopyGCPFiles {
     }
 
     command <<<
-        gsutil cp source_file_path destination_file_path
+        gsutil cp ~{source_file_path} ~{destination_file_path}
     >>>
 
     runtime {
