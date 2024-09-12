@@ -28,7 +28,7 @@ task CopyGCPFiles {
     >>>
 
     runtime {
-        docker: "gcr.io/gcp-runtimes/ubuntu_16_0_4:latest"
+        docker: "gcr.io/google.com/cloudsdktool/cloud-sdk:305.0.0"
     }
 
 }
