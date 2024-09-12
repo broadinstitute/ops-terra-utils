@@ -56,8 +56,7 @@ if __name__ == "__main__":
     files_info = tdr.get_data_set_files(dataset_id=dataset_id, limit=BATCH_SIZE_TO_LIST_FILES)
     file_uuids = [file_dict['fileId'] for file_dict in files_info]
 
-    # Find any file uuids that are unique in file_uuids and all_dataset_file_uuids and return them and where
-    # they came from
+    # Find any file uuids that exist in the dataset but not in the metadata
     orphaned_file_uuids = list(set(file_uuids) - set(all_metadata_dataset_file_uuids))
     if orphaned_file_uuids:
         uuid_str = '\n'.join(orphaned_file_uuids)
