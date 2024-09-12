@@ -12,19 +12,19 @@ workflows:
     testParameterFiles:
       - /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
 
-  - name: terraWorkspaceTableIngest
+  - name: TerraWorkspaceTableIngest
     subclass: WDL
     primaryDescriptorPath: /wdl/TerraWorkspaceTableIngest/TerraWorkspaceTableIngest.wdl
     testParameterFiles:
       - /wdl/terraWorkspaceTableIngest.wdl
 
-  - name: exportDataFromSnapshotToBucket
+  - name: ExportDataFromSnapshotToBucket
     subclass: WDL
     primaryDescriptorPath: /wdl/ExportDataFromSnapshot/ExportDataFromSnapshot.wdl
     testParameterFiles:
       - /wdl/exportDataFromSnapshot.wdl
 
-  - name: getFilesNotInDatasetMetadata
+  - name: GetFilesNotInDatasetMetadata
     subclass: WDL
     primaryDescriptorPath: /wdl/GetFilesNotInDatasetMetadata/GetFilesNotInDatasetMetadata.wdl
     testParameterFiles:
