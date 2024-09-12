@@ -8,10 +8,11 @@ workflow CopyGCPSourceToDestinationFromMappingTsv {
     Array[Array[String]] mapping_info = read_tsv(mapping_tsv)
 
     scatter (line in mapping_info) {
-        call CopyGCPFiles
+        call CopyGCPFiles {
             input:
                 source_file_path = line[0]
                 destination_file_path = line[1]
+        }
     }
 
 }
