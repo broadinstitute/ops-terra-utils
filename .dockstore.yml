@@ -2,30 +2,30 @@ version: 1.2
 workflows:
   - name: CopyDatasetToNewBillingProfile
     subclass: WDL
-    primaryDescriptorPath: /wdl/copyDatasetToNewBillingProfile.wdl
+    primaryDescriptorPath: /wdl/CopyDatasetToNewBillingProfile/CopyDatasetToNewBillingProfile.wdl
     testParameterFiles:
       - /wdl/copyDatasetToNewBillingProfile.wdl
 
   - name: AnvilGcpWorkspaceToDatasetCreationAndIngest
     subclass: WDL
-    primaryDescriptorPath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
+    primaryDescriptorPath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
     testParameterFiles:
       - /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
 
   - name: terraWorkspaceTableIngest
     subclass: WDL
-    primaryDescriptorPath: /wdl/terraWorkspaceTableIngest.wdl
+    primaryDescriptorPath: /wdl/TerraWorkspaceTableIngest/TerraWorkspaceTableIngest.wdl
     testParameterFiles:
       - /wdl/terraWorkspaceTableIngest.wdl
 
   - name: exportDataFromSnapshotToBucket
     subclass: WDL
-    primaryDescriptorPath: /wdl/exportDataFromSnapshot.wdl
+    primaryDescriptorPath: /wdl/ExportDataFromSnapshot/ExportDataFromSnapshot.wdl
     testParameterFiles:
       - /wdl/exportDataFromSnapshot.wdl
 
   - name: getFilesNotInDatasetMetadata
     subclass: WDL
-    primaryDescriptorPath: /wdl/getFilesNotInDatasetMetadata.wdl
+    primaryDescriptorPath: /wdl/GetFilesNotInDatasetMetadata/GetFilesNotInDatasetMetadata.wdl
     testParameterFiles:
       - /wdl/getFilesNotInDatasetMetadata.wdl

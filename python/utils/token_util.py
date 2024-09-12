@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import httplib2
 import pytz
 import logging
-from .general_utils import GCP, AZURE
+from . import GCP, AZURE  # import from __init__.py
 
 
 class Token:

@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from utils.tdr_util import TDR
 from utils.request_util import RunRequest
 from utils.token_util import Token
-from utils.general_utils import GCP
+from utils import GCP
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO

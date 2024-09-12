@@ -3,7 +3,7 @@
 from utils.tdr_util import BatchIngest, TDR
 from utils.request_util import RunRequest
 from utils.token_util import Token
-from utils.general_utils import GCP
+from utils import GCP
 import logging
 import json
 import sys
