@@ -23,7 +23,7 @@ def get_args() -> Namespace:
     parser.add_argument("--orig_dataset_id", required=True)
     parser.add_argument("--ingest_batch_size", help=f"Batch size for ingest. Default to {DEFAULT_BATCH_SIZE}",
                         default=DEFAULT_BATCH_SIZE, type=int)
-    parser.add_argument("--update_strategy", options=["REPLACE", "APPEND", "UPDATE"], default="REPLACE")
+    parser.add_argument("--update_strategy", choices=["REPLACE", "APPEND", "UPDATE"], default="REPLACE")
     parser.add_argument("--new_dataset_name", help="If not provided, will use the same name as the original dataset")
     parser.add_argument("--waiting_time_to_poll", help=f"default to {DEFAULT_WAITING_TIME_POLL}",
                         default=DEFAULT_WAITING_TIME_POLL, type=int)
