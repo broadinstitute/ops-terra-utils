@@ -116,16 +116,15 @@ class TDR:
         all_files = []
 
         logging.info(f"Getting all files in dataset {dataset_id} in batches of {limit}")
-        """
         while True:
             logging.info(f"Retrieving {(batch -1) * limit} to {batch * limit} files in dataset")
-            #uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files?offset={offset}&limit={limit}"
-            uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files"
+            uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files?offset={offset}&limit={limit}"
             response = self.request_util.run_request(uri=uri, method=GET)
             files = json.loads(response.text)
 
             # If no more files, break the loop
             if not files:
+                logging.info(f"No more files to retrieve, found {len(all_files)} total files in dataset {dataset_id}")
                 break
 
             all_files.extend(files)
@@ -133,11 +132,13 @@ class TDR:
             offset += limit
             batch += 1
         return all_files
-        """
-        uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files"
-        response = self.request_util.run_request(uri=uri, method=GET)
-        files = json.loads(response.text)
-        return files
+
+    def create_file_dict(self, dataset_id: str, limit: int = 1000) -> dict:
+        """Create a dictionary of all files in a dataset where key is the file uuid."""
+        return {
+            file_dict['fileId']: file_dict
+            for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
+        }
 
     def get_sas_token(self, snapshot_id: str = "", dataset_id: str = "") -> dict:
         if snapshot_id:
@@ -232,6 +233,13 @@ class TDR:
         response = self.request_util.run_request(uri=uri, method=GET)
         return json.loads(response.text)
 
+    def get_table_schema_info(self, dataset_id: str, table_name: str) -> dict:
+        """get schema information on one table within dataste"""
+        dataset_info = self.get_data_set_info(dataset_id=dataset_id, info_to_include=["SCHEMA"])
+        for table in dataset_info["schema"]["tables"]:
+            if table["name"] == table_name:
+                return table
+
     def get_job_result(self, job_id: str) -> dict:
         """retrieveJobResult"""
         uri = f"{self.TDR_LINK}/jobs/{job_id}/result"
@@ -249,8 +257,7 @@ class TDR:
         )
         return json.loads(response.text)
 
-    def get_data_set_table_metrics(self, dataset_id: str, target_table_name: str, query_limit: int = 1000) -> list[
-        dict]:
+    def get_data_set_table_metrics(self, dataset_id: str, target_table_name: str, query_limit: int = 1000) -> list[dict]:
         """Use yield data_set_metrics and get all metrics returned in one list"""
         return [
             metric
@@ -805,7 +812,7 @@ class BatchIngest:
                  waiting_time_to_poll: int = 60, sas_expire_in_secs: int = 3600, test_ingest: bool = False,
                  load_tag: Optional[str] = None,
                  dest_file_path_flat: bool = False, file_to_uuid_dict: Optional[dict] = None,
-                 schema_info: Optional[dict] = None):
+                 schema_info: Optional[dict] = None, skip_reformat: bool = False):
         self.ingest_metadata = ingest_metadata
         self.tdr = tdr
         self.target_table_name = target_table_name
@@ -825,6 +832,8 @@ class BatchIngest:
         # Used if you want to provide schema info for tables to make sure values match.
         # Should be dict with key being column name and value being dict with datatype
         self.schema_info = schema_info
+        # Use if input is already formatted correctly for ingest
+        self.skip_reformat = skip_reformat
 
     def _reformat_metadata(self, metrics_batch: list[dict]) -> list[dict]:
         if self.cloud_type == AZURE:
@@ -862,7 +871,10 @@ class BatchIngest:
                 f"Starting ingest batch {batch_number} of {total_batches} into table {self.target_table_name}")
             metrics_batch = self.ingest_metadata[i:i + self.batch_size]
 
-            reformatted_batch = self._reformat_metadata(metrics_batch)
+            if self.skip_reformat:
+                reformatted_batch = metrics_batch
+            else:
+                reformatted_batch = self._reformat_metadata(metrics_batch)
 
             if self.load_tag:
                 load_tag = self.load_tag
