@@ -111,27 +111,8 @@ class TDR:
     "directoryDetail": null
 }
         """
-        offset = 0
-        batch = 1
-        all_files = []
-
-        logging.info(f"Getting all files in dataset {dataset_id} in batches of {limit}")
-        while True:
-            logging.info(f"Retrieving {(batch -1) * limit} to {batch * limit} files in dataset")
-            uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files?offset={offset}&limit={limit}"
-            response = self.request_util.run_request(uri=uri, method=GET)
-            files = json.loads(response.text)
-
-            # If no more files, break the loop
-            if not files:
-                logging.info(f"No more files to retrieve, found {len(all_files)} total files in dataset {dataset_id}")
-                break
-
-            all_files.extend(files)
-            # Increment the offset by limit for the next page
-            offset += limit
-            batch += 1
-        return all_files
+        uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files"
+        return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
     def create_file_dict(self, dataset_id: str, limit: int = 1000) -> dict:
         """Create a dictionary of all files in a dataset where key is the file uuid."""
@@ -432,6 +413,7 @@ class TDR:
 
             # If no more files, break the loop
             if not response:
+                logging.info(f"No more results to retrieve, found {len(metadata)} total records")
                 break
 
             metadata.extend(response)
