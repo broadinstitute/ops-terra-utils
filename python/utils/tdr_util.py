@@ -154,13 +154,22 @@ class TDR:
         # Return job id
         return json.loads(response.text)['id']
 
-    def delete_files(self, file_ids: list[str], dataset_id: str) -> None:
-        """Delete multiple files from a dataset and monitor delete jobs until completion."""
+    def delete_files(self, file_ids: list[str], dataset_id: str, submit_all_jobs_and_check_status_after: bool = False) -> None:
+        """Delete multiple files from a dataset and monitor delete jobs until completion.
+        If submit_all_jobs_and_check_status after then will only monitor completion after submitting all jobs"""
         logging.info(f"Deleting {len(file_ids)} files from dataset {dataset_id}")
+        job_ids = []
         for file_id in file_ids:
             job_id = self.delete_file(file_id=file_id, dataset_id=dataset_id)
-            # monitor job every 5 seconds until completion
-            MonitorTDRJob(tdr=self, job_id=job_id, check_interval=5).run()
+            job_ids.append(job_id)
+            # Only check job status if submit_all_jobs_and_check_status_after is False
+            if not submit_all_jobs_and_check_status_after:
+                # monitor job every 5 seconds until completion
+                MonitorTDRJob(tdr=self, job_id=job_id, check_interval=5).run()
+        # If submit_all_jobs_and_check_status_after is True then only check status after submitting all jobs
+        if submit_all_jobs_and_check_status_after:
+            for job_id in job_ids:
+                MonitorTDRJob(tdr=self, job_id=job_id, check_interval=5).run()
         logging.info(f"Successfully deleted {len(file_ids)} files from dataset {dataset_id}")
 
     def add_user_to_dataset(self, dataset_id: str, user: str, policy: str) -> None:
