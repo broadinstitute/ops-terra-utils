@@ -27,5 +27,6 @@ workflows:
   - name: GetAndDeleteOrphanedFilesFromDataset
     subclass: WDL
     primaryDescriptorPath: /wdl/GetAndDeleteOrphanedFilesFromDataset/GetAndDeleteOrphanedFilesFromDataset.wdl
+    readMePath: /wdl/GetAndDeleteOrphanedFilesFromDataset/README.md
     testParameterFiles:
       - /wdl/GetAndDeleteOrphanedFilesFromDataset/GetAndDeleteOrphanedFilesFromDataset.wdl

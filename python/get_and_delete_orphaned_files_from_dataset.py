@@ -70,8 +70,7 @@ if __name__ == "__main__":
         logging.info(f"Below are the {len(orphaned_file_uuids)} orphaned file UUIDs:\n{uuid_str}")
         if args.delete_orphaned_files:
             logging.info("Deleting orphaned files")
-            for file_uuid in orphaned_file_uuids:
-                tdr.delete_files(file_ids=orphaned_file_uuids, dataset_id=dataset_id)
+            tdr.delete_files(file_ids=orphaned_file_uuids, dataset_id=dataset_id, submit_all_jobs_and_check_status_after=True)
         else:
             logging.info("To delete orphaned files, run the script with --delete_orphaned_files flag")
     else:
