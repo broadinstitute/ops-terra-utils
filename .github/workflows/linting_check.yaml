@@ -1,17 +1,18 @@
 name: Perform linting checks
 
+
 on:
-    pull_request:
-      branches:
-        - main
-    workflow_dispatch:
+  pull_request:
+    branches:
+      - '*'
 
 jobs:
     lint:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
-            - name: Install modules
-              run: yarn
-            - name: Run ESLint
-              run: eslint . --ext .js,.jsx,.ts,.tsx
+            - uses: ls-lint/action@v2.2.3
+
+            - name: Lint with flake8
+              run: |
+                flake8 --max-line-length=122 .
