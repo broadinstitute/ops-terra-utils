@@ -1,7 +1,5 @@
 # WDL Input Overview
 
-# WDL Input Overview
-
 This WDL script searches through all tables of a specified dataset to collect file UUIDs that are referenced and then queries the dataset for all files within it. Any file UUID that exists in the dataset but is not referenced in a table is considered an orphaned file.
 
 ## Inputs Table:
