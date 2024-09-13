@@ -1,2 +1,3 @@
 ls:
-  .wdl: camelCase
+  .wdl: pascalcase
+  .py: snakecase
