@@ -1,0 +1,33 @@
+
+# This workflow validates all pipeline WDL files (those found in the pipelines/ projects/ and beta-pipelines directories) using the 'womtool' tool.
+name: WomtoolCheck
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate_wdl_job:
+    runs-on: ubuntu-latest
+    name: Validate all wdl using womtool
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Install Womtool
+        run: |
+          curl -L `curl -s https://api.github.com/repos/broadinstitute/cromwell/releases | grep browser_download_url | head -1 | cut -f 4 -d '"'` > cromwell.jar
+          curl -L `curl -s https://api.github.com/repos/broadinstitute/wdltool/releases | grep browser_download_url | head -1 | cut -f 4 -d '"'` > womtool.jar
+        shell: bash
+
+      - name: Validate WDLs
+        run: |
+          WDL_FILES=$(find . -type f -name "*.wdl")
+          for WDL in ${WDL_FILES}; do
+            echo "Validating ${WDL}"
+            java -jar womtool.jar validate ${WDL}
+          done
