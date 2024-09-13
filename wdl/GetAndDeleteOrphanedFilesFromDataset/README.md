@@ -12,3 +12,6 @@ This WDL script searches through all tables of a specified dataset to collect fi
 | **max_backoff_time**         | Optional. The total amount of time allowed for retrying API calls.           | Int      |
 | **batch_size_to_list_files** | Optional. Specifies the batch size when listing files.                       | Int      |
 | **docker**                   | Optional. Allows the use of a different Docker image.                        | String   |
+
+## Outputs table:
+This script does not have any outputs. If you run this with `delete_orphaned_files` set to `false` then you can view the logs lines, including the orphaned uuids, in the stderr file.
