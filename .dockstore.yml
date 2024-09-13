@@ -30,3 +30,10 @@ workflows:
     readMePath: /wdl/GetAndDeleteOrphanedFilesFromDataset/README.md
     testParameterFiles:
       - /wdl/GetAndDeleteOrphanedFilesFromDataset/GetAndDeleteOrphanedFilesFromDataset.wdl
+
+  - name: RenameAndReingestFiles
+    subclass: WDL
+    primaryDescriptorPath: /wdl/RenameAndReingestFiles/RenameAndReingestFiles.wdl
+    readMePath: /wdl/RenameAndReingestFiles/README.md
+    testParameterFiles:
+      - /wdl/RenameAndReingestFiles/RenameAndReingestFiles.wdl
