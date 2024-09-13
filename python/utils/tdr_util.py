@@ -146,13 +146,22 @@ class TDR:
 
         return {"sas_token": sas_token, "expiry_time": time_str}
 
-    def delete_file(self, file_id: str, dataset_id: str) -> None:
-        """Delete a file from a dataset."""
+    def delete_file(self, file_id: str, dataset_id: str) -> str:
+        """Delete a file from a dataset. Return delete job id"""
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files/{file_id}"
         logging.info(f"Deleting file {file_id} from dataset {dataset_id}")
         response = self.request_util.run_request(uri=uri, method=DELETE)
         # Return job id
         return json.loads(response.text)['id']
+
+    def delete_files(self, file_ids: list[str], dataset_id: str) -> None:
+        """Delete multiple files from a dataset and monitor delete jobs until completion."""
+        logging.info(f"Deleting {len(file_ids)} files from dataset {dataset_id}")
+        for file_id in file_ids:
+            job_id = self.delete_file(file_id=file_id, dataset_id=dataset_id)
+            # monitor job every 5 seconds until completion
+            MonitorTDRJob(tdr=self, job_id=job_id, check_interval=5).run()
+        logging.info(f"Successfully deleted {len(file_ids)} files from dataset {dataset_id}")
 
     def add_user_to_dataset(self, dataset_id: str, user: str, policy: str) -> None:
         """Add user to dataset."""

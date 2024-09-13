@@ -1,7 +1,7 @@
 x-env: &env
   volumes:
     - $HOME/.config/gcloud:/gcp/config:ro
-    - ./stand_alone_terra_and_tdr:/etc/terra_utils_dev
+    - ./python:/etc/terra_utils_dev
   environment:
     CLOUDSDK_CONFIG: "/gcp/config"
     GOOGLE_APPLICATION_CREDENTIALS: "/gcp/config/application_default_credentials.json"

@@ -12,7 +12,7 @@ workflows:
     testParameterFiles:
       - /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
 
-  - name: TerraWorkspaceToTableIngest
+  - name: TerraWorkspaceTableToTDRIngest
     subclass: WDL
     primaryDescriptorPath: /wdl/TerraWorkspaceTableIngest/TerraWorkspaceTableIngest.wdl
     testParameterFiles:
@@ -24,8 +24,8 @@ workflows:
     testParameterFiles:
       - /wdl/exportDataFromSnapshot.wdl
 
-  - name: GetFilesNotPresentInDatasetMetadata
+  - name: GetAndDeleteOrphanedFilesFromDataset
     subclass: WDL
-    primaryDescriptorPath: /wdl/GetFilesNotInDatasetMetadata/GetFilesNotInDatasetMetadata.wdl
+    primaryDescriptorPath: /wdl/GetAndDeleteOrphanedFilesFromDataset/GetAndDeleteOrphanedFilesFromDataset.wdl
     testParameterFiles:
-      - /wdl/getFilesNotInDatasetMetadata.wdl
+      - /wdl/GetAndDeleteOrphanedFilesFromDataset/GetAndDeleteOrphanedFilesFromDataset.wdl
