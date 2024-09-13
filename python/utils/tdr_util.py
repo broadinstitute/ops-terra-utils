@@ -149,10 +149,10 @@ class TDR:
     def delete_file(self, file_id: str, dataset_id: str) -> str:
         """Delete a file from a dataset. Return delete job id"""
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files/{file_id}"
-        logging.info(f"Deleting file {file_id} from dataset {dataset_id}")
         response = self.request_util.run_request(uri=uri, method=DELETE)
-        # Return job id
-        return json.loads(response.text)['id']
+        job_id = json.loads(response.text)['id']
+        logging.info(f"Submitted delete job {job_id} for file {file_id}")
+        return job_id
 
     def delete_files(self, file_ids: list[str], dataset_id: str, submit_all_jobs_and_check_status_after: bool = False) -> None:
         """Delete multiple files from a dataset and monitor delete jobs until completion.
@@ -169,6 +169,7 @@ class TDR:
         # If submit_all_jobs_and_check_status_after is True then only check status after submitting all jobs
         if submit_all_jobs_and_check_status_after:
             for job_id in job_ids:
+                # monitor job every 5 seconds until completion
                 MonitorTDRJob(tdr=self, job_id=job_id, check_interval=5).run()
         logging.info(f"Successfully deleted {len(file_ids)} files from dataset {dataset_id}")
 
