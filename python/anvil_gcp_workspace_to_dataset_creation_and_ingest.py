@@ -301,7 +301,7 @@ if __name__ == "__main__":
     )
 
     # Get all schema info within dataset
-    data_set_info = tdr.get_data_set_info(
+    data_set_info = tdr.get_dataset_info(
         dataset_id=dataset_id, info_to_include=['DATA_PROJECT'])
 
     # Get all files in workspace bucket

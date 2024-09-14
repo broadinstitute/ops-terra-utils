@@ -221,7 +221,7 @@ class TDR:
                 matching_datasets.append(dataset)
         return matching_datasets
 
-    def get_data_set_info(self, dataset_id: str, info_to_include: list[str] = None) -> dict:
+    def get_dataset_info(self, dataset_id: str, info_to_include: list[str] = None) -> dict:
         """Get dataset info"""
         acceptable_include_info = [
             "SCHEMA", "ACCESS_INFORMATION", "PROFILE", "PROPERTIES", "DATA_PROJECT",
@@ -239,8 +239,8 @@ class TDR:
         return json.loads(response.text)
 
     def get_table_schema_info(self, dataset_id: str, table_name: str) -> dict:
-        """get schema information on one table within dataste"""
-        dataset_info = self.get_data_set_info(dataset_id=dataset_id, info_to_include=["SCHEMA"])
+        """get schema information on one table within dataset"""
+        dataset_info = self.get_dataset_info(dataset_id=dataset_id, info_to_include=["SCHEMA"])
         for table in dataset_info["schema"]["tables"]:
             if table["name"] == table_name:
                 return table
@@ -313,7 +313,7 @@ class TDR:
         return response
 
     def get_data_set_file_uuids_from_metadata(self, dataset_id: str) -> list[str]:
-        data_set_info = self.get_data_set_info(dataset_id=dataset_id, info_to_include=["SCHEMA"])
+        data_set_info = self.get_dataset_info(dataset_id=dataset_id, info_to_include=["SCHEMA"])
         all_metadata_file_uuids = []
         tables = 0
         for table in data_set_info["schema"]["tables"]:
@@ -743,7 +743,7 @@ class SetUpTDRTables:
         return dataset_relationships_to_modify
 
     def run(self) -> dict:
-        data_set_info = self.tdr.get_data_set_info(dataset_id=self.dataset_id, info_to_include=['SCHEMA'])
+        data_set_info = self.tdr.get_dataset_info(dataset_id=self.dataset_id, info_to_include=['SCHEMA'])
         existing_tdr_table_schema_info = {
             table_dict['name']: table_dict['columns']
             for table_dict in data_set_info['schema']['tables']
@@ -795,7 +795,7 @@ class SetUpTDRTables:
             else:
                 logging.info("All tables in dataset exist and are up to date")
             # Return schema info for all existing tables after creation
-            data_set_info = self.tdr.get_data_set_info(dataset_id=self.dataset_id, info_to_include=['SCHEMA'])
+            data_set_info = self.tdr.get_dataset_info(dataset_id=self.dataset_id, info_to_include=['SCHEMA'])
             # Return dict with key being table name and value being dict of columns with key being
             # column name and value being column info
             return {
@@ -1137,11 +1137,10 @@ class InferTDRSchema:
 
 
 class GetPermissionsForWorkspaceIngest:
-    def __init__(self, terra_workspace: TerraWorkspace, terra: Terra, dataset_info: dict,
+    def __init__(self, terra_workspace: TerraWorkspace, dataset_info: dict,
                  added_to_auth_domain: bool = False):
         self.terra_workspace = terra_workspace
         self.dataset_info = dataset_info
-        self.terra = terra
         self.added_to_auth_domain = added_to_auth_domain
 
     def run(self) -> None:

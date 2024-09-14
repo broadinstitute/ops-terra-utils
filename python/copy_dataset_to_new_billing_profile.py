@@ -46,7 +46,7 @@ if __name__ == "__main__":
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
 
-    orig_dataset_info = tdr.get_data_set_info(orig_dataset_id)
+    orig_dataset_info = tdr.get_dataset_info(orig_dataset_id)
 
     # Check dataset id is not already in requested billing profile
     if orig_dataset_info['defaultProfileId'] == billing_profile:
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         additional_properties_dict=additional_properties
     )
     # Assumes if dataset exists then it is with same schema
-    dest_dataset_info = tdr.get_data_set_info(dest_dataset_id)
+    dest_dataset_info = tdr.get_dataset_info(dest_dataset_id)
 
     # Add ingest service account for new dataset to original dataset
     logging.info(f"Adding ingest service account for new dataset {new_dataset_name} to original dataset {orig_dataset_info['name']}")
