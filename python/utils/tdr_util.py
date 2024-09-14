@@ -485,9 +485,9 @@ class MonitorTDRJob:
                     f"Status code {ingest_response.status_code}: {ingest_response.text}\n{job_result}")
 
 
-class StartIngest:
+class StartAndMonitorIngest:
     def __init__(self, tdr: TDR, ingest_records: list[dict], target_table_name: str, dataset_id: str, load_tag: str,
-                 bulk_mode: bool, update_strategy: str):
+                 bulk_mode: bool, update_strategy: str, waiting_time_to_poll: int):
         self.tdr = tdr
         self.ingest_records = ingest_records
         self.target_table_name = target_table_name
@@ -495,6 +495,7 @@ class StartIngest:
         self.load_tag = load_tag
         self.bulk_mode = bulk_mode
         self.update_strategy = update_strategy
+        self.waiting_time_to_poll = waiting_time_to_poll
 
     def _create_ingest_dataset_request(self) -> Any:
         """Create the ingestDataset request body."""
@@ -510,12 +511,17 @@ class StartIngest:
         }
         return json.dumps(load_dict)  # dict -> json
 
-    def run(self) -> str:
+    def run(self) -> None:
         ingest_request = self._create_ingest_dataset_request()
         logging.info(f"Starting ingest to {self.dataset_id}")
         ingest_response = self.tdr.ingest_dataset(
             dataset_id=self.dataset_id, data=ingest_request)
-        return ingest_response["id"]
+        MonitorTDRJob(
+            tdr=self.tdr,
+            job_id=ingest_response["id"],
+            check_interval=self.waiting_time_to_poll
+        ).run()
+
 
 
 class ReformatMetricsForIngest:
@@ -888,20 +894,15 @@ class BatchIngest:
                 load_tag = f"{self.dataset_id}.{self.target_table_name}"
             # Start actual ingest
             if reformatted_batch:
-                ingest_id = StartIngest(
+                StartAndMonitorIngest(
                     tdr=self.tdr,
                     ingest_records=reformatted_batch,
                     target_table_name=self.target_table_name,
                     dataset_id=self.dataset_id,
                     load_tag=load_tag,
                     bulk_mode=self.bulk_mode,
-                    update_strategy=self.update_strategy
-                ).run()
-                # monitor ingest until completion
-                MonitorTDRJob(
-                    tdr=self.tdr,
-                    job_id=ingest_id,
-                    check_interval=self.waiting_time_to_poll
+                    update_strategy=self.update_strategy,
+                    waiting_time_to_poll=self.waiting_time_to_poll
                 ).run()
                 logging.info(f"Completed batch ingest of {len(reformatted_batch)} rows")
                 if self.test_ingest:

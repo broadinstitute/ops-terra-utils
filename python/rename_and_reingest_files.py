@@ -4,11 +4,11 @@ import sys
 import os
 from argparse import ArgumentParser, Namespace
 from typing import Optional, Tuple
-from utils.tdr_util import TDR, BatchIngest, GetPermissionsForWorkspaceIngest
+from utils.tdr_util import TDR, StartAndMonitorIngest, GetPermissionsForWorkspaceIngest
 from utils.token_util import Token
 from utils.request_util import RunRequest
 from utils.terra_util import TerraWorkspace
-from utils.gcp_utils import GCPCloudFunctions, COPY
+from utils.gcp_utils import GCPCloudFunctions
 from utils import GCP
 
 logging.basicConfig(
@@ -19,13 +19,15 @@ CLOUD_TYPE = GCP
 MAX_RETRIES = 5
 MAX_BACKOFF_TIME = 5 * 60
 BATCH_SIZE_TO_LIST_FILES = 25000
-INGEST_BATCH_SIZE = 500
+BATCH_SIZE = 500
 WAITING_TIME_TO_POLL = 30
+UPDATE_STRATEGY = 'merge'
 
 
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Copy and Rename files to workspace or bucket and reingest with new name")
     parser.add_argument("-i", "--dataset_id", required=True)
+    parser.add_argument("-c", "--copy_and_ingest_batch_size", type=int, required=True, help=f"The number of rows to copy to temp location and then ingest at a time. Default to {BATCH_SIZE}")
     parser.add_argument("-w", "--workers", type=int, help="How wide you want the copy of files to on prem", required=True)
     parser.add_argument("-o", "--original_file_basename_column", required=True, help=f"The basename column which you want to rename. ie 'sample_id'")
     parser.add_argument("-n", "--new_file_basename_column", required=True, help=f"The new basename column which you want the old one replace with. ie 'collab_sample_id'")
@@ -42,11 +44,6 @@ def get_args() -> Namespace:
         default=MAX_BACKOFF_TIME,
         help=f"The maximum backoff time for a failed request (in seconds). Defaults to 300 seconds if not provided"
     )
-    parser.add_argument(
-        "--batch_size",
-        required=False,
-        default=INGEST_BATCH_SIZE,
-        help=f"The number of files to ingest at a time. Defaults to {INGEST_BATCH_SIZE} if not provided")
     return parser.parse_args()
 
 
@@ -110,7 +107,7 @@ class GetRowAndFileInfoForReingest:
         else:
             return None, None
 
-    def get_new_copy_and_ingest_list(self) -> Tuple[list[dict], list[dict]]:
+    def get_new_copy_and_ingest_list(self) -> Tuple[list[dict], list[list]]:
         rows_to_reingest = []
         files_to_copy_to_temp = []
         # Get all columns in table that are filerefs
@@ -120,35 +117,105 @@ class GetRowAndFileInfoForReingest:
             # If there is something to copy and update
             if new_row_dict and temp_copy_list:
                 rows_to_reingest.append(new_row_dict)
-                files_to_copy_to_temp.extend(temp_copy_list)
+                files_to_copy_to_temp.append(temp_copy_list)
         logging.info(f"Total rows to re-ingest: {len(self.rows_to_reingest)}")
         logging.info(f"Total files to copy and re-ingest: {self.total_files_to_reingest}")
         return rows_to_reingest, files_to_copy_to_temp
 
 
-def get_temp_bucket(temp_bucket: str, billing_project: str, workspace_name: str, dataset_info: dict) -> str:
-    # Check if temp_bucket is provided
-    if not temp_bucket:
-        if not billing_project or not workspace_name:
-            logging.error("If temp_bucket is not provided, billing_project and workspace_name must be provided")
-            sys.exit(1)
+class GetTempBucket:
+    def __init__(self, temp_bucket: str, billing_project: str, workspace_name: str, dataset_info: dict, request_util: RunRequest):
+        self.temp_bucket = temp_bucket
+        self.billing_project = billing_project
+        self.workspace_name = workspace_name
+        self.dataset_info = dataset_info
+        self.request_util = request_util
+
+    def run(self) -> str:
+        # Check if temp_bucket is provided
+        if not self.temp_bucket:
+            if not self.billing_project or not self.workspace_name:
+                logging.error("If temp_bucket is not provided, billing_project and workspace_name must be provided")
+                sys.exit(1)
+            else:
+                terra_workspace = TerraWorkspace(
+                    billing_project=self.billing_project,
+                    workspace_name=self.workspace_name,
+                    request_util=self.request_util
+                )
+                temp_bucket = f'gs://{terra_workspace.get_workspace_bucket()}/'
+                # Make sure workspace is set up for ingest
+                GetPermissionsForWorkspaceIngest(
+                    terra_workspace=terra_workspace,
+                    dataset_info=self.dataset_info,
+                    added_to_auth_domain=True
+                ).run()
         else:
-            terra_workspace = TerraWorkspace(billing_project=billing_project, workspace_name=workspace_name,
-                                             request_util=request_util)
-            temp_bucket = f'gs://{terra_workspace.get_workspace_bucket()}/'
-            # Make sure workspace is set up for ingest
-            GetPermissionsForWorkspaceIngest(
-                terra_workspace=terra_workspace,
-                dataset_info=dataset_info,
-                added_to_auth_domain=True
-            ).run()
-    else:
-        if billing_project or workspace_name:
-            logging.error("If temp_bucket is provided, billing_project and workspace_name must not be provided")
-            sys.exit(1)
+            if billing_project or workspace_name:
+                logging.error("If temp_bucket is provided, billing_project and workspace_name must not be provided")
+                sys.exit(1)
+            logging.info(
+                f"Using temp_bucket: {self.temp_bucket}. Make sure {self.dataset_info['ingestServiceAccount']} has read permission to bucket")
+        return temp_bucket
+
+
+class BatchCopyAndIngest:
+    def __init__(self, rows_to_ingest: list[dict], tdr: TDR, target_table_name: str,
+                 cloud_type: str, update_strategy: str, workers: int, dataset_id: str,
+                 copy_and_ingest_batch_size: int, row_files_to_copy: list[list[dict]]):
+        self.rows_to_ingest = rows_to_ingest
+        self.tdr = tdr
+        self.target_table_name = target_table_name
+        self.dataset_id = dataset_id
+        self.cloud_type = cloud_type
+        self.update_strategy = update_strategy
+        self.workers = workers
+        self.copy_and_ingest_batch_size = copy_and_ingest_batch_size
+        self.row_files_to_copy = row_files_to_copy
+
+    def run(self):
+        # Batch through rows to copy files down and ingest so if script fails partway through large
+        # copy and ingest it will have copied over and ingested some of the files already
         logging.info(
-            f"Using temp_bucket: {temp_bucket}. Make sure {dataset_info['ingestServiceAccount']} has read permission to bucket")
-    return temp_bucket
+            f"Batching {len(self.rows_to_ingest)} total rows into batches of {self.copy_and_ingest_batch_size} for copying to temp location and ingest")
+        total_batches = len(self.rows_to_ingest) // self.copy_and_ingest_batch_size + 1
+        gcp_functions = GCPCloudFunctions()
+        for i in range(0, len(self.rows_to_ingest), self.copy_and_ingest_batch_size):
+            batch_number = i // self.copy_and_ingest_batch_size + 1
+            logging.info(f"Starting batch {batch_number} of {total_batches} for copy to temp and ingest")
+            ingest_metadata_batch = self.rows_to_ingest[i:i + self.copy_and_ingest_batch_size]
+            files_to_copy_batch = self.row_files_to_copy[i:i + self.copy_and_ingest_batch_size]
+            # files_to_copy_batch will be a list of lists of dicts, so flatten it
+            files_to_copy = [file_dict for sublist in files_to_copy_batch for file_dict in sublist]
+
+            # Copy files to temp bucket
+            gcp_functions.multithread_copy_of_files_with_validation(
+                # Create dict with new names for copy of files to temp bucket
+                files_to_move=files_to_copy,
+                workers=self.workers,
+                max_retries=5
+            )
+
+            # Ingest renamed files into dataset
+            StartAndMonitorIngest(
+                tdr=self.tdr,
+                ingest_records=ingest_metadata_batch,
+                target_table_name=self.target_table_name,
+                dataset_id=self.dataset_id,
+                load_tag=f"{self.target_table_name}_re-ingest",
+                bulk_mode=False,
+                update_strategy=UPDATE_STRATEGY,
+                waiting_time_to_poll=WAITING_TIME_TO_POLL
+            ).run()
+
+            # Delete files from temp bucket
+            # Create list of files in temp location to delete. Full destination path is the temp location from copy
+            files_to_delete = [file_dict['full_destination_path'] for file_dict in files_to_copy]
+            gcp_functions.delete_multiple_files(
+                # Create list of files in temp location to delete. Full destination path is the temp location from copy
+                files_to_delete=files_to_delete,
+                workers=self.workers,
+            )
 
 if __name__ == '__main__':
     args = get_args()
@@ -158,7 +225,7 @@ if __name__ == '__main__':
     original_file_basename_column = args.original_file_basename_column
     new_file_basename_column = args.new_file_basename_column
     dataset_table_name = args.dataset_table_name
-    batch_size = args.batch_size
+    copy_and_ingest_batch_size = args.copy_and_ingest_batch_size
     row_identifier = args.row_identifier
     billing_project = args.billing_project
     workspace_name = args.workspace_name
@@ -174,7 +241,13 @@ if __name__ == '__main__':
     dataset_info = tdr.get_dataset_info(dataset_id=dataset_id)
 
     # Get temp bucket
-    temp_bucket = get_temp_bucket(temp_bucket, billing_project, workspace_name, dataset_info)
+    temp_bucket = GetTempBucket(
+        temp_bucket=temp_bucket,
+        billing_project=billing_project,
+        workspace_name=workspace_name,
+        dataset_info=dataset_info,
+        request_util=request_util
+    ).run()
 
     # Get schema info for table
     table_schema_info = tdr.get_table_schema_info(dataset_id=dataset_id, table_name=dataset_table_name)
@@ -186,7 +259,7 @@ if __name__ == '__main__':
     dataset_metrics = tdr.get_data_set_table_metrics(dataset_id=dataset_id, target_table_name=dataset_table_name)
 
     # Get information on files that need to be reingested
-    rows_to_reingest, files_to_copy = GetRowAndFileInfoForReingest(
+    rows_to_reingest, row_files_to_copy = GetRowAndFileInfoForReingest(
         table_schema_info=table_schema_info,
         files_info=files_info,
         table_metrics=dataset_metrics,
@@ -196,36 +269,14 @@ if __name__ == '__main__':
         temp_bucket=temp_bucket
     ).get_new_copy_and_ingest_list()
 
-    # Copy files to temp bucket
-    GCPCloudFunctions().move_or_copy_multiple_files(
-        # Create dict with new names for copy of files to temp bucket
-        files_to_move=files_to_copy,
-        action=COPY,
-        workers=workers,
-        max_retries=5
-    )
-
-    # Batch ingest new rows from temp bucket
-    BatchIngest(
-        ingest_metadata=rows_to_reingest,
+    BatchCopyAndIngest(
+        rows_to_ingest=rows_to_reingest,
         tdr=tdr,
         target_table_name=dataset_table_name,
-        dataset_id=dataset_id,
-        batch_size=batch_size,
         cloud_type=CLOUD_TYPE,
-        update_strategy='merge',
-        bulk_mode=False,
-        file_list_bool=False,
-        skip_reformat=True,
-        waiting_time_to_poll=WAITING_TIME_TO_POLL
+        update_strategy=UPDATE_STRATEGY,
+        workers=workers,
+        dataset_id=dataset_id,
+        copy_and_ingest_batch_size=copy_and_ingest_batch_size,
+        row_files_to_copy=row_files_to_copy
     ).run()
-
-
-
-
-
-
-
-
-
-
