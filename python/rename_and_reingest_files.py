@@ -18,8 +18,6 @@ logging.basicConfig(
 CLOUD_TYPE = GCP
 MAX_RETRIES = 5
 MAX_BACKOFF_TIME = 5 * 60
-BATCH_SIZE_TO_LIST_FILES = 25000
-BATCH_SIZE = 500
 WAITING_TIME_TO_POLL = 30
 UPDATE_STRATEGY = 'merge'
 
@@ -27,7 +25,7 @@ UPDATE_STRATEGY = 'merge'
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Copy and Rename files to workspace or bucket and reingest with new name")
     parser.add_argument("-i", "--dataset_id", required=True)
-    parser.add_argument("-c", "--copy_and_ingest_batch_size", type=int, required=True, help=f"The number of rows to copy to temp location and then ingest at a time. Default to {BATCH_SIZE}")
+    parser.add_argument("-c", "--copy_and_ingest_batch_size", type=int, required=True, help=f"The number of rows to copy to temp location and then ingest at a time.")
     parser.add_argument("-w", "--workers", type=int, help="How wide you want the copy of files to on prem", required=True)
     parser.add_argument("-o", "--original_file_basename_column", required=True, help=f"The basename column which you want to rename. ie 'sample_id'")
     parser.add_argument("-n", "--new_file_basename_column", required=True, help=f"The new basename column which you want the old one replace with. ie 'collab_sample_id'")
