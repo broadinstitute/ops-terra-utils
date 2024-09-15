@@ -58,7 +58,22 @@ class GetRowAndFileInfoForReingest:
         self.rows_to_reingest = []
         self.temp_bucket = temp_bucket
 
-    def create_row_dict(self, row_dict: dict, file_ref_columns: list[str]) -> Tuple[Optional[list[dict]], Optional[list[dict]]]:
+    def _create_paths(self, file_info: dict, og_basename: str, new_basename: str) -> Tuple[str, str, str]:
+        # Access url is the full path to the file in TDR
+        access_url = file_info['fileDetail']['accessUrl']
+        # Get basename of file
+        file_name = os.path.basename(access_url)
+        # Replace basename with new basename
+        new_file_name = file_name.replace(f'{og_basename}.', f'{new_basename}.')
+        # get tdr path. Not real path, just the metadata
+        tdr_file_path = file_info['path']
+        # Create full path to updated tdr metadata file path
+        updated_tdr_metadata_path = os.path.join(os.path.dirname(tdr_file_path), new_file_name)
+        access_url_without_bucket = access_url.split('gs://')[1]
+        temp_path = os.path.join(self.temp_bucket, os.path.dirname(access_url_without_bucket), new_file_name)
+        return temp_path, updated_tdr_metadata_path, access_url
+
+    def _create_row_dict(self, row_dict: dict, file_ref_columns: list[str]) -> Tuple[Optional[dict], Optional[list[dict]]]:
         """Go through each row and check each cell if it is a file and if it needs to be reingested.
         If so, create a new row dict with the new file path."""
         reingest_row = False
@@ -74,24 +89,19 @@ class GetRowAndFileInfoForReingest:
             if column_name in file_ref_columns:
                 # Get full file info for that cell
                 file_info = self.files_info.get(row_dict[column_name])
-                # real file path
-                access_url = file_info['fileDetail']['accessUrl']
-                # path used in metadata, not real file path
-                tdr_file_path = file_info['path']
-                # Updated file name
-                new_file_name = os.path.basename(access_url).replace(og_basename, new_basename)
-                temp_path = os.path.join(self.temp_bucket, new_file_name)
-                updated_tdr_metadata_path = os.path.join(os.path.dirname(tdr_file_path), new_file_name)
+                # Get potential temp path, updated tdr metadata path, and access url for file
+                temp_path, updated_tdr_metadata_path, access_url = self._create_paths(file_info, og_basename, new_basename)
                 # Check if access_url starts with og basename and then .
                 if os.path.basename(access_url).startswith(f"{og_basename}."):
                     self.total_files_to_reingest += 1
-                    # Add to ingest row dict
+                    # Add to ingest row dict to ingest from temp location with updated name
                     new_row_dict[column_name] = {
+                        # temp path is the full path to the renamed file in the temp bucket
                         "sourcePath": temp_path,
-                        # Create new target path with updated basename
+                        # New target path with updated basename
                         "targetPath": updated_tdr_metadata_path,
                     }
-                    # Add to copy list to temp location from access url
+                    # Add to copy list for copying and renaming file currently in TDR
                     temp_copy_list.append(
                         {
                             "source_file": access_url,
@@ -111,7 +121,7 @@ class GetRowAndFileInfoForReingest:
         # Get all columns in table that are filerefs
         file_ref_columns = [col['name'] for col in self.table_schema_info['columns'] if col['datatype'] == 'fileref']
         for row_dict in self.table_metrics:
-            new_row_dict, temp_copy_list = self.create_row_dict(row_dict, file_ref_columns)
+            new_row_dict, temp_copy_list = self._create_row_dict(row_dict, file_ref_columns)
             # If there is something to copy and update
             if new_row_dict and temp_copy_list:
                 rows_to_reingest.append(new_row_dict)
