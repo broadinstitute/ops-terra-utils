@@ -44,12 +44,13 @@ def get_args() -> Namespace:
     parser.add_argument("-tb", "--temp_bucket",
                         help="The bucket to copy files to for rename. Used if workspace_name is not provided")
     parser.add_argument("--max_retries", required=False, default=MAX_RETRIES,
-                        help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided")
+                        help=f"The maximum number of retries for a failed request.\
+                        Defaults to {MAX_RETRIES} if not provided")
     parser.add_argument(
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to 300 seconds if not provided"
+        help="The maximum backoff time for a failed request (in seconds). Defaults to 300 seconds if not provided"
     )
     return parser.parse_args()
 
@@ -85,7 +86,9 @@ class GetRowAndFileInfoForReingest:
             access_url_without_bucket), new_file_name)
         return temp_path, updated_tdr_metadata_path, access_url
 
-    def _create_row_dict(self, row_dict: dict, file_ref_columns: list[str]) -> Tuple[Optional[dict], Optional[list[dict]]]:
+    def _create_row_dict(self,
+                         row_dict: dict,
+                         file_ref_columns: list[str]) -> Tuple[Optional[dict], Optional[list[dict]]]:
         """Go through each row and check each cell if it is a file and if it needs to be reingested.
         If so, create a new row dict with the new file path."""
         reingest_row = False
@@ -148,7 +151,11 @@ class GetRowAndFileInfoForReingest:
 
 
 class GetTempBucket:
-    def __init__(self, temp_bucket: str, billing_project: str, workspace_name: str, dataset_info: dict, request_util: RunRequest):
+    def __init__(self, temp_bucket: str,
+                 billing_project: str,
+                 workspace_name: str,
+                 dataset_info: dict,
+                 request_util: RunRequest):
         self.temp_bucket = temp_bucket
         self.billing_project = billing_project
         self.workspace_name = workspace_name
@@ -181,7 +188,8 @@ class GetTempBucket:
                     "If temp_bucket is provided, billing_project and workspace_name must not be provided")
                 sys.exit(1)
             logging.info(
-                f"Using temp_bucket: {self.temp_bucket}. Make sure {self.dataset_info['ingestServiceAccount']} has read permission to bucket")
+                f"Using temp_bucket: {self.temp_bucket}.\
+                Make sure {self.dataset_info['ingestServiceAccount']} has read permission to bucket")
         return temp_bucket
 
 
@@ -203,7 +211,8 @@ class BatchCopyAndIngest:
         # Batch through rows to copy files down and ingest so if script fails partway through large
         # copy and ingest it will have copied over and ingested some of the files already
         logging.info(
-            f"Batching {len(self.rows_to_ingest)} total rows into batches of {self.copy_and_ingest_batch_size} for copying to temp location and ingest")
+            f"Batching {len(self.rows_to_ingest)} total rows into batches\
+            of {self.copy_and_ingest_batch_size} for copying to temp location and ingest")
         total_batches = len(
             self.rows_to_ingest) // self.copy_and_ingest_batch_size + 1
         gcp_functions = GCPCloudFunctions()

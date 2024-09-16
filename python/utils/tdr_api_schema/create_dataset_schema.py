@@ -1,4 +1,4 @@
-from schema import Schema, And, Use, Optional, SchemaError
+from schema import Schema, And, Optional
 
 create_dataset_schema = Schema({
   "name": And(str),
