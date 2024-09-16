@@ -10,6 +10,7 @@ workflows:
   - name: AnvilGcpWorkspaceToDatasetCreationAndIngestion
     subclass: WDL
     primaryDescriptorPath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
+    readMePath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/README.md
     testParameterFiles:
       - /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
 
