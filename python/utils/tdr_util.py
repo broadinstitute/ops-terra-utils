@@ -18,7 +18,7 @@ from datetime import datetime, date
 from .request_util import GET, POST, DELETE
 from .tdr_api_schema.create_dataset_schema import create_dataset_schema
 from .tdr_api_schema.update_dataset_schema import UpdateSchema
-from .terra_util import Terra, TerraWorkspace
+from .terra_util import TerraWorkspace
 from . import GCP, AZURE  # import from __init__.py
 
 
@@ -83,7 +83,8 @@ class TDR:
         self.request_util = request_util
 
     def get_data_set_files(self, dataset_id: str, batch_query: bool = True, limit: int = 1000) -> list[dict]:
-        """Get all files in a dataset. Azure seems like it has issues with batch query, so set to false for now for Azure.
+        """Get all files in a dataset. Azure seems like it has issues with batch query, so set to false for now for
+        Azure.
 
         Returns json like below:
         {
@@ -107,7 +108,7 @@ class TDR:
     "fileDetail": {
         "datasetId": "0d1c9aea-e944-4d19-83c3-8675f6aa123a",
         "mimeType": null,
-        "accessUrl": "gs://datarepo-34a4ac45-bucket/0d1c9aea-e944-4d19-83c3-8675f6aa062a/cf198fcc-3564-46ad-b73f-8bbc3711a866/SM-XXXXX.vcf.gz.md5sum",
+        "accessUrl": "gs://datarepo-34a4ac45-bucket/0d1c9aea-e944-4d19-83c3-8675f6aa062a/cf198fcc-3564-46ad-b73f-8bbc3711a866/SM-XXXXX.vcf.gz.md5sum",  # noqa
         "loadTag": "0d1c9aea-e944-4d19-83c3-8675f6aa123a"
     },
     "directoryDetail": null
@@ -154,7 +155,9 @@ class TDR:
         logging.info(f"Submitted delete job {job_id} for file {file_id}")
         return job_id
 
-    def delete_files(self, file_ids: list[str], dataset_id: str, submit_all_jobs_and_check_status_after: bool = False) -> None:
+    def delete_files(
+            self, file_ids: list[str], dataset_id: str, submit_all_jobs_and_check_status_after: bool = False
+    ) -> None:
         """Delete multiple files from a dataset and monitor delete jobs until completion.
         If submit_all_jobs_and_check_status after then will only monitor completion after submitting all jobs"""
         logging.info(f"Deleting {len(file_ids)} files from dataset {dataset_id}")
@@ -193,7 +196,7 @@ class TDR:
             filter_str = ""
         while True:
             logging.info(f"Searching for datasets with filter {filter_str} in batches of {batch_size}")
-            uri = f"{self.TDR_LINK}/datasets?offset={offset}&limit={batch_size}&sort=created_date&direction={direction}{filter_str}"
+            uri = f"{self.TDR_LINK}/datasets?offset={offset}&limit={batch_size}&sort=created_date&direction={direction}{filter_str}"  # noqa
             response = self.request_util.run_request(uri=uri, method=GET)
             datasets = response.json()['items']
             if not datasets:
@@ -264,7 +267,9 @@ class TDR:
         )
         return json.loads(response.text)
 
-    def get_data_set_table_metrics(self, dataset_id: str, target_table_name: str, query_limit: int = 1000) -> list[dict]:
+    def get_data_set_table_metrics(
+            self, dataset_id: str, target_table_name: str, query_limit: int = 1000
+    ) -> list[dict]:
         """Use yield data_set_metrics and get all metrics returned in one list"""
         return [
             metric
@@ -294,7 +299,9 @@ class TDR:
             if not response or not response.json()["result"]:
                 break
             logging.info(
-                f"Downloading batch {batch_number} of max {query_limit} records from {target_table_name} table in dataset {dataset_id}")
+                f"""Downloading batch {batch_number} of max {query_limit} records from {target_table_name} table in 
+                dataset {dataset_id}"""
+            )
             for record in response.json()["result"]:
                 yield record
             search_request["offset"] += query_limit
@@ -348,7 +355,9 @@ class TDR:
         if existing_data_sets:
             if len(existing_data_sets) > 1:
                 raise ValueError(
-                    f"Multiple datasets found with name {dataset_name} under billing_profile: {json.dumps(existing_data_sets, indent=4)}")
+                    f"Multiple datasets found with name {dataset_name} under billing_profile: "
+                    f"{json.dumps(existing_data_sets, indent=4)}"
+                )
             dataset_id = existing_data_sets[0]['id']
         if not existing_data_sets:
             logging.info(f"Did not find existing dataset")
@@ -585,11 +594,14 @@ class ReformatMetricsForIngest:
             file_path_storage_container = split_path[3]
             if file_path_storage_container != self.workspace_storage_container:
                 raise ValueError(
-                    f"{cloud_path} storage container {file_path_storage_container} does not match workspace storage container {self.workspace_storage_container}. SAS token will not work"
+                    f"{cloud_path} storage container {file_path_storage_container} does not match workspace storage "
+                    f"container {self.workspace_storage_container}. SAS token will not work"
                 )
             relative_path = '/'.join(split_path[4:])
         if self.dest_file_path_flat:
-            return "/" + relative_path.replace("/", "_").replace("#", "").replace("?", "")
+            return "/" + relative_path.replace(
+                "/", "_"
+            ).replace("#", "").replace("?", "")
         else:
             # Target paths in TDR must start with a leading slash
             return f"/{relative_path}"
@@ -617,7 +629,7 @@ class ReformatMetricsForIngest:
                 else:
                     # If azure sas token will be '?{sas_token}', if gcp it just be file path
                     source_dest_mapping = {
-                        "sourcePath": f"{column_value}{self.sas_token_string}" if self.cloud_type == AZURE else column_value,
+                        "sourcePath": f"{column_value}{self.sas_token_string}" if self.cloud_type == AZURE else column_value,  # noqa
                         "targetPath": self._format_relative_tdr_path(column_value)
                     }
                     return source_dest_mapping, valid
@@ -631,31 +643,31 @@ class ReformatMetricsForIngest:
             if expected_data_type == "string" and not isinstance(column_value, str):
                 try:
                     column_value = str(column_value)
-                except:
+                except Exception:
                     logging.warning(f"Column {column_name} with value {column_value} is not a string")
                     valid = False
             if expected_data_type in ['int64', 'integer'] and not isinstance(column_value, int):
                 try:
                     column_value = int(column_value)
-                except:
+                except Exception:
                     logging.warning(f"Column {column_name} with value {column_value} is not an integer")
                     valid = False
             if expected_data_type == "float64" and not isinstance(column_value, float):
                 try:
                     column_value = float(column_value)
-                except:
+                except Exception:
                     logging.warning(f"Column {column_name} with value {column_value} is not a float")
                     valid = False
             if expected_data_type == "boolean" and not isinstance(column_value, bool):
                 try:
                     column_value = bool(column_value)
-                except:
+                except Exception:
                     logging.warning(f"Column {column_name} with value {column_value} is not a boolean")
                     valid = False
             if expected_data_type in ["datetime", "date", "time"] and not isinstance(column_value, datetime):
                 try:
                     column_value = parser.parse(column_value)
-                except:
+                except Exception:
                     logging.warning(f"Column {column_name} with value {column_value} is not a datetime")
                     valid = False
             if expected_data_type == "array" and not isinstance(column_value, list):
@@ -798,7 +810,8 @@ class SetUpTDRTables:
                     valid = False
                     for column_to_update_dict in columns_to_update:
                         logging.warning(
-                            f"Columns needs updates in {ingest_table_name}: {json.dumps(column_to_update_dict, indent=4)}"
+                            f"Columns needs updates in {ingest_table_name}: "
+                            f"{json.dumps(column_to_update_dict, indent=4)}"
                         )
                 else:
                     logging.info(f"Table {ingest_table_name} exists and is up to date")

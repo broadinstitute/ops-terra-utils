@@ -1,4 +1,4 @@
-from schema import Schema, And, Use, Optional, SchemaError
+from schema import Schema, And, Optional
 
 
 update_schama = Schema({

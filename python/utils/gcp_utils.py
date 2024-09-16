@@ -3,8 +3,9 @@ import logging
 from mimetypes import guess_type
 from .thread_pool_executor_util import MultiThreadedJobs
 
-MOVE = 'move'
-COPY = 'copy'
+MOVE = "move"
+COPY = "copy"
+
 
 class GCPCloudFunctions:
     """List contents of a GCS bucket. Does NOT take in a token and auths as current user"""
@@ -52,8 +53,13 @@ class GCPCloudFunctions:
         destination_file_path_components = self.process_cloud_path(full_destination_path)
 
         try:
-            src_blob = self.client.bucket(source_file_path_components['bucket']).blob(source_file_path_components['blob_url'])
-            dest_blob = self.client.bucket(destination_file_path_components['bucket']).blob(destination_file_path_components['blob_url'])
+            src_blob = self.client.bucket(
+                source_file_path_components['bucket']
+            ).blob(source_file_path_components['blob_url'])
+
+            dest_blob = self.client.bucket(
+                destination_file_path_components['bucket']
+            ).blob(destination_file_path_components['blob_url'])
 
             # Use rewrite so no timeouts
             rewrite_token = False
@@ -81,7 +87,11 @@ class GCPCloudFunctions:
 
     def get_filesize(self, target_path: str) -> int:
         source_file_path_components = self.process_cloud_path(target_path)
-        target = self.client.bucket(source_file_path_components['bucket']).get_blob(source_file_path_components['blob_url'])
+
+        target = self.client.bucket(
+            source_file_path_components['bucket']
+        ).get_blob(source_file_path_components['blob_url'])
+
         size = target.size
         return size
 
@@ -91,7 +101,9 @@ class GCPCloudFunctions:
         dest_file_path_components = self.process_cloud_path(dest_cloud_path)
 
         src_blob = self.client.bucket(src_file_path_components['bucket']).get_blob(src_file_path_components['blob_url'])
-        dest_blob = self.client.bucket(dest_file_path_components['bucket']).get_blob(dest_file_path_components['blob_url'])
+        dest_blob = self.client.bucket(
+            dest_file_path_components['bucket']
+        ).get_blob(dest_file_path_components['blob_url'])
 
         # If either blob is None, return False
         if not src_blob or not dest_blob:
@@ -116,7 +128,12 @@ class GCPCloudFunctions:
         )
 
     def multithread_copy_of_files_with_validation(self, files_to_move: list[dict], workers: int, max_retries: int) -> None:
-        """files_to_move_dict is list of dicts that contain {source_file: gs://bucket/file, full_destination_path: gs://new_bucket/file_path}"""
+        """Files_to_move_dict is list of dicts that contain:
+            {
+                source_file: gs://bucket/file,
+                full_destination_path: gs://new_bucket/file_path
+            }
+        """
         updated_file_to_move = []
         logging.info(f"Checking if {len(files_to_move)} files to copy have already been copied")
         for file_dict in files_to_move:
@@ -138,7 +155,12 @@ class GCPCloudFunctions:
             raise Exception("Failed to copy all files")
 
     def move_or_copy_multiple_files(self, files_to_move: list[dict], action: str, workers: int, max_retries: int) -> None:
-        """files_to_move_dict is list of dicts that contain {source_file: gs://bucket/file, full_destination_path: gs://new_bucket/file_path}"""
+        """Files_to_move_dict is list of dicts that contain:
+            {
+                source_file: gs://bucket/file,
+                full_destination_path: gs://new_bucket/file_path
+            }
+        """
         if action == MOVE:
             cloud_function = self.move_cloud_file
         elif action == COPY:

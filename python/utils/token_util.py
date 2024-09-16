@@ -1,8 +1,9 @@
-from typing import Optional
-from datetime import datetime, timedelta
 import httplib2
 import pytz
 import logging
+from typing import Optional
+from datetime import datetime, timedelta
+
 from . import GCP, AZURE  # import from __init__.py
 
 
