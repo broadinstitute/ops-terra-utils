@@ -102,7 +102,7 @@ if __name__ == "__main__":
     target_table_name = args.target_table_name if args.target_table_name else args.terra_table_name
     primary_key_column_name = args.primary_key_column_name
     update_strategy = args.update_strategy
-    sample_ids_to_ingest = args.sample_ids_to_ingest
+    records_to_ingest = args.records_to_ingest
     bulk_mode = args.bulk_mode
     max_retries = args.max_retries
     max_backoff_time = args.max_backoff_time
@@ -127,9 +127,9 @@ if __name__ == "__main__":
     ).run()
 
     # Use only specific sample ids if provided
-    if sample_ids_to_ingest:
+    if records_to_ingest:
         updated_metrics = [
-            metric for metric in updated_metrics if metric[primary_key_column_name] in sample_ids_to_ingest
+            metric for metric in updated_metrics if metric[primary_key_column_name] in records_to_ingest
         ]
 
     if FILTER_EXISTING_IDS:
