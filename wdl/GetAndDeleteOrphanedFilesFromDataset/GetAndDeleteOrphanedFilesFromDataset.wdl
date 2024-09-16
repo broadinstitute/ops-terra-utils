@@ -7,6 +7,7 @@ workflow GetAndDeleteOrphanedFilesFromDataset {
         Int? max_backoff_time
         Int? batch_size_to_list_files
         String? docker
+        Int? batch_size_to_delete_files
         Boolean delete_orphaned_files
     }
 
@@ -19,7 +20,8 @@ workflow GetAndDeleteOrphanedFilesFromDataset {
             max_backoff_time = max_backoff_time,
             docker_image = docker_image,
             delete_orphaned_files = delete_orphaned_files,
-            batch_size_to_list_files = batch_size_to_list_files
+            batch_size_to_list_files = batch_size_to_list_files,
+            batch_size_to_delete_files = batch_size_to_delete_files
     }
 
 }
@@ -32,6 +34,7 @@ task GetFilesNotInDataset {
         String docker_image
         Boolean delete_orphaned_files
         Int? batch_size_to_list_files
+        Int? batch_size_to_delete_files
     }
 
     command <<<
@@ -40,6 +43,7 @@ task GetFilesNotInDataset {
         ~{"--max_retries " + max_retries} \
         ~{"--max_backoff_time " + max_backoff_time} \
         ~{"--batch_size_to_list_files " + batch_size_to_list_files} \
+        ~{"--batch_size_to_delete_files " + batch_size_to_delete_files} \
         ~{if delete_orphaned_files then "--delete_orphaned_files" else ""}
     >>>
 
