@@ -69,4 +69,4 @@ class MultiThreadedJobs:
             else:
                 logging.warning(f"{failed_jobs} jobs failed, but continuing execution as 'fail_on_error' is False.")
         else:
-            logging.info(f"All jobs completed successfully!")
+            logging.info("All jobs completed successfully!")

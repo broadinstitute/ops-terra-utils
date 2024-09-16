@@ -1,7 +1,9 @@
 import argparse
 
 
-def hello_world(change_type, billing_project, workspace_name, move_or_copy_attachment, delete_attachment, metadata_attachment):
+def hello_world(change_type, billing_project,
+                workspace_name, move_or_copy_attachment,
+                delete_attachment, metadata_attachment):
     print(f"Change type: {change_type}")
     print(f"Billing project: {billing_project}")
     print(f"workspace_name: {workspace_name}")

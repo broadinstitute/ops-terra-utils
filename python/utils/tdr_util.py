@@ -15,7 +15,7 @@ import numpy as np
 from .request_util import GET, POST, DELETE
 from .tdr_api_schema.create_dataset_schema import create_dataset_schema
 from .tdr_api_schema.update_dataset_schema import update_schema
-from .terra_util import Terra, TerraWorkspace
+from .terra_util import TerraWorkspace
 from . import GCP, AZURE  # import from __init__.py
 
 from datetime import datetime, date
@@ -107,7 +107,7 @@ class TDR:
     "fileDetail": {
         "datasetId": "0d1c9aea-e944-4d19-83c3-8675f6aa123a",
         "mimeType": null,
-        "accessUrl": "gs://datarepo-34a4ac45-bucket/0d1c9aea-e944-4d19-83c3-8675f6aa062a/cf198fcc-3564-46ad-b73f-8bbc3711a866/SM-XXXXX.vcf.gz.md5sum",
+        "accessUrl": "gs://datarepo_url",
         "loadTag": "0d1c9aea-e944-4d19-83c3-8675f6aa123a"
     },
     "directoryDetail": null
@@ -164,7 +164,9 @@ class TDR:
         # Process files in batches
         for i in range(0, total_files, batch_size_to_delete_files):
             current_batch = file_ids[i:i + batch_size_to_delete_files]
-            logging.info(f"Submitting delete jobs for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} files.")
+            logging.info(f"Submitting delete jobs for batch\
+                         {i // batch_size_to_delete_files + 1} with {len(current_batch)} files.")
+
             # Submit delete jobs for the current batch
             for file_id in current_batch:
                 job_id = self.delete_file(file_id=file_id, dataset_id=dataset_id)
@@ -173,7 +175,8 @@ class TDR:
             logging.info(f"Monitoring {len(current_batch)} delete jobs in batch {i // batch_size_to_delete_files + 1}")
             for job_id in job_ids:
                 MonitorTDRJob(tdr=self, job_id=job_id, check_interval=5).run()
-            logging.info(f"Completed deletion for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} files.")
+            logging.info(f"Completed deletion for batch\
+                         {i // batch_size_to_delete_files + 1} with {len(current_batch)} files.")
         logging.info(f"Successfully deleted {total_files} files from dataset {dataset_id}")
 
     def add_user_to_dataset(self, dataset_id: str, user: str, policy: str) -> None:
@@ -185,7 +188,8 @@ class TDR:
         logging.info(f"Adding user {user} to dataset {dataset_id} with policy {policy}")
         self.request_util.run_request(uri=uri, method=POST, data=json.dumps(member_dict))
 
-    def _yield_existing_datasets(self, filter: Optional[str] = None, batch_size: int = 100, direction: str = 'asc') -> Any:
+    def _yield_existing_datasets(self, filter: Optional[str] = None,
+                                 batch_size: int = 100, direction: str = 'asc') -> Any:
         """Get all datasets in TDR. Filter can be dataset name"""
         offset = 0
         if filter:
@@ -194,7 +198,7 @@ class TDR:
             filter_str = ""
         while True:
             logging.info(f"Searching for datasets with filter {filter_str} in batches of {batch_size}")
-            uri = f"{self.TDR_LINK}/datasets?offset={offset}&limit={batch_size}&sort=created_date&direction={direction}{filter_str}"
+            uri = f"{self.TDR_LINK}/datasets?offset={offset}&limit={batch_size}&sort=created_date&direction={direction}{filter_str}" # noqa
             response = self.request_util.run_request(uri=uri, method=GET)
             datasets = response.json()['items']
             if not datasets:
@@ -295,7 +299,8 @@ class TDR:
             if not response or not response.json()["result"]:
                 break
             logging.info(
-                f"Downloading batch {batch_number} of max {query_limit} records from {target_table_name} table in dataset {dataset_id}")
+                f"Downloading batch {batch_number} of max {query_limit} records\
+                from {target_table_name} table in dataset {dataset_id}")
             for record in response.json()["result"]:
                 yield record
             search_request["offset"] += query_limit
@@ -349,10 +354,11 @@ class TDR:
         if existing_data_sets:
             if len(existing_data_sets) > 1:
                 raise ValueError(
-                    f"Multiple datasets found with name {dataset_name} under billing_profile: {json.dumps(existing_data_sets, indent=4)}")
+                    f"Multiple datasets found with name {dataset_name} under\
+                    billing_profile: {json.dumps(existing_data_sets, indent=4)}")
             dataset_id = existing_data_sets[0]['id']
         if not existing_data_sets:
-            logging.info(f"Did not find existing dataset")
+            logging.info("Did not find existing dataset")
             # Create dataset
             dataset_id = self.create_dataset(
                 schema=schema,
@@ -456,7 +462,6 @@ class TDR:
         return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
 
-
 class MonitorTDRJob:
     def __init__(self, tdr: TDR, job_id: str, check_interval: int):
         self.tdr = tdr
@@ -526,7 +531,6 @@ class StartAndMonitorIngest:
         ).run()
 
 
-
 class ReformatMetricsForIngest:
     """Reformat metrics for ingest.
     If file_list is True, then it is a list of file paths and formats differently assumes input json for that will be
@@ -578,7 +582,9 @@ class ReformatMetricsForIngest:
             file_path_storage_container = split_path[3]
             if file_path_storage_container != self.workspace_storage_container:
                 raise ValueError(
-                    f"{cloud_path} storage container {file_path_storage_container} does not match workspace storage container {self.workspace_storage_container}. SAS token will not work"
+                    f"{cloud_path} storage container {file_path_storage_container}\
+                        does not match workspace storage container {self.workspace_storage_container}.\
+                        SAS token will not work"
                 )
             relative_path = '/' + '/'.join(split_path[4:])
         if self.dest_file_path_flat:
@@ -587,8 +593,9 @@ class ReformatMetricsForIngest:
             return relative_path
 
     def _check_and_format_file_path(self, column_value: str) -> Any:
-        """Check if column value is a gs:// path and reformat to TDR's dataset relative path. if file_to_uuid_dict is
-        provided then it will add existing uuid. If file_to_uuid_dict provided and file not found then will warn and return None"""
+        """Check if column value is a gs:// path and reformat to TDR's dataset relative path.
+        if file_to_uuid_dict is provided then it will add existing uuid.
+        If file_to_uuid_dict provided and file not found then will warn and return None"""
         valid = True
         if isinstance(column_value, str):
             # If it is a file path then reformat to TDR's dataset relative path
@@ -600,13 +607,15 @@ class ReformatMetricsForIngest:
                         column_value = uuid
                     else:
                         logging.warning(
-                            f"File {column_value} not found in file_to_uuid_dict, which should include all files in dataset.")
+                            f"File {column_value} not found in file_to_uuid_dict,\
+                            which should include all files in dataset.")
                         column_value = None
                         valid = False
                 else:
                     # If azure sas token will be '?{sas_token}', if gcp it just be file path
                     return {
-                        "sourcePath": f"{column_value}{self.sas_token_string}" if self.cloud_type == AZURE else column_value,
+                        "sourcePath": f"{column_value}{self.sas_token_string}"
+                        if self.cloud_type == AZURE else column_value,
                         "targetPath": self._format_relative_tdr_path(column_value)
                     }
         return column_value, valid
@@ -619,31 +628,31 @@ class ReformatMetricsForIngest:
             if expected_data_type == "string" and not isinstance(column_value, str):
                 try:
                     column_value = str(column_value)
-                except:
+                except ValueError:
                     logging.warning(f"Column {column_name} with value {column_value} is not a string")
                     valid = False
             if expected_data_type in ['int64', 'integer'] and not isinstance(column_value, int):
                 try:
                     column_value = int(column_value)
-                except:
+                except ValueError:
                     logging.warning(f"Column {column_name} with value {column_value} is not an integer")
                     valid = False
             if expected_data_type == "float64" and not isinstance(column_value, float):
                 try:
                     column_value = float(column_value)
-                except:
+                except ValueError:
                     logging.warning(f"Column {column_name} with value {column_value} is not a float")
                     valid = False
             if expected_data_type == "boolean" and not isinstance(column_value, bool):
                 try:
                     column_value = bool(column_value)
-                except:
+                except ValueError:
                     logging.warning(f"Column {column_name} with value {column_value} is not a boolean")
                     valid = False
             if expected_data_type in ["datetime", "date", "time"] and not isinstance(column_value, datetime):
                 try:
                     column_value = parser.parse(column_value)
-                except:
+                except ValueError:
                     logging.warning(f"Column {column_name} with value {column_value} is not a datetime")
                     valid = False
             if expected_data_type == "array" and not isinstance(column_value, list):
@@ -711,16 +720,17 @@ class ReformatMetricsForIngest:
 
 
 class SetUpTDRTables:
-    """dict of dicts containing table info list expected columns are table_name, primary_key, ingest metadata, table_unique_id
-    and key should be table name"""
+    """dict of dicts containing table info list;
+    expected columns are table_name, primary_key,
+    ingest metadata, table_unique_id and key should be table name"""
 
     def __init__(self, tdr: TDR, dataset_id: str, table_info_dict: dict):
         self.tdr = tdr
         self.dataset_id = dataset_id
         self.table_info_dict = table_info_dict
 
-    def _compare_table(self, reference_dataset_table: dict, target_dataset_table: list[dict], table_name: str) -> \
-    list[dict]:
+    def _compare_table(self, reference_dataset_table: dict,
+                       target_dataset_table: list[dict], table_name: str) -> list[dict]:
         """Compare tables between two datasets."""
         logging.info(f"Comparing table {reference_dataset_table['name']} to existing target table")
         columns_to_update = []
@@ -743,8 +753,8 @@ class SetUpTDRTables:
                         columns_to_update.append(column_dict)
         return columns_to_update
 
-    def _compare_dataset_relationships(self, reference_dataset_relationships, target_dataset_relationships) -> list[
-        dict]:
+    def _compare_dataset_relationships(self, reference_dataset_relationships,
+                                       target_dataset_relationships) -> list[dict]:
         dataset_relationships_to_modify = []
         for dataset in reference_dataset_relationships:
             if dataset not in target_dataset_relationships:
@@ -786,7 +796,8 @@ class SetUpTDRTables:
                     valid = False
                     for column_to_update_dict in columns_to_update:
                         logging.warning(
-                            f"Columns needs updates in {ingest_table_name}: {json.dumps(column_to_update_dict, indent=4)}")
+                            f"Columns needs updates in {ingest_table_name}:\
+                            {json.dumps(column_to_update_dict, indent=4)}")
                 else:
                     logging.info(f"Table {ingest_table_name} exists and is up to date")
         if valid:
@@ -833,7 +844,8 @@ class BatchIngest:
         self.target_table_name = target_table_name
         self.dataset_id = dataset_id
         self.cloud_type = cloud_type
-        self.terra_workspace = terra_workspace  # This is only used if ingesting Azure data where you need to create sas tokens from workspace
+        # terra_workspace only used if ingesting Azure data where you need to create sas tokens from workspace
+        self.terra_workspace = terra_workspace
         self.batch_size = batch_size
         self.update_strategy = update_strategy
         self.bulk_mode = bulk_mode
@@ -987,7 +999,7 @@ class InferTDRSchema:
                 [v for v in values_for_header if v is not None][0])
 
             # check if all the values in the list that are non-none match the type of the first entry
-            all_values_matching = all(
+            all_values_matching = all(  # noqa: E721
                 type(v) == type_to_match_against for v in values_for_header if v is not None)
             matching.append({header: all_values_matching})
 
@@ -1165,7 +1177,8 @@ class GetPermissionsForWorkspaceIngest:
                 logging.info("added_to_auth_domain has been set to true so assuming account has already been added")
             else:
                 logging.info(
-                    "Please add TDR SA account to auth domain group to allow access to workspace and then rerun with added_to_auth_domain=True")
+                    "Please add TDR SA account to auth domain group\
+                    to allow access to workspace and then rerun with added_to_auth_domain=True")
                 sys.exit(0)
 
 
@@ -1248,7 +1261,8 @@ class FilterOutSampleIdsAlreadyInDataset:
     def run(self) -> list[dict]:
         # Get all sample ids that already exist in dataset
         logging.info(
-            f"Getting all {self.filter_entity_id} that already exist in table {self.target_table_name} in dataset {self.dataset_id}")
+            f"Getting all {self.filter_entity_id} that already exist\
+            in table {self.target_table_name} in dataset {self.dataset_id}")
         data_set_sample_ids = self.tdr.get_data_set_sample_ids(
             dataset_id=self.dataset_id,
             target_table_name=self.target_table_name,
@@ -1262,7 +1276,8 @@ class FilterOutSampleIdsAlreadyInDataset:
         ]
         if len(filtered_ingest_metrics) < len(self.ingest_metrics):
             logging.info(
-                f"Filtered out {len(self.ingest_metrics) - len(filtered_ingest_metrics)} rows that already exist in dataset")
+                f"Filtered out {len(self.ingest_metrics) - len(filtered_ingest_metrics)}\
+                rows that already exist in dataset")
             if filtered_ingest_metrics:
                 return filtered_ingest_metrics
             else:
