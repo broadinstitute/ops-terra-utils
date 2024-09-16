@@ -165,7 +165,10 @@ class TDR:
         # Process files in batches
         for i in range(0, total_files, batch_size_to_delete_files):
             current_batch = file_ids[i:i + batch_size_to_delete_files]
-            logging.info(f"Submitting delete jobs for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} files.")
+            logging.info(
+                f"Submitting delete jobs for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} "
+                f"files."
+            )
             # Submit delete jobs for the current batch
             for file_id in current_batch:
                 job_id = self.delete_file(file_id=file_id, dataset_id=dataset_id)
@@ -174,7 +177,9 @@ class TDR:
             logging.info(f"Monitoring {len(current_batch)} delete jobs in batch {i // batch_size_to_delete_files + 1}")
             for job_id in job_ids:
                 MonitorTDRJob(tdr=self, job_id=job_id, check_interval=5).run()
-            logging.info(f"Completed deletion for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} files.")
+            logging.info(
+                f"Completed deletion for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} files."
+            )
         logging.info(f"Successfully deleted {total_files} files from dataset {dataset_id}")
 
     def add_user_to_dataset(self, dataset_id: str, user: str, policy: str) -> None:
@@ -1022,7 +1027,7 @@ class InferTDRSchema:
         for header, values_for_header in key_value_type_mappings.items():
             # find one value that's non-none to get the type to check against
             type_to_match_against = type(
-                [v for v in values_for_header if v is not None][0])
+                [v for v in values_for_header if v][0])
 
             # check if all the values in the list that are non-none match the type of the first entry
             all_values_matching = all(

@@ -26,8 +26,8 @@ def get_args():
     parser.add_argument(
         "--download_type",
         choices=["flat", "structured"],
-        help="""How you'd like your downloaded data to be structured in the output bucket. 'flat' indicates that all 
-        files will be downloaded to the root of your bucket. 'structured' indicates that the original file path 
+        help="""How you'd like your downloaded data to be structured in the output bucket. 'flat' indicates that all
+        files will be downloaded to the root of your bucket. 'structured' indicates that the original file path
         structure will be maintained.""",
         required=True
     )
@@ -61,7 +61,7 @@ class SourceDestinationMapping:
         if duplicates:
             formatted_duplicates = "\n".join(duplicates)
             raise Exception(
-                f"""Not all destinations were unique. If you selected 'flat' as the download type, try re-running with 
+                f"""Not all destinations were unique. If you selected 'flat' as the download type, try re-running with
                     'structured' instead. Below is a list of files that were duplicated:\n{formatted_duplicates}"""
             )
 

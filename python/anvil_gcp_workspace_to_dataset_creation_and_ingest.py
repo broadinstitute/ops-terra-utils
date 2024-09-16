@@ -84,7 +84,8 @@ def get_args():
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if "
+             f"not provided"
     )
     parser.add_argument(
         "--max_retries",
@@ -194,7 +195,9 @@ class DataSetName:
                 [f"{dataset['name']} - {dataset['id']}" for dataset in existing_datasets]
             )
             logging.error(
-                f"Set dataset name to use manually. {len(existing_datasets)} datasets found with prefix {dataset_prefix}: {dataset_info_str}")
+                f"Set dataset name to use manually. {len(existing_datasets)} datasets found with prefix"
+                f" {dataset_prefix}: {dataset_info_str}"
+            )
             sys.exit(1)
         if len(existing_datasets) == 1 and existing_datasets[0]['name'] != f"{dataset_prefix}_{dataset_suffix}":
             logging.error(

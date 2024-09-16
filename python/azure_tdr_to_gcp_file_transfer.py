@@ -53,7 +53,7 @@ def get_args() -> Namespace:
 
 class DownloadAzBlob:
 
-    def __init__(self, export_info: dict, tdr_client): 
+    def __init__(self, export_info: dict, tdr_client):
         self.tdr_client = tdr_client
         self.export_info = export_info
         self.sas_token = None
@@ -62,7 +62,7 @@ class DownloadAzBlob:
         token_expiry = datetime.fromisoformat(self.sas_token['expiry_time'])
         current_time = datetime.now(timezone.utc)
         time_delta = token_expiry - current_time
-        return time_delta		
+        return time_delta
 
     def get_new_sas_token(self):
         logging.info("Obtaining new sas token")
@@ -103,13 +103,13 @@ if __name__ == "__main__":
     for file in file_list:
         access_url = file['fileDetail']['accessUrl']
         download_path = f"/tmp/{Path(access_url).name}"
-        file_download = download_client.run(blob_path=access_url ,output_path=download_path)
+        file_download = download_client.run(blob_path=access_url, output_path=download_path)
         file_name = Path(access_url).name
         # construct upload path
         if args.retain_path_structure:
             gcp_upload_path = file['path']
         elif args.bucket_output_path:
-            formatted_path = Path(args.bucket_output_path)/file_name 
+            formatted_path = Path(args.bucket_output_path)/file_name
             gcp_upload_path = str(formatted_path)
         else:
             gcp_upload_path = file_name

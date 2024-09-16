@@ -41,8 +41,8 @@ def get_args() -> Namespace:
     parser.add_argument(
         "--bulk_mode",
         action="store_true",
-        help="""If used, will use bulk mode for ingest. Using bulk mode for TDR Ingest loads data faster when ingesting 
-        a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of some 
+        help="""If used, will use bulk mode for ingest. Using bulk mode for TDR Ingest loads data faster when ingesting
+        a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of some
         safeguards (such as guaranteed rollbacks and potential recopying of files)
         and it also forces exclusive locking of the dataset (i.e. you can’t run multiple ingests at once)."""
     )
