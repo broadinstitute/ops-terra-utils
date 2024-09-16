@@ -12,7 +12,7 @@ This workflow automates the process of ingesting all metadata and related files 
 | **primary_key_column_name** | The primary key column name in the Terra metadata table.                                                                          | String        | Yes      | N/A                                  |
 | **update_strategy**         | Specifies how to handle updates during ingestion. Options are `REPLACE`, `APPEND`, or `UPDATE`.                                   | String        | No       | `REPLACE`                            |
 | **records_to_ingest**       | An optional list of IDs to ingest from the metadata if not all rows are desired.                                                  | Array[String] | No       | N/A                                  |
-| **bulk_mode**               | Enables bulk mode for faster ingestion of a large number of files.                                                                | Boolean       | No       | N/A                                  |
+| **bulk_mode**               | Enables bulk mode for faster ingestion of a large number of files.                                                                | Boolean       | Yes      | N/A                                  |
 | **max_retries**             | The maximum number of retries for a failed request. Optional.                                                                     | Int           | No       | 5                                    |
 | **max_backoff_time**        | The maximum backoff time, in seconds, for a failed request. Optional.                                                             | Int           | No       | 300                                  |
 
