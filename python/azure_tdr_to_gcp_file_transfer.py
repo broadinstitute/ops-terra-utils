@@ -1,3 +1,5 @@
+from google.cloud import storage
+import google.cloud.logging
 import logging
 import json
 import subprocess
@@ -67,19 +69,23 @@ class DownloadAzBlob:
     def get_new_sas_token(self):
         logging.info("Obtaining new sas token")
         if self.export_info['endpoint'] == 'dataset':
-            self.sas_token = self.tdr_client.get_sas_token(dataset_id=self.export_info['id'])
+            self.sas_token = self.tdr_client.get_sas_token(
+                dataset_id=self.export_info['id'])
         elif self.export_info['endpoint'] == 'snapshot':
-            self.sas_token = self.tdr_client.get_sas_token(snapshot_id=self.export_info['id'])
+            self.sas_token = self.tdr_client.get_sas_token(
+                snapshot_id=self.export_info['id'])
 
     def run_az_copy(self, blob_path: str, output_path: str):
-        az_copy_command = ['azcopy', 'copy', f"{blob_path}", f"{output_path}", '--output-type=json']
+        az_copy_command = ['azcopy', 'copy',
+                           f"{blob_path}", f"{output_path}", '--output-type=json']
         copy_cmd = subprocess.run(az_copy_command, capture_output=True)
         return copy_cmd
 
     def run(self, blob_path: str, output_path: str):
         self.get_new_sas_token()
         blob_path_with_token = f"{blob_path}?{self.sas_token['sas_token']}"
-        download_output = self.run_az_copy(blob_path=blob_path_with_token, output_path=output_path)
+        download_output = self.run_az_copy(
+            blob_path=blob_path_with_token, output_path=output_path)
         output_list = download_output.stdout.decode('utf-8').splitlines()
         json_list = [json.loads(obj) for obj in output_list]
         return json_list
@@ -95,9 +101,11 @@ if __name__ == "__main__":
     export_info = {'endpoint': args.export_type, 'id': args.target_id}
 
     if args.export_type == 'dataset':
-        file_list = tdr_client.get_data_set_files(dataset_id=args.target_id, batch_query=False)
+        file_list = tdr_client.get_data_set_files(
+            dataset_id=args.target_id, batch_query=False)
     elif args.export_type == 'snapshot':
-        file_list = tdr_client.get_files_from_snapshot(snapshot_id=args.target_id)
+        file_list = tdr_client.get_files_from_snapshot(
+            snapshot_id=args.target_id)
 
     download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
     for file in file_list:

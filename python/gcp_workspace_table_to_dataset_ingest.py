@@ -18,21 +18,26 @@ logging.basicConfig(
 )
 
 # Columns to ignore when ingesting
-COLUMNS_TO_IGNORE = ['datarepo_row_id', 'import:timestamp', 'import:snapshot_id', 'tdr:sample_id']
+COLUMNS_TO_IGNORE = ['datarepo_row_id', 'import:timestamp',
+                     'import:snapshot_id', 'tdr:sample_id']
 CLOUD_TYPE = GCP
 BATCH_SIZE = 700  # The number of rows to ingest at a time
 WAITING_TIME_TO_POLL = 120  # How long to wait between polling for ingest status
 MAX_RETRIES = 5  # The maximum number of retries for a failed request
 MAX_BACKOFF_TIME = 5 * 60  # The maximum backoff time for a failed request
 TEST_INGEST = False  # Whether to test the ingest by just doing first batch
-FILTER_EXISTING_IDS = False  # Filter for out rows where it already exists within the dataset
+# Filter for out rows where it already exists within the dataset
+FILTER_EXISTING_IDS = False
 
 
 def get_args():
-    parser = ArgumentParser(description="Ingest data into an existing dataset from a GCP workspace")
+    parser = ArgumentParser(
+        description="Ingest data into an existing dataset from a GCP workspace")
     parser.add_argument("--billing_project", required=True)
     parser.add_argument("--workspace_name", required=True)
     parser.add_argument("--dataset_id", required=True)
+    parser.add_argument("--target_table_name", required=True,
+                        help="The name of the table in TDR")
     parser.add_argument(
         "--terra_table_name",
         required=True,
@@ -69,6 +74,7 @@ def get_args():
              a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of
              some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces
              exclusive  locking of the dataset (i.e. you can’t run multiple ingests at once)"""
+
     )
     parser.add_argument(
         "--max_retries",

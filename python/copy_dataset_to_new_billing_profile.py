@@ -20,7 +20,8 @@ DEFAULT_BATCH_SIZE = 500
 
 
 def get_args() -> Namespace:
-    parser = ArgumentParser(description="""Copy dataset to new billing profile""")
+    parser = ArgumentParser(
+        description="""Copy dataset to new billing profile""")
     parser.add_argument("--new_billing_profile", required=True)
     parser.add_argument("--orig_dataset_id", required=True)
     parser.add_argument(
@@ -66,10 +67,12 @@ if __name__ == "__main__":
 
     # Check dataset id is not already in requested billing profile
     if orig_dataset_info['defaultProfileId'] == billing_profile:
-        logging.info(f"Dataset {orig_dataset_id} already in billing profile {billing_profile}")
+        logging.info(
+            f"Dataset {orig_dataset_id} already in billing profile {billing_profile}")
         sys.exit(0)
 
-    new_dataset_name = args.new_dataset_name if args.new_dataset_name else orig_dataset_info["name"]
+    new_dataset_name = args.new_dataset_name if args.new_dataset_name else orig_dataset_info[
+        "name"]
 
     additional_properties = {
         "phsId": orig_dataset_info['phsId'],
@@ -107,11 +110,15 @@ if __name__ == "__main__":
     )
 
     # Go through each table in source dataset and run batch ingest to dest dataset
-    orig_dataset_tables = [t['name'] for t in orig_dataset_info['schema']['tables']]
-    logging.info(f"Found {len(orig_dataset_tables)} tables in source dataset to ingest")
+    orig_dataset_tables = [t['name']
+                           for t in orig_dataset_info['schema']['tables']]
+    logging.info(
+        f"Found {len(orig_dataset_tables)} tables in source dataset to ingest")
     for table_name in orig_dataset_tables:
-        table_metadata = tdr.get_data_set_table_metrics(orig_dataset_id, table_name)
-        logging.info(f"Starting ingest for table {table_name} with total of {len(table_metadata)} rows")
+        table_metadata = tdr.get_data_set_table_metrics(
+            orig_dataset_id, table_name)
+        logging.info(
+            f"Starting ingest for table {table_name} with total of {len(table_metadata)} rows")
         BatchIngest(
             ingest_metadata=table_metadata,
             tdr=tdr,

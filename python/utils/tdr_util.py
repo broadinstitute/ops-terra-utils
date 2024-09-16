@@ -17,8 +17,8 @@ from datetime import datetime, date
 
 from .request_util import GET, POST, DELETE
 from .tdr_api_schema.create_dataset_schema import create_dataset_schema
+
 from .tdr_api_schema.update_dataset_schema import UpdateSchema
-from .terra_util import TerraWorkspace
 from . import GCP, AZURE  # import from __init__.py
 
 
@@ -169,6 +169,7 @@ class TDR:
                 f"Submitting delete jobs for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} "
                 f"files."
             )
+
             # Submit delete jobs for the current batch
             for file_id in current_batch:
                 job_id = self.delete_file(file_id=file_id, dataset_id=dataset_id)
@@ -180,6 +181,7 @@ class TDR:
             logging.info(
                 f"Completed deletion for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} files."
             )
+
         logging.info(f"Successfully deleted {total_files} files from dataset {dataset_id}")
 
     def add_user_to_dataset(self, dataset_id: str, user: str, policy: str) -> None:
@@ -364,6 +366,7 @@ class TDR:
                     f"Multiple datasets found with name {dataset_name} under billing_profile: "
                     f"{json.dumps(existing_data_sets, indent=4)}"
                 )
+
             dataset_id = existing_data_sets[0]['id']
         if not existing_data_sets:
             logging.info("Did not find existing dataset")
@@ -649,31 +652,33 @@ class ReformatMetricsForIngest:
             if expected_data_type == "string" and not isinstance(column_value, str):
                 try:
                     column_value = str(column_value)
-                except Exception:
+                except ValueError:
                     logging.warning(f"Column {column_name} with value {column_value} is not a string")
                     valid = False
             if expected_data_type in ['int64', 'integer'] and not isinstance(column_value, int):
                 try:
                     column_value = int(column_value)
-                except Exception:
+                except ValueError:
                     logging.warning(f"Column {column_name} with value {column_value} is not an integer")
                     valid = False
             if expected_data_type == "float64" and not isinstance(column_value, float):
                 try:
                     column_value = float(column_value)
-                except Exception:
+                except ValueError:
+
                     logging.warning(f"Column {column_name} with value {column_value} is not a float")
                     valid = False
             if expected_data_type == "boolean" and not isinstance(column_value, bool):
                 try:
                     column_value = bool(column_value)
-                except Exception:
+                except ValueError:
                     logging.warning(f"Column {column_name} with value {column_value} is not a boolean")
                     valid = False
             if expected_data_type in ["datetime", "date", "time"] and not isinstance(column_value, datetime):
                 try:
                     column_value = parser.parse(column_value)
-                except Exception:
+                except ValueError:
+
                     logging.warning(f"Column {column_name} with value {column_value} is not a datetime")
                     valid = False
             if expected_data_type == "array" and not isinstance(column_value, list):
@@ -741,8 +746,9 @@ class ReformatMetricsForIngest:
 
 
 class SetUpTDRTables:
-    """dict of dicts containing table info list expected columns are table_name, primary_key, ingest metadata,
-    table_unique_id and key should be table name"""
+    """dict of dicts containing table info list;
+    expected columns are table_name, primary_key,
+    ingest metadata, table_unique_id and key should be table name"""
 
     def __init__(self, tdr: TDR, dataset_id: str, table_info_dict: dict):
         self.tdr = tdr
@@ -772,6 +778,7 @@ class SetUpTDRTables:
                         column_dict["action"] = "modify"
                         columns_to_update.append(column_dict)
         return columns_to_update
+
 
     @staticmethod
     def _compare_dataset_relationships(reference_dataset_relationships, target_dataset_relationships) -> list[dict]:
@@ -877,7 +884,7 @@ class BatchIngest:
         self.target_table_name = target_table_name
         self.dataset_id = dataset_id
         self.cloud_type = cloud_type
-        # This is only used if ingesting Azure data where you need to create sas tokens from workspace
+        # terra_workspace only used if ingesting Azure data where you need to create sas tokens from workspace
         self.terra_workspace = terra_workspace
         self.batch_size = batch_size
         self.update_strategy = update_strategy
@@ -1030,8 +1037,8 @@ class InferTDRSchema:
                 [v for v in values_for_header if v][0])
 
             # check if all the values in the list that are non-none match the type of the first entry
-            all_values_matching = all(  # noqa
-                type(v) == type_to_match_against for v in values_for_header if v)
+            all_values_matching = all(  # noqa: E721
+                type(v) == type_to_match_against for v in values_for_header if v is not None)
             matching.append({header: all_values_matching})
 
         # Returns true if all headers are determined to be "matching"
@@ -1210,6 +1217,7 @@ class GetPermissionsForWorkspaceIngest:
                     "Please add TDR SA account to auth domain group to allow access to workspace and then rerun with "
                     "added_to_auth_domain=True"
                 )
+
                 sys.exit(0)
 
 
@@ -1313,6 +1321,7 @@ class FilterOutSampleIdsAlreadyInDataset:
             f"Getting all {self.filter_entity_id} that already exist in table {self.target_table_name} in "
             f"dataset {self.dataset_id}"
         )
+
         data_set_sample_ids = self.tdr.get_data_set_sample_ids(
             dataset_id=self.dataset_id,
             target_table_name=self.target_table_name,
@@ -1329,6 +1338,7 @@ class FilterOutSampleIdsAlreadyInDataset:
                 f"Filtered out {len(self.ingest_metrics) - len(filtered_ingest_metrics)} rows that already exist in "
                 f"dataset"
             )
+
             if filtered_ingest_metrics:
                 return filtered_ingest_metrics
             else:

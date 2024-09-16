@@ -23,7 +23,8 @@ UPDATE_STRATEGY = 'merge'
 
 
 def get_args() -> Namespace:
-    parser = ArgumentParser(description="Copy and Rename files to workspace or bucket and reingest with new name")
+    parser = ArgumentParser(
+        description="Copy and Rename files to workspace or bucket and reingest with new name")
     parser.add_argument("-i", "--dataset_id", required=True)
     parser.add_argument(
         "-c",
@@ -121,13 +122,16 @@ class GetRowAndFileInfoForReingest:
         # Get basename of file
         file_name = os.path.basename(access_url)
         # Replace basename with new basename
-        new_file_name = file_name.replace(f'{og_basename}.', f'{new_basename}.')
+        new_file_name = file_name.replace(
+            f'{og_basename}.', f'{new_basename}.')
         # get tdr path. Not real path, just the metadata
         tdr_file_path = file_info['path']
         # Create full path to updated tdr metadata file path
-        updated_tdr_metadata_path = os.path.join(os.path.dirname(tdr_file_path), new_file_name)
+        updated_tdr_metadata_path = os.path.join(
+            os.path.dirname(tdr_file_path), new_file_name)
         access_url_without_bucket = access_url.split('gs://')[1]
-        temp_path = os.path.join(self.temp_bucket, os.path.dirname(access_url_without_bucket), new_file_name)
+        temp_path = os.path.join(self.temp_bucket, os.path.dirname(
+            access_url_without_bucket), new_file_name)
         return temp_path, updated_tdr_metadata_path, access_url
 
     def _create_row_dict(
@@ -180,15 +184,18 @@ class GetRowAndFileInfoForReingest:
         rows_to_reingest = []
         files_to_copy_to_temp = []
         # Get all columns in table that are filerefs
-        file_ref_columns = [col['name'] for col in self.table_schema_info['columns'] if col['datatype'] == 'fileref']
+        file_ref_columns = [
+            col['name'] for col in self.table_schema_info['columns'] if col['datatype'] == 'fileref']
         for row_dict in self.table_metrics:
-            new_row_dict, temp_copy_list = self._create_row_dict(row_dict, file_ref_columns)
+            new_row_dict, temp_copy_list = self._create_row_dict(
+                row_dict, file_ref_columns)
             # If there is something to copy and update
             if new_row_dict and temp_copy_list:
                 rows_to_reingest.append(new_row_dict)
                 files_to_copy_to_temp.append(temp_copy_list)
         logging.info(f"Total rows to re-ingest: {len(self.rows_to_reingest)}")
-        logging.info(f"Total files to copy and re-ingest: {self.total_files_to_reingest}")
+        logging.info(
+            f"Total files to copy and re-ingest: {self.total_files_to_reingest}")
         return rows_to_reingest, files_to_copy_to_temp
 
 
@@ -211,7 +218,8 @@ class GetTempBucket:
         # Check if temp_bucket is provided
         if not self.temp_bucket:
             if not self.billing_project or not self.workspace_name:
-                logging.error("If temp_bucket is not provided, billing_project and workspace_name must be provided")
+                logging.error(
+                    "If temp_bucket is not provided, billing_project and workspace_name must be provided")
                 sys.exit(1)
             else:
                 terra_workspace = TerraWorkspace(
@@ -228,7 +236,8 @@ class GetTempBucket:
                 ).run()
         else:
             if billing_project or workspace_name:
-                logging.error("If temp_bucket is provided, billing_project and workspace_name must not be provided")
+                logging.error(
+                    "If temp_bucket is provided, billing_project and workspace_name must not be provided")
                 sys.exit(1)
             logging.info(
                 f"""Using temp_bucket: {self.temp_bucket}. Make sure {self.dataset_info['ingestServiceAccount']}
@@ -271,11 +280,15 @@ class BatchCopyAndIngest:
         gcp_functions = GCPCloudFunctions()
         for i in range(0, len(self.rows_to_ingest), self.copy_and_ingest_batch_size):
             batch_number = i // self.copy_and_ingest_batch_size + 1
-            logging.info(f"Starting batch {batch_number} of {total_batches} for copy to temp and ingest")
-            ingest_metadata_batch = self.rows_to_ingest[i:i + self.copy_and_ingest_batch_size]
-            files_to_copy_batch = self.row_files_to_copy[i:i + self.copy_and_ingest_batch_size]
+            logging.info(
+                f"Starting batch {batch_number} of {total_batches} for copy to temp and ingest")
+            ingest_metadata_batch = self.rows_to_ingest[i:i +
+                                                        self.copy_and_ingest_batch_size]
+            files_to_copy_batch = self.row_files_to_copy[i:i +
+                                                         self.copy_and_ingest_batch_size]
             # files_to_copy_batch will be a list of lists of dicts, so flatten it
-            files_to_copy = [file_dict for sublist in files_to_copy_batch for file_dict in sublist]
+            files_to_copy = [
+                file_dict for sublist in files_to_copy_batch for file_dict in sublist]
 
             # Copy files to temp bucket
             gcp_functions.multithread_copy_of_files_with_validation(
@@ -299,7 +312,8 @@ class BatchCopyAndIngest:
 
             # Delete files from temp bucket
             # Create list of files in temp location to delete. Full destination path is the temp location from copy
-            files_to_delete = [file_dict['full_destination_path'] for file_dict in files_to_copy]
+            files_to_delete = [file_dict['full_destination_path']
+                               for file_dict in files_to_copy]
             gcp_functions.delete_multiple_files(
                 # Create list of files in temp location to delete. Full destination path is the temp location from copy
                 files_to_delete=files_to_delete,
@@ -324,7 +338,8 @@ if __name__ == '__main__':
 
     # Initialize TDR classes
     token = Token(cloud=CLOUD_TYPE)
-    request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
+    request_util = RunRequest(
+        token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
 
     # Get dataset info
@@ -340,13 +355,15 @@ if __name__ == '__main__':
     ).run()
 
     # Get schema info for table
-    table_schema_info = tdr.get_table_schema_info(dataset_id=dataset_id, table_name=dataset_table_name)
+    table_schema_info = tdr.get_table_schema_info(
+        dataset_id=dataset_id, table_name=dataset_table_name)
 
     # Get all dict of all files where key is uuid
     files_info = tdr.create_file_dict(dataset_id=dataset_id, limit=1000)
 
     # Get all metrics for table
-    dataset_metrics = tdr.get_data_set_table_metrics(dataset_id=dataset_id, target_table_name=dataset_table_name)
+    dataset_metrics = tdr.get_data_set_table_metrics(
+        dataset_id=dataset_id, target_table_name=dataset_table_name)
 
     # Get information on files that need to be reingested
     rows_to_reingest, row_files_to_copy = GetRowAndFileInfoForReingest(

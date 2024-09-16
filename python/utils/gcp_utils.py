@@ -7,6 +7,7 @@ MOVE = "move"
 COPY = "copy"
 
 
+
 class GCPCloudFunctions:
     """List contents of a GCS bucket. Does NOT take in a token and auths as current user"""
     def __init__(self):
@@ -53,13 +54,12 @@ class GCPCloudFunctions:
         destination_file_path_components = self.process_cloud_path(full_destination_path)
 
         try:
-            src_blob = self.client.bucket(
-                source_file_path_components['bucket']
-            ).blob(source_file_path_components['blob_url'])
-
-            dest_blob = self.client.bucket(
-                destination_file_path_components['bucket']
-            ).blob(destination_file_path_components['blob_url'])
+            src_bucket = source_file_path_components['bucket']
+            src_blob_url = source_file_path_components['blob_url']
+            dest_bucket = destination_file_path_components['bucket']
+            dest_blob_url = destination_file_path_components['blob_url']
+            src_blob = self.client.bucket(src_bucket).blob(src_blob_url)
+            dest_blob = self.client.bucket(dest_bucket).blob(dest_blob_url)
 
             # Use rewrite so no timeouts
             rewrite_token = False
@@ -87,7 +87,6 @@ class GCPCloudFunctions:
 
     def get_filesize(self, target_path: str) -> int:
         source_file_path_components = self.process_cloud_path(target_path)
-
         target = self.client.bucket(
             source_file_path_components['bucket']
         ).get_blob(source_file_path_components['blob_url'])
@@ -98,7 +97,11 @@ class GCPCloudFunctions:
     def validate_files_are_same(self, src_cloud_path: str, dest_cloud_path: str) -> bool:
         """Validate if two cloud files (source and destination) are identical based on their MD5 hashes."""
         src_file_path_components = self.process_cloud_path(src_cloud_path)
+        src_bucket = src_file_path_components['bucket']
+        src_blob_url = src_file_path_components['blob_url']
         dest_file_path_components = self.process_cloud_path(dest_cloud_path)
+        dest_bucket = dest_file_path_components['bucket']
+        dest_blob_url = dest_file_path_components['blob_url']
 
         src_blob = self.client.bucket(src_file_path_components['bucket']).get_blob(src_file_path_components['blob_url'])
         dest_blob = self.client.bucket(

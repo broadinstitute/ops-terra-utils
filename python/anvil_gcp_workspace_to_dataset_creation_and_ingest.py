@@ -19,7 +19,8 @@ logging.basicConfig(
 TOKEN_TYPE = GCP  # The cloud type for the token
 CLOUD_TYPE = GCP  # The cloud type for the TDR dataset and workspace
 MAX_RETRIES = 5  # The maximum number of retries for a failed request
-MAX_BACKOFF_TIME = 5 * 60  # The maximum backoff time for a failed request (in seconds)
+# The maximum backoff time for a failed request (in seconds)
+MAX_BACKOFF_TIME = 5 * 60
 # Anvil prod billing profile id
 ANVIL_TDR_BILLING_PROFILE = "e0e03e48-5b96-45ec-baa4-8cc1ebf74c61"
 DATASET_MONITORING = True  # Enable monitoring for dataset
@@ -44,7 +45,8 @@ FILE_INVENTORY_TABLE_NAME = "file_inventory"
 
 
 def get_args():
-    parser = ArgumentParser(description="Create and ingest data into a new GCP dataset from a workspace")
+    parser = ArgumentParser(
+        description="Create and ingest data into a new GCP dataset from a workspace")
     parser.add_argument("--billing_project", required=True)
     parser.add_argument("--workspace_name", required=True)
     parser.add_argument(
@@ -99,7 +101,6 @@ def get_args():
 
 class CreateIngestTableInfo:
     """Create a list of dictionaries for each table to ingest"""
-
     def __init__(
             self,
             file_paths_dict: list[dict],
