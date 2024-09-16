@@ -1,17 +1,15 @@
-from azure.storage.blob import BlobClient
-from azure.core.credentials import AzureSasCredential
-from google.cloud import storage
-import google.cloud.logging
-
-from argparse import ArgumentParser, Namespace
-from utils.tdr_util import TDR
-from utils.request_util import RunRequest
-from utils.token_util import Token
-from datetime import datetime, timedelta, timezone
 import logging
 import json
 import subprocess
+import google.cloud.logging
+from google.cloud import storage
 from pathlib import Path
+from datetime import datetime, timezone
+from argparse import ArgumentParser, Namespace
+
+from utils.tdr_util import TDR
+from utils.request_util import RunRequest
+from utils.token_util import Token
 
 
 logging.basicConfig(
@@ -25,26 +23,33 @@ google_logging_client.setup_logging()
 def get_args() -> Namespace:
     parser = ArgumentParser(
         description="""For deletion of on prem aggregations for input samples""")
-    parser.add_argument("-t", "--export_type", required=True,
-                        help="Target to export from TDR, either entire dataset or snapshot", choices=['dataset', 'snapshot'])
+    parser.add_argument(
+        "-t",
+        "--export_type",
+        required=True,
+        help="Target to export from TDR, either entire dataset or snapshot", choices=['dataset', 'snapshot']
+    )
     parser.add_argument("-id", "--target_id", required=True,
                         help="ID of dataset or snapshot to export")
     parser.add_argument("-b", "--bucket_id", required=True,
                         help="Google bucket to export data to")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-op", "--bucket_output_path", required=False,
-                        help="Directory to upload files to within google bucket, cannot be used alongside retain_path_structure option")
-    group.add_argument("-rps", "--retain_path_structure", required=False, default=False, action='store_true',
-                        help="Option to keep path structure set in TDR from path attribute")
+    group.add_argument(
+        "-op",
+        "--bucket_output_path",
+        required=False,
+        help="Directory to upload files to within google bucket, cannot be used alongside retain_path_structure option"
+    )
+    group.add_argument(
+        "-rps",
+        "--retain_path_structure",
+        required=False,
+        default=False,
+        action="store_true",
+        help="Option to keep path structure set in TDR from path attribute"
+    )
     return parser.parse_args()
 
-
-
-
-#DATASET_ID = "34f9c0d5-3a78-4e7d-85b5-2089280ff87a"
-#SNAPSHOT_ID = ""
-#GOOGLE_BUCKET = "fc-912e0ea1-de65-4c99-93c0-2b914063ba22"
-#MOUNT_PATH = "/mnt/mount_test"
 
 class DownloadAzBlob:
 
@@ -80,10 +85,6 @@ class DownloadAzBlob:
         return json_list
 
 
-def format_download_output(output_list: list):
-    pass
-
-    
 if __name__ == "__main__":
     args = get_args()
     token = Token(cloud='gcp')
@@ -98,14 +99,13 @@ if __name__ == "__main__":
     elif args.export_type == 'snapshot':
         file_list = tdr_client.get_files_from_snapshot(snapshot_id=args.target_id)
 
-
     download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
     for file in file_list:
         access_url = file['fileDetail']['accessUrl']
         download_path = f"/tmp/{Path(access_url).name}"
         file_download = download_client.run(blob_path=access_url ,output_path=download_path)
         file_name = Path(access_url).name
-        #construct upload path
+        # construct upload path
         if args.retain_path_structure:
             gcp_upload_path = file['path']
         elif args.bucket_output_path:
@@ -117,7 +117,5 @@ if __name__ == "__main__":
         logging.info(f"Uploading {file_name} to {gcp_upload_path}")
         upload_blob = gcp_bucket.blob(gcp_upload_path)
         upload_blob.upload_from_filename(download_path)
-        #cleanup file beore next iteration
+        # cleanup file before next iteration
         Path(download_path).unlink()
-
-        

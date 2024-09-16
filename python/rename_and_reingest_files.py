@@ -42,13 +42,13 @@ def get_args() -> Namespace:
         "-o",
         "--original_file_basename_column",
         required=True,
-        help=f"The basename column which you want to rename. ie 'sample_id'"
+        help="The basename column which you want to rename. ie 'sample_id'"
     )
     parser.add_argument(
         "-n",
         "--new_file_basename_column",
         required=True,
-        help=f"The new basename column which you want the old one replace with. ie 'collab_sample_id'"
+        help="The new basename column which you want the old one replace with. ie 'collab_sample_id'"
     )
     parser.add_argument(
         "-t",
@@ -89,7 +89,7 @@ def get_args() -> Namespace:
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to 300 seconds if not provided"
+        help="The maximum backoff time for a failed request (in seconds). Defaults to 300 seconds if not provided"
     )
     return parser.parse_args()
 
@@ -264,7 +264,7 @@ class BatchCopyAndIngest:
         # Batch through rows to copy files down and ingest so if script fails partway through large
         # copy and ingest it will have copied over and ingested some of the files already
         logging.info(
-            f"""Batching {len(self.rows_to_ingest)} total rows into batches of {self.copy_and_ingest_batch_size} for 
+            f"""Batching {len(self.rows_to_ingest)} total rows into batches of {self.copy_and_ingest_batch_size} for
             copying to temp location and ingest"""
         )
         total_batches = len(self.rows_to_ingest) // self.copy_and_ingest_batch_size + 1

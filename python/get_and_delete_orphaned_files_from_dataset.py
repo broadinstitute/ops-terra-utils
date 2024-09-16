@@ -29,7 +29,8 @@ def get_args():
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if "
+             f"not provided"
     )
     parser.add_argument(
         "--delete_orphaned_files",
@@ -70,7 +71,9 @@ if __name__ == "__main__":
         logging.info(f"Below are the {len(orphaned_file_uuids)} orphaned file UUIDs:\n{uuid_str}")
         if args.delete_orphaned_files:
             logging.info("Deleting orphaned files")
-            tdr.delete_files(file_ids=orphaned_file_uuids, dataset_id=dataset_id, submit_all_jobs_and_check_status_after=True)
+            tdr.delete_files(
+                file_ids=orphaned_file_uuids, dataset_id=dataset_id, submit_all_jobs_and_check_status_after=True
+            )
         else:
             logging.info("To delete orphaned files, run the script with --delete_orphaned_files flag")
     else:

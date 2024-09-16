@@ -299,7 +299,7 @@ class TDR:
             if not response or not response.json()["result"]:
                 break
             logging.info(
-                f"""Downloading batch {batch_number} of max {query_limit} records from {target_table_name} table in 
+                f"""Downloading batch {batch_number} of max {query_limit} records from {target_table_name} table in
                 dataset {dataset_id}"""
             )
             for record in response.json()["result"]:
@@ -360,7 +360,7 @@ class TDR:
                 )
             dataset_id = existing_data_sets[0]['id']
         if not existing_data_sets:
-            logging.info(f"Did not find existing dataset")
+            logging.info("Did not find existing dataset")
             # Create dataset
             dataset_id = self.create_dataset(
                 schema=schema,

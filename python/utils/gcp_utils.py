@@ -127,7 +127,9 @@ class GCPCloudFunctions:
             fail_on_error=True
         )
 
-    def multithread_copy_of_files_with_validation(self, files_to_move: list[dict], workers: int, max_retries: int) -> None:
+    def multithread_copy_of_files_with_validation(
+            self, files_to_move: list[dict], workers: int, max_retries: int
+    ) -> None:
         """Files_to_move_dict is list of dicts that contain:
             {
                 source_file: gs://bucket/file,
@@ -146,7 +148,9 @@ class GCPCloudFunctions:
         copy_valid = True
         for file_dict in updated_file_to_move:
             if not self.validate_files_are_same(file_dict['source_file'], file_dict['full_destination_path']):
-                logging.error(f"File {file_dict['source_file']} and {file_dict['full_destination_path']} are not identical")
+                logging.error(
+                    f"File {file_dict['source_file']} and {file_dict['full_destination_path']} are not identical"
+                )
                 copy_valid = False
         if copy_valid:
             logging.info(f"Successfully copied {len(updated_file_to_move)} files")
@@ -154,7 +158,9 @@ class GCPCloudFunctions:
             logging.error(f"Failed to copy {len(updated_file_to_move)} files")
             raise Exception("Failed to copy all files")
 
-    def move_or_copy_multiple_files(self, files_to_move: list[dict], action: str, workers: int, max_retries: int) -> None:
+    def move_or_copy_multiple_files(
+            self, files_to_move: list[dict], action: str, workers: int, max_retries: int
+    ) -> None:
         """Files_to_move_dict is list of dicts that contain:
             {
                 source_file: gs://bucket/file,

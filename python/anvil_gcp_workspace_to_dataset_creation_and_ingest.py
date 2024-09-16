@@ -64,8 +64,8 @@ def get_args():
         "--bulk_mode",
         action="store_true",
         help="""If used, will use bulk mode for ingest. Using bulk mode for TDR Ingest loads data faster when ingesting
-         a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of 
-         some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces exclusive 
+         a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of
+         some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces exclusive
          locking of the dataset (i.e. you can’t run multiple ingests at once)"""
     )
     parser.add_argument(
@@ -99,7 +99,13 @@ def get_args():
 class CreateIngestTableInfo:
     """Create a list of dictionaries for each table to ingest"""
 
-    def __init__(self, file_paths_dict: list[dict], metadata_table_names: list[str], workspace_metadata: list[dict], terra_workspace: TerraWorkspace):
+    def __init__(
+            self,
+            file_paths_dict: list[dict],
+            metadata_table_names: list[str],
+            workspace_metadata: list[dict],
+            terra_workspace: TerraWorkspace
+    ):
         self.file_paths_dict = file_paths_dict
         self.metadata_table_names = metadata_table_names
         self.workspace_metadata = workspace_metadata
@@ -192,7 +198,9 @@ class DataSetName:
             sys.exit(1)
         if len(existing_datasets) == 1 and existing_datasets[0]['name'] != f"{dataset_prefix}_{dataset_suffix}":
             logging.error(
-                f"Set dataset name to use manually. Dataset with prefix {dataset_prefix} already exists: {existing_datasets[0]['name']} - {existing_datasets[0]['id']}")
+                f"Set dataset name to use manually. Dataset with prefix {dataset_prefix} already exists:"
+                f" {existing_datasets[0]['name']} - {existing_datasets[0]['id']}"
+            )
             sys.exit(1)
         return f"{dataset_prefix}_{dataset_suffix}"
 
@@ -276,7 +284,7 @@ if __name__ == "__main__":
 
     workspace_properties_dict = {
         "auth_domains": workspace_info['workspace']['authorizationDomain'],
-        "consent_name": workspace_info['workspace']["attributes"]["library:dataUseRestriction"] if workspace_info['workspace']["attributes"].get("library:dataUseRestriction") else "",
+        "consent_name": workspace_info['workspace']["attributes"]["library:dataUseRestriction"] if workspace_info['workspace']["attributes"].get("library:dataUseRestriction") else "",  # noqa
         "source_workspaces": [workspace_name]
     }
 

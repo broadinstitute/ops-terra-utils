@@ -66,8 +66,8 @@ def get_args():
         "--bulk_mode",
         action="store_true",
         help="""If used, will use bulk mode for ingest. Using bulk mode for TDR Ingest loads data faster when ingesting
-             a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of 
-             some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces 
+             a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of
+             some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces
              exclusive  locking of the dataset (i.e. you can’t run multiple ingests at once)"""
     )
     parser.add_argument(
@@ -80,7 +80,7 @@ def get_args():
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"""The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds 
+        help=f"""The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds
         if not provided"""
     )
 
@@ -121,7 +121,6 @@ if __name__ == "__main__":
     ).run()
 
     # Use only specific sample ids if provided
-    # TODO: rename sample_ids_to_ingest to "records_to_ingest" and update the description to be "a list records (primary keys) to ingest if not all records should be ingested)
     if sample_ids_to_ingest:
         updated_metrics = [
             metric for metric in updated_metrics if metric[primary_key_column_name] in sample_ids_to_ingest
