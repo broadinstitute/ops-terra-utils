@@ -8,13 +8,13 @@ workflow RenameAndReingestFiles {
         String dataset_table_name
         String row_identifier
         Int copy_and_ingest_batch_size
+        Int workers
         Int? max_retries
         Int? max_backoff_time
         String? docker
         String? billing_project
         String? workspace_name
         String? temp_bucket
-        Int? workers
     }
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -46,12 +46,12 @@ task RenameAndingestFiles {
         String row_identifier
         String docker_image
         Int copy_and_ingest_batch_size
+        Int workers
         Int? max_retries
         Int? max_backoff_time
         String? billing_project
         String? workspace_name
         String? temp_bucket
-        Int? workers
     }
 
     command <<<
