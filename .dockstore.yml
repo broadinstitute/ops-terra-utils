@@ -3,12 +3,14 @@ workflows:
   - name: CopyDatasetToNewBillingProfile
     subclass: WDL
     primaryDescriptorPath: /wdl/CopyDatasetToNewBillingProfile/CopyDatasetToNewBillingProfile.wdl
+    readMePath: /wdl/CopyDatasetToNewBillingProfile/README.md
     testParameterFiles:
       - /wdl/copyDatasetToNewBillingProfile.wdl
 
   - name: AnvilGcpWorkspaceToDatasetCreationAndIngestion
     subclass: WDL
     primaryDescriptorPath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
+    readMePath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/README.md
     testParameterFiles:
       - /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
 
@@ -21,6 +23,7 @@ workflows:
   - name: ExportDataFromSnapshotToOutputBucket
     subclass: WDL
     primaryDescriptorPath: /wdl/ExportDataFromSnapshot/ExportDataFromSnapshot.wdl
+    readMePath: /wdl/ExportDataFromSnapshot/README.md
     testParameterFiles:
       - /wdl/exportDataFromSnapshot.wdl
 

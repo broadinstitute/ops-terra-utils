@@ -305,9 +305,10 @@ if __name__ == "__main__":
         dataset_id=dataset_id, info_to_include=['DATA_PROJECT'])
 
     # Get all files in workspace bucket
-    workspace_bucket_files = GCPCloudFunctions(
-        bucket_name=workspace_info["workspace"]["bucketName"]
-    ).list_bucket_contents(file_strings_to_ignore=['SubsetHailJointCall', '.vds/'])  # Ignore hail files
+    workspace_bucket_files = GCPCloudFunctions().list_bucket_contents(
+        bucket_name=workspace_info['workspace']['bucketName'],
+        file_strings_to_ignore=['SubsetHailJointCall', '.vds/']  # Ignore hail files
+    )
 
     # Create workspace attributes for ingestion
     workspace_attributes_ingest_dict = terra_workspace.create_workspace_attributes_ingest_dict(
@@ -336,7 +337,6 @@ if __name__ == "__main__":
     # Ensure dataset SA account is reader on Terra workspace and in auth domain if it exists
     GetPermissionsForWorkspaceIngest(
         terra_workspace=terra_workspace,
-        terra=terra,
         dataset_info=data_set_info,
         added_to_auth_domain=ALREADY_ADDED_TO_AUTH_DOMAIN
     ).run()
@@ -368,4 +368,5 @@ if __name__ == "__main__":
                 workspace_name=workspace_name,
                 dataset_name=dataset_name,
                 file_to_uuid_dict=file_to_uuid_dict,
+                file_ingest_batch_size=file_ingest_batch_size
             )
