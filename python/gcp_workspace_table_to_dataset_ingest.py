@@ -2,8 +2,13 @@ import logging
 from argparse import ArgumentParser
 from utils import GCP
 from utils.terra_util import TerraWorkspace
-from utils.tdr_util import TDR, ConvertTerraTableInfoForIngest, FilterOutSampleIdsAlreadyInDataset, BatchIngest, \
+from utils.tdr_util import (
+    TDR,
+    ConvertTerraTableInfoForIngest,
+    FilterOutSampleIdsAlreadyInDataset,
+    BatchIngest,
     SetUpTDRTables
+)
 from utils.token_util import Token
 from utils.request_util import RunRequest
 
