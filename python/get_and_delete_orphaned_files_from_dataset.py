@@ -54,6 +54,7 @@ def get_args():
         until all have completed before moving to next batch. Defaults to {BATCH_SIZE_TO_LIST_FILES}"
     )
 
+
     return parser.parse_args()
 
 

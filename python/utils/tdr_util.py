@@ -166,6 +166,7 @@ class TDR:
             current_batch = file_ids[i:i + batch_size_to_delete_files]
             logging.info(f"Submitting delete jobs for batch\
                          {i // batch_size_to_delete_files + 1} with {len(current_batch)} files.")
+
             # Submit delete jobs for the current batch
             for file_id in current_batch:
                 job_id = self.delete_file(file_id=file_id, dataset_id=dataset_id)
