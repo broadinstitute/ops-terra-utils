@@ -3,6 +3,7 @@ workflows:
   - name: CopyDatasetToNewBillingProfile
     subclass: WDL
     primaryDescriptorPath: /wdl/CopyDatasetToNewBillingProfile/CopyDatasetToNewBillingProfile.wdl
+    readMePath: /wdl/CopyDatasetToNewBillingProfile/README.md
     testParameterFiles:
       - /wdl/copyDatasetToNewBillingProfile.wdl
 
@@ -21,6 +22,7 @@ workflows:
   - name: ExportDataFromSnapshotToOutputBucket
     subclass: WDL
     primaryDescriptorPath: /wdl/ExportDataFromSnapshot/ExportDataFromSnapshot.wdl
+    readMePath: /wdl/ExportDataFromSnapshot/README.md
     testParameterFiles:
       - /wdl/exportDataFromSnapshot.wdl
 
