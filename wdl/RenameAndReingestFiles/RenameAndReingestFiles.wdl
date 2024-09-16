@@ -44,10 +44,10 @@ task RenameAndingestFiles {
         String new_file_basename_column
         String dataset_table_name
         String row_identifier
+        String docker_image
         Int copy_and_ingest_batch_size
         Int? max_retries
         Int? max_backoff_time
-        String? docker_image
         String? billing_project
         String? workspace_name
         String? temp_bucket

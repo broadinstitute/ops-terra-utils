@@ -14,6 +14,7 @@ CLOUD_TYPE = GCP
 MAX_RETRIES = 5
 MAX_BACKOFF_TIME = 5 * 60
 BATCH_SIZE_TO_LIST_FILES = 20000
+BATCH_SIZE_TO_DELETE_FILES = 100
 
 
 def get_args():
@@ -43,6 +44,14 @@ def get_args():
         default=BATCH_SIZE_TO_LIST_FILES,
         help=f"The batch size to query files in the dataset. Defaults to {BATCH_SIZE_TO_LIST_FILES}"
     )
+    parser.add_argument(
+        "--batch_size_to_delete_files",
+        action="store",
+        type=int,
+        default=BATCH_SIZE_TO_DELETE_FILES,
+        help=f"The batch size to submit all delete jobs together and wait until all have completed before moving to next batch. Defaults to {BATCH_SIZE_TO_LIST_FILES}"
+    )
+
 
     return parser.parse_args()
 
@@ -52,6 +61,9 @@ if __name__ == "__main__":
     dataset_id = args.dataset_id
     max_retries = args.max_retries
     max_backoff_time = args.max_backoff_time
+    batch_size_to_list_files = args.batch_size_to_list_files
+    batch_size_to_delete_files = args.batch_size_to_delete_files
+
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -60,7 +72,7 @@ if __name__ == "__main__":
     # Get all file uuids from metadata
     all_metadata_dataset_file_uuids = tdr.get_data_set_file_uuids_from_metadata(dataset_id=dataset_id)
     # Get all files for dataset
-    files_info = tdr.get_data_set_files(dataset_id=dataset_id, limit=BATCH_SIZE_TO_LIST_FILES)
+    files_info = tdr.get_data_set_files(dataset_id=dataset_id, limit=batch_size_to_list_files)
     file_uuids = [file_dict['fileId'] for file_dict in files_info]
 
     # Find any file uuids that exist in the dataset but not in the metadata
@@ -70,7 +82,11 @@ if __name__ == "__main__":
         logging.info(f"Below are the {len(orphaned_file_uuids)} orphaned file UUIDs:\n{uuid_str}")
         if args.delete_orphaned_files:
             logging.info("Deleting orphaned files")
-            tdr.delete_files(file_ids=orphaned_file_uuids, dataset_id=dataset_id, submit_all_jobs_and_check_status_after=True)
+            tdr.delete_files(
+                file_ids=orphaned_file_uuids,
+                dataset_id=dataset_id,
+                batch_size_to_delete_files=batch_size_to_delete_files
+            )
         else:
             logging.info("To delete orphaned files, run the script with --delete_orphaned_files flag")
     else:

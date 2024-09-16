@@ -154,24 +154,27 @@ class TDR:
         logging.info(f"Submitted delete job {job_id} for file {file_id}")
         return job_id
 
-    def delete_files(self, file_ids: list[str], dataset_id: str, submit_all_jobs_and_check_status_after: bool = False) -> None:
-        """Delete multiple files from a dataset and monitor delete jobs until completion.
-        If submit_all_jobs_and_check_status after then will only monitor completion after submitting all jobs"""
+    def delete_files(self, file_ids: list[str], dataset_id: str, batch_size_to_delete_files: int = 100) -> None:
+        """Delete multiple files from a dataset in batches and monitor delete jobs until completion for each batch.
+        Will submit batch of delete jobs, monitor all, and then proceed to next batch until all files are deleted."""
         logging.info(f"Deleting {len(file_ids)} files from dataset {dataset_id}")
+        total_files = len(file_ids)
         job_ids = []
-        for file_id in file_ids:
-            job_id = self.delete_file(file_id=file_id, dataset_id=dataset_id)
-            job_ids.append(job_id)
-            # Only check job status if submit_all_jobs_and_check_status_after is False
-            if not submit_all_jobs_and_check_status_after:
-                # monitor job every 5 seconds until completion
-                MonitorTDRJob(tdr=self, job_id=job_id, check_interval=5).run()
-        # If submit_all_jobs_and_check_status_after is True then only check status after submitting all jobs
-        if submit_all_jobs_and_check_status_after:
+
+        # Process files in batches
+        for i in range(0, total_files, batch_size_to_delete_files):
+            current_batch = file_ids[i:i + batch_size_to_delete_files]
+            logging.info(f"Submitting delete jobs for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} files.")
+            # Submit delete jobs for the current batch
+            for file_id in current_batch:
+                job_id = self.delete_file(file_id=file_id, dataset_id=dataset_id)
+                job_ids.append(job_id)
+            # Monitor delete jobs for the current batch
+            logging.info(f"Monitoring {len(current_batch)} delete jobs in batch {i // batch_size_to_delete_files + 1}")
             for job_id in job_ids:
-                # monitor job every 5 seconds until completion
                 MonitorTDRJob(tdr=self, job_id=job_id, check_interval=5).run()
-        logging.info(f"Successfully deleted {len(file_ids)} files from dataset {dataset_id}")
+            logging.info(f"Completed deletion for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} files.")
+        logging.info(f"Successfully deleted {total_files} files from dataset {dataset_id}")
 
     def add_user_to_dataset(self, dataset_id: str, user: str, policy: str) -> None:
         """Add user to dataset."""
