@@ -20,7 +20,7 @@ workflow GetAndDeleteOrphanedFilesFromDataset {
             max_backoff_time = max_backoff_time,
             docker_image = docker_image,
             delete_orphaned_files = delete_orphaned_files,
-            batch_size_to_list_files = batch_size_to_list_files
+            batch_size_to_list_files = batch_size_to_list_files,
             batch_size_to_delete_files = batch_size_to_delete_files
     }
 
