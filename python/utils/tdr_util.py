@@ -526,7 +526,6 @@ class StartAndMonitorIngest:
         ).run()
 
 
-
 class ReformatMetricsForIngest:
     """Reformat metrics for ingest.
     If file_list is True, then it is a list of file paths and formats differently assumes input json for that will be
@@ -588,13 +587,14 @@ class ReformatMetricsForIngest:
                 raise ValueError(
                     f"{cloud_path} storage container {file_path_storage_container} does not match workspace storage container {self.workspace_storage_container}. SAS token will not work"
                 )
-            relative_path = '/' + '/'.join(split_path[4:])
+            relative_path = '/'.join(split_path[4:])
         if self.dest_file_path_flat:
             return "/" + relative_path.replace("/", "_").replace("#", "").replace("?", "")
         else:
-            return relative_path
+            # Target paths in TDR must start with a leading slash
+            return f"/{relative_path}"
 
-    def _check_and_format_file_path(self, column_value: str) -> Any:
+    def _check_and_format_file_path(self, column_value: str) -> tuple[Any, bool]:
         """Check if column value is a gs:// path and reformat to TDR's dataset relative path. if file_to_uuid_dict is
         provided then it will add existing uuid. If file_to_uuid_dict provided and file not found then will warn and
         return None"""
@@ -616,10 +616,11 @@ class ReformatMetricsForIngest:
                         valid = False
                 else:
                     # If azure sas token will be '?{sas_token}', if gcp it just be file path
-                    return {
+                    source_dest_mapping = {
                         "sourcePath": f"{column_value}{self.sas_token_string}" if self.cloud_type == AZURE else column_value,
                         "targetPath": self._format_relative_tdr_path(column_value)
                     }
+                    return source_dest_mapping, valid
         return column_value, valid
 
     def _validate_and_update_column_for_schema(self, column_name: str, column_value: Any) -> Any:
@@ -674,7 +675,7 @@ class ReformatMetricsForIngest:
         reformatted_dict = {}
         # Set to make sure row valid and should be included
         row_valid = True
-        #  If a specific file list is provided, then add file ref. Different then all other ingests
+        #  If a specific file list is provided, then add file ref. Different than all other ingests
         if self.file_list:
             self._add_file_ref(row_dict)
             reformatted_dict = row_dict
@@ -910,7 +911,6 @@ class BatchIngest:
             logging.info(
                 f"Starting ingest batch {batch_number} of {total_batches} into table {self.target_table_name}")
             metrics_batch = self.ingest_metadata[i:i + self.batch_size]
-
             if self.skip_reformat:
                 reformatted_batch = metrics_batch
             else:

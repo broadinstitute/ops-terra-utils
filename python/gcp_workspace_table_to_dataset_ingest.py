@@ -7,7 +7,7 @@ from utils.tdr_util import (
     ConvertTerraTableInfoForIngest,
     FilterOutSampleIdsAlreadyInDataset,
     BatchIngest,
-    SetUpTDRTables
+    SetUpTDRTables, GetPermissionsForWorkspaceIngest
 )
 from utils.token_util import Token
 from utils.request_util import RunRequest
@@ -57,18 +57,18 @@ def get_args():
         help="Defaults to REPLACE if not provided"
     )
     parser.add_argument(
-        "--sample_ids_to_ingest",
+        "--records_to_ingest",
         nargs="*",
         required=False,
-        help="Provide a list of sample IDs if not all samples should be ingested"
+        help="A list of records (primary keys) to ingest if not all records should be ingested into TDR"
     )
     parser.add_argument(
         "--bulk_mode",
         action="store_true",
         help="""If used, will use bulk mode for ingest. Using bulk mode for TDR Ingest loads data faster when ingesting
              a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of 
-             some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces exclusive 
-             locking of the dataset (i.e. you can’t run multiple ingests at once)"""
+             some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces 
+             exclusive  locking of the dataset (i.e. you can’t run multiple ingests at once)"""
     )
     parser.add_argument(
         "--max_retries",
@@ -80,7 +80,8 @@ def get_args():
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+        help=f"""The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds 
+        if not provided"""
     )
 
     return parser.parse_args()
@@ -103,7 +104,9 @@ if __name__ == "__main__":
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
     request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
-    terra_workspace = TerraWorkspace(billing_project=billing_project, workspace_name=workspace_name, request_util=request_util)
+    terra_workspace = TerraWorkspace(
+        billing_project=billing_project, workspace_name=workspace_name, request_util=request_util
+    )
     tdr = TDR(request_util=request_util)
 
     # Get sample metrics from Terra
@@ -118,6 +121,7 @@ if __name__ == "__main__":
     ).run()
 
     # Use only specific sample ids if provided
+    # TODO: rename sample_ids_to_ingest to "records_to_ingest" and update the description to be "a list records (primary keys) to ingest if not all records should be ingested)
     if sample_ids_to_ingest:
         updated_metrics = [
             metric for metric in updated_metrics if metric[primary_key_column_name] in sample_ids_to_ingest
@@ -146,6 +150,11 @@ if __name__ == "__main__":
 
     }
     SetUpTDRTables(tdr=tdr, dataset_id=dataset_id, table_info_dict=table_info_dict).run()
+    GetPermissionsForWorkspaceIngest(
+        terra_workspace=terra_workspace,
+        dataset_info=tdr.get_dataset_info(dataset_id=dataset_id),
+        added_to_auth_domain=True,
+    ).run()
 
     BatchIngest(
         ingest_metadata=filtered_metrics,
