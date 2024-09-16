@@ -12,22 +12,26 @@ logging.basicConfig(
 )
 
 # Columns to ignore when ingesting
-COLUMNS_TO_IGNORE = ['datarepo_row_id', 'import:timestamp', 'import:snapshot_id', 'tdr:sample_id']
+COLUMNS_TO_IGNORE = ['datarepo_row_id', 'import:timestamp',
+                     'import:snapshot_id', 'tdr:sample_id']
 CLOUD_TYPE = GCP
 BATCH_SIZE = 700  # The number of rows to ingest at a time
 WAITING_TIME_TO_POLL = 120  # How long to wait between polling for ingest status
 MAX_RETRIES = 5  # The maximum number of retries for a failed request
 MAX_BACKOFF_TIME = 5 * 60  # The maximum backoff time for a failed request
 TEST_INGEST = False  # Whether to test the ingest by just doing first batch
-FILTER_EXISTING_IDS = False  # Filter for out rows where it already exists within the dataset
+# Filter for out rows where it already exists within the dataset
+FILTER_EXISTING_IDS = False
 
 
 def get_args():
-    parser = ArgumentParser(description="Ingest data into an existing dataset from a GCP workspace")
+    parser = ArgumentParser(
+        description="Ingest data into an existing dataset from a GCP workspace")
     parser.add_argument("--billing_project", required=True)
     parser.add_argument("--workspace_name", required=True)
     parser.add_argument("--dataset_id", required=True)
-    parser.add_argument("--target_table_name", required=True, help="The name of the table in TDR")
+    parser.add_argument("--target_table_name", required=True,
+                        help="The name of the table in TDR")
     parser.add_argument(
         "--tdr_row_id",
         required=True,
@@ -50,8 +54,8 @@ def get_args():
         "--bulk_mode",
         action="store_true",
         help="""If used, will use bulk mode for ingest. Using bulk mode for TDR Ingest loads data faster when ingesting
-             a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of 
-             some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces exclusive 
+             a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of
+             some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces exclusive
              locking of the dataset (i.e. you can’t run multiple ingests at once)"""
     )
     parser.add_argument(
@@ -64,7 +68,8 @@ def get_args():
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+        help=f"The maximum backoff time for a failed request (in seconds).\
+        Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
     )
 
     return parser.parse_args()
@@ -85,12 +90,16 @@ if __name__ == "__main__":
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
-    request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
-    terra_workspace = TerraWorkspace(billing_project=billing_project, workspace_name=workspace_name, request_util=request_util)
+    request_util = RunRequest(
+        token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
+    terra_workspace = TerraWorkspace(billing_project=billing_project,
+                                     workspace_name=workspace_name,
+                                     request_util=request_util)
     tdr = TDR(request_util=request_util)
 
     # Get sample metrics from Terra
-    sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=target_table_name)
+    sample_metrics = terra_workspace.get_gcp_workspace_metrics(
+        entity_type=target_table_name)
     logging.info(f"Got {len(sample_metrics)} samples")
 
     # Convert sample dict into list of usable dicts for ingestion
@@ -102,7 +111,8 @@ if __name__ == "__main__":
 
     # Use only specific sample ids if provided
     if sample_ids_to_ingest:
-        updated_metrics = [metric for metric in updated_metrics if metric[tdr_row_id] in sample_ids_to_ingest]
+        updated_metrics = [
+            metric for metric in updated_metrics if metric[tdr_row_id] in sample_ids_to_ingest]
 
     if FILTER_EXISTING_IDS:
         # Filter out sample ids that are already in the dataset

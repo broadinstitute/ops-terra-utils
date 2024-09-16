@@ -17,7 +17,8 @@ BATCH_SIZE_TO_LIST_FILES = 20000
 
 
 def get_args():
-    parser = ArgumentParser(description="Get files that are not in the dataset metadata")
+    parser = ArgumentParser(
+        description="Get files that are not in the dataset metadata")
     parser.add_argument("--dataset_id", required=True)
     parser.add_argument(
         "--max_retries",
@@ -29,7 +30,8 @@ def get_args():
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+        help=f"The maximum backoff time for a failed request (in seconds).\
+        Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
     )
     parser.add_argument(
         "--delete_orphaned_files",
@@ -55,23 +57,31 @@ if __name__ == "__main__":
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
-    request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
+    request_util = RunRequest(
+        token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
     # Get all file uuids from metadata
-    all_metadata_dataset_file_uuids = tdr.get_data_set_file_uuids_from_metadata(dataset_id=dataset_id)
+    all_metadata_dataset_file_uuids = tdr.get_data_set_file_uuids_from_metadata(
+        dataset_id=dataset_id)
     # Get all files for dataset
-    files_info = tdr.get_data_set_files(dataset_id=dataset_id, limit=BATCH_SIZE_TO_LIST_FILES)
+    files_info = tdr.get_data_set_files(
+        dataset_id=dataset_id, limit=BATCH_SIZE_TO_LIST_FILES)
     file_uuids = [file_dict['fileId'] for file_dict in files_info]
 
     # Find any file uuids that exist in the dataset but not in the metadata
-    orphaned_file_uuids = list(set(file_uuids) - set(all_metadata_dataset_file_uuids))
+    orphaned_file_uuids = list(
+        set(file_uuids) - set(all_metadata_dataset_file_uuids))
     if orphaned_file_uuids:
         uuid_str = '\n'.join(orphaned_file_uuids)
-        logging.info(f"Below are the {len(orphaned_file_uuids)} orphaned file UUIDs:\n{uuid_str}")
+        logging.info(
+            f"Below are the {len(orphaned_file_uuids)} orphaned file UUIDs:\n{uuid_str}")
         if args.delete_orphaned_files:
             logging.info("Deleting orphaned files")
-            tdr.delete_files(file_ids=orphaned_file_uuids, dataset_id=dataset_id, submit_all_jobs_and_check_status_after=True)
+            tdr.delete_files(file_ids=orphaned_file_uuids,
+                             dataset_id=dataset_id,
+                             submit_all_jobs_and_check_status_after=True)
         else:
-            logging.info("To delete orphaned files, run the script with --delete_orphaned_files flag")
+            logging.info(
+                "To delete orphaned files, run the script with --delete_orphaned_files flag")
     else:
         logging.info("No orphaned files found")

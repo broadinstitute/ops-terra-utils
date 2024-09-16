@@ -19,14 +19,15 @@ MAX_BACKOFF_TIME = 5 * 60
 
 
 def get_args():
-    parser = ArgumentParser(description="Download data from an existing snapshot to a Google bucket")
+    parser = ArgumentParser(
+        description="Download data from an existing snapshot to a Google bucket")
     parser.add_argument("--snapshot_id", required=True)
     parser.add_argument("--output_bucket", required=True)
     parser.add_argument(
         "--download_type",
         choices=["flat", "structured"],
-        help="""How you'd like your downloaded data to be structured in the output bucket. 'flat' indicates that all 
-        files will be downloaded to the root of your bucket. 'structured' indicates that the original file path 
+        help="""How you'd like your downloaded data to be structured in the output bucket. 'flat' indicates that all
+        files will be downloaded to the root of your bucket. 'structured' indicates that the original file path
         structure will be maintained.""",
         required=True
     )
@@ -34,7 +35,8 @@ def get_args():
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+        help=f"The maximum backoff time for a failed request (in seconds).\
+        Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
     )
     parser.add_argument(
         "--max_retries",
@@ -59,7 +61,7 @@ class SourceDestinationMapping:
         if duplicates:
             formatted_duplicates = "\n".join(duplicates)
             raise Exception(
-                f"""Not all destinations were unique. If you selected 'flat' as the download type, try re-running with 
+                f"""Not all destinations were unique. If you selected 'flat' as the download type, try re-running with
                     'structured' instead. Below is a list of files that were duplicated:\n{formatted_duplicates}"""
             )
 
@@ -68,9 +70,11 @@ class SourceDestinationMapping:
         for file in self.file_metadata:
             source = file["fileDetail"]["accessUrl"]
             if download_type == "flat":
-                destination = os.path.join(self.output_bucket, os.path.basename(source).lstrip("/"))
+                destination = os.path.join(
+                    self.output_bucket, os.path.basename(source).lstrip("/"))
             else:
-                destination = os.path.join(self.output_bucket, file["path"].lstrip("/"))
+                destination = os.path.join(
+                    self.output_bucket, file["path"].lstrip("/"))
             mapping.append(
                 {
                     "source": source,
@@ -91,7 +95,8 @@ if __name__ == '__main__':
     max_retries = args.max_retries
 
     token = Token(cloud=CLOUD_TYPE)
-    request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
+    request_util = RunRequest(
+        token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
     file_metadata = tdr.get_files_from_snapshot(snapshot_id=snapshot_id)
 
@@ -103,5 +108,6 @@ if __name__ == '__main__':
     ).get_source_and_destination_paths()
 
     with open("file_mapping.tsv", "w") as mapping_file:
-        writer = csv.DictWriter(mapping_file, fieldnames=["source", "destination"], delimiter="\t")
+        writer = csv.DictWriter(mapping_file, fieldnames=[
+                                "source", "destination"], delimiter="\t")
         writer.writerows(mapping)
