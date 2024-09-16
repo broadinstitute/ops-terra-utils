@@ -60,7 +60,7 @@ task IngestWorkspaceDataToDataset {
         --target_table_name  ~{target_table_name} \
         --primary_key_column_name  ~{primary_key_column_name} \
         ~{"--update_strategy " + update_strategy} \
-        ~{if records_to_ingest then "--records_to_ingest " + records_to_ingest else ""} \
+        ~{if defined(records_to_ingest) then "--records_to_ingest " + records_to_ingest else ""} \
         ~{if bulk_mode then "--bulk_mode" else ""} \
         ~{"--max_retries " + max_retries} \
         ~{"--max_backoff_time " + max_backoff_time} \
