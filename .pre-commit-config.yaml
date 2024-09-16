@@ -1,0 +1,24 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: check-yaml # checks yaml files for parseable syntax.
+    -   id: end-of-file-fixer # ensures that a file is either empty, or ends with one newline.
+    -   id: trailing-whitespace # trims trailing whitespace.
+    -   id: check-added-large-files # prevents giant files from being committed (max default=500kB)
+    -   id: mixed-line-ending # replaces or checks mixed line ending.
+-   repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+    -   id: python-use-type-annotations # Enforce that python3.6+ type annotations are used instead of type comments
+    -   id: python-check-blanket-noqa # Enforce that noqa annotations always occur with specific codes.
+    -   id: python-check-blanket-type-ignore # Enforce that # type: ignore annotations always occur with specific codes.
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.4.1
+    hooks:
+    -   id: mypy # Mypy is a static type checker for Python.
+        args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls, --ignore-missing-imports]
+-   repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v2.0.4
+    hooks:
+    -   id: autopep8

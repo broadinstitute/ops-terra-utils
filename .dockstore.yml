@@ -3,12 +3,14 @@ workflows:
   - name: CopyDatasetToNewBillingProfile
     subclass: WDL
     primaryDescriptorPath: /wdl/CopyDatasetToNewBillingProfile/CopyDatasetToNewBillingProfile.wdl
+    readMePath: /wdl/CopyDatasetToNewBillingProfile/README.md
     testParameterFiles:
       - /wdl/copyDatasetToNewBillingProfile.wdl
 
   - name: AnvilGcpWorkspaceToDatasetCreationAndIngestion
     subclass: WDL
     primaryDescriptorPath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
+    readMePath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/README.md
     testParameterFiles:
       - /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
 
@@ -21,11 +23,20 @@ workflows:
   - name: ExportDataFromSnapshotToOutputBucket
     subclass: WDL
     primaryDescriptorPath: /wdl/ExportDataFromSnapshot/ExportDataFromSnapshot.wdl
+    readMePath: /wdl/ExportDataFromSnapshot/README.md
     testParameterFiles:
       - /wdl/exportDataFromSnapshot.wdl
 
   - name: GetAndDeleteOrphanedFilesFromDataset
     subclass: WDL
     primaryDescriptorPath: /wdl/GetAndDeleteOrphanedFilesFromDataset/GetAndDeleteOrphanedFilesFromDataset.wdl
+    readMePath: /wdl/GetAndDeleteOrphanedFilesFromDataset/README.md
     testParameterFiles:
       - /wdl/GetAndDeleteOrphanedFilesFromDataset/GetAndDeleteOrphanedFilesFromDataset.wdl
+
+  - name: RenameAndReingestFiles
+    subclass: WDL
+    primaryDescriptorPath: /wdl/RenameAndReingestFiles/RenameAndReingestFiles.wdl
+    readMePath: /wdl/RenameAndReingestFiles/README.md
+    testParameterFiles:
+      - /wdl/RenameAndReingestFiles/RenameAndReingestFiles.wdl

@@ -147,6 +147,9 @@ class TerraWorkspace:
         """Set workspace ID."""
         self.workspace_id = workspace_info["workspace"]["workspaceId"]
 
+    def get_workspace_bucket(self):
+        return self.get_workspace_info()["workspace"]["bucketName"]
+
     def get_workspace_entity_info(self, use_cache: bool = True) -> dict:
         """Get workspace entity info."""
         use_cache = 'true' if use_cache else 'false'
