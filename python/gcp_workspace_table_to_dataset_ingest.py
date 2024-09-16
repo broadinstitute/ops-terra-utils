@@ -2,7 +2,8 @@ import logging
 from argparse import ArgumentParser
 from utils import GCP
 from utils.terra_util import TerraWorkspace
-from utils.tdr_util import TDR, ConvertTerraTableInfoForIngest, FilterOutSampleIdsAlreadyInDataset, BatchIngest
+from utils.tdr_util import TDR, ConvertTerraTableInfoForIngest, FilterOutSampleIdsAlreadyInDataset, BatchIngest, \
+    SetUpTDRTables
 from utils.token_util import Token
 from utils.request_util import RunRequest
 
@@ -27,11 +28,21 @@ def get_args():
     parser.add_argument("--billing_project", required=True)
     parser.add_argument("--workspace_name", required=True)
     parser.add_argument("--dataset_id", required=True)
-    parser.add_argument("--target_table_name", required=True, help="The name of the table in TDR")
     parser.add_argument(
-        "--tdr_row_id",
+        "--terra_table_name",
         required=True,
-        help="The name of the column in TDR that corresponds to the TDR row ID"
+        help="The name of the Terra table that you'd like to import into TDR"
+    )
+    parser.add_argument(
+        "--target_table_name",
+        required=False,
+        help="The name of the table in TDR (this can either be an existing table, OR a new one). Will default to "
+             "the Terra table name if not provided."
+    )
+    parser.add_argument(
+        "--primary_key_column_name",
+        required=True,
+        help="The name of the primary key column in Terra"
     )
     parser.add_argument(
         "--update_strategy",
@@ -75,8 +86,9 @@ if __name__ == "__main__":
     billing_project = args.billing_project
     workspace_name = args.workspace_name
     dataset_id = args.dataset_id
-    target_table_name = args.target_table_name
-    tdr_row_id = args.tdr_row_id
+    terra_table_name = args.terra_table_name
+    target_table_name = args.target_table_name if args.target_table_name else args.terra_table_name
+    primary_key_column_name = args.primary_key_column_name
     update_strategy = args.update_strategy
     sample_ids_to_ingest = args.sample_ids_to_ingest
     bulk_mode = args.bulk_mode
@@ -90,19 +102,21 @@ if __name__ == "__main__":
     tdr = TDR(request_util=request_util)
 
     # Get sample metrics from Terra
-    sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=target_table_name)
+    sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name)
     logging.info(f"Got {len(sample_metrics)} samples")
 
     # Convert sample dict into list of usable dicts for ingestion
     updated_metrics = ConvertTerraTableInfoForIngest(
         table_metadata=sample_metrics,
-        tdr_row_id=tdr_row_id,
+        tdr_row_id=primary_key_column_name,
         columns_to_ignore=COLUMNS_TO_IGNORE
     ).run()
 
     # Use only specific sample ids if provided
     if sample_ids_to_ingest:
-        updated_metrics = [metric for metric in updated_metrics if metric[tdr_row_id] in sample_ids_to_ingest]
+        updated_metrics = [
+            metric for metric in updated_metrics if metric[primary_key_column_name] in sample_ids_to_ingest
+        ]
 
     if FILTER_EXISTING_IDS:
         # Filter out sample ids that are already in the dataset
@@ -111,10 +125,22 @@ if __name__ == "__main__":
             dataset_id=dataset_id,
             tdr=tdr,
             target_table_name=target_table_name,
-            filter_entity_id=tdr_row_id,
+            filter_entity_id=primary_key_column_name,
         ).run()
     else:
         filtered_metrics = updated_metrics
+
+    table_info_dict = {
+        target_table_name: {
+            "table_name": target_table_name,
+            "primary_key": primary_key_column_name,
+            "ingest_metadata": filtered_metrics,
+            "file_list": False,
+            "datePartitionOptions": None
+        }
+
+    }
+    SetUpTDRTables(tdr=tdr, dataset_id=dataset_id, table_info_dict=table_info_dict).run()
 
     BatchIngest(
         ingest_metadata=filtered_metrics,
