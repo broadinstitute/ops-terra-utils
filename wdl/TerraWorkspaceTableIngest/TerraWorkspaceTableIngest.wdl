@@ -55,10 +55,9 @@ task IngestWorkspaceDataToDataset {
         --dataset_id  ~{dataset_id} \
         --target_table_name  ~{target_table_name} \
         --tdr_row_id  ~{tdr_row_id} \
-        --tdr_row_id  ~{tdr_row_id} \
         ~{"--update_strategy " + update_strategy} \
         ~{"--sample_ids_to_ingest " + sample_ids_to_ingest} \
-        ~{"--bulk_mode " + bulk_mode} \
+        ~{if bulk_mode then "--bulk_mode" else ""} \
         ~{"--max_retries " + max_retries} \
         ~{"--max_backoff_time " + max_backoff_time} \
     >>>
