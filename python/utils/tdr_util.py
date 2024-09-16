@@ -1030,7 +1030,7 @@ class InferTDRSchema:
                 [v for v in values_for_header if v][0])
 
             # check if all the values in the list that are non-none match the type of the first entry
-            all_values_matching = all(
+            all_values_matching = all(  # noqa
                 type(v) == type_to_match_against for v in values_for_header if v)
             matching.append({header: all_values_matching})
 
