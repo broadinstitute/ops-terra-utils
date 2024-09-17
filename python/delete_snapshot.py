@@ -28,3 +28,4 @@ if __name__ == '__main__':
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
     tdr.delete_snapshot(snapshot_id=snapshot_id)
+    
