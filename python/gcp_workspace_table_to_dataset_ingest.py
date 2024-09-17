@@ -36,8 +36,6 @@ def get_args():
     parser.add_argument("--billing_project", required=True)
     parser.add_argument("--workspace_name", required=True)
     parser.add_argument("--dataset_id", required=True)
-    parser.add_argument("--target_table_name", required=True,
-                        help="The name of the table in TDR")
     parser.add_argument(
         "--terra_table_name",
         required=True,
