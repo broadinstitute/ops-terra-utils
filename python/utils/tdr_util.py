@@ -192,6 +192,22 @@ class TDR:
         logging.info(f"Adding user {user} to dataset {dataset_id} with policy {policy}")
         self.request_util.run_request(uri=uri, method=POST, data=json.dumps(member_dict))
 
+    def delete_dataset(self, dataset_id: str) -> None:
+        """Delete dataset."""
+        uri = f"{self.TDR_LINK}/datasets/{dataset_id}"
+        logging.info(f"Deleting dataset {dataset_id}")
+        response = self.request_util.run_request(uri=uri, method=DELETE)
+        job_id = response.json()['id']
+        MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
+
+    def delete_snapshot(self, snapshot_id: str) -> None:
+        """Delete snapshot."""
+        uri = f"{self.TDR_LINK}/snapshots/{snapshot_id}"
+        logging.info(f"Deleting snapshot {snapshot_id}")
+        response = self.request_util.run_request(uri=uri, method=DELETE)
+        job_id = response.json()['id']
+        MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
+
     def _yield_existing_datasets(
             self, filter: Optional[str] = None, batch_size: int = 100, direction: str = "asc"
     ) -> Any:
