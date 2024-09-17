@@ -50,9 +50,12 @@ task IngestWorkspaceDataToDataset {
         Int? max_backoff_time
         String docker_image
     }
-    Array records = if defined(records_to_ingest) then ~{sep=", " records_to_ingest} else ""
+
+
 
     command <<<
+        declare -a records_to_ingest_str=(~{sep=',' records_to_ingest})
+
         python /etc/terra_utils/gcp_workspace_table_to_dataset_ingest.py \
         --billing_project  ~{billing_project} \
         --workspace_name  ~{workspace_name} \
@@ -60,8 +63,9 @@ task IngestWorkspaceDataToDataset {
         --terra_table_name  ~{terra_table_name} \
         --target_table_name  ~{target_table_name} \
         --primary_key_column_name  ~{primary_key_column_name} \
+        "--records_to_ingest " + records_to_ingest_str \
         ~{"--update_strategy " + update_strategy} \
-        ~{if defined(records) then "--records_to_ingest " + records else ""} \
+        "--records_to_ingest " + records_to_ingest_str \
         ~{if bulk_mode then "--bulk_mode" else ""} \
         ~{"--max_retries " + max_retries} \
         ~{"--max_backoff_time " + max_backoff_time} \
