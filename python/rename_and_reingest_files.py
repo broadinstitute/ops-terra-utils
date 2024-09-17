@@ -3,6 +3,7 @@ import sys
 import os
 from argparse import ArgumentParser, Namespace
 from typing import Optional, Tuple
+
 from utils.tdr_util import TDR, StartAndMonitorIngest, GetPermissionsForWorkspaceIngest
 from utils.token_util import Token
 from utils.request_util import RunRequest
@@ -25,27 +26,66 @@ def get_args() -> Namespace:
     parser = ArgumentParser(
         description="Copy and Rename files to workspace or bucket and reingest with new name")
     parser.add_argument("-i", "--dataset_id", required=True)
-    parser.add_argument("-c", "--copy_and_ingest_batch_size", type=int, required=True,
-                        help="The number of rows to copy to temp location and then ingest at a time.")
-    parser.add_argument("-w", "--workers", type=int,
-                        help="How wide you want the copy of files to on prem", required=True)
-    parser.add_argument("-o", "--original_file_basename_column", required=True,
-                        help="The basename column which you want to rename. ie 'sample_id'")
-    parser.add_argument("-n", "--new_file_basename_column", required=True,
-                        help="The new basename column which you want the old one replace with. ie 'collab_sample_id'")
-    parser.add_argument("-t", "--dataset_table_name",
-                        required=True, help="The name of the table in TDR")
-    parser.add_argument("-ri", "--row_identifier", required=True,
-                        help="The unique identifier for the row in the table. ie 'sample_id'")
-    parser.add_argument("-b", "--billing_project", required=False,
-                        help="The billing project to copy files to. Used if temp_bucket is not provided")
-    parser.add_argument("-wn", "--workspace_name", required=False,
-                        help="The workspace to copy files to. Used if temp_bucket is not provided")
-    parser.add_argument("-tb", "--temp_bucket",
-                        help="The bucket to copy files to for rename. Used if workspace_name is not provided")
-    parser.add_argument("--max_retries", required=False, default=MAX_RETRIES,
-                        help=f"The maximum number of retries for a failed request.\
-                        Defaults to {MAX_RETRIES} if not provided")
+    parser.add_argument(
+        "-c",
+        "--copy_and_ingest_batch_size",
+        type=int,
+        required=True,
+        help="The number of rows to copy to temp location and then ingest at a time."
+    )
+    parser.add_argument(
+        "-w",
+        "--workers",
+        type=int,
+        help="How wide you want the copy of files to on prem", required=True
+    )
+    parser.add_argument(
+        "-o",
+        "--original_file_basename_column",
+        required=True,
+        help="The basename column which you want to rename. ie 'sample_id'"
+    )
+    parser.add_argument(
+        "-n",
+        "--new_file_basename_column",
+        required=True,
+        help="The new basename column which you want the old one replace with. ie 'collab_sample_id'"
+    )
+    parser.add_argument(
+        "-t",
+        "--dataset_table_name",
+        required=True,
+        help="The name of the table in TDR"
+    )
+    parser.add_argument(
+        "-ri",
+        "--row_identifier",
+        required=True,
+        help="The unique identifier for the row in the table. ie 'sample_id'"
+    )
+    parser.add_argument(
+        "-b",
+        "--billing_project",
+        required=False,
+        help="The billing project to copy files to. Used if temp_bucket is not provided"
+    )
+    parser.add_argument(
+        "-wn",
+        "--workspace_name",
+        required=False,
+        help="The workspace to copy files to. Used if temp_bucket is not provided"
+    )
+    parser.add_argument(
+        "-tb",
+        "--temp_bucket",
+        help="The bucket to copy files to for rename. Used if workspace_name is not provided"
+    )
+    parser.add_argument(
+        "--max_retries",
+        required=False,
+        default=MAX_RETRIES,
+        help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided"
+    )
     parser.add_argument(
         "--max_backoff_time",
         required=False,
@@ -56,8 +96,16 @@ def get_args() -> Namespace:
 
 
 class GetRowAndFileInfoForReingest:
-    def __init__(self, table_schema_info: dict, files_info: dict, table_metrics: list[dict], og_file_basename_column: str,
-                 new_file_basename_column: str, row_identifier: str, temp_bucket: str):
+    def __init__(
+            self,
+            table_schema_info: dict,
+            files_info: dict,
+            table_metrics: list[dict],
+            og_file_basename_column: str,
+            new_file_basename_column: str,
+            row_identifier: str,
+            temp_bucket: str
+    ):
         self.table_schema_info = table_schema_info
         self.files_info = files_info
         self.table_metrics = table_metrics
@@ -86,9 +134,9 @@ class GetRowAndFileInfoForReingest:
             access_url_without_bucket), new_file_name)
         return temp_path, updated_tdr_metadata_path, access_url
 
-    def _create_row_dict(self,
-                         row_dict: dict,
-                         file_ref_columns: list[str]) -> Tuple[Optional[dict], Optional[list[dict]]]:
+    def _create_row_dict(
+            self, row_dict: dict, file_ref_columns: list[str]
+    ) -> Tuple[Optional[dict], Optional[list[dict]]]:
         """Go through each row and check each cell if it is a file and if it needs to be reingested.
         If so, create a new row dict with the new file path."""
         reingest_row = False
@@ -106,7 +154,8 @@ class GetRowAndFileInfoForReingest:
                 file_info = self.files_info.get(row_dict[column_name])
                 # Get potential temp path, updated tdr metadata path, and access url for file
                 temp_path, updated_tdr_metadata_path, access_url = self._create_paths(
-                    file_info, og_basename, new_basename)
+                    file_info, og_basename, new_basename
+                )
                 # Check if access_url starts with og basename and then .
                 if os.path.basename(access_url).startswith(f"{og_basename}."):
                     self.total_files_to_reingest += 1
@@ -151,11 +200,14 @@ class GetRowAndFileInfoForReingest:
 
 
 class GetTempBucket:
-    def __init__(self, temp_bucket: str,
-                 billing_project: str,
-                 workspace_name: str,
-                 dataset_info: dict,
-                 request_util: RunRequest):
+    def __init__(
+            self,
+            temp_bucket: str,
+            billing_project: str,
+            workspace_name: str,
+            dataset_info: dict,
+            request_util: RunRequest
+    ):
         self.temp_bucket = temp_bucket
         self.billing_project = billing_project
         self.workspace_name = workspace_name
@@ -188,15 +240,25 @@ class GetTempBucket:
                     "If temp_bucket is provided, billing_project and workspace_name must not be provided")
                 sys.exit(1)
             logging.info(
-                f"Using temp_bucket: {self.temp_bucket}.\
-                Make sure {self.dataset_info['ingestServiceAccount']} has read permission to bucket")
+                f"""Using temp_bucket: {self.temp_bucket}. Make sure {self.dataset_info['ingestServiceAccount']}
+                 has read permission to bucket"""
+            )
         return temp_bucket
 
 
 class BatchCopyAndIngest:
-    def __init__(self, rows_to_ingest: list[dict], tdr: TDR, target_table_name: str,
-                 cloud_type: str, update_strategy: str, workers: int, dataset_id: str,
-                 copy_and_ingest_batch_size: int, row_files_to_copy: list[list[dict]]):
+    def __init__(
+            self,
+            rows_to_ingest: list[dict],
+            tdr: TDR,
+            target_table_name: str,
+            cloud_type: str,
+            update_strategy: str,
+            workers: int,
+            dataset_id: str,
+            copy_and_ingest_batch_size: int,
+            row_files_to_copy: list[list[dict]]
+    ):
         self.rows_to_ingest = rows_to_ingest
         self.tdr = tdr
         self.target_table_name = target_table_name
@@ -211,10 +273,10 @@ class BatchCopyAndIngest:
         # Batch through rows to copy files down and ingest so if script fails partway through large
         # copy and ingest it will have copied over and ingested some of the files already
         logging.info(
-            f"Batching {len(self.rows_to_ingest)} total rows into batches\
-            of {self.copy_and_ingest_batch_size} for copying to temp location and ingest")
-        total_batches = len(
-            self.rows_to_ingest) // self.copy_and_ingest_batch_size + 1
+            f"""Batching {len(self.rows_to_ingest)} total rows into batches of {self.copy_and_ingest_batch_size} for
+            copying to temp location and ingest"""
+        )
+        total_batches = len(self.rows_to_ingest) // self.copy_and_ingest_batch_size + 1
         gcp_functions = GCPCloudFunctions()
         for i in range(0, len(self.rows_to_ingest), self.copy_and_ingest_batch_size):
             batch_number = i // self.copy_and_ingest_batch_size + 1

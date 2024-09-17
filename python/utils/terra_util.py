@@ -1,8 +1,9 @@
-from typing import Any, Optional
 import json
 import logging
-from .request_util import GET, POST, PATCH, PUT
+from typing import Any, Optional
 from urllib.parse import urlparse
+
+from .request_util import GET, POST, PATCH, PUT
 
 
 class Terra:
@@ -41,7 +42,7 @@ class TerraWorkspace:
 
     def _yield_all_entity_metrics(self, entity: str, total_entities_per_page: int = 40000) -> Any:
         """Yield all entity metrics from workspace."""
-        url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/entityQuery/{entity}?pageSize={total_entities_per_page}" # noqa
+        url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/entityQuery/{entity}?pageSize={total_entities_per_page}"  # noqa
         response = self.request_util.run_request(
             uri=url,
             method=GET,
@@ -87,8 +88,8 @@ class TerraWorkspace:
                 return None
 
         raise ValueError(
-            f"No resource ID found for {self.billing_project}/{self.workspace_name} - {self.workspace_id}:\
-            {json.dumps(response.json(), indent=4)}"
+            f"No resource ID found for {self.billing_project}/{self.workspace_name} - "
+            f"{self.workspace_id}: {json.dumps(response.json(), indent=4)}"
         )
 
     def set_azure_terra_variables(self) -> None:
@@ -126,7 +127,7 @@ class TerraWorkspace:
 
     def _get_sas_token_json(self, sas_expiration_in_secs: int) -> dict:
         """Get SAS token JSON."""
-        url = f"{self.WORKSPACE_LINK}/{self.workspace_id}/resources/controlled/azure/storageContainer/{self.resource_id}/getSasToken?sasExpirationDuration={str(sas_expiration_in_secs)}" # noqa
+        url = f"{self.WORKSPACE_LINK}/{self.workspace_id}/resources/controlled/azure/storageContainer/{self.resource_id}/getSasToken?sasExpirationDuration={str(sas_expiration_in_secs)}"  # noqa
         response = self.request_util.run_request(uri=url, method=POST)
         return json.loads(response.text)
 

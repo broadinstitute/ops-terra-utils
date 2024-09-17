@@ -14,3 +14,4 @@ backoff
 aiohttp
 pytz
 pandas
+pydantic==2.9.1

@@ -3,6 +3,7 @@ import logging
 import os.path
 from argparse import ArgumentParser
 from collections import Counter
+
 from utils.token_util import Token
 from utils.tdr_util import TDR
 from utils.request_util import RunRequest
@@ -35,8 +36,8 @@ def get_args():
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds).\
-        Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if "
+             f"not provided"
     )
     parser.add_argument(
         "--max_retries",
