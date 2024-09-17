@@ -17,6 +17,7 @@ workflows:
   - name: TerraWorkspaceTableToTDRIngest
     subclass: WDL
     primaryDescriptorPath: /wdl/TerraWorkspaceTableIngest/TerraWorkspaceTableIngest.wdl
+    readMePath: /wdl/TerraWorkspaceTableIngest/README.md
     testParameterFiles:
       - /wdl/terraWorkspaceTableIngest.wdl
 

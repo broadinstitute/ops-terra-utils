@@ -1,2 +1,2 @@
-GCP = 'gcp'
-AZURE = 'azure'
+GCP = "gcp"
+AZURE = "azure"

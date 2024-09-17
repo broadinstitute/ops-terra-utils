@@ -86,8 +86,8 @@ def get_args():
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds).\
-        Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if "
+             f"not provided"
     )
     parser.add_argument(
         "--max_retries",
@@ -101,11 +101,13 @@ def get_args():
 
 class CreateIngestTableInfo:
     """Create a list of dictionaries for each table to ingest"""
-
-    def __init__(self, file_paths_dict: list[dict],
-                 metadata_table_names: list[str],
-                 workspace_metadata: list[dict],
-                 terra_workspace: TerraWorkspace):
+    def __init__(
+            self,
+            file_paths_dict: list[dict],
+            metadata_table_names: list[str],
+            workspace_metadata: list[dict],
+            terra_workspace: TerraWorkspace
+    ):
         self.file_paths_dict = file_paths_dict
         self.metadata_table_names = metadata_table_names
         self.workspace_metadata = workspace_metadata
@@ -194,15 +196,15 @@ class DataSetName:
                 [f"{dataset['name']} - {dataset['id']}" for dataset in existing_datasets]
             )
             logging.error(
-                f"Set dataset name to use manually.\
-                {len(existing_datasets)} datasets found\
-                with prefix {dataset_prefix}: {dataset_info_str}")
+                f"Set dataset name to use manually. {len(existing_datasets)} datasets found with prefix"
+                f" {dataset_prefix}: {dataset_info_str}"
+            )
             sys.exit(1)
         if len(existing_datasets) == 1 and existing_datasets[0]['name'] != f"{dataset_prefix}_{dataset_suffix}":
             logging.error(
-                f"Set dataset name to use manually.\
-                Dataset with prefix {dataset_prefix} already exists:\
-                {existing_datasets[0]['name']} - {existing_datasets[0]['id']}")
+                f"Set dataset name to use manually. Dataset with prefix {dataset_prefix} already exists:"
+                f" {existing_datasets[0]['name']} - {existing_datasets[0]['id']}"
+            )
             sys.exit(1)
         return f"{dataset_prefix}_{dataset_suffix}"
 
@@ -286,8 +288,7 @@ if __name__ == "__main__":
 
     workspace_properties_dict = {
         "auth_domains": workspace_info['workspace']['authorizationDomain'],
-        "consent_name": workspace_info['workspace']["attributes"]["library:dataUseRestriction"]
-        if workspace_info['workspace']["attributes"].get("library:dataUseRestriction") else "",
+        "consent_name": workspace_info['workspace']["attributes"]["library:dataUseRestriction"] if workspace_info['workspace']["attributes"].get("library:dataUseRestriction") else "",  # noqa
         "source_workspaces": [workspace_name]
     }
 

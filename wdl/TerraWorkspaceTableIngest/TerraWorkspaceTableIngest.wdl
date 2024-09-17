@@ -5,11 +5,12 @@ workflow GCPWorkspaceToDatasetIngest {
         String billing_project
         String workspace_name
         String dataset_id
-        String target_table_name
-        String tdr_row_id
+        String terra_table_name
+        String? target_table_name
+        String primary_key_column_name
         String? update_strategy
-        Array[String] sample_ids_to_ingest
-        Boolean? bulk_mode
+        String? records_to_ingest
+        Boolean bulk_mode
         Int? max_retries
         Int? max_backoff_time
         String? docker
@@ -22,10 +23,11 @@ workflow GCPWorkspaceToDatasetIngest {
             billing_project = billing_project,
             workspace_name = workspace_name,
             dataset_id = dataset_id,
+            terra_table_name = terra_table_name,
             target_table_name = target_table_name,
-            tdr_row_id = tdr_row_id,
+            primary_key_column_name = primary_key_column_name,
             update_strategy = update_strategy,
-            sample_ids_to_ingest = sample_ids_to_ingest,
+            records_to_ingest = records_to_ingest,
             bulk_mode = bulk_mode,
             max_retries = max_retries,
             max_backoff_time = max_backoff_time,
@@ -38,11 +40,12 @@ task IngestWorkspaceDataToDataset {
         String billing_project
         String workspace_name
         String dataset_id
-        String target_table_name
-        String tdr_row_id
+        String terra_table_name
+        String? target_table_name
+        String primary_key_column_name
         String? update_strategy
-        Array[String]? sample_ids_to_ingest
-        Boolean? bulk_mode
+        String? records_to_ingest
+        Boolean bulk_mode
         Int? max_retries
         Int? max_backoff_time
         String docker_image
@@ -53,13 +56,14 @@ task IngestWorkspaceDataToDataset {
         --billing_project  ~{billing_project} \
         --workspace_name  ~{workspace_name} \
         --dataset_id  ~{dataset_id} \
-        --target_table_name  ~{target_table_name} \
-        --tdr_row_id  ~{tdr_row_id} \
+        --terra_table_name  ~{terra_table_name} \
+        ~{"--target_table_name " + target_table_name} \
+        --primary_key_column_name  ~{primary_key_column_name} \
         ~{"--update_strategy " + update_strategy} \
-        ~{"--sample_ids_to_ingest " + sample_ids_to_ingest} \
         ~{if bulk_mode then "--bulk_mode" else ""} \
         ~{"--max_retries " + max_retries} \
         ~{"--max_backoff_time " + max_backoff_time} \
+        ~{"--records_to_ingest " + records_to_ingest} \
     >>>
 
     runtime {

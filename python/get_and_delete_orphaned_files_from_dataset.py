@@ -30,8 +30,8 @@ def get_args():
         "--max_backoff_time",
         required=False,
         default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds).\
-        Defaults to {MAX_BACKOFF_TIME} seconds if not provided"
+        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if "
+             f"not provided"
     )
     parser.add_argument(
         "--delete_orphaned_files",
@@ -50,8 +50,8 @@ def get_args():
         action="store",
         type=int,
         default=BATCH_SIZE_TO_DELETE_FILES,
-        help=f"The batch size to submit all delete jobs together and wait\
-        until all have completed before moving to next batch. Defaults to {BATCH_SIZE_TO_LIST_FILES}"
+        help=f"The batch size to submit all delete jobs together and wait until all have completed before moving to "
+             f"next batch. Defaults to {BATCH_SIZE_TO_LIST_FILES}"
     )
 
     return parser.parse_args()

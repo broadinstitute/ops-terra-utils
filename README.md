@@ -23,8 +23,10 @@ For more detailed information, please refer to [CONTRIBUTING.md](CONTRIBUTING.md
    git clone <repository-url>
    cd <repository-directory>
 2. Running Python Scripts: You can run the Python scripts directly after cloning. Some of the key scripts are designed to interact with Terra and TDR for tasks such as metadata ingestion, dataset management, etc.
+
 3. Using Docker: There is a Docker image available that comes with all the required dependencies for running the scripts:
 `us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest`
+
 4. Running WDLs: The WDLs in this repository are designed to be run in Terra. You can import the WDLs into your Terra workspace and run them there.
 
 ## Running Code Locally
@@ -36,6 +38,7 @@ python python/script_name.py --arg1 value --arg2 value
 ```bash
 docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest python /app/script_name.py --arg1 value --arg2 value
 ```
+
 
 ## Testing WDL's locally
 
@@ -76,5 +79,7 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
       cat ./test_wdl_stdout
       Hello World!
   ```
+
+=======
 
 For more setup details, see [CONTRIBUTING.md](CONTRIBUTING.md).

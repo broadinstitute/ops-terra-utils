@@ -8,9 +8,9 @@ google-cloud-logging
 google-auth-oauthlib==1.2.1
 azure-identity==1.17.1
 azure-storage-blob==12.21.0
-schema
 oauth2client
 backoff
 aiohttp
 pytz
 pandas
+pydantic==2.9.1
