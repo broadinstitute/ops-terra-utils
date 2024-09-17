@@ -16,8 +16,7 @@ from dateutil.parser import ParserError
 from datetime import datetime, date
 
 from .request_util import GET, POST, DELETE
-from .tdr_api_schema.create_dataset_schema import create_dataset_schema
-
+from .tdr_api_schema.create_dataset_schema import CreateDatasetSchema
 from .tdr_api_schema.update_dataset_schema import UpdateSchema
 from .terra_util import TerraWorkspace
 from . import GCP, AZURE  # import from __init__.py
@@ -382,8 +381,15 @@ class TDR:
             )
         return dataset_id
 
-    def create_dataset(self, schema: dict, cloud_platform: str, dataset_name: str, description: str,
-                       profile_id: str, additional_dataset_properties: dict = None) -> str:
+    def create_dataset(
+            self,
+            schema: dict,
+            cloud_platform: str,
+            dataset_name: str,
+            description: str,
+            profile_id: str,
+            additional_dataset_properties: dict = None
+    ) -> str:
         dataset_properties = {
             "name": dataset_name,
             "description": description,
@@ -397,7 +403,7 @@ class TDR:
             dataset_properties.update(additional_dataset_properties)
 
         try:
-            create_dataset_schema.validate(dataset_properties)
+            CreateDatasetSchema(**dataset_properties)
         except SchemaError as e:
             raise ValueError(f"Schema validation error: {e}")
 
