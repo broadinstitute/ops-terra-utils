@@ -30,7 +30,7 @@ class Policy(BaseModel):
     snapshotCreators: str
 
 
-class GcpEnum(str, Enum):
+class CloudPlatformEnum(str, Enum):
     gcp = "gcp"
     azure = "azure"
 
@@ -41,7 +41,7 @@ class CreateDatasetSchema(BaseModel):
     defaultProfileId: str
     schema: Schema
     region: Optional[str]
-    cloudPlatform: Optional[GcpEnum] = GcpEnum.gcp
+    cloudPlatform: Optional[CloudPlatformEnum] = CloudPlatformEnum.gcp
     enableSecureMonitoring: Optional[bool]
     phsId: Optional[str]
     experimentalSelfHosted: Optional[bool]
