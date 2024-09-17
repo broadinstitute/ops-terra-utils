@@ -52,7 +52,7 @@ task IngestWorkspaceDataToDataset {
     }
 
     command <<<
-        if defined
+        Array records = if defined(records_to_ingest) then {sep=", " records_to_ingest} else ""
 
         python /etc/terra_utils/gcp_workspace_table_to_dataset_ingest.py \
         --billing_project  ~{billing_project} \
@@ -62,7 +62,7 @@ task IngestWorkspaceDataToDataset {
         --target_table_name  ~{target_table_name} \
         --primary_key_column_name  ~{primary_key_column_name} \
         ~{"--update_strategy " + update_strategy} \
-        ~{if defined(records_to_ingest) then "--records_to_ingest " + sep=", " records_to_ingest else ""} \
+        ~{if defined(records) then "--records_to_ingest " + records} \
         ~{if bulk_mode then "--bulk_mode" else ""} \
         ~{"--max_retries " + max_retries} \
         ~{"--max_backoff_time " + max_backoff_time} \
