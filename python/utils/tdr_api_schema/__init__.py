@@ -23,19 +23,19 @@ class DataTypeEnum(str, Enum):
 
 
 class Column(BaseModel):
-    name: Field(str, min_length=1, max_length=63)
+    name: str = Field(min_length=1, max_length=63)
     datatype: DataTypeEnum
-    array_of: Optional[bool]
-    required: Optional[bool]
+    array_of: Optional[bool] = None
+    required: Optional[bool] = None
 
 
 class RelationshipTerm(BaseModel):
-    table: Field(str, min_length=1, max_length=63)
-    column: Field(str, min_length=1, max_length=63)
+    table: str = Field(min_length=1, max_length=63)
+    column: str = Field(min_length=1, max_length=63)
 
 
 class Relationship(BaseModel):
-    name: Field(str, min_length=1)
+    name: str = Field(min_length=1)
     from_table: RelationshipTerm = Field(alias="from")
     to: RelationshipTerm
 
@@ -47,21 +47,21 @@ class PartitionModeEnum(str, Enum):
 
 
 class DatePartition(BaseModel):
-    column: Field(str, min_length=1, max_length=63)
+    column: str = Field(min_length=1, max_length=63)
 
 
 class IntPartition(BaseModel):
-    column: Field(str, min_length=1, max_length=63)
+    column: str = Field(min_length=1, max_length=63)
     min: int
     max: int
     interval: int
 
 
 class Table(BaseModel):
-    name: Field(str, max_length=63, min_length=1)
+    name: str = Field(max_length=63, min_length=1)
     columns: list[Column]
-    primaryKey: Optional[list[Field(str, min_length=1, max_length=63)]]
-    partitionMode: Optional[PartitionModeEnum]
-    datePartitionOptions: Optional[DatePartition]
-    intPartitionOptions: Optional[IntPartition]
-    row_count: Optional[int]
+    primaryKey: Optional[list[str]] = None
+    partitionMode: Optional[PartitionModeEnum] = None
+    datePartitionOptions: Optional[DatePartition] = None
+    intPartitionOptions: Optional[IntPartition] = None
+    row_count: Optional[int] = None
