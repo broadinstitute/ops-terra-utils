@@ -49,4 +49,4 @@ class CreateDatasetSchema(BaseModel):
     dedicatedIngestServiceAccount: Optional[bool] = None
     experimentalPredictableFileIds: Optional[bool] = None
     policies: Optional[Policy] = None
-    tags: Optional[str] = None
+    tags: Optional[list[str]] = None
