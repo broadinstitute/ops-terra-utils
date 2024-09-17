@@ -15,10 +15,12 @@ logging.basicConfig(
 
 CLOUD_TYPE = GCP
 
+
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Delete a dataset in TDR")
     parser.add_argument("--dataset_id", required=True)
     return parser.parse_args()
+
 
 if __name__ == '__main__':
     args = get_args()

@@ -15,10 +15,12 @@ logging.basicConfig(
 
 CLOUD_TYPE = GCP
 
+
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Delete a snapshot in TDR")
     parser.add_argument("--snapshot_id", required=True)
     return parser.parse_args()
+
 
 if __name__ == '__main__':
     args = get_args()
@@ -28,4 +30,3 @@ if __name__ == '__main__':
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
     tdr.delete_snapshot(snapshot_id=snapshot_id)
-    
