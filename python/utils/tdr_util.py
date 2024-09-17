@@ -9,7 +9,6 @@ import numpy as np
 import pytz
 from typing import Any, Optional
 from urllib.parse import unquote
-from schema import SchemaError
 from pydantic import ValidationError
 from dateutil import parser
 from dateutil.parser import ParserError
@@ -404,7 +403,7 @@ class TDR:
 
         try:
             CreateDatasetSchema(**dataset_properties)
-        except SchemaError as e:
+        except ValidationError as e:
             raise ValueError(f"Schema validation error: {e}")
 
         uri = f'{self.TDR_LINK}/datasets'
