@@ -61,7 +61,7 @@ task IngestWorkspaceDataToDataset {
         --workspace_name  ~{workspace_name} \
         --dataset_id  ~{dataset_id} \
         --terra_table_name  ~{terra_table_name} \
-        --target_table_name  ~{target_table_name} \
+        ~{"--target_table_name " + target_table_name} \
         --primary_key_column_name  ~{primary_key_column_name} \
         "--records_to_ingest " + records_to_ingest_str \
         ~{"--update_strategy " + update_strategy} \
