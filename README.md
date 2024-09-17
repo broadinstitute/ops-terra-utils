@@ -64,7 +64,7 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
 
   ```sh
    # Submitting test workflow
-      cromshell submit ./dev/tests/Hello_World.wdl ./dev/tests/hello_world_inputs.json
+      cromshell submit ./dev/tests/HelloWorld.wdl ./dev/tests/hello_world_inputs.json
       {"id": "498cde1f-5495-4b6e-a7ec-89d6d5f4903b", "status": "Submitted"}
    # Checking workflow status
       cromshell status 498cde1f-5495-4b6e-a7ec-89d6d5f4903b
