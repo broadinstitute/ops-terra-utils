@@ -50,7 +50,7 @@ task IngestWorkspaceDataToDataset {
         Int? max_backoff_time
         String docker_image
     }
-    Array records = if defined(records_to_ingest) then {sep=", " records_to_ingest} else ""
+    Array records = if defined(records_to_ingest) then ~{sep=", " records_to_ingest} else ""
 
     command <<<
         python /etc/terra_utils/gcp_workspace_table_to_dataset_ingest.py \
