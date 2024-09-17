@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
-from python.utils.tdr_api_schema import Column, Relationship, Table
+from . import Column, Relationship, Table
 
 
 class NewColumn(BaseModel):
@@ -10,9 +10,9 @@ class NewColumn(BaseModel):
 
 
 class Changes(BaseModel):
-    addTables: Optional[list[Table]]
-    addColumns: Optional[list[NewColumn]]
-    addRelationships: Optional[list[Relationship]]
+    addTables: Optional[list[Table]] = None
+    addColumns: Optional[list[NewColumn]] = None
+    addRelationships: Optional[list[Relationship]] = None
 
 
 class UpdateSchema(BaseModel):

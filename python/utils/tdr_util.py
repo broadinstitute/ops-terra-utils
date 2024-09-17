@@ -416,12 +416,10 @@ class TDR:
 
         if additional_dataset_properties:
             dataset_properties.update(additional_dataset_properties)
-
         try:
             CreateDatasetSchema(**dataset_properties)
         except ValidationError as e:
             raise ValueError(f"Schema validation error: {e}")
-
         uri = f'{self.TDR_LINK}/datasets'
         logging.info(f"Creating dataset {dataset_name} under billing profile {profile_id}")
         response = self.request_util.run_request(
@@ -449,7 +447,6 @@ class TDR:
             request_body["changes"]["addRelationships"] = relationships_to_add
         if columns_to_add:
             request_body["changes"]["addColumns"] = columns_to_add
-
         try:
             UpdateSchema(**request_body)
         except ValidationError as e:

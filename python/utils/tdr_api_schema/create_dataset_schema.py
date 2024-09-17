@@ -2,26 +2,26 @@ from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
 
-from python.utils.tdr_api_schema import Relationship, Table
+from . import Relationship, Table
 
 
 class AssetTable(BaseModel):
-    name: Field(str, min_length=1, max_length=63)
-    columns: list[Field(str, min_length=1, max_length=63)]
+    name: str = Field(min_length=1, max_length=63)
+    columns: list[str]
 
 
 class Asset(BaseModel):
-    name: Field(str, min_length=1)
-    tables: [AssetTable]
-    rootTable: Field(str, min_length=1, max_length=63)
-    rootColumn: Field(str, min_length=1, max_length=63)
-    follow: list[Field(str, min_length=1, max_length=63)]
+    name: str = Field(min_length=1)
+    tables: list[AssetTable]
+    rootTable: str = Field(min_length=1, max_length=63)
+    rootColumn: str = Field(min_length=1, max_length=63)
+    follow: list[str]
 
 
 class Schema(BaseModel):
     tables: list[Table]
-    relationships: Optional[list[Relationship]]
-    assets: Optional[list[Asset]]
+    relationships: Optional[list[Relationship]] = None
+    assets: Optional[list[Asset]] = None
 
 
 class Policy(BaseModel):
@@ -36,17 +36,17 @@ class CloudPlatformEnum(str, Enum):
 
 
 class CreateDatasetSchema(BaseModel):
-    name: Field(str, max_length=511, min_length=1)
-    description: Optional[str]
+    name: str = Field(max_length=511, min_length=1)
+    description: Optional[str] = None
     defaultProfileId: str
     schema: Schema
-    region: Optional[str]
+    region: Optional[str] = None
     cloudPlatform: Optional[CloudPlatformEnum] = CloudPlatformEnum.gcp
-    enableSecureMonitoring: Optional[bool]
-    phsId: Optional[str]
-    experimentalSelfHosted: Optional[bool]
-    properties: Optional[dict]
-    dedicatedIngestServiceAccount: Optional[bool]
-    experimentalPredictableFileIds: Optional[bool]
-    policies: Optional[Policy]
-    tags: Optional[str]
+    enableSecureMonitoring: Optional[bool] = None
+    phsId: Optional[str] = None
+    experimentalSelfHosted: Optional[bool] = None
+    properties: Optional[dict] = None
+    dedicatedIngestServiceAccount: Optional[bool] = None
+    experimentalPredictableFileIds: Optional[bool] = None
+    policies: Optional[Policy] = None
+    tags: Optional[str] = None
