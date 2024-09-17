@@ -19,6 +19,7 @@ from .request_util import GET, POST, DELETE
 from .tdr_api_schema.create_dataset_schema import create_dataset_schema
 
 from .tdr_api_schema.update_dataset_schema import UpdateSchema
+from .terra_util import TerraWorkspace
 from . import GCP, AZURE  # import from __init__.py
 
 
@@ -778,7 +779,6 @@ class SetUpTDRTables:
                         column_dict["action"] = "modify"
                         columns_to_update.append(column_dict)
         return columns_to_update
-
 
     @staticmethod
     def _compare_dataset_relationships(reference_dataset_relationships, target_dataset_relationships) -> list[dict]:

@@ -7,7 +7,6 @@ MOVE = "move"
 COPY = "copy"
 
 
-
 class GCPCloudFunctions:
     """List contents of a GCS bucket. Does NOT take in a token and auths as current user"""
     def __init__(self):
@@ -97,11 +96,7 @@ class GCPCloudFunctions:
     def validate_files_are_same(self, src_cloud_path: str, dest_cloud_path: str) -> bool:
         """Validate if two cloud files (source and destination) are identical based on their MD5 hashes."""
         src_file_path_components = self.process_cloud_path(src_cloud_path)
-        src_bucket = src_file_path_components['bucket']
-        src_blob_url = src_file_path_components['blob_url']
         dest_file_path_components = self.process_cloud_path(dest_cloud_path)
-        dest_bucket = dest_file_path_components['bucket']
-        dest_blob_url = dest_file_path_components['blob_url']
 
         src_blob = self.client.bucket(src_file_path_components['bucket']).get_blob(src_file_path_components['blob_url'])
         dest_blob = self.client.bucket(

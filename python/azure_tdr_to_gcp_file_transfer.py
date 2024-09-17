@@ -1,5 +1,3 @@
-from google.cloud import storage
-import google.cloud.logging
 import logging
 import json
 import subprocess
