@@ -1,0 +1,4 @@
+{
+    "HelloWorld.docker": "frolvlad/alpine-bash",
+    "HelloWorld.mem": 128
+}

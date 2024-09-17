@@ -324,3 +324,8 @@ bin
 Network Trash Folder
 Temporary Items
 .apdisk
+
+
+# new additions for ops terra utils repo
+dev/.cromshell/*
+!dev/.cromshell/.cromshell_config.json
