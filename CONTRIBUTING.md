@@ -8,6 +8,24 @@ Thank you for your interest in contributing to this repository! This document ou
 - **`wdl/`**: Contains all WDLs. New WDLs should be placed in this directory.
 - **`python/utils/`**: Houses reusable Python utility functions. If possible, reuse or contribute new functions here.
 
+## Interacting with Terra and TDR
+If you are interacting with Terra or TDR at all in your script you will want to follow the pattern of importing Token and RunRequest from the utils like below.
+
+```python
+from utils.request_util import RunRequest
+from utils.token_util import Token
+from utils.terra_util import Terra
+from utils.tdr_util import TDR
+
+# Initialize the Terra and TDR classes
+token = Token(cloud=TOKEN_TYPE)  # Either gcp or azure  
+request_util = RunRequest(token=token)
+tdr = TDR(request_util=request_util)
+terra = Terra(request_util=request_util)
+```
+You should not be interacting with Terra or TDR directly in your script. Instead, you should use the `Terra` and `TDR` classes to interact with Terra and TDR respectively. If an API call is not available in the `Terra` or `TDR` classes, you can add it to the respective class.
+
+
 ## Workflow for Adding WDLs
 
 1. **Create a WDL**: Add your new WDL to the `wdl/` directory.

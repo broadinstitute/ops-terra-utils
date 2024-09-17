@@ -8,9 +8,8 @@ DELETE = "DELETE"
 PATCH = "PATCH"
 PUT = "PUT"
 
-
 class RunRequest:
-    def __init__(self, token: Any, max_retries: int = 5, max_backoff_time: int = 900):
+    def __init__(self, token: Any, max_retries: int = 5, max_backoff_time: int = 5 * 60):
         self.max_retries = max_retries
         self.max_backoff_time = max_backoff_time
         self.token = token
