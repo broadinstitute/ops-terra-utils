@@ -1,12 +1,19 @@
 import logging
 import sys
 import re
+import argparse
 from typing import Optional
 from datetime import datetime
-from argparse import ArgumentParser
+
 from utils import GCP
-from utils.tdr_util import TDR, ConvertTerraTableInfoForIngest, SetUpTDRTables, GetPermissionsForWorkspaceIngest, \
-    FILE_INVENTORY_DEFAULT_SCHEMA, FilterAndBatchIngest
+from utils.tdr_util import (
+    TDR,
+    ConvertTerraTableInfoForIngest,
+    SetUpTDRTables,
+    GetPermissionsForWorkspaceIngest,
+    FILE_INVENTORY_DEFAULT_SCHEMA,
+    FilterAndBatchIngest
+)
 from utils.request_util import RunRequest
 from utils.token_util import Token
 from utils.terra_util import TerraWorkspace, Terra
@@ -44,8 +51,8 @@ DEST_FILE_PATH_FLAT = True
 FILE_INVENTORY_TABLE_NAME = "file_inventory"
 
 
-def get_args():
-    parser = ArgumentParser(
+def get_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
         description="Create and ingest data into a new GCP dataset from a workspace")
     parser.add_argument("--billing_project", required=True)
     parser.add_argument("--workspace_name", required=True)
@@ -101,13 +108,14 @@ def get_args():
 
 class CreateIngestTableInfo:
     """Create a list of dictionaries for each table to ingest"""
+
     def __init__(
             self,
             file_paths_dict: list[dict],
             metadata_table_names: list[str],
             workspace_metadata: list[dict],
             terra_workspace: TerraWorkspace
-    ):
+    ) -> None:
         self.file_paths_dict = file_paths_dict
         self.metadata_table_names = metadata_table_names
         self.workspace_metadata = workspace_metadata
@@ -167,7 +175,7 @@ class CreateIngestTableInfo:
 
 
 class DataSetName:
-    def __init__(self, workspace_name: str, billing_profile: str, tdr: TDR, dataset_name: Optional[str] = None):
+    def __init__(self, workspace_name: str, billing_profile: str, tdr: TDR, dataset_name: Optional[str] = None) -> None:
         self.workspace_name = workspace_name
         self.billing_profile = billing_profile
         self.tdr = tdr
@@ -192,7 +200,7 @@ class DataSetName:
         )
         # Check if multiple datasets exist with the same prefix or if dataset exists with different date
         if len(existing_datasets) > 1:
-            dataset_info_str = ', '.join(
+            dataset_info_str = ", ".join(
                 [f"{dataset['name']} - {dataset['id']}" for dataset in existing_datasets]
             )
             logging.error(
@@ -200,7 +208,7 @@ class DataSetName:
                 f" {dataset_prefix}: {dataset_info_str}"
             )
             sys.exit(1)
-        if len(existing_datasets) == 1 and existing_datasets[0]['name'] != f"{dataset_prefix}_{dataset_suffix}":
+        if len(existing_datasets) == 1 and existing_datasets[0]["name"] != f"{dataset_prefix}_{dataset_suffix}":
             logging.error(
                 f"Set dataset name to use manually. Dataset with prefix {dataset_prefix} already exists:"
                 f" {existing_datasets[0]['name']} - {existing_datasets[0]['id']}"
@@ -217,11 +225,11 @@ def run_filter_and_ingest(
         file_ingest_batch_size: int,
         file_to_uuid_dict: Optional[dict] = None
 ) -> None:
-    table_name = table_info_dict['table_name']
-    ingest_metadata = table_info_dict['ingest_metadata']
-    table_unique_id = table_info_dict['table_unique_id']
-    file_list_bool = table_info_dict['file_list']
-    schema_info = table_info_dict['schema']
+    table_name = table_info_dict["table_name"]
+    ingest_metadata = table_info_dict["ingest_metadata"]
+    table_unique_id = table_info_dict["table_unique_id"]
+    file_list_bool = table_info_dict["file_list"]
+    schema_info = table_info_dict["schema"]
 
     # Set waiting time to poll and batch size based on if files are being ingested
     if table_name != FILE_INVENTORY_TABLE_NAME:
@@ -288,7 +296,7 @@ if __name__ == "__main__":
 
     workspace_properties_dict = {
         "auth_domains": workspace_info['workspace']['authorizationDomain'],
-        "consent_name": workspace_info['workspace']["attributes"]["library:dataUseRestriction"] if workspace_info['workspace']["attributes"].get("library:dataUseRestriction") else "",  # noqa
+        "consent_name": workspace_info['workspace']["attributes"]["library:dataUseRestriction"] if workspace_info['workspace']["attributes"].get("library:dataUseRestriction") else "",  # noqa: E501
         "source_workspaces": [workspace_name]
     }
 
@@ -319,7 +327,8 @@ if __name__ == "__main__":
     # Get all files in workspace bucket
     workspace_bucket_files = GCPCloudFunctions().list_bucket_contents(
         bucket_name=workspace_info['workspace']['bucketName'],
-        file_strings_to_ignore=['SubsetHailJointCall', '.vds/']  # Ignore hail files
+        file_strings_to_ignore=[
+            'SubsetHailJointCall', '.vds/']  # Ignore hail files
     )
 
     # Create workspace attributes for ingestion

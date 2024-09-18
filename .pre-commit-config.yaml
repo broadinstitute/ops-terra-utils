@@ -17,7 +17,18 @@ repos:
     rev: v1.4.1
     hooks:
     -   id: mypy # Mypy is a static type checker for Python.
-        args: [--disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls, --ignore-missing-imports]
+        args: [
+            --disallow-untyped-defs,
+            --disallow-incomplete-defs,
+            --disallow-untyped-calls,
+            --ignore-missing-imports,
+            --python-version=3.11
+        ]
+        additional_dependencies: [
+            "types-requests",
+            "types-python-dateutil",
+            "types-pytz"
+        ]
 -   repo: https://github.com/pre-commit/mirrors-autopep8
     rev: v2.0.4
     hooks:

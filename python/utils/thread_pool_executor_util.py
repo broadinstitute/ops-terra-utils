@@ -18,7 +18,8 @@ class MultiThreadedJobs:
                 function(*job_args_list)
                 return True
             except Exception as e:
-                logging.warning(f"Job failed with error: {e}. Retry {retries + 1}/{max_retries}")
+                logging.warning(
+                    f"Job failed with error: {e}. Retry {retries + 1}/{max_retries}")
                 retries += 1
         return False
 
@@ -33,7 +34,8 @@ class MultiThreadedJobs:
         """Run jobs in parallel and allow for retries.
            Logs successes and failures, and decides whether to fail or continue after failed jobs.
         """
-        logging.info(f'Attempting to run {function.__name__} for total {len(list_of_jobs_args_list)} jobs')
+        logging.info(
+            f'Attempting to run {function.__name__} for total {len(list_of_jobs_args_list)} jobs')
 
         total_jobs = len(list_of_jobs_args_list)
         completed_jobs = 0
@@ -54,7 +56,8 @@ class MultiThreadedJobs:
                         logging.info(f"Job {job_args} completed successfully.")
                     else:
                         failed_jobs += 1
-                        logging.error(f"Job {job_args} failed after {max_retries} retries.")
+                        logging.error(
+                            f"Job {job_args} failed after {max_retries} retries.")
                 except Exception as e:
                     failed_jobs += 1
                     logging.error(f"Job {job_args} raised an exception: {e}")
@@ -67,6 +70,7 @@ class MultiThreadedJobs:
                 logging.error(f"Exiting due to {failed_jobs} failed jobs.")
                 raise Exception(f"{failed_jobs} jobs failed after retries.")
             else:
-                logging.warning(f"{failed_jobs} jobs failed, but continuing execution as 'fail_on_error' is False.")
+                logging.warning(
+                    f"{failed_jobs} jobs failed, but continuing execution as 'fail_on_error' is False.")
         else:
             logging.info("All jobs completed successfully!")

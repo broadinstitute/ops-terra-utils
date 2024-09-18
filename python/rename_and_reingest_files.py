@@ -113,19 +113,19 @@ class GetRowAndFileInfoForReingest:
         self.new_file_basename_column = new_file_basename_column
         self.row_identifier = row_identifier
         self.total_files_to_reingest = 0
-        self.rows_to_reingest = []
+        self.rows_to_reingest: list = []
         self.temp_bucket = temp_bucket
 
     def _create_paths(self, file_info: dict, og_basename: str, new_basename: str) -> Tuple[str, str, str]:
         # Access url is the full path to the file in TDR
-        access_url = file_info['fileDetail']['accessUrl']
+        access_url = file_info["fileDetail"]["accessUrl"]
         # Get basename of file
         file_name = os.path.basename(access_url)
         # Replace basename with new basename
         new_file_name = file_name.replace(
             f'{og_basename}.', f'{new_basename}.')
         # get tdr path. Not real path, just the metadata
-        tdr_file_path = file_info['path']
+        tdr_file_path = file_info["path"]
         # Create full path to updated tdr metadata file path
         updated_tdr_metadata_path = os.path.join(
             os.path.dirname(tdr_file_path), new_file_name)
@@ -137,7 +137,7 @@ class GetRowAndFileInfoForReingest:
     def _create_row_dict(
             self, row_dict: dict, file_ref_columns: list[str]
     ) -> Tuple[Optional[dict], Optional[list[dict]]]:
-        """Go through each row and check each cell if it is a file and if it needs to be reingested.
+        """Go through each row and check each cell if it is a file and if it needs to be re-ingested.
         If so, create a new row dict with the new file path."""
         reingest_row = False
         # Create new dictionary for ingest just the row identifier so can merge with right row later
@@ -151,10 +151,11 @@ class GetRowAndFileInfoForReingest:
             # Check if column is a fileref
             if column_name in file_ref_columns:
                 # Get full file info for that cell
-                file_info = self.files_info.get(row_dict[column_name])
+                file_info = self.files_info.get(
+                    row_dict[column_name])
                 # Get potential temp path, updated tdr metadata path, and access url for file
                 temp_path, updated_tdr_metadata_path, access_url = self._create_paths(
-                    file_info, og_basename, new_basename
+                    file_info, og_basename, new_basename  # type: ignore[arg-type]
                 )
                 # Check if access_url starts with og basename and then .
                 if os.path.basename(access_url).startswith(f"{og_basename}."):
@@ -258,7 +259,7 @@ class BatchCopyAndIngest:
             dataset_id: str,
             copy_and_ingest_batch_size: int,
             row_files_to_copy: list[list[dict]]
-    ):
+    ) -> None:
         self.rows_to_ingest = rows_to_ingest
         self.tdr = tdr
         self.target_table_name = target_table_name
@@ -269,14 +270,15 @@ class BatchCopyAndIngest:
         self.copy_and_ingest_batch_size = copy_and_ingest_batch_size
         self.row_files_to_copy = row_files_to_copy
 
-    def run(self):
+    def run(self) -> None:
         # Batch through rows to copy files down and ingest so if script fails partway through large
         # copy and ingest it will have copied over and ingested some of the files already
         logging.info(
             f"""Batching {len(self.rows_to_ingest)} total rows into batches of {self.copy_and_ingest_batch_size} for
             copying to temp location and ingest"""
         )
-        total_batches = len(self.rows_to_ingest) // self.copy_and_ingest_batch_size + 1
+        total_batches = len(
+            self.rows_to_ingest) // self.copy_and_ingest_batch_size + 1
         gcp_functions = GCPCloudFunctions()
         for i in range(0, len(self.rows_to_ingest), self.copy_and_ingest_batch_size):
             batch_number = i // self.copy_and_ingest_batch_size + 1
