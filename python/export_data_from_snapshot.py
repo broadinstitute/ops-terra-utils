@@ -1,10 +1,10 @@
 import argparse
-import csv
 import logging
 import os.path
 from argparse import ArgumentParser
 from collections import Counter
 
+from utils.gcp_utils import GCPCloudFunctions
 from utils.token_util import Token
 from utils.tdr_util import TDR
 from utils.request_util import RunRequest
@@ -18,6 +18,7 @@ logging.basicConfig(
 CLOUD_TYPE = GCP
 MAX_RETRIES = 5
 MAX_BACKOFF_TIME = 5 * 60
+MULTITHREAD_WORKERS = 10
 
 
 def get_args() -> argparse.Namespace:
@@ -57,7 +58,7 @@ class SourceDestinationMapping:
 
     @staticmethod
     def _validate_file_destinations_unique(mapping: list[dict]) -> None:
-        all_destination_paths = [a["destination"] for a in mapping]
+        all_destination_paths = [a["full_destination_path"] for a in mapping]
         file_counts = Counter(all_destination_paths)
         duplicates = [file for file, count in file_counts.items() if count > 1]
         if duplicates:
@@ -69,18 +70,18 @@ class SourceDestinationMapping:
 
     def get_source_and_destination_paths(self) -> list[dict]:
         mapping = []
+        output = self.output_bucket if self.output_bucket.startswith("gs://") else f"gs://{self.output_bucket}"
+
         for file in self.file_metadata:
             source = file["fileDetail"]["accessUrl"]
             if download_type == "flat":
-                destination = os.path.join(
-                    self.output_bucket, os.path.basename(source).lstrip("/"))
+                destination = os.path.join(output, os.path.basename(source).lstrip("/"))
             else:
-                destination = os.path.join(
-                    self.output_bucket, file["path"].lstrip("/"))
+                destination = os.path.join(output, file["path"].lstrip("/"))
             mapping.append(
                 {
-                    "source": source,
-                    "destination": destination,
+                    "source_file": source,
+                    "full_destination_path": destination,
                 }
             )
 
@@ -109,7 +110,6 @@ if __name__ == '__main__':
         download_type=download_type
     ).get_source_and_destination_paths()
 
-    with open("file_mapping.tsv", "w") as mapping_file:
-        writer = csv.DictWriter(mapping_file, fieldnames=[
-                                "source", "destination"], delimiter="\t")
-        writer.writerows(mapping)
+    GCPCloudFunctions().multithread_copy_of_files_with_validation(
+        files_to_move=mapping, workers=MULTITHREAD_WORKERS, max_retries=max_retries
+    )

@@ -1,6 +1,4 @@
 version 1.0
-import "../utilities/GcpUtils.wdl" as gcp_utils
-
 
 workflow ExportDataFromSnapshotToBucket {
     input {
@@ -14,7 +12,7 @@ workflow ExportDataFromSnapshotToBucket {
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
-    call GetFileMapping {
+    call CopyFilesFromSnapshotToBucket {
         input:
             snapshot_id = snapshot_id,
             output_bucket = output_bucket,
@@ -24,14 +22,9 @@ workflow ExportDataFromSnapshotToBucket {
             docker_image = docker_image
     }
 
-    call gcp_utils.CopyGCPSourceToDestinationFromMappingTsv {
-        input:
-            mapping_tsv = GetFileMapping.source_destination_mapping_file
-    }
-
 }
 
-task GetFileMapping {
+task CopyFilesFromSnapshotToBucket {
     input {
         String snapshot_id
         String output_bucket
@@ -52,10 +45,6 @@ task GetFileMapping {
 
     runtime {
         docker: docker_image
-    }
-
-    output {
-        File source_destination_mapping_file = "file_mapping.tsv"
     }
 
 }
