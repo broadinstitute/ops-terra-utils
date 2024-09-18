@@ -1,0 +1,4 @@
+{
+    "wdl_name.docker": "frolvlad/alpine-bash",
+    "wdl_name.mem": 128
+}
