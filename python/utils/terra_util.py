@@ -34,7 +34,7 @@ class TerraWorkspace:
         self.storage_container = None
         self.bucket = None
         self.wds_url = None
-        self.account_url = None
+        self.account_url: Optional[str] = None
         self.request_util = request_util
 
     def __repr__(self) -> str:
@@ -42,11 +42,11 @@ class TerraWorkspace:
 
     def _yield_all_entity_metrics(self, entity: str, total_entities_per_page: int = 40000) -> Any:
         """Yield all entity metrics from workspace."""
-        url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/entityQuery/{entity}?pageSize={total_entities_per_page}"  # noqa
+        url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/entityQuery/{entity}?pageSize={total_entities_per_page}"  # noqa: E501
         response = self.request_util.run_request(
             uri=url,
             method=GET,
-            content_type='application/json'
+            content_type="application/json"
         )
         first_page_json = response.json()
         yield first_page_json
@@ -59,7 +59,7 @@ class TerraWorkspace:
             next_page = self.request_util.run_request(
                 uri=url,
                 method=GET,
-                content_type='application/json',
+                content_type="application/json",
                 params={"page": page}
             )
             yield next_page.json()
@@ -127,7 +127,7 @@ class TerraWorkspace:
 
     def _get_sas_token_json(self, sas_expiration_in_secs: int) -> dict:
         """Get SAS token JSON."""
-        url = f"{self.WORKSPACE_LINK}/{self.workspace_id}/resources/controlled/azure/storageContainer/{self.resource_id}/getSasToken?sasExpirationDuration={str(sas_expiration_in_secs)}"  # noqa
+        url = f"{self.WORKSPACE_LINK}/{self.workspace_id}/resources/controlled/azure/storageContainer/{self.resource_id}/getSasToken?sasExpirationDuration={str(sas_expiration_in_secs)}"  # noqa: E501
         response = self.request_util.run_request(uri=url, method=POST)
         return json.loads(response.text)
 
@@ -149,12 +149,12 @@ class TerraWorkspace:
         """Set workspace ID."""
         self.workspace_id = workspace_info["workspace"]["workspaceId"]
 
-    def get_workspace_bucket(self):
+    def get_workspace_bucket(self) -> str:
         return self.get_workspace_info()["workspace"]["bucketName"]
 
     def get_workspace_entity_info(self, use_cache: bool = True) -> dict:
         """Get workspace entity info."""
-        use_cache = 'true' if use_cache else 'false'
+        use_cache = "true" if use_cache else "false"  # type: ignore[assignment]
         url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/entities?useCache={use_cache}"
         response = self.request_util.run_request(uri=url, method=GET)
         return json.loads(response.text)
@@ -174,7 +174,7 @@ class TerraWorkspace:
         response = self.request_util.run_request(
             uri=url,
             method=PATCH,
-            content_type='application/json',
+            content_type="application/json",
             data="[" + json.dumps(payload) + "]"
         )
         request_json = response.json()
@@ -190,20 +190,21 @@ class TerraWorkspace:
         """Create ingest dictionary for workspace attributes. If attributes passed in should JUST be attributes
         and not whole workspace info."""
         # If not provided then call API to get it
-        if not workspace_attributes:
-            workspace_attributes = self.get_workspace_info()['workspace']['attributes']
+        workspace_attributes = workspace_attributes if workspace_attributes else self.get_workspace_info()[
+            "workspace"]["attributes"]
+
         ingest_dict = []
         for key, value in workspace_attributes.items():
             # If value is dict just use 'items' as value
             if isinstance(value, dict):
                 value = value.get("items")
-            # If value is list convert to comma seperated string
+            # If value is list convert to comma separated string
             if isinstance(value, list):
-                value = ', '.join(value)
+                value = ", ".join(value)
             ingest_dict.append(
                 {
-                    'attribute': key,
-                    'value': str(value) if value else None
+                    "attribute": key,
+                    "value": str(value) if value else None
                 }
             )
         return ingest_dict

@@ -4,8 +4,9 @@ import subprocess
 import google.cloud.logging
 from google.cloud import storage
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from argparse import ArgumentParser, Namespace
+from typing import Optional, Union
 
 from utils.tdr_util import TDR
 from utils.request_util import RunRequest
@@ -53,40 +54,45 @@ def get_args() -> Namespace:
 
 class DownloadAzBlob:
 
-    def __init__(self, export_info: dict, tdr_client):
+    def __init__(self, export_info: dict, tdr_client: TDR) -> None:
         self.tdr_client = tdr_client
         self.export_info = export_info
-        self.sas_token = None
+        self.sas_token: Optional[dict] = None
 
-    def time_until_token_expiry(self):
-        token_expiry = datetime.fromisoformat(self.sas_token['expiry_time'])
-        current_time = datetime.now(timezone.utc)
-        time_delta = token_expiry - current_time
-        return time_delta
+    def time_until_token_expiry(self) -> Union[timedelta, None]:
+        if self.sas_token:
+            token_expiry = datetime.fromisoformat(
+                self.sas_token["expiry_time"])
+            current_time = datetime.now(timezone.utc)
+            time_delta = token_expiry - current_time
+            return time_delta
+        return None
 
-    def get_new_sas_token(self):
+    def get_new_sas_token(self) -> None:
         logging.info("Obtaining new sas token")
-        if self.export_info['endpoint'] == 'dataset':
+        if self.export_info["endpoint"] == "dataset":
             self.sas_token = self.tdr_client.get_sas_token(
-                dataset_id=self.export_info['id'])
-        elif self.export_info['endpoint'] == 'snapshot':
+                dataset_id=self.export_info["id"])
+        elif self.export_info["endpoint"] == "snapshot":
             self.sas_token = self.tdr_client.get_sas_token(
-                snapshot_id=self.export_info['id'])
+                snapshot_id=self.export_info["id"])
 
-    def run_az_copy(self, blob_path: str, output_path: str):
-        az_copy_command = ['azcopy', 'copy',
-                           f"{blob_path}", f"{output_path}", '--output-type=json']
+    @staticmethod
+    def run_az_copy(blob_path: str, output_path: str) -> subprocess.CompletedProcess:
+        az_copy_command = ["azcopy", "copy", f"{blob_path}", f"{output_path}", "--output-type=json"]
         copy_cmd = subprocess.run(az_copy_command, capture_output=True)
         return copy_cmd
 
-    def run(self, blob_path: str, output_path: str):
+    def run(self, blob_path: str, output_path: str) -> Union[list, None]:
         self.get_new_sas_token()
-        blob_path_with_token = f"{blob_path}?{self.sas_token['sas_token']}"
-        download_output = self.run_az_copy(
-            blob_path=blob_path_with_token, output_path=output_path)
-        output_list = download_output.stdout.decode('utf-8').splitlines()
-        json_list = [json.loads(obj) for obj in output_list]
-        return json_list
+        if self.sas_token:
+            blob_path_with_token: str = f"{blob_path}?{self.sas_token['sas_token']}"
+            download_output = self.run_az_copy(
+                blob_path=blob_path_with_token, output_path=output_path)
+            output_list = download_output.stdout.decode('utf-8').splitlines()
+            json_list = [json.loads(obj) for obj in output_list]
+            return json_list
+        return None
 
 
 if __name__ == "__main__":
@@ -107,19 +113,19 @@ if __name__ == "__main__":
 
     download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
     for file in file_list:
-        access_url = file['fileDetail']['accessUrl']
+        access_url = file["fileDetail"]["accessUrl"]
         download_path = f"/tmp/{Path(access_url).name}"
-        file_download = download_client.run(blob_path=access_url, output_path=download_path)
+        file_download = download_client.run(
+            blob_path=access_url, output_path=download_path)
         file_name = Path(access_url).name
         # construct upload path
         if args.retain_path_structure:
-            gcp_upload_path = file['path']
+            gcp_upload_path = file["path"]
         elif args.bucket_output_path:
-            formatted_path = Path(args.bucket_output_path)/file_name
+            formatted_path = Path(args.bucket_output_path) / file_name
             gcp_upload_path = str(formatted_path)
         else:
             gcp_upload_path = file_name
-        breakpoint()
         logging.info(f"Uploading {file_name} to {gcp_upload_path}")
         upload_blob = gcp_bucket.blob(gcp_upload_path)
         upload_blob.upload_from_filename(download_path)

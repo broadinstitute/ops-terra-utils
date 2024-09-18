@@ -7,21 +7,21 @@ ENV PIP_USER=false
 ENV PIP_ROOT_USER_ACTION=ignore
 
 # install build dependencies and needed tools
-RUN apt-get update 
+RUN apt-get update
 RUN apt-get install -yq --no-install-recommends \
     wget \
     curl \
     gcc \
-    g++ \ 
-    python3 \ 
+    g++ \
+    python3 \
     python3-pip \
-    sudo \ 
+    sudo \
     make \
     dpkg \
-    apt-transport-https \ 
+    apt-transport-https \
     which \
-    ca-certificates \ 
-    gnupg 
+    ca-certificates \
+    gnupg
 
 COPY requirements.txt /etc/terra-docker/
 COPY python/ /etc/terra_utils

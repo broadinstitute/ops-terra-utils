@@ -1,29 +1,28 @@
 x-env: &env
   volumes:
     - $HOME/.config/gcloud:/gcp/config:ro
-    - ./python:/etc/terra_utils_dev
+    - ./:/etc/local_repo
   environment:
-    CLOUDSDK_CONFIG: "/gcp/config"
-    GOOGLE_APPLICATION_CREDENTIALS: "/gcp/config/application_default_credentials.json"
+    CLOUDSDK_CONFIG: /gcp/config
+    GOOGLE_APPLICATION_CREDENTIALS: /gcp/config/application_default_credentials.json
 
 services:
-  ops-toolbox-terra-notebook:
+  dev-cromwell:
     <<: *env
     # for dev
     build:
-      dockerfile: ./Dockerfile
-    privileged: true
-    container_name: ops_terra_utils
-    stdin_open: true
-    tty: true
+      dockerfile: ./dev/Dockerfile
     ports:
+      - "127.0.0.1:8000:8000"
       - 8080:80
-    entrypoint: /bin/sh
+    privileged: true
+    container_name: dev-cromwell
+
   ops-toolbox-slim:
     <<: *env
     # for dev
     build:
-      dockerfile: ./ops_docker_utils_slim/Dockerfile  
+      dockerfile: ./ops_docker_utils_slim/Dockerfile
     container_name: ops_terra_utils_slim
     stdin_open: true
     tty: true
