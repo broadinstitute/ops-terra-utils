@@ -111,8 +111,7 @@ if __name__ == "__main__":
         file_list = tdr_client.get_files_from_snapshot(
             snapshot_id=args.target_id)
 
-    download_client = DownloadAzBlob(
-        export_info=export_info, tdr_client=tdr_client)
+    download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
     for file in file_list:
         access_url = file["fileDetail"]["accessUrl"]
         download_path = f"/tmp/{Path(access_url).name}"

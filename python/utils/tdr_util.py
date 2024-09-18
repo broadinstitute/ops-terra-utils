@@ -186,8 +186,7 @@ class TDR:
     def add_user_to_dataset(self, dataset_id: str, user: str, policy: str) -> None:
         """Add user to dataset."""
         if policy not in ["steward", "custodian", "snapshot_creator"]:
-            raise ValueError(
-                f"Policy {policy} is not valid. Must be READER, WRITER, or OWNER")
+            raise ValueError(f"Policy {policy} is not valid. Must be READER, WRITER, or OWNER")
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/policies/{policy}/members"
         member_dict = {"email": user}
         logging.info(f"Adding user {user} to dataset {dataset_id} with policy {policy}")
@@ -491,8 +490,7 @@ class TDR:
 
             # If no more files, break the loop
             if not response:
-                logging.info(
-                    f"No more results to retrieve, found {len(metadata)} total records")
+                logging.info(f"No more results to retrieve, found {len(metadata)} total records")
                 break
 
             metadata.extend(response)
@@ -801,8 +799,7 @@ class SetUpTDRTables:
         logging.info(f"Comparing table {reference_dataset_table['name']} to existing target table")
         columns_to_update = []
         # Convert target table to dict for easier comparison
-        target_dataset_table_dict = {
-            col["name"]: col for col in target_dataset_table}
+        target_dataset_table_dict = {col["name"]: col for col in target_dataset_table}
         # Go through each column in reference table and see if it exists and if so, is it the same in target table
         for column_dict in reference_dataset_table["columns"]:
             # Check if column exists in target table already
@@ -831,7 +828,7 @@ class SetUpTDRTables:
         return dataset_relationships_to_modify
 
     def run(self) -> dict:
-        data_set_info = self.tdr.get_dataset_info(dataset_id=self.dataset_id, info_to_include=['SCHEMA'])
+        data_set_info = self.tdr.get_dataset_info(dataset_id=self.dataset_id, info_to_include=["SCHEMA"])
         existing_tdr_table_schema_info = {
             table_dict["name"]: table_dict["columns"]
             for table_dict in data_set_info["schema"]["tables"]
@@ -885,8 +882,7 @@ class SetUpTDRTables:
             else:
                 logging.info("All tables in dataset exist and are up to date")
             # Return schema info for all existing tables after creation
-            data_set_info = self.tdr.get_dataset_info(
-                dataset_id=self.dataset_id, info_to_include=["SCHEMA"])
+            data_set_info = self.tdr.get_dataset_info(dataset_id=self.dataset_id, info_to_include=["SCHEMA"])
             # Return dict with key being table name and value being dict of columns with key being
             # column name and value being column info
             return {

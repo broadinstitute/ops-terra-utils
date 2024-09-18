@@ -33,8 +33,7 @@ class MultiThreadedJobs:
         """Run jobs in parallel and allow for retries.
            Logs successes and failures, and decides whether to fail or continue after failed jobs.
         """
-        logging.info(
-            f'Attempting to run {function.__name__} for total {len(list_of_jobs_args_list)} jobs')
+        logging.info(f'Attempting to run {function.__name__} for total {len(list_of_jobs_args_list)} jobs')
 
         total_jobs = len(list_of_jobs_args_list)
         completed_jobs = 0

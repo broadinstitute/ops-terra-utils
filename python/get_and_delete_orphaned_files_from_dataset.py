@@ -18,8 +18,7 @@ BATCH_SIZE_TO_DELETE_FILES = 100
 
 
 def get_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Get files that are not in the dataset metadata")
+    parser = argparse.ArgumentParser(description="Get files that are not in the dataset metadata")
     parser.add_argument("--dataset_id", required=True)
     parser.add_argument(
         "--max_retries",
@@ -77,8 +76,7 @@ if __name__ == "__main__":
     file_uuids = [file_dict["fileId"] for file_dict in files_info]
 
     # Find any file uuids that exist in the dataset but not in the metadata
-    orphaned_file_uuids = list(
-        set(file_uuids) - set(all_metadata_dataset_file_uuids))
+    orphaned_file_uuids = list(set(file_uuids) - set(all_metadata_dataset_file_uuids))
     if orphaned_file_uuids:
         uuid_str = "\n".join(orphaned_file_uuids)
         logging.info(
@@ -91,7 +89,6 @@ if __name__ == "__main__":
                 batch_size_to_delete_files=batch_size_to_delete_files
             )
         else:
-            logging.info(
-                "To delete orphaned files, run the script with --delete_orphaned_files flag")
+            logging.info("To delete orphaned files, run the script with --delete_orphaned_files flag")
     else:
         logging.info("No orphaned files found")

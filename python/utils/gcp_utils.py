@@ -146,8 +146,7 @@ class GCPCloudFunctions:
             if not self.validate_files_are_same(file_dict['source_file'], file_dict['full_destination_path']):
                 updated_file_to_move.append(file_dict)
         logging.info(f"Attempting to {COPY} {len(updated_file_to_move)} files")
-        self.move_or_copy_multiple_files(
-            updated_file_to_move, COPY, workers, max_retries)
+        self.move_or_copy_multiple_files(updated_file_to_move, COPY, workers, max_retries)
         logging.info(f"Validating all {len(updated_file_to_move)} new files are identical to original")
         copy_valid = True
         for file_dict in updated_file_to_move:
