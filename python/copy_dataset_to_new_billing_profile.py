@@ -75,12 +75,21 @@ class CreateIngestRecords:
 
     @staticmethod
     def _create_new_file_ref(file_details: dict) -> dict:
+        # Get md5 from file details
+        md5_checksum = next(
+            (
+                item['checksum']
+                for item in file_details['checksums']
+                if item['type'] == 'md5'
+            ), None
+        )
+
         return {
             # source path is the full gs path to original file in TDR
             "sourcePath": file_details['fileDetail']['accessUrl'],
             # Keep the same target path
             "targetPath": f"/new/{os.path.basename(file_details['fileDetail']['accessUrl'])}",
-            "checksums": file_details['checksums']
+            "md5": md5_checksum
         }
 
     def run(self) -> list[dict]:

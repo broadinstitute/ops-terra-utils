@@ -190,7 +190,11 @@ class TDR:
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/policies/{policy}/members"
         member_dict = {"email": user}
         logging.info(f"Adding user {user} to dataset {dataset_id} with policy {policy}")
-        self.request_util.run_request(uri=uri, method=POST, data=json.dumps(member_dict), content_type="application/json",)
+        self.request_util.run_request(
+            uri=uri,
+            method=POST,
+            data=json.dumps(member_dict), content_type="application/json"
+        )
 
     def delete_dataset(self, dataset_id: str) -> None:
         """Delete dataset."""
