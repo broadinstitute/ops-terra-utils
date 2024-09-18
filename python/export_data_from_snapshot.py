@@ -1,3 +1,4 @@
+import argparse
 import csv
 import logging
 import os.path
@@ -19,7 +20,7 @@ MAX_RETRIES = 5
 MAX_BACKOFF_TIME = 5 * 60
 
 
-def get_args():
+def get_args() -> argparse.Namespace:
     parser = ArgumentParser(
         description="Download data from an existing snapshot to a Google bucket")
     parser.add_argument("--snapshot_id", required=True)

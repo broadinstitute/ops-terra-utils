@@ -1,5 +1,6 @@
+import argparse
 import logging
-from argparse import ArgumentParser
+
 from utils import GCP
 from utils.terra_util import TerraWorkspace
 from utils.tdr_util import (
@@ -30,8 +31,8 @@ TEST_INGEST = False  # Whether to test the ingest by just doing first batch
 FILTER_EXISTING_IDS = False
 
 
-def get_args():
-    parser = ArgumentParser(
+def get_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
         description="Ingest data into an existing dataset from a GCP workspace")
     parser.add_argument("--billing_project", required=True)
     parser.add_argument("--workspace_name", required=True)

@@ -1,5 +1,5 @@
 # WDL Input Overview
-This workflow automates the process of ingesting all metadata and related files from a Terra metadata table to a TDR dataset. The dataset must already exist in order for this workflow to be utilized. However, the target table schema does not need to exist in the dataset, this script will handle either creating a new table, or updating an existing one depending on the parameters provided. 
+This workflow automates the process of ingesting all metadata and related files from a Terra metadata table to a TDR dataset. The dataset must already exist in order for this workflow to be utilized. However, the target table schema does not need to exist in the dataset, this script will handle either creating a new table, or updating an existing one depending on the parameters provided.
 
 ## Inputs Table:
 | Input Name                  | Description                                                                                                                      | Type     | Required | Default                              |

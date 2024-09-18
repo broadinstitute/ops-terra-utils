@@ -9,7 +9,8 @@ COPY = "copy"
 
 class GCPCloudFunctions:
     """List contents of a GCS bucket. Does NOT take in a token and auths as current user"""
-    def __init__(self):
+
+    def __init__(self) -> None:
         from google.cloud import storage
         from google.auth import default
         credentials, project = default()
@@ -17,10 +18,14 @@ class GCPCloudFunctions:
 
     @staticmethod
     def process_cloud_path(cloud_path: str) -> dict:
-        platform_prefix, remaining_url = str.split(str(cloud_path), '//')
-        bucket_name = str.split(remaining_url, '/')[0]
-        blob_name = "/".join(str.split(remaining_url, '/')[1:])
-        path_components = {'platform_prefix': platform_prefix, 'bucket': bucket_name, 'blob_url': blob_name}
+        platform_prefix, remaining_url = str.split(str(cloud_path), sep="//")
+        bucket_name = str.split(remaining_url, sep="/")[0]
+        blob_name = "/".join(str.split(remaining_url, sep="/")[1:])
+        path_components = {
+            "platform_prefix": platform_prefix,
+            "bucket": bucket_name,
+            "blob_url": blob_name
+        }
         return path_components
 
     def list_bucket_contents(self, bucket_name: str, file_extensions_to_ignore: list[str] = [],
@@ -53,10 +58,10 @@ class GCPCloudFunctions:
         destination_file_path_components = self.process_cloud_path(full_destination_path)
 
         try:
-            src_bucket = source_file_path_components['bucket']
-            src_blob_url = source_file_path_components['blob_url']
-            dest_bucket = destination_file_path_components['bucket']
-            dest_blob_url = destination_file_path_components['blob_url']
+            src_bucket = source_file_path_components["bucket"]
+            src_blob_url = source_file_path_components["blob_url"]
+            dest_bucket = destination_file_path_components["bucket"]
+            dest_blob_url = destination_file_path_components["blob_url"]
             src_blob = self.client.bucket(src_bucket).blob(src_blob_url)
             dest_blob = self.client.bucket(dest_bucket).blob(dest_blob_url)
 
@@ -77,7 +82,7 @@ class GCPCloudFunctions:
 
     def delete_cloud_file(self, full_cloud_path: str) -> None:
         file_path_components = self.process_cloud_path(full_cloud_path)
-        blob = self.client.bucket(file_path_components['bucket']).blob(file_path_components['blob_url'])
+        blob = self.client.bucket(file_path_components["bucket"]).blob(file_path_components["blob_url"])
         blob.delete()
 
     def move_cloud_file(self, src_cloud_path: str, full_destination_path: str) -> None:
@@ -87,8 +92,8 @@ class GCPCloudFunctions:
     def get_filesize(self, target_path: str) -> int:
         source_file_path_components = self.process_cloud_path(target_path)
         target = self.client.bucket(
-            source_file_path_components['bucket']
-        ).get_blob(source_file_path_components['blob_url'])
+            source_file_path_components["bucket"]
+        ).get_blob(source_file_path_components["blob_url"])
 
         size = target.size
         return size
@@ -98,10 +103,10 @@ class GCPCloudFunctions:
         src_file_path_components = self.process_cloud_path(src_cloud_path)
         dest_file_path_components = self.process_cloud_path(dest_cloud_path)
 
-        src_blob = self.client.bucket(src_file_path_components['bucket']).get_blob(src_file_path_components['blob_url'])
+        src_blob = self.client.bucket(src_file_path_components["bucket"]).get_blob(src_file_path_components["blob_url"])
         dest_blob = self.client.bucket(
-            dest_file_path_components['bucket']
-        ).get_blob(dest_file_path_components['blob_url'])
+            dest_file_path_components["bucket"]
+        ).get_blob(dest_file_path_components["blob_url"])
 
         # If either blob is None, return False
         if not src_blob or not dest_blob:

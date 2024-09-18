@@ -1,11 +1,12 @@
-version 1.0 
+version 1.0
 
 workflow FileExport{
-        input {
+  input {
         String export_type
         String target_id
         String bucket_id
     }
+    
     call run_export {
         input: export_type=export_type, 
                 target_id=target_id,

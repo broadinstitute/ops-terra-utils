@@ -1,5 +1,5 @@
 import logging
-from argparse import ArgumentParser
+import argparse
 
 from utils.tdr_util import TDR
 from utils.request_util import RunRequest
@@ -17,8 +17,8 @@ BATCH_SIZE_TO_LIST_FILES = 20000
 BATCH_SIZE_TO_DELETE_FILES = 100
 
 
-def get_args():
-    parser = ArgumentParser(description="Get files that are not in the dataset metadata")
+def get_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Get files that are not in the dataset metadata")
     parser.add_argument("--dataset_id", required=True)
     parser.add_argument(
         "--max_retries",
@@ -73,13 +73,14 @@ if __name__ == "__main__":
     all_metadata_dataset_file_uuids = tdr.get_data_set_file_uuids_from_metadata(dataset_id=dataset_id)
     # Get all files for dataset
     files_info = tdr.get_data_set_files(dataset_id=dataset_id, limit=batch_size_to_list_files)
-    file_uuids = [file_dict['fileId'] for file_dict in files_info]
+    file_uuids = [file_dict["fileId"] for file_dict in files_info]
 
     # Find any file uuids that exist in the dataset but not in the metadata
     orphaned_file_uuids = list(set(file_uuids) - set(all_metadata_dataset_file_uuids))
     if orphaned_file_uuids:
-        uuid_str = '\n'.join(orphaned_file_uuids)
-        logging.info(f"Below are the {len(orphaned_file_uuids)} orphaned file UUIDs:\n{uuid_str}")
+        uuid_str = "\n".join(orphaned_file_uuids)
+        logging.info(
+            f"Below are the {len(orphaned_file_uuids)} orphaned file UUIDs:\n{uuid_str}")
         if args.delete_orphaned_files:
             logging.info("Deleting orphaned files")
             tdr.delete_files(
