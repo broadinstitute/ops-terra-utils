@@ -151,8 +151,7 @@ class GetRowAndFileInfoForReingest:
             # Check if column is a fileref
             if column_name in file_ref_columns:
                 # Get full file info for that cell
-                file_info = self.files_info.get(
-                    row_dict[column_name])
+                file_info = self.files_info.get(row_dict[column_name])
                 # Get potential temp path, updated tdr metadata path, and access url for file
                 temp_path, updated_tdr_metadata_path, access_url = self._create_paths(
                     file_info, og_basename, new_basename  # type: ignore[arg-type]
@@ -277,8 +276,7 @@ class BatchCopyAndIngest:
             f"""Batching {len(self.rows_to_ingest)} total rows into batches of {self.copy_and_ingest_batch_size} for
             copying to temp location and ingest"""
         )
-        total_batches = len(
-            self.rows_to_ingest) // self.copy_and_ingest_batch_size + 1
+        total_batches = len(self.rows_to_ingest) // self.copy_and_ingest_batch_size + 1
         gcp_functions = GCPCloudFunctions()
         for i in range(0, len(self.rows_to_ingest), self.copy_and_ingest_batch_size):
             batch_number = i // self.copy_and_ingest_batch_size + 1

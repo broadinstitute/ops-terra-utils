@@ -108,16 +108,14 @@ if __name__ == "__main__":
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
-    request_util = RunRequest(
-        token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
+    request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     terra_workspace = TerraWorkspace(
         billing_project=billing_project, workspace_name=workspace_name, request_util=request_util
     )
     tdr = TDR(request_util=request_util)
 
     # Get sample metrics from Terra
-    sample_metrics = terra_workspace.get_gcp_workspace_metrics(
-        entity_type=terra_table_name)
+    sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name)
     logging.info(f"Got {len(sample_metrics)} samples")
 
     # Convert sample dict into list of usable dicts for ingestion
@@ -155,8 +153,7 @@ if __name__ == "__main__":
         }
 
     }
-    SetUpTDRTables(tdr=tdr, dataset_id=dataset_id,
-                   table_info_dict=table_info_dict).run()
+    SetUpTDRTables(tdr=tdr, dataset_id=dataset_id, table_info_dict=table_info_dict).run()
     GetPermissionsForWorkspaceIngest(
         terra_workspace=terra_workspace,
         dataset_info=tdr.get_dataset_info(dataset_id=dataset_id),

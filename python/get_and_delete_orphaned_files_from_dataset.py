@@ -68,22 +68,19 @@ if __name__ == "__main__":
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
-    request_util = RunRequest(
-        token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
+    request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
     # Get all file uuids from metadata
-    all_metadata_dataset_file_uuids = tdr.get_data_set_file_uuids_from_metadata(
-        dataset_id=dataset_id)
+    all_metadata_dataset_file_uuids = tdr.get_data_set_file_uuids_from_metadata(dataset_id=dataset_id)
     # Get all files for dataset
-    files_info = tdr.get_data_set_files(
-        dataset_id=dataset_id, limit=batch_size_to_list_files)
-    file_uuids = [file_dict['fileId'] for file_dict in files_info]
+    files_info = tdr.get_data_set_files(dataset_id=dataset_id, limit=batch_size_to_list_files)
+    file_uuids = [file_dict["fileId"] for file_dict in files_info]
 
     # Find any file uuids that exist in the dataset but not in the metadata
     orphaned_file_uuids = list(
         set(file_uuids) - set(all_metadata_dataset_file_uuids))
     if orphaned_file_uuids:
-        uuid_str = '\n'.join(orphaned_file_uuids)
+        uuid_str = "\n".join(orphaned_file_uuids)
         logging.info(
             f"Below are the {len(orphaned_file_uuids)} orphaned file UUIDs:\n{uuid_str}")
         if args.delete_orphaned_files:

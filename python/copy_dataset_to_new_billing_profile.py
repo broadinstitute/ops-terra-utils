@@ -29,8 +29,7 @@ def get_args() -> Namespace:
         help=f"Batch size for ingest. Default to {DEFAULT_BATCH_SIZE}",
         default=DEFAULT_BATCH_SIZE, type=int
     )
-    parser.add_argument(
-        "--update_strategy", choices=["REPLACE", "APPEND", "UPDATE"], default="REPLACE")
+    parser.add_argument("--update_strategy", choices=["REPLACE", "APPEND", "UPDATE"], default="REPLACE")
     parser.add_argument(
         "--new_dataset_name",
         help="If not provided, will use the same name as the original dataset"

@@ -38,8 +38,7 @@ class Token:
                 self.az_token = self.credentials.get_token(
                     "https://management.azure.com/.default")
             else:
-                raise ValueError(
-                    f"Cloud {self.cloud} not supported. Must be {GCP} or {AZURE}")
+                raise ValueError(f"Cloud {self.cloud} not supported. Must be {GCP} or {AZURE}")
 
     def _get_gcp_token(self) -> Union[str, None]:
         # Refresh token if it has not been set or if it is expired or close to expiry
@@ -48,19 +47,16 @@ class Token:
             self.credentials.refresh(http)
             self.token_string = self.credentials.get_access_token().access_token
             # Set expiry to use UTC since google uses that timezone
-            self.expiry = self.credentials.token_expiry.replace(  # type: ignore[union-attr]
-                tzinfo=pytz.UTC)
+            self.expiry = self.credentials.token_expiry.replace(tzinfo=pytz.UTC)  # type: ignore[union-attr]
             # Convert expiry time to EST for logging
-            est_expiry = self.expiry.astimezone(  # type: ignore[union-attr]
-                pytz.timezone("US/Eastern"))
+            est_expiry = self.expiry.astimezone(pytz.timezone("US/Eastern"))  # type: ignore[union-attr]
             logging.info(f"New token expires at {est_expiry} EST")
         return self.token_string
 
     def _get_az_token(self) -> Union[str, None]:
         # This is not working... Should also check about timezones once it does work
         if not self.token_string or not self.expiry or self.expiry < datetime.now() - timedelta(minutes=10):
-            self.az_token = self.credentials.get_token(
-                "https://management.azure.com/.default")
+            self.az_token = self.credentials.get_token("https://management.azure.com/.default")
             self.token_string = self.az_token.token
             self.expiry = datetime.fromtimestamp(self.az_token.expires_on)
         return self.token_string

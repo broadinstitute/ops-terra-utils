@@ -322,18 +322,17 @@ if __name__ == "__main__":
 
     # Get all schema info within dataset
     data_set_info = tdr.get_dataset_info(
-        dataset_id=dataset_id, info_to_include=['DATA_PROJECT'])
+        dataset_id=dataset_id, info_to_include=["DATA_PROJECT"])
 
     # Get all files in workspace bucket
     workspace_bucket_files = GCPCloudFunctions().list_bucket_contents(
-        bucket_name=workspace_info['workspace']['bucketName'],
-        file_strings_to_ignore=[
-            'SubsetHailJointCall', '.vds/']  # Ignore hail files
+        bucket_name=workspace_info["workspace"]["bucketName"],
+        file_strings_to_ignore=["SubsetHailJointCall", ".vds/"]  # Ignore hail files
     )
 
     # Create workspace attributes for ingestion
     workspace_attributes_ingest_dict = terra_workspace.create_workspace_attributes_ingest_dict(
-        workspace_info['workspace']['attributes'])
+        workspace_info["workspace"]["attributes"])
 
     # Create dictionary of dictionaries for each table for ingestion
     # Do this outside because we are ingesting combo of workspace metadata,

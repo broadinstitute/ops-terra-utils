@@ -79,8 +79,7 @@ class DownloadAzBlob:
 
     @staticmethod
     def run_az_copy(blob_path: str, output_path: str) -> subprocess.CompletedProcess:
-        az_copy_command = ["azcopy", "copy",
-                           f"{blob_path}", f"{output_path}", "--output-type=json"]
+        az_copy_command = ["azcopy", "copy", f"{blob_path}", f"{output_path}", "--output-type=json"]
         copy_cmd = subprocess.run(az_copy_command, capture_output=True)
         return copy_cmd
 
