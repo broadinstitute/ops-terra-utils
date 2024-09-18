@@ -1,8 +1,8 @@
 """Take in billing profile and dataset and recreate the dataset in a new billing profile."""
-
-
+import json
 import logging
 import sys
+import os
 from argparse import ArgumentParser, Namespace
 
 from utils.tdr_util import BatchIngest, TDR
@@ -31,8 +31,8 @@ def get_args() -> Namespace:
     )
     parser.add_argument("--update_strategy", choices=["REPLACE", "APPEND", "UPDATE"], default="REPLACE")
     parser.add_argument(
-        "--new_dataset_name",
-        help="If not provided, will use the same name as the original dataset"
+        "--new_dataset_name", required=True,
+        help="Cannot be named the same as original dataset"
     )
     parser.add_argument(
         "--waiting_time_to_poll",
@@ -50,6 +50,60 @@ def get_args() -> Namespace:
     return parser.parse_args()
 
 
+def create_additional_properties(orig_dataset_info: dict) -> dict:
+    additional_properties = {
+        "experimentalSelfHosted": True,
+        "dedicatedIngestServiceAccount": True,
+        "experimentalPredictableFileIds": True,
+        "enableSecureMonitoring": True
+    }
+    if orig_dataset_info['phsId']:
+        additional_properties['phsId'] = orig_dataset_info['phsId']
+    if orig_dataset_info['tags']:
+        additional_properties['tags'] = orig_dataset_info['tags']
+    if orig_dataset_info['properties']:
+        additional_properties['properties'] = orig_dataset_info['properties']
+    return additional_properties
+
+
+class CreateIngestRecords:
+    def __init__(self, tdr: TDR, orig_dataset_id: str, table_schema_info: dict, orig_dataset_file_info: dict):
+        self.tdr = tdr
+        self.orig_dataset_id = orig_dataset_id
+        self.table_schema_info = table_schema_info
+        self.orig_dataset_file_info = orig_dataset_file_info
+
+    @staticmethod
+    def _create_new_file_ref(file_details: dict) -> dict:
+        return {
+            # source path is the full gs path to original file in TDR
+            "sourcePath": file_details['fileDetail']['accessUrl'],
+            # Keep the same target path
+            "targetPath": f"/new/{os.path.basename(file_details['fileDetail']['accessUrl'])}",
+            "checksums": file_details['checksums']
+        }
+
+    def run(self) -> list[dict]:
+        # Get all file ref columns in table
+        file_ref_columns = [
+            col['name'] for col in self.table_schema_info['columns'] if col['datatype'] == 'fileref']
+        table_metadata = tdr.get_data_set_table_metrics(orig_dataset_id, table_dict['name'])
+        # Go through each row in table
+        for row_dict in table_metadata:
+            # Go through each column in row
+            for column in row_dict:
+                # Check if column is a file ref column
+                if column in file_ref_columns:
+                    file_uuid = row_dict[column]
+                    # Check if file_uuid is in original dataset
+                    if file_uuid:
+                        # Update dict in place to be ingest record instead of file uuid
+                        row_dict[column] = self._create_new_file_ref(
+                            self.orig_dataset_file_info[file_uuid]
+                        )
+        return table_metadata
+
+
 if __name__ == "__main__":
     args = get_args()
 
@@ -57,7 +111,7 @@ if __name__ == "__main__":
         args.orig_dataset_id, args.update_strategy, args.waiting_time_to_poll
     )
     bulk_mode, ingest_batch_size, billing_profile = args.bulk_mode, args.ingest_batch_size, args.new_billing_profile
-
+    new_dataset_name = args.new_dataset_name
     # Initialize the Terra and TDR classes
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -71,18 +125,7 @@ if __name__ == "__main__":
             f"Dataset {orig_dataset_id} already in billing profile {billing_profile}")
         sys.exit(0)
 
-    new_dataset_name = args.new_dataset_name if args.new_dataset_name else orig_dataset_info[
-        "name"]
-
-    additional_properties = {
-        "phsId": orig_dataset_info['phsId'],
-        "experimentalSelfHosted": True,
-        "dedicatedIngestServiceAccount": True,
-        "experimentalPredictableFileIds": True,
-        "enableSecureMonitoring": True,
-        "tags": orig_dataset_info['tags'],
-        "properties": orig_dataset_info['properties'],
-    }
+    additional_properties = create_additional_properties(orig_dataset_info)
     # Check if new dataset already created. If not then create it.
     logging.info(
         f"Searching for and creating new dataset {new_dataset_name} in billing profile {billing_profile} if needed"
@@ -91,7 +134,7 @@ if __name__ == "__main__":
         dataset_name=new_dataset_name,
         billing_profile=billing_profile,
         schema=orig_dataset_info['schema'],
-        description='description',
+        description=orig_dataset_info['description'],
         cloud_platform=GCP,
         additional_properties_dict=additional_properties
     )
@@ -110,17 +153,29 @@ if __name__ == "__main__":
     )
 
     # Go through each table in source dataset and run batch ingest to dest dataset
-    orig_dataset_tables = [t['name']
-                           for t in orig_dataset_info['schema']['tables']]
+    orig_dataset_tables = [
+        table for table in orig_dataset_info['schema']['tables']
+    ]
     logging.info(
         f"Found {len(orig_dataset_tables)} tables in source dataset to ingest")
-    for table_name in orig_dataset_tables:
-        table_metadata = tdr.get_data_set_table_metrics(
-            orig_dataset_id, table_name)
+
+    # Get dict of all files in original dataset
+    original_files_info = tdr.create_file_dict(dataset_id=orig_dataset_id, limit=1000)
+
+    for table_dict in orig_dataset_tables:
+        # Update UUIDs from dataset metrics to be paths to files
+        ingest_records = CreateIngestRecords(
+            tdr=tdr,
+            orig_dataset_id=orig_dataset_id,
+            table_schema_info=table_dict,
+            orig_dataset_file_info=original_files_info
+        ).run()
+        print(json.dumps(ingest_records, indent=2))
+        table_name = table_dict['name']
         logging.info(
-            f"Starting ingest for table {table_name} with total of {len(table_metadata)} rows")
+            f"Starting ingest for table {table_name} with total of {len(ingest_records)} rows")
         BatchIngest(
-            ingest_metadata=table_metadata,
+            ingest_metadata=ingest_records,
             tdr=tdr,
             target_table_name=table_name,
             dataset_id=dest_dataset_id,
@@ -131,5 +186,6 @@ if __name__ == "__main__":
             waiting_time_to_poll=time_to_poll,
             test_ingest=False,
             load_tag=f"{orig_dataset_info['name']}-{new_dataset_name}",
-            file_list_bool=False
+            file_list_bool=False,
+            skip_reformat=True
         ).run()
