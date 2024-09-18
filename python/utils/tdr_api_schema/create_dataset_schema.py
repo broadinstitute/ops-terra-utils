@@ -39,7 +39,7 @@ class CreateDatasetSchema(BaseModel):
     name: str = Field(max_length=511, min_length=1)
     description: Optional[str] = None
     defaultProfileId: str
-    schema: Schema
+    tdr_schema: Schema = Field(alias="schema")
     region: Optional[str] = None
     cloudPlatform: Optional[CloudPlatformEnum] = CloudPlatformEnum.gcp
     enableSecureMonitoring: Optional[bool] = None
@@ -49,4 +49,4 @@ class CreateDatasetSchema(BaseModel):
     dedicatedIngestServiceAccount: Optional[bool] = None
     experimentalPredictableFileIds: Optional[bool] = None
     policies: Optional[Policy] = None
-    tags: Optional[str] = None
+    tags: Optional[list[str]] = None
