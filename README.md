@@ -82,6 +82,51 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
       Hello World!
   ```
 
-=======
+## Pre-Commit
+*[pre-commit](https://pre-commit.com/#intro) is enabled on this repository*
+
+### Usage
+* Install the `pre-commit` package using one of the following two options:
+  * via pip: `pip install pre-commit`
+  * via homebrew: `brew install pre-commit`
+  * Set up `pre-commit` locally so that it runs on each commit automatically by running `pre-commit install`
+      * Note, if you run into the following error when running the installation command: `Cowardly refusing to install hooks with core.hooksPath set.`, then try running the following two commands and then re-attempt to run `pre-commit install`
+    * `git config --unset-all core.hooksPath`
+    * `git config --global --unset-all core.hooksPath`
+
+### Configuration
+* The hooks that are automatically set to run on each commit are configured in the [.pre-commit.yml](https://github.com/broadinstitute/spitfire/blob/master/.pre-commit-config.yaml)
+* To add more hooks, browse available hooks [here](https://pre-commit.com/hooks.html)
+
+### Overriding a Hook
+* After you've installed `pre-commit`, all hooks will run automatically on _each file you've changed in your feature branch_
+* To override the check and commit directly, run `git commit -m "YOU COMMIT MESSAGE" --no-verify`
+  * The only time you may want to use the `--no-verify` flag is if your commit is WIP and you just need to commit something for testing.
+
+### GitHub Actions
+* There are linting checks currently configured for this repository, so committing without fully formatting or type annotating a file may result in failed GitHub actions.
+
+### Specific checks and troubleshooting
+#### mypy
+`mypy` is one of the checks that are run as part of the current `pre-commit` checks. Sometimes it's super helpful, but occasionally it's just wrong. If you have line(s) failing on `mypy` errors, try the following:
+1. If `mypy` isn't already installed, install it using pip: `pip install mypy`
+2. If you're not able to troubleshoot with the given information automatically output my `pre-commit`, you can run
+```commandline
+mypy --ignore-missing-imports --ignore-missing-imports {PATH TO YOUR FILE}
+```
+There are lots of additional options for running `mypy` if this still isn't helpful. You can see them all by running `mypy -h`, or looking through their [documentation](https://mypy.readthedocs.io/en/latest/).
+3. The part in the brackets (such as `[assignment]`, `[misc]`, etc.) is the error code. If you think `mypy` is throwing an error incorrectly on a given line, you can ignore that error using the following syntax in your code on the line the check is failing on. In the following example, the error code is an `assignment` error. You can swap this out for whatever type of error code `mypy` is reporting for that line.
+```Python
+def my_function(x): # type: ignore[assignment]
+    return x
+```
+
+### Some things to note
+* Because `pre-commit` will automatically reformat and make other adjustments (due to some of the configurations currently set up in the configuration yml), it could be that you run `git commit` and end up with 0 files tracked for commit. You may have to re-run your exact commit command to add the tracked files. If all automatic re-formatting has been run successfully, you'll see a message that says something like `2 files changed, 52 insertions(+), 1 deletion(-)`
+  * At this point, you can run `git push` to push your local files to your remote branch
+* For hooks that do not automatically reformat your file (for example the hook that checks for type annotations), you will have to modify your file and address the missing annotations before you'll be able to add those files as tracked files ready for commit. If annotations have successfully been fixed, you can re-run the exact same commit command and you'll see the same message as mentioned above.
+  * At this point, you can run `git push` to push your local files to your remote branch
+
+---
 
 For more setup details, see [CONTRIBUTING.md](CONTRIBUTING.md).
