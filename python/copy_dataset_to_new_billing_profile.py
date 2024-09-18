@@ -52,7 +52,7 @@ def get_args() -> Namespace:
 
 def create_additional_properties(orig_dataset_info: dict) -> dict:
     additional_properties = {
-        "experimentalSelfHosted": True,
+        "experimentalSelfHosted": False,
         "dedicatedIngestServiceAccount": True,
         "experimentalPredictableFileIds": True,
         "enableSecureMonitoring": True

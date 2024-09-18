@@ -303,7 +303,7 @@ if __name__ == "__main__":
     # Create dict of additional properties for dataset
     additional_properties_dict = {
         "phsId": phs_id,
-        "experimentalSelfHosted": True,
+        "experimentalSelfHosted": False,
         "dedicatedIngestServiceAccount": True,
         "experimentalPredictableFileIds": True,
         "enableSecureMonitoring": DATASET_MONITORING,
