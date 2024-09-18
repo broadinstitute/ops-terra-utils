@@ -3,8 +3,8 @@ x-env: &env
     - $HOME/.config/gcloud:/gcp/config:ro
     - ./:/etc/local_repo
   environment:
-    CLOUDSDK_CONFIG: "/gcp/config"
-    GOOGLE_APPLICATION_CREDENTIALS: "/gcp/config/application_default_credentials.json"
+    CLOUDSDK_CONFIG: /gcp/config
+    GOOGLE_APPLICATION_CREDENTIALS: /gcp/config/application_default_credentials.json
 
 services:
   dev-cromwell:
@@ -14,8 +14,9 @@ services:
       dockerfile: ./dev/Dockerfile
     ports:
       - "127.0.0.1:8000:8000"
+      - 8080:80
     privileged: true
-    container_name: ops_terra_utils_dev
+    container_name: dev-cromwell
 
   ops-toolbox-slim:
     <<: *env
