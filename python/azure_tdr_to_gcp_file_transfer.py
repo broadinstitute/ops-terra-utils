@@ -119,7 +119,6 @@ if __name__ == "__main__":
             gcp_upload_path = str(formatted_path)
         else:
             gcp_upload_path = file_name
-        breakpoint()
         logging.info(f"Uploading {file_name} to {gcp_upload_path}")
         upload_blob = gcp_bucket.blob(gcp_upload_path)
         upload_blob.upload_from_filename(download_path)
