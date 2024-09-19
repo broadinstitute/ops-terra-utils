@@ -97,27 +97,23 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--dataset_self_hosted",
         action="store_true",
-        help=f"If used then experimentalSelfHosted in new dataset will be set to True. This means does not copy files into dataset, just symlinks out to current location."
+        help="If used then experimentalSelfHosted in new dataset will be set to True. This means " +
+             "does not copy files into dataset, just symlinks out to current location."
     )
     parser.add_argument(
         "--file_path_flat",
         action="store_true",
-        help=f"If used then 'path' in fileref info in dataset will replace '/' with '_'."
-    )
-    parser.add_argument(
-        "--dataset_self_hosted",
-        action="store_true",
-        help=f"If used then experimentalSelfHosted in new dataset will be set to True. This means does not copy files into dataset, just symlinks out to current location."
+        help="If used then 'path' in fileref info in dataset will replace '/' with '_'."
     )
     parser.add_argument(
         "--filter_existing_ids",
         action="store_true",
-        help=f"If used then will filter out rows where id already exist in the dataset from new ingest."
+        help="If used then will filter out rows where id already exist in the dataset from new ingest."
     )
     parser.add_argument(
         "--already_added_to_auth_domain",
         action="store_true",
-        help=f"If used will not stop after creating dataset and will assume tdr account already added to auth domians."
+        help="If used will not stop after creating dataset and will assume tdr account already added to auth domians."
     )
 
     return parser.parse_args()
