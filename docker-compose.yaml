@@ -17,6 +17,7 @@ services:
       - 8080:80
     privileged: true
     container_name: dev-cromwell
+    platform: linux/amd64
 
   ops-toolbox-slim:
     <<: *env

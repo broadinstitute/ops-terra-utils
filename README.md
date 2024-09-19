@@ -51,7 +51,7 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
    # Install - within your venv of choice
    pip -m install cromshell
    # Set env path for config file:
-   export CROMSHELL_CONFIG=$(readlink -f ./dev/.cromshell)
+   export CROMSHELL_CONFIG=$(readlink -f ./dev/)
    ```
 
   - Docker container running local cromwell server
