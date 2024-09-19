@@ -122,14 +122,19 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
       You can then run your python script in the manner described below:
 
       ```sh
-         dev/submit_wdl_to_cromwell.sh {python_script_to_run} {path_to_input_json}
+         dev/submit_wdl_to_cromwell.sh submit {python_script_to_run} {path_to_input_json}
 
          e.g.
-         dev/submit_wdl_to_cromwell.sh azure_tdr_to_gcp_file_transfer.py wdl/FileExportAzureTdrToGcp/test_inputs.json
+         dev/submit_wdl_to_cromwell.sh submit azure_tdr_to_gcp_file_transfer.py wdl/FileExportAzureTdrToGcp/test_inputs.json
 
          Job submitted successfully. Job ID: {job_guid}
 
-         You can check the status of the job by running: cromshell status {job_guid}
+         You can check the status of the job by running:
+         dev/submit_wdl_to_cromwell.sh monitor
+         Checking status of job 8b137972-f81a-4581-a01b-22a5ae5a68fc
+
+         {"status":"Running",
+         "id ":"8b137972-f81a-4581-a01b-22a5ae5a68fc"}
       ```
 
 dev/submit_wdl_to_cromwell.sh azure_tdr_to_gcp_file_transfer.py wdl/FileExportAzureTdrToGcp/test_inputs.json | jq
