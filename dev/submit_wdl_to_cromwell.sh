@@ -22,11 +22,11 @@ CROMSHELL_JOB_SUBMISSION="$(cromshell --no_turtle -mc submit dev/wrapper_wdl.wdl
 JOB_ID="$(echo "$CROMSHELL_JOB_SUBMISSION" | jq -r '.id')"
 SUBMISSION_STATUS="$(echo "$CROMSHELL_JOB_SUBMISSION" | jq -r '.status')"
 
-if ["$SUBMISSION_STATUS" == "submitted"]; then
-	JOB_ALIAS="$(cromshell --no_turtle -mc alias $JOB_ID TEST_WORKFLOW)"
-	echo "Job submitted successfully. Job ID: $JOB_ID, and has been given alias: $JOB_ALIAS"
-	echo "You can check the status of the job by running: cromshell status $JOB_ALIAS"
+if [[ "$SUBMISSION_STATUS" == "Submitted" ]]; then
+	echo "Job submitted successfully. Job ID: ${JOB_ID}"
+	echo "You can check the status of the job by running: cromshell status ${JOB_ID}"
 else
+	echo "Submission status is $SUBMISSION_STATUS"
 	echo "Job submission failed. Please review command output."
 fi
 
