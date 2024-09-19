@@ -287,12 +287,12 @@ class TDR:
         response = self.request_util.run_request(uri=uri, method=GET)
         return json.loads(response.text)
 
-    def ingest_dataset(self, dataset_id: str, data: dict) -> dict:
+    def ingest_to_dataset(self, dataset_id: str, data: dict) -> dict:
         """Load data into TDR with ingestDataset."""
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/ingest"
         logging.info(
             "If recently added TDR SA to source bucket/dataset/workspace and you receive a 400/403 error, " +
-            "it can somtimes take some time for permissions to propagate")
+            "it can somtimes take up to 12/24 hours for permissions to propagate. Try rerunning the script later.")
         response = self.request_util.run_request(
             uri=uri,
             method=POST,
@@ -580,7 +580,7 @@ class StartAndMonitorIngest:
     def run(self) -> None:
         ingest_request = self._create_ingest_dataset_request()
         logging.info(f"Starting ingest to {self.dataset_id}")
-        ingest_response = self.tdr.ingest_dataset(dataset_id=self.dataset_id, data=ingest_request)
+        ingest_response = self.tdr.ingest_to_dataset(dataset_id=self.dataset_id, data=ingest_request)
         MonitorTDRJob(
             tdr=self.tdr,
             job_id=ingest_response["id"],

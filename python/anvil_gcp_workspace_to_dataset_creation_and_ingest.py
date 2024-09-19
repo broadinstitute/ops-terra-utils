@@ -39,16 +39,7 @@ FILE_INGEST_WAITING_TIME_TO_POLL = 30
 METADATA_INGEST_BATCH_SIZE = 1000
 # How long to wait between polling for ingest status when ingesting metadata
 METADATA_INGEST_WAITING_TIME_TO_POLL = 45
-BULK_MODE = False  # What to use for bulk_mode in ingest. True or False
 TEST_INGEST = False  # Whether to test the ingest by just doing first batch
-# Filter for out rows where it already exists within the dataset
-FILTER_EXISTING_IDS = True
-# If the dataset SA account is already in the workspace auth domain
-ALREADY_ADDED_TO_AUTH_DOMAIN = True
-# If the file path should be flat or not. Will replace '/' with '_'
-DEST_FILE_PATH_FLAT = True
-SELF_HOSTED = False  # Whether the dataset is self hosted or not
-
 FILE_INVENTORY_TABLE_NAME = "file_inventory"
 
 
@@ -102,6 +93,27 @@ def get_args() -> argparse.Namespace:
         required=False,
         default=MAX_RETRIES,
         help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided."
+    )
+    parser.add_argument(
+        "--dataset_self_hosted",
+        action="store_true",
+        help="If used then experimentalSelfHosted in new dataset will be set to True. This means " +
+             "does not copy files into dataset, just symlinks out to current location."
+    )
+    parser.add_argument(
+        "--file_path_flat",
+        action="store_true",
+        help="If used then 'path' in fileref info in dataset will replace '/' with '_'."
+    )
+    parser.add_argument(
+        "--filter_existing_ids",
+        action="store_true",
+        help="If used then will filter out rows where id already exist in the dataset from new ingest."
+    )
+    parser.add_argument(
+        "--already_added_to_auth_domain",
+        action="store_true",
+        help="If used will not stop after creating dataset and will assume tdr account already added to auth domians."
     )
 
     return parser.parse_args()
@@ -223,8 +235,10 @@ def run_filter_and_ingest(
         update_strategy: str,
         workspace_name: str,
         dataset_name: str,
+        file_path_flat: bool,
         file_ingest_batch_size: int,
-        file_to_uuid_dict: Optional[dict] = None
+        filter_existing_ids: bool,
+        file_to_uuid_dict: Optional[dict] = None,
 ) -> None:
     table_name = table_info_dict["table_name"]
     ingest_metadata = table_info_dict["ingest_metadata"]
@@ -243,7 +257,7 @@ def run_filter_and_ingest(
     # Filter out all rows that already exist in the dataset and batch ingests to table
     FilterAndBatchIngest(
         tdr=tdr,
-        filter_existing_ids=FILTER_EXISTING_IDS,
+        filter_existing_ids=filter_existing_ids,
         unique_id_field=table_unique_id,
         table_name=table_name,
         ingest_metadata=ingest_metadata,
@@ -251,12 +265,12 @@ def run_filter_and_ingest(
         file_list_bool=file_list_bool,
         ingest_waiting_time_poll=waiting_time_to_poll,
         ingest_batch_size=ingest_batch_size,
-        bulk_mode=BULK_MODE,
+        bulk_mode=bulk_mode,
         cloud_type=CLOUD_TYPE,
         update_strategy=update_strategy,
         load_tag=f"{workspace_name}-{dataset_name}",
         test_ingest=TEST_INGEST,
-        dest_file_path_flat=DEST_FILE_PATH_FLAT,
+        dest_file_path_flat=file_path_flat,
         file_to_uuid_dict=file_to_uuid_dict,
         schema_info=schema_info
     ).run()
@@ -274,6 +288,10 @@ if __name__ == "__main__":
     file_ingest_batch_size = args.file_ingest_batch_size
     max_backoff_time = args.max_backoff_time
     max_retries = args.max_retries
+    dataset_self_hosted = args.dataset_self_hosted
+    file_path_flat = args.file_path_flat
+    filter_existing_ids = args.filter_existing_ids
+    already_added_to_auth_domain = args.already_added_to_auth_domain
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=TOKEN_TYPE)
@@ -304,7 +322,7 @@ if __name__ == "__main__":
     # Create dict of additional properties for dataset
     additional_properties_dict = {
         "phsId": phs_id,
-        "experimentalSelfHosted": SELF_HOSTED,
+        "experimentalSelfHosted": dataset_self_hosted,
         "dedicatedIngestServiceAccount": True,
         "experimentalPredictableFileIds": True,
         "enableSecureMonitoring": DATASET_MONITORING,
@@ -359,7 +377,7 @@ if __name__ == "__main__":
     GetPermissionsForWorkspaceIngest(
         terra_workspace=terra_workspace,
         dataset_info=data_set_info,
-        added_to_auth_domain=ALREADY_ADDED_TO_AUTH_DOMAIN
+        added_to_auth_domain=already_added_to_auth_domain
     ).run()
 
     # Ingest just the files first
@@ -369,6 +387,8 @@ if __name__ == "__main__":
         workspace_name=workspace_name,
         dataset_name=dataset_name,
         file_ingest_batch_size=file_ingest_batch_size,
+        file_path_flat=file_path_flat,
+        filter_existing_ids=filter_existing_ids
     )
 
     # Get all file info from dataset
