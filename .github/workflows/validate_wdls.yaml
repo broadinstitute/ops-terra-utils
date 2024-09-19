@@ -5,8 +5,12 @@ name: WomtoolCheck
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'wdl/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'wdl/**'
 
 jobs:
   validate_wdl_job:
