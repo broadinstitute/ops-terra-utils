@@ -1,0 +1,11 @@
+{
+    "RenameAndReingestFiles.dataset_id": "str",
+    "RenameAndReingestFiles.copy_and_ingest_batch_size": "Int",
+	"RenameAndReingestFiles.workers": "Int",
+	"RenameAndReingestFiles.original_file_basename_column":"str",
+	"RenameAndReingestFiles.new_file_basename_column":"str",
+	"RenameAndReingestFiles.dataset_table_name":"str",
+	"RenameAndReingestFiles.row_identifier_column":"str",
+	"RenameAndReingestFiles.billing_project":"str",
+	"RenameAndReingestFiles.workspace_name":"str"
+}
