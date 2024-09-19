@@ -97,20 +97,29 @@ class CreateIngestRecords:
         file_ref_columns = [
             col['name'] for col in self.table_schema_info['columns'] if col['datatype'] == 'fileref']
         table_metadata = tdr.get_data_set_table_metrics(orig_dataset_id, table_dict['name'])
+        new_ingest_records = []
         # Go through each row in table
         for row_dict in table_metadata:
+            new_row_dict = {}
             # Go through each column in row
             for column in row_dict:
-                # Check if column is a file ref column
-                if column in file_ref_columns:
-                    file_uuid = row_dict[column]
-                    # Check if file_uuid is in original dataset
-                    if file_uuid:
-                        # Update dict in place to be ingest record instead of file uuid
-                        row_dict[column] = self._create_new_file_ref(
-                            self.orig_dataset_file_info[file_uuid]
-                        )
-        return table_metadata
+                # Don't include empty columns
+                if row_dict[column]:
+                    # Check if column is a file ref column
+                    if column in file_ref_columns:
+                        file_uuid = row_dict[column]
+                        # Check if file_uuid is in original dataset
+                        if file_uuid:
+                            # Create updated dict with new file ref
+                            new_row_dict[column] = self._create_new_file_ref(
+                                self.orig_dataset_file_info[file_uuid]
+                            )
+                    else:
+                        # Add column to new row dict
+                        new_row_dict[column] = row_dict[column]
+            # Add new row dict to list of new ingest records
+            new_ingest_records.append(new_row_dict)
+        return new_ingest_records
 
 
 if __name__ == "__main__":
@@ -179,7 +188,6 @@ if __name__ == "__main__":
             table_schema_info=table_dict,
             orig_dataset_file_info=original_files_info
         ).run()
-        print(json.dumps(ingest_records, indent=2))
         table_name = table_dict['name']
         logging.info(
             f"Starting ingest for table {table_name} with total of {len(ingest_records)} rows")
