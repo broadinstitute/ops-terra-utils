@@ -83,7 +83,7 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
    # Install - within your venv of choice
    pip -m install cromshell
    # Set env path for config file:
-   export CROMSHELL_CONFIG=$(readlink -f ./dev/.cromshell)
+   export CROMSHELL_CONFIG=$(readlink -f ./dev)
    ```
 
    Docker container running local cromwell server
@@ -127,8 +127,9 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
          e.g.
          dev/submit_wdl_to_cromwell.sh azure_tdr_to_gcp_file_transfer.py wdl/FileExportAzureTdrToGcp/test_inputs.json
 
-         Job submitted successfully. Job ID: 13881190-56ca-4dbb-b8da-1fb8260b2554
-         You can check the status of the job by running: cromshell status 13881190-56ca-4dbb-b8da-1fb8260b2554
+         Job submitted successfully. Job ID: {job_guid}
+
+         You can check the status of the job by running: cromshell status {job_guid}
       ```
 
 dev/submit_wdl_to_cromwell.sh azure_tdr_to_gcp_file_transfer.py wdl/FileExportAzureTdrToGcp/test_inputs.json | jq
