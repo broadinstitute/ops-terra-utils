@@ -290,6 +290,9 @@ class TDR:
     def ingest_dataset(self, dataset_id: str, data: dict) -> dict:
         """Load data into TDR with ingestDataset."""
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/ingest"
+        logging.info(
+            "If recently added TDR SA to source bucket/dataset/workspace and you receive a 400/403 error, " +
+            "it can somtimes take some time for permissions to propagate")
         response = self.request_util.run_request(
             uri=uri,
             method=POST,
