@@ -855,7 +855,9 @@ class SetUpTDRTables:
 
             # add table to ones to create if it does not exist
             if ingest_table_name not in existing_tdr_table_schema_info:
-                tables_to_create.append(expected_tdr_schema_dict)
+                # Ensure there is columns in table before adding to list
+                if expected_tdr_schema_dict['columns']:
+                    tables_to_create.append(expected_tdr_schema_dict)
             else:
                 # Compare columns
                 columns_to_update = self._compare_table(
@@ -1255,8 +1257,8 @@ class GetPermissionsForWorkspaceIngest:
                 logging.info("added_to_auth_domain has been set to true so assuming account has already been added")
             else:
                 logging.info(
-                    "Please add TDR SA account to auth domain group to allow access to workspace and then rerun with "
-                    "added_to_auth_domain=True"
+                    f"Please add TDR SA account {tdr_sa_account} to auth domain group(s) to allow  "
+                    "access to workspace and then rerun with added_to_auth_domain=True"
                 )
                 sys.exit(0)
 
