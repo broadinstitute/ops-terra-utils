@@ -47,6 +47,7 @@ FILTER_EXISTING_IDS = True
 ALREADY_ADDED_TO_AUTH_DOMAIN = True
 # If the file path should be flat or not. Will replace '/' with '_'
 DEST_FILE_PATH_FLAT = True
+SELF_HOSTED = False  # Whether the dataset is self hosted or not
 
 FILE_INVENTORY_TABLE_NAME = "file_inventory"
 
@@ -303,7 +304,7 @@ if __name__ == "__main__":
     # Create dict of additional properties for dataset
     additional_properties_dict = {
         "phsId": phs_id,
-        "experimentalSelfHosted": True,
+        "experimentalSelfHosted": SELF_HOSTED,
         "dedicatedIngestServiceAccount": True,
         "experimentalPredictableFileIds": True,
         "enableSecureMonitoring": DATASET_MONITORING,
