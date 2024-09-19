@@ -4,11 +4,11 @@ workflow copy_to_new_billing_profile {
     input {
 		String new_billing_profile
 		String orig_dataset_id
+		String new_dataset_name
+		Boolean bulk_mode
+		Int? waiting_time_to_poll
 		Int? ingest_batch_size
 		String? update_strategy
-		String? new_dataset_name
-		Int? waiting_time_to_poll
-		Boolean bulk_mode
 		String? docker_name
 	}
 
