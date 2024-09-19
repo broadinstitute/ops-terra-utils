@@ -1,8 +1,4 @@
 #!/bin/bash
-# shellcheck disable=all
-
-
-
 
 # Argument checking
 if [ $# -ne 2 ]

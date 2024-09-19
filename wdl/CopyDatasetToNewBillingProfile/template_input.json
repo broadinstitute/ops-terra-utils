@@ -1,0 +1,6 @@
+{
+    "copy_to_new_billing_profile.new_billing_profile": "String",
+    "copy_to_new_billing_profile.orig_dataset_id": "String",
+	"copy_to_new_billing_profile.new_dataset_name": "String",
+	"copy_to_new_billing_profile.bulk_mode": "Boolean"
+}
