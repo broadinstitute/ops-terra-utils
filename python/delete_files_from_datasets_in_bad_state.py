@@ -21,7 +21,7 @@ def get_args() -> Namespace:
 
 class DeleteFilesFromDatasetsInBadState:
     TDR_LINK = "https://data.terra.bio/api/repository/v1"
-    
+
     def __init__(self, request_util: RunRequest, dataset_id: str, tdr: TDR, limit: int):
         self.request_util = request_util
         self.dataset_id = dataset_id
