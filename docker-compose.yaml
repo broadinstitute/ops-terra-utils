@@ -16,6 +16,7 @@ services:
       - "127.0.0.1:8000:8000"
       - 8080:80
     privileged: true
+    platform: linux/amd64
     container_name: dev-cromwell
 
   ops-toolbox-slim:
@@ -26,6 +27,7 @@ services:
     container_name: ops_terra_utils_slim
     stdin_open: true
     tty: true
+    platform: linux/amd64
     ports:
       - 8080:80
     entrypoint: /bin/sh

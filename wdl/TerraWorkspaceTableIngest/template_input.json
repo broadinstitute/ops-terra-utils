@@ -1,0 +1,8 @@
+{
+    "GCPWorkspaceToDatasetIngest.billing_project": "String",
+    "GCPWorkspaceToDatasetIngest.workspace_name": "String",
+	"GCPWorkspaceToDatasetIngest.dataset_id": "String",
+	"GCPWorkspaceToDatasetIngest.terra_table_name": "String",
+	"GCPWorkspaceToDatasetIngest.primary_key_column_name": "String",
+	"GCPWorkspaceToDatasetIngest.bulk_mode": "Boolean"
+}

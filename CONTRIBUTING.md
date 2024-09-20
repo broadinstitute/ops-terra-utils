@@ -74,6 +74,71 @@ docker push us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_
 docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest python /app/python/script_name.py --arg1 value --arg2 value
 ```
 
+### Testing WDL's locally
+ Prereqs
+
+  Cromshell
+
+   ```sh
+   # Install - within your venv of choice
+   pip -m install cromshell
+   # Set env path for config file:
+   export CROMSHELL_CONFIG=$(readlink -f ./dev)
+   ```
+
+   Docker container running local cromwell server
+
+  ```sh
+  #Start docker container running cromwell
+  docker compose up -d dev-cromwell
+  ```
+
+- Testing Locally
+  - you should now be able to submit workflows to the running docker container using cromshell
+
+  ```sh
+   # Submitting test workflow
+      cromshell submit ./dev/tests/HelloWorld.wdl ./dev/tests/hello_world_inputs.json
+      {"id": "498cde1f-5495-4b6e-a7ec-89d6d5f4903b", "status": "Submitted"}
+   # Checking workflow status
+      cromshell status 498cde1f-5495-4b6e-a7ec-89d6d5f4903b
+      {"status":"Succeeded", "id":"498cde1f-5495-4b6e-a7ec-89d6d5f4903b"}
+   # Get workflow metadata
+      cromshell metadata 498cde1f-5495-4b6e-a7ec-89d6d5f4903b
+   # Get workflow outputs
+      cromshell list-outputs 498cde1f-5495-4b6e-a7ec-89d6d5f4903b
+         HelloWorld.output_file: /cromwell-executions/HelloWorld/498cde1f-5495-4b6e-a7ec-89d6d5f4903b/call-HelloWorldTask/execution/stdout
+      ## This file is on the docker container so we need to copy it over in order to access it:
+      docker compose cp dev-cromwell:/cromwell-executions/HelloWorld/498cde1f-5495-4b6e-a7ec-89d6d5f4903b/call-HelloWorldTask/execution/stdout ./test_wdl_stdout
+      cat ./test_wdl_stdout
+      Hello World!
+  ```
+
+   Testing Execution of python scripts through Cromwell
+
+      Pre-reqs
+         - properly filled in test_inputs.json file (located within the wdl/{wdl_name} directory)
+
+      You can then run your python script in the manner described below:
+
+      ```sh
+         dev/submit_wdl_to_cromwell.sh submit {python_script_to_run} {path_to_input_json}
+
+         e.g.
+         dev/submit_wdl_to_cromwell.sh submit azure_tdr_to_gcp_file_transfer.py wdl/FileExportAzureTdrToGcp/test_inputs.json
+
+         Job submitted successfully. Job ID: {job_guid}
+
+         You can check the status of the job by running:
+         dev/submit_wdl_to_cromwell.sh monitor
+         Checking status of job 8b137972-f81a-4581-a01b-22a5ae5a68fc
+
+         {"status":"Running",
+         "id ":"8b137972-f81a-4581-a01b-22a5ae5a68fc"}
+      ```
+
+dev/submit_wdl_to_cromwell.sh azure_tdr_to_gcp_file_transfer.py wdl/FileExportAzureTdrToGcp/test_inputs.json | jq
+
 ### Adding libraries to the Docker image:
 - If you need to add a new library to the Docker image, update the `requirements.txt` with the new library.
 

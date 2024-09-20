@@ -329,3 +329,4 @@ Temporary Items
 # new additions for ops terra utils repo
 dev/.cromshell/*
 !dev/.cromshell/.cromshell_config.json
+.job_id

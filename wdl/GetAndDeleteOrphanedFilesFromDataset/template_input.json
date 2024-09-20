@@ -1,0 +1,4 @@
+{
+    "GetAndDeleteOrphanedFilesFromDataset.dataset_id": "String",
+    "GetAndDeleteOrphanedFilesFromDataset.delete_orphaned_files": "Boolean"
+}
