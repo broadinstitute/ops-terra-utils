@@ -64,19 +64,20 @@ class DeleteFilesFromDatasetsInBadState:
 
             # If there is a different status code or message does not include Directory entry refers to non-existent file
             elif 300 <= response.status_code or response.status_code < 200:
-                logging.info("Failed to retrieve files with different status code " +
-                             "then 500 and/or message did not include Directory entry refers to non-existent file")
+                logging.info(
+                    "Failed to retrieve files with different status code " +
+                    "then 500 and/or message did not include Directory entry refers to non-existent file")
                 print(response.text)
                 response.raise_for_status()
 
             # If no more files, break the loop
-            elif not response:
+            elif not response.json():
                 logging.info(f"No more results to retrieve, found {len(metadata)} total records")
                 break
 
             # If there are more files to retrieve and no failures, extend the metadata list
             else:
-                metadata.extend(response)
+                metadata.extend(response.json())
                 # Increment the offset by limit for the next page
                 offset += self.limit
                 batch += 1

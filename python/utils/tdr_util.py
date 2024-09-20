@@ -490,14 +490,14 @@ class TDR:
         metadata: list = []
         while True:
             logging.info(f"Retrieving {(batch - 1) * limit} to {batch * limit} records in metadata")
-            response = self.request_util.run_request(uri=f"{uri}?offset={offset}&limit={limit}", method=GET).json()
+            response_json = self.request_util.run_request(uri=f"{uri}?offset={offset}&limit={limit}", method=GET).json()
 
             # If no more files, break the loop
-            if not response:
+            if not response_json:
                 logging.info(f"No more results to retrieve, found {len(metadata)} total records")
                 break
 
-            metadata.extend(response)
+            metadata.extend(response_json)
             # Increment the offset by limit for the next page
             offset += limit
             batch += 1
@@ -1036,7 +1036,7 @@ converts to
 }]
 """
 
-    def __init__(self, table_metadata: list[dict], tdr_row_id: str = 'sample_id', columns_to_ignore: list[str] = []):
+    def __init__(self, table_metadata: list[dict], tdr_row_id: str = 'sample_id', columns_to_ignore: list[str] = None):
         self.table_metadata = table_metadata
         self.tdr_row_id = tdr_row_id
         self.columns_to_ignore = columns_to_ignore
