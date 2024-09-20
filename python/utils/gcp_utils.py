@@ -132,7 +132,7 @@ class GCPCloudFunctions:
         )
 
     def loop_and_log_validation_files(self, files_to_validate: list[dict], log_difference: bool) -> list[dict]:
-        """Validate if two cloud files (source and destination) are identical based on their MD5 hashes and log progress"""
+        """Validate if two cloud files are identical based on their MD5 hashes and log progress"""
         not_valid_files = []
         logging.info(f"Validating if {len(files_to_validate)} files are identical")
         files_checked = 0

@@ -1,5 +1,3 @@
-from email.policy import default
-
 from utils.tdr_util import TDR, MonitorTDRJob
 from utils.request_util import RunRequest
 from utils.token_util import Token
@@ -22,6 +20,7 @@ def get_args() -> Namespace:
 
 
 class DeleteFilesFromDatasetsInBadState:
+    TDR_LINK = "https://data.terra.bio/api/repository/v1"
     def __init__(self, request_util: RunRequest, dataset_id: str, tdr: TDR, limit: int):
         self.request_util = request_util
         self.dataset_id = dataset_id
@@ -49,14 +48,14 @@ class DeleteFilesFromDatasetsInBadState:
         while True:
             # Loop through all files in the dataset and delete any files in bad state
             logging.info(f"Retrieving {(batch - 1) * self.limit} to {batch * self.limit} records in metadata")
-            uri = f"https://data.terra.bio/api/repository/v1/datasets/{self.dataset_id}/files?offset={offset}&limit={self.limit}"
+            uri = f"{self.TDR_LINK}/datasets/{self.dataset_id}/files?offset={offset}&limit={self.limit}"
             # Run the request outside the backoff decorator so can catch specific failures
             response = requests.get(
                 uri,
                 headers=self.request_util.create_headers(),
             )
             # Check if it is specific failure like
-            # {"message":"Directory entry refers to non-existent file (fileId = 180ccfb4-f2e8-4bbe-a264-74f3e7549fbd)","errorDetail":[]}
+            # Directory entry refers to non-existent file (fileId = 180ccfb4-f2e8-4bbe-a264-74f3e7549fbd)
             if response.status_code == 500 and 'Directory entry refers to non-existent file' in response.text:
                 file_uuid = self.get_file_uuid_from_request(response.json())
                 self.delete_file(file_id=file_uuid)
@@ -64,7 +63,7 @@ class DeleteFilesFromDatasetsInBadState:
 
             # If there is a different status code or message does not include Directory entry refers to non-existent file
             elif 300 <= response.status_code or response.status_code < 200:
-                logging.info(f"Failed to retrieve files with different status code " +
+                logging.info("Failed to retrieve files with different status code " +
                              "then 500 and/or message did not include Directory entry refers to non-existent file")
                 print(response.text)
                 response.raise_for_status()

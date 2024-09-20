@@ -161,7 +161,6 @@ class GetRowAndFileInfoForReingest:
                 temp_path, updated_tdr_metadata_path, access_url = self._create_paths(
                     file_info, og_basename, new_basename  # type: ignore[arg-type]
                 )
-                #print(f"temp_path: {temp_path} updated_tdr_metadata_path: {updated_tdr_metadata_path} access_url: {access_url} og_basename: {og_basename} new_basename: {new_basename}")
                 # Check if access_url starts with og basename and then .
                 if os.path.basename(access_url).startswith(f"{og_basename}."):
                     self.total_files_to_reingest += 1
