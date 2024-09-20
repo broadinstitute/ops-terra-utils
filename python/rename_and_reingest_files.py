@@ -113,7 +113,6 @@ class GetRowAndFileInfoForReingest:
         self.new_file_basename_column = new_file_basename_column
         self.row_identifier = row_identifier
         self.total_files_to_reingest = 0
-        self.rows_to_reingest: list = []
         self.temp_bucket = temp_bucket
 
     def _create_paths(self, file_info: dict, og_basename: str, new_basename: str) -> Tuple[str, str, str]:
@@ -148,8 +147,8 @@ class GetRowAndFileInfoForReingest:
         og_basename = row_dict[self.og_file_basename_column]
         new_basename = row_dict[self.new_file_basename_column]
         for column_name in row_dict:
-            # Check if column is a fileref
-            if column_name in file_ref_columns:
+            # Check if column is a fileref and cell is not empty
+            if column_name in file_ref_columns and row_dict[column_name]:
                 # Get full file info for that cell
                 file_info = self.files_info.get(row_dict[column_name])
                 # Get potential temp path, updated tdr metadata path, and access url for file
@@ -193,7 +192,7 @@ class GetRowAndFileInfoForReingest:
             if new_row_dict and temp_copy_list:
                 rows_to_reingest.append(new_row_dict)
                 files_to_copy_to_temp.append(temp_copy_list)
-        logging.info(f"Total rows to re-ingest: {len(self.rows_to_reingest)}")
+        logging.info(f"Total rows to re-ingest: {len(rows_to_reingest)}")
         logging.info(
             f"Total files to copy and re-ingest: {self.total_files_to_reingest}")
         return rows_to_reingest, files_to_copy_to_temp

@@ -81,7 +81,7 @@ class TDR:
     def __init__(self, request_util: Any):
         self.request_util = request_util
 
-    def get_data_set_files(self, dataset_id: str, batch_query: bool = True, limit: int = 1000) -> list[dict]:
+    def get_data_set_files(self, dataset_id: str, limit: int = 1000) -> list[dict]:
         """Get all files in a dataset. Azure seems like it has issues with batch query, so set to false for now for
         Azure.
 
@@ -114,10 +114,8 @@ class TDR:
 }
         """
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files"
-        if batch_query:
-            return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
-        else:
-            return self.request_util.run_request(uri=f"{uri}", method=GET).json()
+        logging.info(f"Getting all files in dataset {dataset_id}")
+        return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
     def create_file_dict(self, dataset_id: str, limit: int = 1000) -> dict:
         """Create a dictionary of all files in a dataset where key is the file uuid."""
