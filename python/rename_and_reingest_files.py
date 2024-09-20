@@ -18,7 +18,8 @@ logging.basicConfig(
 CLOUD_TYPE = GCP
 MAX_RETRIES = 5
 MAX_BACKOFF_TIME = 5 * 60
-WAITING_TIME_TO_POLL = 30
+WAITING_TIME_TO_POLL = 60
+FILES_TO_LIST_BATCH_SIZE = 20000
 UPDATE_STRATEGY = 'merge'
 
 
@@ -92,6 +93,11 @@ def get_args() -> Namespace:
         default=MAX_BACKOFF_TIME,
         help="The maximum backoff time for a failed request (in seconds). Defaults to 300 seconds if not provided"
     )
+    parser.add_argument(
+        "--report_updates_only",
+        action="store_true",
+        help="Use this option if you only want to report what updates would be made without actually making them"
+    )
     return parser.parse_args()
 
 
@@ -155,6 +161,7 @@ class GetRowAndFileInfoForReingest:
                 temp_path, updated_tdr_metadata_path, access_url = self._create_paths(
                     file_info, og_basename, new_basename  # type: ignore[arg-type]
                 )
+                #print(f"temp_path: {temp_path} updated_tdr_metadata_path: {updated_tdr_metadata_path} access_url: {access_url} og_basename: {og_basename} new_basename: {new_basename}")
                 # Check if access_url starts with og basename and then .
                 if os.path.basename(access_url).startswith(f"{og_basename}."):
                     self.total_files_to_reingest += 1
@@ -272,8 +279,8 @@ class BatchCopyAndIngest:
         # Batch through rows to copy files down and ingest so if script fails partway through large
         # copy and ingest it will have copied over and ingested some of the files already
         logging.info(
-            f"""Batching {len(self.rows_to_ingest)} total rows into batches of {self.copy_and_ingest_batch_size} for
-            copying to temp location and ingest"""
+            f"Batching {len(self.rows_to_ingest)} total rows into batches of {self.copy_and_ingest_batch_size} " +
+            "for copying to temp location and ingest"
         )
         total_batches = len(self.rows_to_ingest) // self.copy_and_ingest_batch_size + 1
         gcp_functions = GCPCloudFunctions()
@@ -334,6 +341,7 @@ if __name__ == '__main__':
     workspace_name = args.workspace_name
     temp_bucket = args.temp_bucket
     workers = args.workers
+    report_updates_only = args.report_updates_only
 
     # Initialize TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -358,7 +366,7 @@ if __name__ == '__main__':
         dataset_id=dataset_id, table_name=dataset_table_name)
 
     # Get all dict of all files where key is uuid
-    files_info = tdr.create_file_dict(dataset_id=dataset_id, limit=1000)
+    files_info = tdr.create_file_dict(dataset_id=dataset_id, limit=FILES_TO_LIST_BATCH_SIZE)
 
     # Get all metrics for table
     dataset_metrics = tdr.get_data_set_table_metrics(
@@ -375,14 +383,21 @@ if __name__ == '__main__':
         temp_bucket=temp_bucket
     ).get_new_copy_and_ingest_list()
 
-    BatchCopyAndIngest(
-        rows_to_ingest=rows_to_reingest,
-        tdr=tdr,
-        target_table_name=dataset_table_name,
-        cloud_type=CLOUD_TYPE,
-        update_strategy=UPDATE_STRATEGY,
-        workers=workers,
-        dataset_id=dataset_id,
-        copy_and_ingest_batch_size=copy_and_ingest_batch_size,
-        row_files_to_copy=row_files_to_copy
-    ).run()
+    if report_updates_only:
+        logging.info("Reporting updates only. Exiting.")
+        sys.exit(0)
+
+    if rows_to_reingest:
+        BatchCopyAndIngest(
+            rows_to_ingest=rows_to_reingest,
+            tdr=tdr,
+            target_table_name=dataset_table_name,
+            cloud_type=CLOUD_TYPE,
+            update_strategy=UPDATE_STRATEGY,
+            workers=workers,
+            dataset_id=dataset_id,
+            copy_and_ingest_batch_size=copy_and_ingest_batch_size,
+            row_files_to_copy=row_files_to_copy
+        ).run()
+    else:
+        logging.info("No files to re-ingest. Exiting.")

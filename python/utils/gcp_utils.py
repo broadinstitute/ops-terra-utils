@@ -1,6 +1,7 @@
 import os
 import logging
 from mimetypes import guess_type
+
 from .thread_pool_executor_util import MultiThreadedJobs
 
 MOVE = "move"
@@ -130,6 +131,26 @@ class GCPCloudFunctions:
             fail_on_error=True
         )
 
+    def loop_and_log_validation_files(self, files_to_validate: list[dict], log_difference: bool) -> list[dict]:
+        """Validate if two cloud files (source and destination) are identical based on their MD5 hashes and log progress"""
+        not_valid_files = []
+        logging.info(f"Validating if {len(files_to_validate)} files are identical")
+        files_checked = 0
+        for file_dict in files_to_validate:
+            files_checked += 1
+            if files_checked % 250 == 0:
+                logging.info(f"Validated {files_checked} files")
+            # Check if source and destination files are identical
+            if not self.validate_files_are_same(file_dict['source_file'], file_dict['full_destination_path']):
+                # If not identical and log_differences then log a warning and add the file to the list of not valid files
+                # log_difference should be set to True if you expect the files to be identical after copy
+                if log_difference:
+                    logging.warning(
+                        f"File {file_dict['source_file']} and {file_dict['full_destination_path']} are not identical"
+                    )
+                not_valid_files.append(file_dict)
+        return not_valid_files
+
     def multithread_copy_of_files_with_validation(
             self, files_to_move: list[dict], workers: int, max_retries: int
     ) -> None:
@@ -139,27 +160,21 @@ class GCPCloudFunctions:
                 full_destination_path: gs://new_bucket/file_path
             }
         """
-        updated_file_to_move = []
-        logging.info(f"Checking if {len(files_to_move)} files to copy have already been copied")
-        for file_dict in files_to_move:
-            # Check if already copied and if so don't try to move again
-            if not self.validate_files_are_same(file_dict['source_file'], file_dict['full_destination_path']):
-                updated_file_to_move.append(file_dict)
-        logging.info(f"Attempting to {COPY} {len(updated_file_to_move)} files")
-        self.move_or_copy_multiple_files(updated_file_to_move, COPY, workers, max_retries)
-        logging.info(f"Validating all {len(updated_file_to_move)} new files are identical to original")
-        copy_valid = True
-        for file_dict in updated_file_to_move:
-            if not self.validate_files_are_same(file_dict['source_file'], file_dict['full_destination_path']):
-                logging.error(
-                    f"File {file_dict['source_file']} and {file_dict['full_destination_path']} are not identical"
-                )
-                copy_valid = False
-        if copy_valid:
-            logging.info(f"Successfully copied {len(updated_file_to_move)} files")
-        else:
-            logging.error(f"Failed to copy {len(updated_file_to_move)} files")
+        updated_files_to_move = self.loop_and_log_validation_files(files_to_move, log_difference=False)
+        # If all files are already copied, return
+        if not updated_files_to_move:
+            logging.info("All files are already copied")
+            return None
+        logging.info(f"Attempting to {COPY} {len(updated_files_to_move)} files")
+        self.move_or_copy_multiple_files(updated_files_to_move, COPY, workers, max_retries)
+        logging.info(f"Validating all {len(updated_files_to_move)} new files are identical to original")
+        # Validate that all files were copied successfully
+        files_not_moved_successfully = self.loop_and_log_validation_files(files_to_move, log_difference=True)
+        if files_not_moved_successfully:
+            logging.error(f"Failed to copy {len(files_not_moved_successfully)} files")
             raise Exception("Failed to copy all files")
+        logging.info(f"Successfully copied {len(updated_files_to_move)} files")
+        return None
 
     def move_or_copy_multiple_files(
             self, files_to_move: list[dict], action: str, workers: int, max_retries: int

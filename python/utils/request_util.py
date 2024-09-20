@@ -42,30 +42,30 @@ class RunRequest:
             if method == GET:
                 response = requests.get(
                     uri,
-                    headers=self._create_headers(content_type=content_type),
+                    headers=self.create_headers(content_type=content_type),
                     params=params
                 )
             elif method == POST:
                 response = requests.post(
                     uri,
-                    headers=self._create_headers(content_type=content_type),
+                    headers=self.create_headers(content_type=content_type),
                     data=data
                 )
             elif method == DELETE:
                 response = requests.delete(
                     uri,
-                    headers=self._create_headers(content_type=content_type)
+                    headers=self.create_headers(content_type=content_type)
                 )
             elif method == PATCH:
                 response = requests.patch(
                     uri,
-                    headers=self._create_headers(content_type=content_type),
+                    headers=self.create_headers(content_type=content_type),
                     data=data
                 )
             elif method == PUT:
                 response = requests.put(
                     uri,
-                    headers=self._create_headers(content_type=content_type)
+                    headers=self.create_headers(content_type=content_type)
                 )
             else:
                 raise ValueError(f"Method {method} is not supported")
@@ -76,7 +76,7 @@ class RunRequest:
 
         return _make_request()
 
-    def _create_headers(self, content_type: Optional[str] = None) -> dict:
+    def create_headers(self, content_type: Optional[str] = None) -> dict:
         """Create headers for API calls."""
         self.token.get_token()
         headers = {"Authorization": f"Bearer {self.token.token_string}",
