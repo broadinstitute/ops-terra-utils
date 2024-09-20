@@ -77,10 +77,10 @@ task RunGCPWorkspaceToDataset {
         ~{"--file_ingest_batch_size " + file_ingest_batch_size} \
         ~{"--max_backoff_time " + max_backoff_time} \
         ~{"--max_retries " + max_retries} \
-        ~{if bulk_mode then "--bulk_mode" else ""}
-        ~{if self_hosted then "--dataset_self_hosted" else ""}
-        ~{if filter_existing_ids then "--filter_existing_ids" else ""}
-        ~{if already_added_to_auth_domain then "--already_added_to_auth_domain" else ""}
+        ~{if bulk_mode then "--bulk_mode" else ""} \
+        ~{if self_hosted then "--dataset_self_hosted" else ""} \
+        ~{if filter_existing_ids then "--filter_existing_ids" else ""} \
+        ~{if already_added_to_auth_domain then "--already_added_to_auth_domain" else ""} \
         ~{if file_path_flat_bool then "--file_path_flat" else ""}
 
     >>>
