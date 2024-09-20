@@ -22,7 +22,7 @@ if [[ "$ACTION" =~ ^(monitor|submit)$ ]]; then
 
 		echo "$WRAPPER_JSON" > "$JSON_OUPUT_PATH"
 
-		CROMSHELL_JOB_SUBMISSION="$(cromshell --no_turtle -mc submit dev/wrapper_wdl.wdl $JSON_OUPUT_PATH)"
+		CROMSHELL_JOB_SUBMISSION="$(cromshell --no_turtle -mc submit dev/Wrapper.wdl $JSON_OUPUT_PATH)"
 		JOB_ID="$(echo "$CROMSHELL_JOB_SUBMISSION" | jq -r '.id')"
 		SUBMISSION_STATUS="$(echo "$CROMSHELL_JOB_SUBMISSION" | jq -r '.status')"
 
