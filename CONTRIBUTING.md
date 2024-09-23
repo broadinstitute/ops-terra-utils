@@ -121,8 +121,9 @@ This method of testing makes a few assumptions:
 * All arguments to your Python code are named exactly the same in your WDL
 * All arguments that are booleans in your WDL are passed as "store_true" arguments to your Python code
 
-1. First fill out the `test_inputs.json` file with your inputs defined (these are located within the wdl/{wdl_name} directory)
-2. You can now run your Python script in the manner described below (note that the first argument is NOT the path to the Python script but rather the NAME of the Python script).
+1. Install jq if it's not already installed: `brew install jq`
+2. First fill out the `test_inputs.json` file with your inputs defined (these are located within the wdl/{wdl_name} directory)
+3. You can now run your Python script in the manner described below (note that the first argument is NOT the path to the Python script but rather the NAME of the Python script).
 
       ```sh
          dev/submit_wdl_to_cromwell.sh submit {python_script_to_run} {path_to_input_json}
