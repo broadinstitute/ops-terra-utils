@@ -1046,8 +1046,8 @@ converts to
             {
                 self.tdr_row_id: row["name"],
                 **{k: v for k, v in row["attributes"].items()
-                # if columns_to_ignore is not provided or if the column is not in the columns_to_ignore list
-                if not self.columns_to_ignore or k not in self.columns_to_ignore}
+                   # if columns_to_ignore is not provided or if the column is not in the columns_to_ignore list
+                   if not self.columns_to_ignore or k not in self.columns_to_ignore}
             }
             for row in self.table_metadata
         ]
