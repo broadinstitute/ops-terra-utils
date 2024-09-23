@@ -1114,14 +1114,14 @@ class InferTDRSchema:
             if az_match or gcp_match:
                 return self.PYTHON_TDR_DATA_TYPE_MAPPING["fileref"]
 
-        # Try to parse times and dates
-        try:
-            date_or_time = parser.parse(value_for_header)
-            # This is not working as expected and tries to turn too many ints into dates
-            #return self.PYTHON_TDR_DATA_TYPE_MAPPING[type(date_or_time)]
-            pass
-        except (TypeError, ParserError):
-            pass
+        # Tried to use this to parse datetimes, but it was turning too many
+        # regular ints into datetimes. Commenting out for now
+        # try:
+        #    date_or_time = parser.parse(value_for_header)
+        #    return self.PYTHON_TDR_DATA_TYPE_MAPPING[type(date_or_time)]
+        #    pass
+        # except (TypeError, ParserError):
+        #    pass
 
         if isinstance(value_for_header, list):
             # check for potential list of filerefs
