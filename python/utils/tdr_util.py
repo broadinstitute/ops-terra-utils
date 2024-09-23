@@ -626,11 +626,11 @@ class ReformatMetricsForIngest:
     def _add_file_ref(self, file_details: dict) -> None:
         """Create file ref for ingest."""
         file_details["file_ref"] = {
-            "sourcePath": file_details["file_path"],
+            "sourcePath": file_details["path"],
             # https://some_url.blob.core.windows.net/container_name/dir/file.txt
             # Remove url and container name with. Result will be /dir/file.txt
-            "targetPath": self._format_relative_tdr_path(file_details["file_path"]),
-            "description": f"Ingest of {file_details['file_path']}",
+            "targetPath": self._format_relative_tdr_path(file_details["path"]),
+            "description": f"Ingest of {file_details['path']}",
             "mimeType": file_details["content_type"]
         }
 
@@ -742,6 +742,8 @@ class ReformatMetricsForIngest:
         #  If a specific file list is provided, then add file ref. Different than all other ingests
         if self.file_list:
             self._add_file_ref(row_dict)
+            # Update path to TDR's dataset relative path with / included and not have bucket
+            row_dict['path'] = '/'.join(row_dict['path'].split('/')[3:])
             reformatted_dict = row_dict
         else:
             # Go through each value in row and reformat if needed
@@ -1036,7 +1038,7 @@ converts to
 }]
 """
 
-    def __init__(self, table_metadata: list[dict], tdr_row_id: str = 'sample_id', columns_to_ignore: list[str] = None):
+    def __init__(self, table_metadata: list[dict], tdr_row_id: str = 'sample_id', columns_to_ignore: list[str] = []):
         self.table_metadata = table_metadata
         self.tdr_row_id = tdr_row_id
         self.columns_to_ignore = columns_to_ignore
@@ -1047,7 +1049,7 @@ converts to
                 self.tdr_row_id: row["name"],
                 **{k: v for k, v in row["attributes"].items()
                    # if columns_to_ignore is not provided or if the column is not in the columns_to_ignore list
-                   if not self.columns_to_ignore or k not in self.columns_to_ignore}
+                   if k not in self.columns_to_ignore}
             }
             for row in self.table_metadata
         ]
