@@ -41,3 +41,10 @@ workflows:
     readMePath: /wdl/RenameAndReingestFiles/README.md
     testParameterFiles:
       - /wdl/RenameAndReingestFiles/RenameAndReingestFiles.wdl
+
+  - name: DeleteBadStateFilesFromDataset
+    subclass: WDL
+    primaryDescriptorPath: /wdl/DeleteBadStateFilesFromDataset/DeleteBadStateFilesFromDataset.wdl
+    readMePath: /wdl/DeleteBadStateFilesFromDataset/README.md
+    testParameterFiles:
+      - /wdl/DeleteBadStateFilesFromDataset/DeleteBadStateFilesFromDataset.wdl

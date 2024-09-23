@@ -1,0 +1,5 @@
+{
+    "DeleteBadStateFilesFromDataset.dataset_id": "String",
+    "DeleteBadStateFilesFromDataset.file_query_limit": "Int",
+	"DeleteBadStateFilesFromDataset.docker": "String"
+}

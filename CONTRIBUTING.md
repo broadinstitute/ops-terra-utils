@@ -33,15 +33,17 @@ You should not be interacting with Terra or TDR directly in your script. Instead
 2. **Add Dockstore Information**: Update the `.dockstore.yml` file with information about the WDL.
 
 3. **Add a README**: Each WDL should have a `README.txt` file describing the WDL. Ensure that the `.dockstore.yml` file links to this `README.txt`. For examples of READMEs, see the existing WDLs.
-
-4. **Publishing and testing WDLs with Dockstore**:
-   - Navigate to [Dockstore](https://dockstore.org/my-workflows/).
-   - Search for the WDL in the unpublished section.
-   - After selecting the WDL, go to the "Versions" tab.
-   - Set the appropriate branch as the default.
-   - Publish the WDL
-   - Go to public page for WDL and it to Terra Workspace.
-   - Test WDL from within workspace.
+4. **Testing WDLs**
+    * **Testing WDL locally**
+      * See directions [below](#testing-wdls-locally)
+    * **Publishing and testing WDLs with Dockstore**:
+         - Navigate to [Dockstore](https://dockstore.org/my-workflows/).
+         - Search for the WDL in the unpublished section.
+         - After selecting the WDL, go to the "Versions" tab.
+         - Set the appropriate branch as the default.
+         - Publish the WDL
+         - Go to public page for WDL and it to Terra Workspace.
+         - Test WDL from within workspace.
 
 5. **Updating and testing already published WDLs**:
    - Make changes to the WDL.
@@ -74,11 +76,12 @@ docker push us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_
 docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest python /app/python/script_name.py --arg1 value --arg2 value
 ```
 
-### Testing WDL's locally
- Prereqs
+### Testing WDLs locally
+There are two different ways to test your changes locally. The fist is the more robust way, and ensures that your WDL _and_ Python code are working as expected. The second option mainly tests your Python code can run through Cromwell and is not actually testing the WDL you've written. This is helpful for quick validations and for extremely straightforward WDLs that are essentially wrappers for Python code.
 
-  Cromshell
+#### Testing WDL and Python
 
+* Install and configure Cromshell:
    ```sh
    # Install - within your venv of choice
    pip -m install cromshell
@@ -86,15 +89,13 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
    export CROMSHELL_CONFIG=$(readlink -f ./dev)
    ```
 
-   Docker container running local cromwell server
-
+* Create a Docker container running a local cromwell server
   ```sh
   #Start docker container running cromwell
   docker compose up -d dev-cromwell
   ```
 
-- Testing Locally
-  - you should now be able to submit workflows to the running docker container using cromshell
+* You should now be able to submit workflows to the running docker container using Cromshell
 
   ```sh
    # Submitting test workflow
@@ -114,12 +115,15 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
       Hello World!
   ```
 
-   Testing Execution of python scripts through Cromwell
+#### Testing Execution of Python scripts through Cromwell
+This method of testing creates a WDL on the fly, and _does not_ actually test the WDL associated with your code. It instead is testing the functionality of your Python code running in Cromwell.
+This method of testing makes a few assumptions:
+* All arguments to your Python code are named exactly the same in your WDL
+* All arguments that are booleans in your WDL are passed as "store_true" arguments to your Python code
 
-      Pre-reqs
-         - properly filled in test_inputs.json file (located within the wdl/{wdl_name} directory)
-
-      You can then run your python script in the manner described below:
+1. Install jq if it's not already installed: `brew install jq`
+2. First fill out the `test_inputs.json` file with your inputs defined (these are located within the wdl/{wdl_name} directory)
+3. You can now run your Python script in the manner described below (note that the first argument is NOT the path to the Python script but rather the NAME of the Python script).
 
       ```sh
          dev/submit_wdl_to_cromwell.sh submit {python_script_to_run} {path_to_input_json}
@@ -137,20 +141,16 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
          "id ":"8b137972-f81a-4581-a01b-22a5ae5a68fc"}
       ```
 
-dev/submit_wdl_to_cromwell.sh azure_tdr_to_gcp_file_transfer.py wdl/FileExportAzureTdrToGcp/test_inputs.json | jq
-
 ### Adding libraries to the Docker image:
 - If you need to add a new library to the Docker image, update the `requirements.txt` with the new library.
 
 ## Automated Tests
-
 We have two automated tests run via GitHub actions: linting and `womtools` for WDL validation.
 
 ## Submitting Changes
-
 Before merging any branches to main:
 1. Ensure that all tests pass.
 2. Update the README with any new information about the repository or its contents.
 3. Update WDL-specific README with any new information about the WDLs.
-4. Test python code locally and if WDL changes are made, test the WDLs in a Terra Workspace.
-5. Get approval from a team member
+4. Test Python code locally and if WDL changes are made, test the WDLs in a Terra Workspace.
+5. Get approval on the PR from a team member
