@@ -21,7 +21,7 @@ task DeleteFilesFromDataset {
     input {
         String dataset_id
         Int? file_query_limit
-        String? docker_image
+        String docker_image
     }
 
     command <<<
