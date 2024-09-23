@@ -1,4 +1,5 @@
 {
-    "DeleteBadStateFilesFromDataset.dataset_id": "bb62f7a8-1a9c-47c6-beba-4246f5afa696"
-
+    "DeleteBadStateFilesFromDataset.dataset_id": "String",
+    "DeleteBadStateFilesFromDataset.file_query_limit": "Int",
+	"DeleteBadStateFilesFromDataset.docker": "String"
 }
