@@ -81,7 +81,7 @@ class TDR:
     def __init__(self, request_util: Any):
         self.request_util = request_util
 
-    def get_data_set_files(self, dataset_id: str, batch_query: bool = True, limit: int = 1000) -> list[dict]:
+    def get_data_set_files(self, dataset_id: str, limit: int = 1000) -> list[dict]:
         """Get all files in a dataset. Azure seems like it has issues with batch query, so set to false for now for
         Azure.
 
@@ -114,10 +114,8 @@ class TDR:
 }
         """
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files"
-        if batch_query:
-            return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
-        else:
-            return self.request_util.run_request(uri=f"{uri}", method=GET).json()
+        logging.info(f"Getting all files in dataset {dataset_id}")
+        return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
     def create_file_dict(self, dataset_id: str, limit: int = 1000) -> dict:
         """Create a dictionary of all files in a dataset where key is the file uuid."""
@@ -492,14 +490,14 @@ class TDR:
         metadata: list = []
         while True:
             logging.info(f"Retrieving {(batch - 1) * limit} to {batch * limit} records in metadata")
-            response = self.request_util.run_request(uri=f"{uri}?offset={offset}&limit={limit}", method=GET).json()
+            response_json = self.request_util.run_request(uri=f"{uri}?offset={offset}&limit={limit}", method=GET).json()
 
             # If no more files, break the loop
-            if not response:
+            if not response_json:
                 logging.info(f"No more results to retrieve, found {len(metadata)} total records")
                 break
 
-            metadata.extend(response)
+            metadata.extend(response_json)
             # Increment the offset by limit for the next page
             offset += limit
             batch += 1
@@ -1038,7 +1036,7 @@ converts to
 }]
 """
 
-    def __init__(self, table_metadata: list[dict], tdr_row_id: str = 'sample_id', columns_to_ignore: list[str] = []):
+    def __init__(self, table_metadata: list[dict], tdr_row_id: str = 'sample_id', columns_to_ignore: list[str] = None):
         self.table_metadata = table_metadata
         self.tdr_row_id = tdr_row_id
         self.columns_to_ignore = columns_to_ignore
