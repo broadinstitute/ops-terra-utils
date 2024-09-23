@@ -24,7 +24,7 @@ workflow GCPWorkspaceToDatasetCreationAndIngest {
     Boolean file_path_flat_bool = select_first([file_path_flat, true])
     Boolean self_hosted_bool = select_first([self_hosted, true])
     Boolean filter_existing_ids_bool = select_first([filter_existing_ids, true])
-    Boolean bulk_mode_bool = select_first([bulk_mode, true])
+    Boolean bulk_mode_bool = select_first([bulk_mode, false])
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
     call RunGCPWorkspaceToDataset {

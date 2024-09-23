@@ -31,6 +31,7 @@ class GCPCloudFunctions:
 
     def list_bucket_contents(self, bucket_name: str, file_extensions_to_ignore: list[str] = [],
                              file_strings_to_ignore: list[str] = []) -> list[dict]:
+        """List contents of a GCS bucket and return a list of dictionaries with file information"""
         logging.info(f"Listing contents of bucket gs://{bucket_name}/")
         blobs = self.client.list_blobs(bucket_name)
 
@@ -44,7 +45,7 @@ class GCPCloudFunctions:
                 continue
             file_info = {
                 "name": os.path.basename(blob.name),
-                "path": blob.name,
+                "path": f"gs://{bucket_name}/{blob.name}",
                 "content_type": blob.content_type or guess_type(blob.name)[0] or "application/octet-stream",
                 "file_extension": os.path.splitext(blob.name)[1],
                 "size_in_bytes": blob.size,
