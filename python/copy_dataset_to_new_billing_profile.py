@@ -74,6 +74,12 @@ class CreateIngestRecords:
 
     @staticmethod
     def _create_new_file_ref(file_details: dict) -> dict:
+        file_ref_dict = {
+            # source path is the full gs path to original file in TDR
+            "sourcePath": file_details['fileDetail']['accessUrl'],
+            # Keep the same target path
+            "targetPath": f"/new/{os.path.basename(file_details['fileDetail']['accessUrl'])}",
+        }
         # Get md5 from file details
         md5_checksum = next(
             (
@@ -82,14 +88,9 @@ class CreateIngestRecords:
                 if item['type'] == 'md5'
             ), None
         )
-
-        return {
-            # source path is the full gs path to original file in TDR
-            "sourcePath": file_details['fileDetail']['accessUrl'],
-            # Keep the same target path
-            "targetPath": f"/new/{os.path.basename(file_details['fileDetail']['accessUrl'])}",
-            "md5": md5_checksum
-        }
+        if md5_checksum:
+            file_ref_dict['md5'] = md5_checksum
+        return file_ref_dict
 
     def run(self) -> list[dict]:
         # Get all file ref columns in table
@@ -177,7 +178,7 @@ if __name__ == "__main__":
         f"Found {len(orig_dataset_tables)} tables in source dataset to ingest")
 
     # Get dict of all files in original dataset
-    original_files_info = tdr.create_file_dict(dataset_id=orig_dataset_id, limit=1000)
+    original_files_info = tdr.create_file_dict(dataset_id=orig_dataset_id, limit=20000)
 
     for table_dict in orig_dataset_tables:
         # Update UUIDs from dataset metrics to be paths to files
