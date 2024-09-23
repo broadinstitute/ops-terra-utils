@@ -19,7 +19,7 @@ BATCH_SIZE_TO_DELETE_FILES = 100
 
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Get files that are not in the dataset metadata")
-    parser.add_argument("--dataset_id", required=True)
+    parser.add_argument("--dataset_id", "-i", required=True)
     parser.add_argument(
         "--max_retries",
         required=False,

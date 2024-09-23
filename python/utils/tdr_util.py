@@ -743,7 +743,7 @@ class ReformatMetricsForIngest:
         if self.file_list:
             self._add_file_ref(row_dict)
             # Update path to TDR's dataset relative path with / included and not have bucket
-            row_dict['path'] = '/'.join(row_dict['path'].split('/')[3:])
+            #row_dict['path'] = '/'.join(row_dict['path'].split('/')[3:])
             reformatted_dict = row_dict
         else:
             # Go through each value in row and reformat if needed

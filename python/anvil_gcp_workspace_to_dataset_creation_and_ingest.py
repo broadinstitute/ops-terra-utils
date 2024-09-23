@@ -1,3 +1,4 @@
+import json
 import logging
 import sys
 import re
@@ -394,9 +395,11 @@ if __name__ == "__main__":
     # Get all file info from dataset
     existing_file_inventory_metadata = tdr.get_data_set_table_metrics(
         dataset_id=dataset_id, target_table_name=FILE_INVENTORY_TABLE_NAME)
+    print(json.dumps(existing_file_inventory_metadata, indent=2))
+
     # Create dictionary to map input file paths to uuids
     file_to_uuid_dict = {
-        file_dict['file_path']: file_dict['file_ref']
+        file_dict['path']: file_dict['file_ref']
         for file_dict in existing_file_inventory_metadata
     }
 
@@ -409,5 +412,7 @@ if __name__ == "__main__":
                 workspace_name=workspace_name,
                 dataset_name=dataset_name,
                 file_to_uuid_dict=file_to_uuid_dict,
-                file_ingest_batch_size=file_ingest_batch_size
+                file_ingest_batch_size=file_ingest_batch_size,
+                filter_existing_ids=filter_existing_ids,
+                file_path_flat=file_path_flat
             )
