@@ -173,10 +173,10 @@ class CreateIngestTableInfo:
 
     def run(self) -> dict:
         # Create a dictionary of all tables to ingest
-        ingest_table_dict = {
-            'workspace_metadata': self._create_workspace_table_dict(),
-            FILE_INVENTORY_TABLE_NAME: self._create_file_metadata_table_dict()
-        }
+        ingest_table_dict = {FILE_INVENTORY_TABLE_NAME: self._create_file_metadata_table_dict()}
+        # Add workspace attributes to ingest only if exists
+        if self.workspace_metadata:
+            ingest_table_dict['workspace_metadata'] = self._create_workspace_table_dict()
         # Add all other workspace tables to ingest
         ingest_table_dict.update(
             {
