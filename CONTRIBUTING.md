@@ -116,7 +116,7 @@ There are two different ways to test your changes locally. The fist is the more 
   ```
 
 #### Testing Execution of Python scripts through Cromwell
-This method of testing creates a WDL on the fly, and _does not_actually test the WDL associated with your code. It instead is testing the functionality of your Python code running in Cromwell.
+This method of testing creates a WDL on the fly, and _does not_ actually test the WDL associated with your code. It instead is testing the functionality of your Python code running in Cromwell.
 This method of testing makes a few assumptions:
 * All arguments to your Python code are named exactly the same in your WDL
 * All arguments that are booleans in your WDL are passed as "store_true" arguments to your Python code
