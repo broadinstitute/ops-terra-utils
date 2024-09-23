@@ -53,7 +53,7 @@ def create_additional_properties(orig_dataset_info: dict) -> dict:
     additional_properties = {
         "experimentalSelfHosted": False,
         "dedicatedIngestServiceAccount": True,
-        "experimentalPredictableFileIds": True,
+        "experimentalPredictableFileIds": False,
         "enableSecureMonitoring": True
     }
     if orig_dataset_info['phsId']:
