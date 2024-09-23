@@ -15,6 +15,7 @@ workflow RenameAndReingestFiles {
         String? billing_project
         String? workspace_name
         String? temp_bucket
+        Boolean? report_updates_only
     }
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -33,7 +34,8 @@ workflow RenameAndReingestFiles {
             billing_project = billing_project,
             workspace_name = workspace_name,
             temp_bucket = temp_bucket,
-            workers = workers
+            workers = workers,
+            report_updates_only = report_updates_only
     }
 }
 
@@ -47,6 +49,7 @@ task RenameAndingestFiles {
         String docker_image
         Int copy_and_ingest_batch_size
         Int workers
+        Boolean? report_updates_only
         Int? max_retries
         Int? max_backoff_time
         String? billing_project
@@ -67,7 +70,8 @@ task RenameAndingestFiles {
         ~{"--billing_project " + billing_project} \
         ~{"--workspace_name " + workspace_name} \
         ~{"--temp_bucket " + temp_bucket} \
-        ~{"--workers " + workers}
+        ~{"--workers " + workers} \
+        ~{if report_updates_only then "--report_updates_only" else ""}
     >>>
 
     runtime {

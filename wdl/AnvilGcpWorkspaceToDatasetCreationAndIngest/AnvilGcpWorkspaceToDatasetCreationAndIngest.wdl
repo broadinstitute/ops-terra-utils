@@ -20,7 +20,6 @@ workflow GCPWorkspaceToDatasetCreationAndIngest {
         String? docker
     }
 
-    Boolean bulk_mode_bool = select_first([bulk_mode, false])
     Boolean already_added_to_auth_domain_bool = select_first([already_added_to_auth_domain, true])
     Boolean file_path_flat_bool = select_first([file_path_flat, true])
     Boolean self_hosted_bool = select_first([self_hosted, true])
@@ -43,7 +42,7 @@ workflow GCPWorkspaceToDatasetCreationAndIngest {
             filter_existing_ids = filter_existing_ids_bool,
             already_added_to_auth_domain = already_added_to_auth_domain_bool,
             file_path_flat_bool = file_path_flat_bool,
-            bulk_mode = bulk_mode_bool
+            bulk_mode = bulk_mode
     }
 }
 
@@ -57,7 +56,7 @@ task RunGCPWorkspaceToDataset {
         Boolean already_added_to_auth_domain
         Boolean file_path_flat_bool
         String docker_name
-        Boolean bulk_mode
+        Boolean? bulk_mode
         String? tdr_billing_profile
         Int? file_ingest_batch_size
         Int? max_backoff_time
