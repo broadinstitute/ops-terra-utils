@@ -11,7 +11,6 @@ from typing import Any, Optional, Union
 from urllib.parse import unquote
 from pydantic import ValidationError
 from dateutil import parser
-from dateutil.parser import ParserError
 from datetime import datetime, date
 
 from .request_util import GET, POST, DELETE
