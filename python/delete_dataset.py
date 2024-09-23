@@ -18,7 +18,7 @@ CLOUD_TYPE = GCP
 
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Delete a dataset in TDR")
-    parser.add_argument("--dataset_id", required=True)
+    parser.add_argument("--dataset_id", "-i", required=True)
     return parser.parse_args()
 
 

@@ -728,7 +728,7 @@ class ReformatMetricsForIngest:
                 if expected_data_type == "bytes" and not isinstance(column_value, bytes):
                     valid = False
                     logging.warning(f"Column {column_name} with value {column_value} is not bytes")
-                if expected_data_type == "fileref" and column_value.startswith(self.file_prefix):
+                if expected_data_type == "fileref" and not column_value.startswith(self.file_prefix):
                     valid = False
                     logging.warning(f"Column {column_name} with value {column_value} is not a file path")
         # Ingest should be able to convert from string to correct format
@@ -746,8 +746,8 @@ class ReformatMetricsForIngest:
         else:
             # Go through each value in row and reformat if needed
             for key, value in row_dict.items():
-                # Ignore where there is no value
-                if value:
+                # Ignore where there is no value. 0 is valid value
+                if value or value == 0:
                     # If schema info passed in then check if column matches what
                     # schema expect and attempt to update if not
                     if self.schema_info:
@@ -763,10 +763,11 @@ class ReformatMetricsForIngest:
                                 row_valid = False
                             updated_value_list.append(update_value)
                         reformatted_dict[key] = updated_value_list
-                    update_value, valid = self._check_and_format_file_path(value)
-                    if not valid:
-                        row_valid = False
-                    reformatted_dict[key] = update_value
+                    else:
+                        update_value, valid = self._check_and_format_file_path(value)
+                        reformatted_dict[key] = update_value
+                        if not valid:
+                            row_valid = False
         # add in timestamp
         reformatted_dict["last_modified_date"] = datetime.now(
             tz=pytz.UTC).strftime("%Y-%m-%dT%H:%M:%S")
@@ -1116,7 +1117,9 @@ class InferTDRSchema:
         # Try to parse times and dates
         try:
             date_or_time = parser.parse(value_for_header)
-            return self.PYTHON_TDR_DATA_TYPE_MAPPING[type(date_or_time)]
+            # This is not working as expected and tries to turn too many ints into dates
+            #return self.PYTHON_TDR_DATA_TYPE_MAPPING[type(date_or_time)]
+            pass
         except (TypeError, ParserError):
             pass
 
