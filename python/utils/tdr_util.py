@@ -11,7 +11,6 @@ from typing import Any, Optional, Union
 from urllib.parse import unquote
 from pydantic import ValidationError
 from dateutil import parser
-from dateutil.parser import ParserError
 from datetime import datetime, date
 
 from .request_util import GET, POST, DELETE
@@ -117,7 +116,7 @@ class TDR:
         logging.info(f"Getting all files in dataset {dataset_id}")
         return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
-    def create_file_dict(self, dataset_id: str, limit: int = 1000) -> dict:
+    def create_file_dict(self, dataset_id: str, limit: int = 20000) -> dict:
         """Create a dictionary of all files in a dataset where key is the file uuid."""
         return {
             file_dict['fileId']: file_dict
@@ -728,7 +727,7 @@ class ReformatMetricsForIngest:
                 if expected_data_type == "bytes" and not isinstance(column_value, bytes):
                     valid = False
                     logging.warning(f"Column {column_name} with value {column_value} is not bytes")
-                if expected_data_type == "fileref" and column_value.startswith(self.file_prefix):
+                if expected_data_type == "fileref" and not column_value.startswith(self.file_prefix):
                     valid = False
                     logging.warning(f"Column {column_name} with value {column_value} is not a file path")
         # Ingest should be able to convert from string to correct format
@@ -742,14 +741,12 @@ class ReformatMetricsForIngest:
         #  If a specific file list is provided, then add file ref. Different than all other ingests
         if self.file_list:
             self._add_file_ref(row_dict)
-            # Update path to TDR's dataset relative path with / included and not have bucket
-            row_dict['path'] = '/'.join(row_dict['path'].split('/')[3:])
             reformatted_dict = row_dict
         else:
             # Go through each value in row and reformat if needed
             for key, value in row_dict.items():
-                # Ignore where there is no value
-                if value:
+                # Ignore where there is no value. 0 is valid value
+                if value or value == 0:
                     # If schema info passed in then check if column matches what
                     # schema expect and attempt to update if not
                     if self.schema_info:
@@ -765,10 +762,11 @@ class ReformatMetricsForIngest:
                                 row_valid = False
                             updated_value_list.append(update_value)
                         reformatted_dict[key] = updated_value_list
-                    update_value, valid = self._check_and_format_file_path(value)
-                    if not valid:
-                        row_valid = False
-                    reformatted_dict[key] = update_value
+                    else:
+                        update_value, valid = self._check_and_format_file_path(value)
+                        reformatted_dict[key] = update_value
+                        if not valid:
+                            row_valid = False
         # add in timestamp
         reformatted_dict["last_modified_date"] = datetime.now(
             tz=pytz.UTC).strftime("%Y-%m-%dT%H:%M:%S")
@@ -1115,12 +1113,14 @@ class InferTDRSchema:
             if az_match or gcp_match:
                 return self.PYTHON_TDR_DATA_TYPE_MAPPING["fileref"]
 
-        # Try to parse times and dates
-        try:
-            date_or_time = parser.parse(value_for_header)
-            return self.PYTHON_TDR_DATA_TYPE_MAPPING[type(date_or_time)]
-        except (TypeError, ParserError):
-            pass
+        # Tried to use this to parse datetimes, but it was turning too many
+        # regular ints into datetimes. Commenting out for now
+        # try:
+        #    date_or_time = parser.parse(value_for_header)
+        #    return self.PYTHON_TDR_DATA_TYPE_MAPPING[type(date_or_time)]
+        #    pass
+        # except (TypeError, ParserError):
+        #    pass
 
         if isinstance(value_for_header, list):
             # check for potential list of filerefs
