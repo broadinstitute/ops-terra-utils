@@ -117,7 +117,7 @@ class TDR:
         logging.info(f"Getting all files in dataset {dataset_id}")
         return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
-    def create_file_dict(self, dataset_id: str, limit: int = 1000) -> dict:
+    def create_file_dict(self, dataset_id: str, limit: int = 20000) -> dict:
         """Create a dictionary of all files in a dataset where key is the file uuid."""
         return {
             file_dict['fileId']: file_dict
@@ -742,8 +742,6 @@ class ReformatMetricsForIngest:
         #  If a specific file list is provided, then add file ref. Different than all other ingests
         if self.file_list:
             self._add_file_ref(row_dict)
-            # Update path to TDR's dataset relative path with / included and not have bucket
-            #row_dict['path'] = '/'.join(row_dict['path'].split('/')[3:])
             reformatted_dict = row_dict
         else:
             # Go through each value in row and reformat if needed

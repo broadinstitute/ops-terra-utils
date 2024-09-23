@@ -395,7 +395,6 @@ if __name__ == "__main__":
     # Get all file info from dataset
     existing_file_inventory_metadata = tdr.get_data_set_table_metrics(
         dataset_id=dataset_id, target_table_name=FILE_INVENTORY_TABLE_NAME)
-    print(json.dumps(existing_file_inventory_metadata, indent=2))
 
     # Create dictionary to map input file paths to uuids
     file_to_uuid_dict = {
