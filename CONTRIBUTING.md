@@ -116,10 +116,8 @@ docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/op
 
    Testing Execution of python scripts through Cromwell
 
-      Pre-reqs
-         - properly filled in test_inputs.json file (located within the wdl/{wdl_name} directory)
-
-      You can then run your python script in the manner described below:
+  Pre-reqs
+   - Properly filled in test_inputs.json file (located within the wdl/{wdl_name} directory). You can then run your python script in the manner described below:
 
       ```sh
          dev/submit_wdl_to_cromwell.sh submit {python_script_to_run} {path_to_input_json}
