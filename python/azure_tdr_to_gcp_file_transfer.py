@@ -193,8 +193,8 @@ if __name__ == "__main__":
             logging.info(f"Uploading {file_name} to {gcp_upload_path}")
             upload_blob = gcp_bucket.blob(gcp_upload_path)
             upload_blob.upload_from_filename(download_path)
-            upload_status = 'True' if upload_blob.exists() else 'False'
-            copy_info["upload_completed_successfully"] = upload_status
+            upload_completed = 'True' if upload_blob.exists() else 'False'
+            copy_info["upload_completed_successfully"] = upload_completed
             write_to_transfer_manifest(copy_info)
             # cleanup file before next iteration
             Path(download_path).unlink()
