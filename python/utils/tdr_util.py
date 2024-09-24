@@ -1238,11 +1238,25 @@ class InferTDRSchema:
 
 class GetPermissionsForWorkspaceIngest:
     def __init__(self, terra_workspace: TerraWorkspace, dataset_info: dict, added_to_auth_domain: bool = False):
+        """
+        Initialize the GetPermissionsForWorkspaceIngest class.
+
+        Args:
+            terra_workspace (TerraWorkspace): Instance of the TerraWorkspace class.
+            dataset_info (dict): Information about the dataset.
+            added_to_auth_domain (bool, optional): Flag indicating if the SA account has been added to the auth domain. Defaults to False.
+        """
         self.terra_workspace = terra_workspace
         self.dataset_info = dataset_info
         self.added_to_auth_domain = added_to_auth_domain
 
     def run(self) -> None:
+        """
+        Ensure the dataset SA account has the necessary permissions on the Terra workspace.
+
+        This method updates the user ACL to make the SA account a reader on the Terra workspace.
+        It also checks if the workspace has an authorization domain and logs the necessary steps to add the SA account to the auth domain.
+        """
         # Ensure dataset SA account is reader on Terra workspace.
         tdr_sa_account = self.dataset_info["ingestServiceAccount"]
         self.terra_workspace.update_user_acl(email=tdr_sa_account, access_level="READER")
@@ -1288,6 +1302,30 @@ class FilterAndBatchIngest:
             schema_info: Optional[dict] = None,
             terra_workspace: Optional[TerraWorkspace] = None
     ):
+        """
+        Initialize the FilterAndBatchIngest class.
+
+        Args:
+            tdr (TDR): Instance of the TDR class.
+            filter_existing_ids (bool): Whether to filter out sample IDs that already exist in the dataset.
+            unique_id_field (str): The unique ID field to filter on.
+            table_name (str): The name of the table to ingest data into.
+            ingest_metadata (list[dict]): The metadata to ingest.
+            dataset_id (str): The ID of the dataset.
+            file_list_bool (bool): Whether the ingest metadata is a list of files.
+            ingest_waiting_time_poll (int): The waiting time to poll for ingest status.
+            ingest_batch_size (int): The batch size for ingest.
+            bulk_mode (bool): Whether to use bulk mode for ingest.
+            cloud_type (str): The type of cloud (e.g., GCP, AZURE).
+            update_strategy (str): The update strategy to use.
+            load_tag (str): The load tag for the ingest. Used to make future ingests of same files go faster.
+            test_ingest (bool, optional): Whether to run a test ingest. Defaults to False.
+            dest_file_path_flat (bool, optional): Whether to flatten the destination file path. Defaults to False.
+            file_to_uuid_dict (Optional[dict], optional): A dictionary mapping files to UUIDs. If supplied makes ingest run faster due to just linking to already ingested file UUID. Defaults to None.
+            sas_expire_in_secs (int, optional): The expiration time for SAS tokens in seconds. Defaults to 3600.
+            schema_info (Optional[dict], optional): Schema information for the tables. Used to validate ingest metrics match. Defaults to None.
+            terra_workspace (Optional[TerraWorkspace], optional): Instance of the TerraWorkspace class. Only used for azure ingests to get token. Defaults to None.
+        """
         self.tdr = tdr
         self.filter_existing_ids = filter_existing_ids
         self.unique_id_field = unique_id_field
@@ -1306,11 +1344,15 @@ class FilterAndBatchIngest:
         self.sas_expire_in_secs = sas_expire_in_secs
         self.terra_workspace = terra_workspace
         self.file_to_uuid_dict = file_to_uuid_dict
-        # Used if you want to provide schema info for tables to make sure values match.
-        # Should be dict with key being column name and value being dict with datatype
         self.schema_info = schema_info
 
     def run(self) -> None:
+        """
+        Run the filter and batch ingest process.
+
+        This method filters out sample IDs that already exist in the dataset (if specified),
+        and then performs a batch ingest of the remaining metadata into the specified table.
+        """
         if self.filter_existing_ids:
             # Filter out sample ids that are already in the dataset
             filtered_metrics = FilterOutSampleIdsAlreadyInDataset(
@@ -1353,6 +1395,16 @@ class FilterOutSampleIdsAlreadyInDataset:
             target_table_name: str,
             filter_entity_id: str
     ):
+        """
+        Initialize the FilterOutSampleIdsAlreadyInDataset class.
+
+        Args:
+            ingest_metrics (list[dict]): The metrics to be ingested.
+            dataset_id (str): The ID of the dataset.
+            tdr (TDR): Instance of the TDR class.
+            target_table_name (str): The name of the target table.
+            filter_entity_id (str): The entity ID to filter on.
+        """
         self.ingest_metrics = ingest_metrics
         self.tdr = tdr
         self.dataset_id = dataset_id
@@ -1360,6 +1412,12 @@ class FilterOutSampleIdsAlreadyInDataset:
         self.filter_entity_id = filter_entity_id
 
     def run(self) -> list[dict]:
+        """
+        Run the filter process to remove sample IDs that already exist in the dataset.
+
+        Returns:
+            list[dict]: The filtered ingest metrics.
+        """
         # Get all sample ids that already exist in dataset
         logging.info(
             f"Getting all {self.filter_entity_id} that already exist in table {self.target_table_name} in "
