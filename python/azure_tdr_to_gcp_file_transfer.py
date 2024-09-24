@@ -81,31 +81,55 @@ class DownloadAzBlob:
     @staticmethod
     def run_az_copy(blob_path: str, output_path: str) -> subprocess.CompletedProcess:
         az_copy_command = ["azcopy", "copy", f"{blob_path}",
-                           f"{output_path}", "--output-type=json", "--check-md5=NoCheck"]
-        #
+                           f"{output_path}", "--output-type=json"]
+        #, "--check-md5=NoCheck"
         copy_cmd = subprocess.run(az_copy_command, capture_output=True)
         return copy_cmd
 
-    def run(self, blob_path: str, output_path: str) -> list:
-        self.get_new_sas_token()
+    def check_copy_completed_successfully(self, output_path: str) -> bool:
+        file_exists = Path(output_path).exists()
+        return file_exists
 
+
+    def run(self, blob_path: str, output_path: str) -> tuple(bool, dict[Any, Any]):
+        self.get_new_sas_token()
         blob_path_with_token: str = f"{blob_path}?{self.sas_token['sas_token']}"
         download_output = self.run_az_copy(
             blob_path=blob_path_with_token, output_path=output_path)
         output_list = download_output.stdout.decode('utf-8').splitlines()
         json_list = [json.loads(obj) for obj in output_list]
+        job_logs = ParseAzCopyOutput().run(copy_logs=json_list)
+        copy_completed = self.check_copy_completed_successfully(output_path)
+        return copy_completed, job_logs
 
-        return json_list
+class ParseAzCopyOutput:
 
+    def _get_copy_logs(self, job_log: dict) -> dict:
+        job_dict = {}
+        match job_log['MessageType']:
+            case 'Init':
+                job_dict['LogType'] = 'Init'
+                job_dict['Message'] = job_log['MessageContent']
+            case 'Progress':
+                job_dict['LogType'] = 'Progress'
+                job_dict['Message'] = job_log['MessageContent']
+            case 'EndOfJob':               
+                job_dict['LogType'] = 'EndOfJob'
+                job_dict['Message'] = job_log['MessageContent']
+            case _:
+                pass
+        return job_dict
 
-def parse_copy_ouput(copy_logs: list) -> dict:
-    job_metadata = {}
-    for log in copy_logs:
-        if log['MessageType'] in ['Init', 'Progress', 'EndOfJob']:
-            if not job_metadata.get(log['JobID']):
-                job_metadata[log['JobID']] = {}
-            job_metadata[log['JobID']][log['MessageType']] = log
-    return job_metadata
+    def run(self, copy_logs: list) -> dict:
+        job_metadata = {}
+        for log in copy_logs:    
+            if log['MessageType'] in ['Init', 'Progress', 'EndOfJob']:
+                log_info = self._get_copy_logs(log)            
+                job_id = log['JobID'] if log['JobID'] else log['MessageContent']['JobID']
+                if not job_metadata.get(job_id):
+                    job_metadata[log['JobID']] = {}
+                job_metadata[log['JobID']][log['MessageType']] = log_info
+        return job_metadata
 
 
 def construct_upload_path(file, args):
@@ -132,9 +156,6 @@ def write_to_transfer_manifest(file_dict):
         writer.writerow(file_dict)
 
 
-def validate_files_uploaded_successfully(gcp_bucket_client, upload_paths):
-    pass
-
 
 if __name__ == "__main__":
     args = get_args()
@@ -144,34 +165,40 @@ if __name__ == "__main__":
     gcp_storage_client = storage.Client()
     gcp_bucket = gcp_storage_client.bucket(args.bucket_id)
     export_info = {'endpoint': args.export_type, 'id': args.target_id}
-    upload_paths = []
     if args.export_type == 'dataset':
         file_list = tdr_client.get_data_set_files(
-            dataset_id=args.target_id, batch_query=False)
+            dataset_id=args.target_id)
     elif args.export_type == 'snapshot':
-        file_list = tdr_client.get_files_from_snapshot(
-            snapshot_id=args.target_id)
+        logging.warning("Snapshot export not yet implemented")
+        exit
+        #file_list = tdr_client.get_files_from_snapshot(
+        #    snapshot_id=args.target_id)
 
     download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
     for file in file_list:
         access_url = file["fileDetail"]["accessUrl"]
         download_path = f"/tmp/{Path(access_url).name}"
-        file_download = download_client.run(
+        file_download_completed, job_logs = download_client.run(
             blob_path=access_url, output_path=download_path)
         file_name = Path(access_url).name
-        # construct upload path
+        md5 = next(checksum for checksum in file["checksums"] if checksum["type"] == "md5")            
         gcp_upload_path = construct_upload_path(file, args)
-        upload_paths.append(gcp_upload_path)
-        md5 = next(checksum for checksum in file["checksums"] if checksum["type"] == "md5")
-        file_info = {
-            "source_path": access_url,
-            "destination_path": gcp_upload_path,
-            "md5": md5["checksum"]
-        }
-        write_to_transfer_manifest(file_info)
-        logging.info(f"Uploading {file_name} to {gcp_upload_path}")
-        upload_blob = gcp_bucket.blob(gcp_upload_path)
-        upload_blob.upload_from_filename(download_path)
-        breakpoint()
-        # cleanup file before next iteration
-        Path(download_path).unlink()
+        copy_info = {
+                "source_path": access_url,
+                "destination_path": gcp_upload_path,
+                "md5": md5["checksum"]                
+            }
+        if file_download_completed:
+            copy_info["download_completed_successfully"] = 'True'            
+            logging.info(f"Uploading {file_name} to {gcp_upload_path}")
+            upload_blob = gcp_bucket.blob(gcp_upload_path)
+            upload_blob.upload_from_filename(download_path)
+            upload_status = 'True' if upload_blob.exists() else 'False'
+            copy_info["upload_completed_successfully"] = upload_status
+            write_to_transfer_manifest(copy_info)
+            # cleanup file before next iteration
+            Path(download_path).unlink()
+        else:
+            copy_info["download_completed_successfully"] = 'False'
+            write_to_transfer_manifest(copy_info)
+            logging.error(f"Failed to download {file_name}")

@@ -31,4 +31,9 @@ task run_export{
     runtime {
         docker: "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"
   }
+
+    output{
+        File copy_logs='copy_manifest.csv'
+    }
+
 }
