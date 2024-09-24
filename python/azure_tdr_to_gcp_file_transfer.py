@@ -1,6 +1,7 @@
 import logging
 import json
 import subprocess
+import csv
 import google.cloud.logging
 from google.cloud import storage
 from pathlib import Path
@@ -79,20 +80,60 @@ class DownloadAzBlob:
 
     @staticmethod
     def run_az_copy(blob_path: str, output_path: str) -> subprocess.CompletedProcess:
-        az_copy_command = ["azcopy", "copy", f"{blob_path}", f"{output_path}", "--output-type=json"]
+        az_copy_command = ["azcopy", "copy", f"{blob_path}",
+                           f"{output_path}", "--output-type=json", "--check-md5=NoCheck"]
+        #
         copy_cmd = subprocess.run(az_copy_command, capture_output=True)
         return copy_cmd
 
-    def run(self, blob_path: str, output_path: str) -> Union[list, None]:
+    def run(self, blob_path: str, output_path: str) -> list:
         self.get_new_sas_token()
-        if self.sas_token:
-            blob_path_with_token: str = f"{blob_path}?{self.sas_token['sas_token']}"
-            download_output = self.run_az_copy(
-                blob_path=blob_path_with_token, output_path=output_path)
-            output_list = download_output.stdout.decode('utf-8').splitlines()
-            json_list = [json.loads(obj) for obj in output_list]
-            return json_list
-        return None
+
+        blob_path_with_token: str = f"{blob_path}?{self.sas_token['sas_token']}"
+        download_output = self.run_az_copy(
+            blob_path=blob_path_with_token, output_path=output_path)
+        output_list = download_output.stdout.decode('utf-8').splitlines()
+        json_list = [json.loads(obj) for obj in output_list]
+
+        return json_list
+
+
+def parse_copy_ouput(copy_logs: list) -> dict:
+    job_metadata = {}
+    for log in copy_logs:
+        if log['MessageType'] in ['Init', 'Progress', 'EndOfJob']:
+            if not job_metadata.get(log['JobID']):
+                job_metadata[log['JobID']] = {}
+            job_metadata[log['JobID']][log['MessageType']] = log
+    return job_metadata
+
+
+def construct_upload_path(file, args):
+    if args.retain_path_structure:
+        gcp_upload_path = file["path"]
+    elif args.bucket_output_path:
+        formatted_path = Path(args.bucket_output_path) / file_name
+        gcp_upload_path = str(formatted_path)
+    else:
+        file_name = Path(file['fileDetail']['accessUrl']).name
+        gcp_upload_path = file_name
+    return gcp_upload_path
+
+
+def write_to_transfer_manifest(file_dict):
+    manifest_path = Path('copy_manifest.csv')
+    dict_keys = file_dict.keys()
+    if not manifest_path.exists():
+        with open('copy_manifest.csv', 'w') as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=dict_keys)
+            writer.writeheader()
+    with open('copy_manifest.csv', 'a') as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=dict_keys)
+        writer.writerow(file_dict)
+
+
+def validate_files_uploaded_successfully(gcp_bucket_client, upload_paths):
+    pass
 
 
 if __name__ == "__main__":
@@ -103,7 +144,7 @@ if __name__ == "__main__":
     gcp_storage_client = storage.Client()
     gcp_bucket = gcp_storage_client.bucket(args.bucket_id)
     export_info = {'endpoint': args.export_type, 'id': args.target_id}
-
+    upload_paths = []
     if args.export_type == 'dataset':
         file_list = tdr_client.get_data_set_files(
             dataset_id=args.target_id, batch_query=False)
@@ -119,15 +160,18 @@ if __name__ == "__main__":
             blob_path=access_url, output_path=download_path)
         file_name = Path(access_url).name
         # construct upload path
-        if args.retain_path_structure:
-            gcp_upload_path = file["path"]
-        elif args.bucket_output_path:
-            formatted_path = Path(args.bucket_output_path) / file_name
-            gcp_upload_path = str(formatted_path)
-        else:
-            gcp_upload_path = file_name
+        gcp_upload_path = construct_upload_path(file, args)
+        upload_paths.append(gcp_upload_path)
+        md5 = next(checksum for checksum in file["checksums"] if checksum["type"] == "md5")
+        file_info = {
+            "source_path": access_url,
+            "destination_path": gcp_upload_path,
+            "md5": md5["checksum"]
+        }
+        write_to_transfer_manifest(file_info)
         logging.info(f"Uploading {file_name} to {gcp_upload_path}")
         upload_blob = gcp_bucket.blob(gcp_upload_path)
         upload_blob.upload_from_filename(download_path)
+        breakpoint()
         # cleanup file before next iteration
         Path(download_path).unlink()
