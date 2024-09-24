@@ -81,7 +81,8 @@ class DownloadAzBlob:
     @staticmethod
     def run_az_copy(blob_path: str, output_path: str) -> subprocess.CompletedProcess:
         az_copy_command = ["azcopy", "copy", f"{blob_path}",
-                           f"{output_path}", "--output-type=json"]
+                           f"{output_path}", "--output-type=json", "--check-md5=NoCheck"]
+        #used for test datasets where checksums don't match provided file
         #, "--check-md5=NoCheck"
         copy_cmd = subprocess.run(az_copy_command, capture_output=True)
         return copy_cmd
@@ -91,7 +92,7 @@ class DownloadAzBlob:
         return file_exists
 
 
-    def run(self, blob_path: str, output_path: str) -> tuple(bool, dict[Any, Any]):
+    def run(self, blob_path: str, output_path: str):
         self.get_new_sas_token()
         blob_path_with_token: str = f"{blob_path}?{self.sas_token['sas_token']}"
         download_output = self.run_az_copy(
@@ -122,13 +123,14 @@ class ParseAzCopyOutput:
 
     def run(self, copy_logs: list) -> dict:
         job_metadata = {}
+        std_job_id = next((log['JobID'] for log in copy_logs if log.get('JobID')), None)
+        fallback_job_id = next((json.loads(log['MessageContent'])['JobID'] for log in copy_logs if isinstance(log['MessageContent'], dict)), None)
+        job_id = std_job_id if std_job_id else fallback_job_id
+        job_metadata[job_id] = {}
         for log in copy_logs:    
             if log['MessageType'] in ['Init', 'Progress', 'EndOfJob']:
-                log_info = self._get_copy_logs(log)            
-                job_id = log['JobID'] if log['JobID'] else log['MessageContent']['JobID']
-                if not job_metadata.get(job_id):
-                    job_metadata[log['JobID']] = {}
-                job_metadata[log['JobID']][log['MessageType']] = log_info
+                log_info = self._get_copy_logs(log)                                        
+                job_metadata[job_id][log['MessageType']] = log_info
         return job_metadata
 
 
@@ -175,7 +177,7 @@ if __name__ == "__main__":
         #    snapshot_id=args.target_id)
 
     download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
-    for file in file_list:
+    for file in file_list[:10]:
         access_url = file["fileDetail"]["accessUrl"]
         download_path = f"/tmp/{Path(access_url).name}"
         file_download_completed, job_logs = download_client.run(
