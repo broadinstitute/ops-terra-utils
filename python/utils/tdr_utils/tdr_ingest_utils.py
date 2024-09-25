@@ -6,10 +6,11 @@ from datetime import datetime
 from typing import Optional, Any
 from dateutil import parser
 
-from python.utils import GCP, AZURE
-from python.utils.tdr_utils.tdr_api_utils import TDR, FilterOutSampleIdsAlreadyInDataset
-from python.utils.tdr_utils.tdr_job_utils import MonitorTDRJob
-from python.utils.terra_util import TerraWorkspace
+from .. import GCP, AZURE
+
+from .tdr_api_utils import TDR, FilterOutSampleIdsAlreadyInDataset
+from .tdr_job_utils import MonitorTDRJob
+from ..terra_util import TerraWorkspace
 
 
 class BatchIngest:

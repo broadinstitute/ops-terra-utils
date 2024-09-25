@@ -2,8 +2,8 @@ import json
 import logging
 import sys
 
-from python.utils.tdr_utils.tdr_api_utils import TDR
-from python.utils.tdr_utils.tdr_schema_utils import InferTDRSchema
+from ..tdr_utils.tdr_api_utils import TDR
+from ..tdr_utils.tdr_schema_utils import InferTDRSchema
 
 
 class SetUpTDRTables:

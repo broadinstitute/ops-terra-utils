@@ -1,5 +1,5 @@
 {
-    "ExportDataFromSnapshotToBucket.dataset_id": "String",
-    "ExportDataFromSnapshotToBucket.output_bucket": "String",
-	"ExportDataFromSnapshotToBucket.download_type": "String"
+    "ExportDataFromSnapshotToBucket.dataset_id": "bb62f7a8-1a9c-47c6-beba-4246f5afa696",
+    "ExportDataFromSnapshotToBucket.output_bucket": "fc-dc34d2dc-e412-456a-b9d4-7c2512b1b317",
+	"ExportDataFromSnapshotToBucket.download_type": "flat"
 }

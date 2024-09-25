@@ -2,7 +2,7 @@ import json
 import logging
 import time
 
-from python.utils.tdr_utils.tdr_api_utils import TDR
+from typing import Any
 
 
 class MonitorTDRJob:
@@ -15,7 +15,7 @@ class MonitorTDRJob:
         check_interval (int): The interval in seconds to wait between status checks.
     """
 
-    def __init__(self, tdr: TDR, job_id: str, check_interval: int):
+    def __init__(self, tdr: Any, job_id: str, check_interval: int):
         """
         Initialize the MonitorTDRJob class.
 
