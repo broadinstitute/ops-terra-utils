@@ -48,3 +48,10 @@ workflows:
     readMePath: /wdl/DeleteBadStateFilesFromDataset/README.md
     testParameterFiles:
       - /wdl/DeleteBadStateFilesFromDataset/DeleteBadStateFilesFromDataset.wdl
+
+  - name: ExportDataFromDatasetToOutputBucket
+    subclass: WDL
+    primaryDescriptorPath: /wdl/ExportDataFromDataset/ExportDataFromDataset.wdl
+    readMePath: /wdl/ExportDataFromDataset/README.md
+    testParameterFiles:
+      - /wdl/ExportDataFromDataset/ExportDataFromDataset.wdl

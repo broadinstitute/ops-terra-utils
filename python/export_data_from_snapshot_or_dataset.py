@@ -22,9 +22,10 @@ MULTITHREAD_WORKERS = 10
 
 
 def get_args() -> argparse.Namespace:
-    parser = ArgumentParser(
-        description="Download data from an existing snapshot to a Google bucket")
-    parser.add_argument("--snapshot_id", required=True)
+    parser = ArgumentParser(description="Download data from an existing snapshot to a Google bucket")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--snapshot_id", required=False)
+    group.add_argument("--dataset_id", required=False)
     parser.add_argument("--output_bucket", required=True)
     parser.add_argument(
         "--download_type",
@@ -92,16 +93,23 @@ class SourceDestinationMapping:
 if __name__ == '__main__':
     args = get_args()
     snapshot_id = args.snapshot_id
+    dataset_id = args.dataset_id
     output_bucket = args.output_bucket
     download_type = args.download_type
     max_backoff_time = args.max_backoff_time
     max_retries = args.max_retries
 
+    if not (snapshot_id or dataset_id):
+        raise Exception("Either snapshot id OR dataset id are required. Received neither")
+
     token = Token(cloud=CLOUD_TYPE)
-    request_util = RunRequest(
-        token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
+    request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
-    file_metadata = tdr.get_files_from_snapshot(snapshot_id=snapshot_id)
+
+    if snapshot_id:
+        file_metadata = tdr.get_files_from_snapshot(snapshot_id=snapshot_id)
+    else:
+        file_metadata = tdr.get_data_set_files(dataset_id=dataset_id)
 
     # get the source and destination mapping and validate that all output paths are unique
     mapping = SourceDestinationMapping(
