@@ -58,7 +58,6 @@ class DownloadAzBlob:
     def __init__(self, export_info: dict, tdr_client: TDR) -> None:
         self.tdr_client = tdr_client
         self.export_info = export_info
-        self.sas_token: Optional[dict] = None
 
     def time_until_token_expiry(self) -> Union[timedelta, None]:
         if self.sas_token:
@@ -81,7 +80,7 @@ class DownloadAzBlob:
     @staticmethod
     def run_az_copy(blob_path: str, output_path: str) -> subprocess.CompletedProcess:
         az_copy_command = ["azcopy", "copy", f"{blob_path}",
-                           f"{output_path}", "--output-type=json", "--check-md5=NoCheck"]
+                           f"{output_path}", "--output-type=json"]
         #used for test datasets where checksums don't match provided file
         #, "--check-md5=NoCheck"
         copy_cmd = subprocess.run(az_copy_command, capture_output=True)
@@ -91,7 +90,7 @@ class DownloadAzBlob:
         file_exists = Path(output_path).exists()
         return file_exists
 
-    def run(self, blob_path: str, output_path: str):
+    def run(self, blob_path: str, output_path: str) -> tuple[bool, dict]:
         self.get_new_sas_token()
         blob_path_with_token: str = f"{blob_path}?{self.sas_token['sas_token']}"
         download_output = self.run_az_copy(
@@ -122,9 +121,9 @@ class ParseAzCopyOutput:
         return job_dict
 
     def run(self, copy_logs: list) -> dict:
-        job_metadata = {}
+        job_metadata: dict[str, dict] = {}
         std_job_id = next((log['JobID'] for log in copy_logs if log.get('JobID')), None)
-        fallback_job_id = next((json.loads(log['MessageContent'])['JobID']
+        fallback_job_id = next((json.loads(log['MessageContent'])['JobID']  # type: ignore[arg-type]
                                for log in copy_logs if isinstance(log['MessageContent'], dict)), None)
         job_id = std_job_id if std_job_id else fallback_job_id
         job_metadata[job_id] = {}
@@ -135,19 +134,19 @@ class ParseAzCopyOutput:
         return job_metadata
 
 
-def construct_upload_path(file, args):
+def construct_upload_path(file: dict, args: Namespace) -> str:
+    file_name = Path(file['fileDetail']['accessUrl']).name
     if args.retain_path_structure:
         gcp_upload_path = file["path"]
     elif args.bucket_output_path:
         formatted_path = Path(args.bucket_output_path) / file_name
         gcp_upload_path = str(formatted_path)
     else:
-        file_name = Path(file['fileDetail']['accessUrl']).name
         gcp_upload_path = file_name
     return gcp_upload_path
 
 
-def write_to_transfer_manifest(file_dict):
+def write_to_transfer_manifest(file_dict: dict) -> None:
     manifest_path = Path('copy_manifest.csv')
     dict_keys = file_dict.keys()
     if not manifest_path.exists():
