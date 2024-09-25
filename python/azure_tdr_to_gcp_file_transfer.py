@@ -7,7 +7,7 @@ from google.cloud import storage
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from argparse import ArgumentParser, Namespace
-from typing import Optional, Union
+from typing import Union
 
 from utils.tdr_util import TDR
 from utils.request_util import RunRequest
@@ -81,8 +81,8 @@ class DownloadAzBlob:
     def run_az_copy(blob_path: str, output_path: str) -> subprocess.CompletedProcess:
         az_copy_command = ["azcopy", "copy", f"{blob_path}",
                            f"{output_path}", "--output-type=json"]
-        #used for test datasets where checksums don't match provided file
-        #, "--check-md5=NoCheck"
+        # used for test datasets where checksums don't match provided file
+        # , "--check-md5=NoCheck"
         copy_cmd = subprocess.run(az_copy_command, capture_output=True)
         return copy_cmd
 
@@ -172,7 +172,7 @@ if __name__ == "__main__":
     elif args.export_type == 'snapshot':
         logging.warning("Snapshot export not yet implemented")
         exit
-        #file_list = tdr_client.get_files_from_snapshot(
+        # file_list = tdr_client.get_files_from_snapshot(
         #    snapshot_id=args.target_id)
 
     download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
