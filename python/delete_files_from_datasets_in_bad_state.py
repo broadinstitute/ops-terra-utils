@@ -6,7 +6,7 @@ from utils.token_util import Token
 from utils import GCP
 from argparse import ArgumentParser, Namespace
 
-from utils.tdr_utils.tdr_utils import TDR
+from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_job_utils import MonitorTDRJob
 
 logging.basicConfig(

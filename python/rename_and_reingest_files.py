@@ -4,7 +4,7 @@ import os
 from argparse import ArgumentParser, Namespace
 from typing import Optional, Tuple
 
-from utils.tdr_utils.tdr_utils import TDR
+from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest, GetPermissionsForWorkspaceIngest
 from utils.token_util import Token
 from utils.request_util import RunRequest

@@ -6,7 +6,7 @@ from typing import Optional
 from datetime import datetime
 
 from utils import GCP
-from utils.tdr_utils.tdr_utils import TDR, FILE_INVENTORY_DEFAULT_SCHEMA
+from utils.tdr_utils.tdr_api_utils import TDR, FILE_INVENTORY_DEFAULT_SCHEMA
 from utils.tdr_utils.tdr_ingest_utils import (
     ConvertTerraTableInfoForIngest,
     FilterAndBatchIngest,

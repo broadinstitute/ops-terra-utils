@@ -6,11 +6,10 @@ from typing import Any, Optional, Union
 from urllib.parse import unquote
 from pydantic import ValidationError
 
-from utils.request_util import GET, POST, DELETE
-from utils.tdr_api_schema.create_dataset_schema import CreateDatasetSchema
-from utils.tdr_api_schema.update_dataset_schema import UpdateSchema
-
-from utils.tdr_utils.tdr_job_utils import MonitorTDRJob
+from python.utils.request_util import GET, POST, DELETE
+from python.utils.tdr_api_schema.create_dataset_schema import CreateDatasetSchema
+from python.utils.tdr_api_schema.update_dataset_schema import UpdateSchema
+from python.utils.tdr_utils.tdr_job_utils import MonitorTDRJob
 
 # Can be used when creating a new dataset
 FILE_INVENTORY_DEFAULT_SCHEMA = {

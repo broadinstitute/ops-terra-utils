@@ -2,7 +2,7 @@ import json
 import logging
 import time
 
-from utils.tdr_utils.tdr_utils import TDR
+from python.utils.tdr_utils.tdr_api_utils import TDR
 
 
 class MonitorTDRJob:
