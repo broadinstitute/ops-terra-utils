@@ -91,7 +91,6 @@ class DownloadAzBlob:
         file_exists = Path(output_path).exists()
         return file_exists
 
-
     def run(self, blob_path: str, output_path: str):
         self.get_new_sas_token()
         blob_path_with_token: str = f"{blob_path}?{self.sas_token['sas_token']}"
@@ -102,6 +101,7 @@ class DownloadAzBlob:
         job_logs = ParseAzCopyOutput().run(copy_logs=json_list)
         copy_completed = self.check_copy_completed_successfully(output_path)
         return copy_completed, job_logs
+
 
 class ParseAzCopyOutput:
 
@@ -114,7 +114,7 @@ class ParseAzCopyOutput:
             case 'Progress':
                 job_dict['LogType'] = 'Progress'
                 job_dict['Message'] = job_log['MessageContent']
-            case 'EndOfJob':               
+            case 'EndOfJob':
                 job_dict['LogType'] = 'EndOfJob'
                 job_dict['Message'] = job_log['MessageContent']
             case _:
@@ -124,12 +124,13 @@ class ParseAzCopyOutput:
     def run(self, copy_logs: list) -> dict:
         job_metadata = {}
         std_job_id = next((log['JobID'] for log in copy_logs if log.get('JobID')), None)
-        fallback_job_id = next((json.loads(log['MessageContent'])['JobID'] for log in copy_logs if isinstance(log['MessageContent'], dict)), None)
+        fallback_job_id = next((json.loads(log['MessageContent'])['JobID']
+                               for log in copy_logs if isinstance(log['MessageContent'], dict)), None)
         job_id = std_job_id if std_job_id else fallback_job_id
         job_metadata[job_id] = {}
-        for log in copy_logs:    
+        for log in copy_logs:
             if log['MessageType'] in ['Init', 'Progress', 'EndOfJob']:
-                log_info = self._get_copy_logs(log)                                        
+                log_info = self._get_copy_logs(log)
                 job_metadata[job_id][log['MessageType']] = log_info
         return job_metadata
 
@@ -158,7 +159,6 @@ def write_to_transfer_manifest(file_dict):
         writer.writerow(file_dict)
 
 
-
 if __name__ == "__main__":
     args = get_args()
     token = Token(cloud='gcp')
@@ -177,21 +177,21 @@ if __name__ == "__main__":
         #    snapshot_id=args.target_id)
 
     download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
-    for file in file_list[:10]:
+    for file in file_list:
         access_url = file["fileDetail"]["accessUrl"]
         download_path = f"/tmp/{Path(access_url).name}"
         file_download_completed, job_logs = download_client.run(
             blob_path=access_url, output_path=download_path)
         file_name = Path(access_url).name
-        md5 = next(checksum for checksum in file["checksums"] if checksum["type"] == "md5")            
+        md5 = next(checksum for checksum in file["checksums"] if checksum["type"] == "md5")
         gcp_upload_path = construct_upload_path(file, args)
         copy_info = {
-                "source_path": access_url,
-                "destination_path": gcp_upload_path,
-                "md5": md5["checksum"]                
-            }
+            "source_path": access_url,
+            "destination_path": gcp_upload_path,
+            "md5": md5["checksum"]
+        }
         if file_download_completed:
-            copy_info["download_completed_successfully"] = 'True'            
+            copy_info["download_completed_successfully"] = 'True'
             logging.info(f"Uploading {file_name} to {gcp_upload_path}")
             upload_blob = gcp_bucket.blob(gcp_upload_path)
             upload_blob.upload_from_filename(download_path)

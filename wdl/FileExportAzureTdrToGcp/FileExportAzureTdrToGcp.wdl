@@ -5,12 +5,16 @@ workflow FileExport{
         String export_type
         String target_id
         String bucket_id
+        String? bucket_output_path
+        Boolean? retain_path_structure
     }
-    
+
     call run_export {
-        input: export_type=export_type, 
+        input: export_type=export_type,
                 target_id=target_id,
-                bucket_id=bucket_id
+                bucket_id=bucket_id,
+                bucket_output_path=bucket_output_path,
+                retain_path_structure=retain_path_structure
     }
 }
 
@@ -19,13 +23,17 @@ task run_export{
         String export_type
         String target_id
         String bucket_id
+        String? bucket_output_path
+        Boolean? retain_path_structure
     }
 
     command <<<
         python /etc/terra_utils/azure_tdr_to_gcp_file_transfer.py \
         --export_type ~{export_type} \
         --target_id ~{target_id} \
-        --bucket_id ~{bucket_id}
+        --bucket_id ~{bucket_id} \
+        ~{"--bucket_ouput_path" + bucket_output_path} \
+        ~{if retain_path_structure then "--retain_path_structure" else ""}
     >>>
 
     runtime {
