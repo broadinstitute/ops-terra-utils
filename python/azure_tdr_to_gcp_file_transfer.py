@@ -137,7 +137,7 @@ class ParseAzCopyOutput:
 def construct_upload_path(file: dict, args: Namespace) -> str:
     file_name = Path(file['fileDetail']['accessUrl']).name
     if args.retain_path_structure:
-        gcp_upload_path = file["path"]
+        gcp_upload_path = file["path"].removeprefix('/')
     elif args.bucket_output_path:
         formatted_path = Path(args.bucket_output_path) / file_name
         gcp_upload_path = str(formatted_path)
@@ -176,7 +176,7 @@ if __name__ == "__main__":
         #    snapshot_id=args.target_id)
 
     download_client = DownloadAzBlob(export_info=export_info, tdr_client=tdr_client)
-    for file in file_list:
+    for file in file_list[:10]:
         access_url = file["fileDetail"]["accessUrl"]
         download_path = f"/tmp/{Path(access_url).name}"
         file_download_completed, job_logs = download_client.run(
