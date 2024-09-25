@@ -16,7 +16,7 @@ if __name__ == '__main__':
     formatted_args = []
     for k, v in input_json.items():
         param_name = k.split(".")[1]
-        if v in ["true", "false"]:
+        if v.lower() in ["true", "false"]:
             formatted_args.append(f"--{param_name}")
         else:
             formatted_args.append(f"--{param_name} {v}")

@@ -1,6 +1,7 @@
 {
-    "GCPWorkspaceToDatasetCreationAndIngest.billing_project": "String",
-    "GCPWorkspaceToDatasetCreationAndIngest.workspace_name": "String",
-    "GCPWorkspaceToDatasetCreationAndIngest.phs_id": "String",
-    "GCPWorkspaceToDatasetCreationAndIngest.bulk_mode": "Boolean"
+    "FileExportAzureTdrToGcp.export_type": "String",
+    "FileExportAzureTdrToGcp.target_id": "String",
+    "FileExportAzureTdrToGcp.bucket_id": "String",
+    "FileExportAzureTdrToGcp.bucket_output_path": "String",
+    "FileExportAzureTdrToGcp.retain_path_structure": "Boolean"
 }
