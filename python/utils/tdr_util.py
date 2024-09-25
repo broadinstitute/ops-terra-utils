@@ -216,7 +216,8 @@ class TDR:
         Args:
             dataset_id (str): The ID of the dataset.
             user (str): The email of the user to be added.
-            policy (str): The policy to be assigned to the user. Must be one of "steward", "custodian", or "snapshot_creator".
+            policy (str): The policy to be assigned to the user.
+                Must be one of "steward", "custodian", or "snapshot_creator".
 
         Raises:
             ValueError: If the policy is not valid.
@@ -545,7 +546,8 @@ class TDR:
             schema (dict): The schema of the dataset.
             description (str): The description of the dataset.
             cloud_platform (str): The cloud platform for the dataset.
-            additional_properties_dict (Optional[dict], optional): Additional properties for the dataset. Defaults to None.
+            additional_properties_dict (Optional[dict], optional): Additional properties
+                for the dataset. Defaults to None.
 
         Returns:
             str: The ID of the dataset.
@@ -593,7 +595,8 @@ class TDR:
             dataset_name (str): The name of the dataset.
             description (str): The description of the dataset.
             profile_id (str): The billing profile ID.
-            additional_dataset_properties (Optional[dict], optional): Additional properties for the dataset. Defaults to None.
+            additional_dataset_properties (Optional[dict], optional): Additional
+                properties for the dataset. Defaults to None.
 
         Returns:
             Optional[str]: The ID of the created dataset, or None if creation failed.
@@ -884,7 +887,8 @@ class ReformatMetricsForIngest:
             storage_container (Optional[str], optional): The storage container name. For Azure only. Defaults to None.
             sas_token_string (Optional[str], optional): The SAS token string for Azure. Defaults to None.
             file_list (bool, optional): Flag indicating if the input is a list of file paths. Defaults to False.
-            dest_file_path_flat (bool, optional): Flag indicating if the destination file path should be flattened. Defaults to False.
+            dest_file_path_flat (bool, optional): Flag indicating if the destination file path should
+                be flattened. Defaults to False.
             file_to_uuid_dict (Optional[dict], optional): A dictionary mapping file paths to UUIDs. Speeds up ingest
                 dramatically as it can skip uploading files or looking up file UUIDs in TDR. Defaults to None.
             schema_info (Optional[dict], optional): Schema information for the tables. Defaults to None.
@@ -966,8 +970,9 @@ class ReformatMetricsForIngest:
                         column_value = None  # type: ignore[assignment]
                         valid = False
                 else:
+                    source_path = f"{column_value}{self.sas_token_string}" if self.cloud_type == AZURE else column_value
                     source_dest_mapping = {
-                        "sourcePath": f"{column_value}{self.sas_token_string}" if self.cloud_type == AZURE else column_value,
+                        "sourcePath": source_path,
                         "targetPath": self._format_relative_tdr_path(column_value)
                     }
                     return source_dest_mapping, valid
@@ -1283,11 +1288,14 @@ class BatchIngest:
                 ingests so sas token can be created. Defaults to None.
             update_strategy (str, optional): The strategy for updating existing records. Defaults to "replace".
             waiting_time_to_poll (int, optional): The time to wait between polling for job status. Defaults to 60.
-            sas_expire_in_secs (int, optional): The expiration time for SAS tokens in seconds. Azure only. Defaults to 3600.
-            test_ingest (bool, optional): Flag indicating if only the first batch should be ingested for testing. Defaults to False.
+            sas_expire_in_secs (int, optional): The expiration time for SAS tokens in seconds.
+                Azure only. Defaults to 3600.
+            test_ingest (bool, optional): Flag indicating if only the first batch should be
+                ingested for testing. Defaults to False.
             load_tag (Optional[str], optional): A tag to identify the load. Used so future ingests
                 can pick up where left off. Defaults to None.
-            dest_file_path_flat (bool, optional): Flag indicating if the destination file path should be flattened. Defaults to False.
+            dest_file_path_flat (bool, optional): Flag indicating if the destination file
+                path should be flattened. Defaults to False.
             file_to_uuid_dict (Optional[dict], optional): A dictionary mapping file paths to UUIDs. If used
                 will make ingest much quicker since no ingest or look up of file needed. Defaults to None.
             schema_info (Optional[dict], optional): Schema information for the tables. Validates ingest data matches up
@@ -1485,7 +1493,8 @@ class InferTDRSchema:
         Check if all values for each header are of the same type.
 
         Args:
-            key_value_type_mappings (dict): A dictionary where the key is the header, and the value is a list of values for the header.
+            key_value_type_mappings (dict): A dictionary where the key is the header,
+                and the value is a list of values for the header.
 
         Raises:
             Exception: If types do not match for any header.
@@ -1564,7 +1573,8 @@ class InferTDRSchema:
         Generate the metadata for each column's header name, data type, and whether it's an array of values.
 
         Args:
-            key_value_type_mappings (dict): A dictionary where the key is the header, and the value is a list of values for the header.
+            key_value_type_mappings (dict): A dictionary where the key is the header,
+                and the value is a list of values for the header.
 
         Returns:
             list[dict]: A list of dictionaries containing column metadata.
