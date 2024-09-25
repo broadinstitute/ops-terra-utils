@@ -1,11 +1,13 @@
-from utils.tdr_util import TDR, MonitorTDRJob
+import logging
+import requests
+import re
 from utils.request_util import RunRequest
 from utils.token_util import Token
 from utils import GCP
 from argparse import ArgumentParser, Namespace
-import logging
-import requests
-import re
+
+from utils.tdr_utils.tdr_utils import TDR
+from utils.tdr_utils.tdr_job_utils import MonitorTDRJob
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -35,14 +37,15 @@ class DeleteFilesFromDatasetsInBadState:
         uuid_pattern = r'\b[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}\b'
         # Search for the first UUID in the text
         match = re.search(uuid_pattern, request_json['message'])
-        return match.group(0)  # Return the matched UUID as a string
+        # Return the matched UUID as a string
+        return match.group(0)  # type: ignore[union-attr]
 
-    def delete_file(self, file_id: str):
+    def delete_file(self, file_id: str) -> None:
         logging.info(f"Could not list all file because of file, {file_id}, in bad state. Attempting to delete file.")
         job_id = self.tdr.delete_file(file_id=file_id, dataset_id=self.dataset_id)
         MonitorTDRJob(tdr=self.tdr, job_id=job_id, check_interval=10).run()
 
-    def find_and_delete_files_in_bad_state(self):
+    def find_and_delete_files_in_bad_state(self) -> list:
         batch = 1
         offset = 0
         metadata: list = []
@@ -62,7 +65,8 @@ class DeleteFilesFromDatasetsInBadState:
                 self.delete_file(file_id=file_uuid)
                 logging.info("Attempting to retrieve same batch again after deletion")
 
-            # If there is a different status code or message does not include Directory entry refers to non-existent file
+            # If there is a different status code or message does not include Directory entry refers to
+            # non-existent file
             elif 300 <= response.status_code or response.status_code < 200:
                 logging.info(
                     "Failed to retrieve files with different status code " +

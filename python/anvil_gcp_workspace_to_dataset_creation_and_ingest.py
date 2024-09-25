@@ -6,14 +6,13 @@ from typing import Optional
 from datetime import datetime
 
 from utils import GCP
-from utils.tdr_util import (
-    TDR,
+from utils.tdr_utils.tdr_utils import TDR, FILE_INVENTORY_DEFAULT_SCHEMA
+from utils.tdr_utils.tdr_ingest_utils import (
     ConvertTerraTableInfoForIngest,
-    SetUpTDRTables,
-    GetPermissionsForWorkspaceIngest,
-    FILE_INVENTORY_DEFAULT_SCHEMA,
-    FilterAndBatchIngest
+    FilterAndBatchIngest,
+    GetPermissionsForWorkspaceIngest
 )
+from utils.tdr_utils.tdr_table_utils import SetUpTDRTables
 from utils.request_util import RunRequest
 from utils.token_util import Token
 from utils.terra_util import TerraWorkspace, Terra
