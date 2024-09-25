@@ -4,8 +4,11 @@ import logging
 from utils import GCP
 from utils.terra_util import TerraWorkspace
 from utils.tdr_utils.tdr_api_utils import TDR, FilterOutSampleIdsAlreadyInDataset
-from utils.tdr_utils.tdr_ingest_utils import ConvertTerraTableInfoForIngest, GetPermissionsForWorkspaceIngest
-from utils.tdr_utils.tdr_ingest_utils import BatchIngest
+from utils.tdr_utils.tdr_ingest_utils import (
+    ConvertTerraTableInfoForIngest,
+    GetPermissionsForWorkspaceIngest,
+    BatchIngest
+)
 from utils.tdr_utils.tdr_table_utils import SetUpTDRTables
 from utils.token_util import Token
 from utils.request_util import RunRequest
