@@ -1,8 +1,8 @@
 version 1.0
 
-workflow ExportDataFromSnapshotToBucket {
+workflow ExportDataFromDatasetToBucket {
     input {
-        String snapshot_id
+        String dataset_id
         String output_bucket
         String download_type
         Int? max_backoff_time
@@ -14,7 +14,7 @@ workflow ExportDataFromSnapshotToBucket {
 
     call CopyFilesFromSnapshotToBucket {
         input:
-            snapshot_id = snapshot_id,
+            dataset_id = dataset_id,
             output_bucket = output_bucket,
             download_type = download_type,
             max_backoff_time = max_backoff_time,
@@ -26,7 +26,7 @@ workflow ExportDataFromSnapshotToBucket {
 
 task CopyFilesFromSnapshotToBucket {
     input {
-        String snapshot_id
+        String dataset_id
         String output_bucket
         String download_type
         Int? max_backoff_time
@@ -36,7 +36,7 @@ task CopyFilesFromSnapshotToBucket {
 
     command <<<
         python /etc/terra_utils/export_data_from_snapshot_or_dataset.py \
-        --snapshot_id  ~{snapshot_id} \
+        --dataset_id  ~{dataset_id} \
         --output_bucket  ~{output_bucket} \
         --download_type  ~{download_type} \
         ~{"--max_retries " + max_retries} \

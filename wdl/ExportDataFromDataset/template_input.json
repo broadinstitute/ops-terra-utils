@@ -1,0 +1,5 @@
+{
+    "ExportDataFromSnapshotToBucket.dataset_id": "String",
+    "ExportDataFromSnapshotToBucket.output_bucket": "String",
+	"ExportDataFromSnapshotToBucket.download_type": "String"
+}
