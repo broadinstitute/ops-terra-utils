@@ -9,12 +9,15 @@ workflow FileExport{
         Boolean? retain_path_structure
     }
 
+
+    Boolean retain_path_structure_bool = select_first([retain_path_structure, false])
+
     call run_export {
         input: export_type=export_type,
                 target_id=target_id,
                 bucket_id=bucket_id,
                 bucket_output_path=bucket_output_path,
-                retain_path_structure=retain_path_structure
+                retain_path_structure=retain_path_structure_bool
     }
 }
 
@@ -24,7 +27,7 @@ task run_export{
         String target_id
         String bucket_id
         String? bucket_output_path
-        Boolean? retain_path_structure
+        Boolean retain_path_structure
     }
 
     command <<<
