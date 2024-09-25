@@ -20,7 +20,7 @@ from .terra_util import TerraWorkspace
 from . import GCP, AZURE  # import from __init__.py
 
 
-# Used when creating a new dataset
+# Can be used when creating a new dataset
 FILE_INVENTORY_DEFAULT_SCHEMA = {
     "tables": [
         {
@@ -75,55 +75,69 @@ FILE_INVENTORY_DEFAULT_SCHEMA = {
 
 
 class TDR:
+    """
+    A class to interact with the Terra Data Repository (TDR) API.
+
+    Attributes:
+        TDR_LINK (str): The base URL for the TDR API.
+        request_util (Any): Utility for making HTTP requests.
+    """
     TDR_LINK = "https://data.terra.bio/api/repository/v1"
 
     def __init__(self, request_util: Any):
+        """
+        Initialize the TDR class.
+
+        Args:
+            request_util (Any): Utility for making HTTP requests.
+        """
         self.request_util = request_util
 
     def get_data_set_files(self, dataset_id: str, limit: int = 1000) -> list[dict]:
-        """Get all files in a dataset. Azure seems like it has issues with batch query, so set to false for now for
-        Azure.
+        """
+        Get all files in a dataset.
 
-        Returns json like below:
-        {
-    "fileId": "cf198fcc-3564-46ad-b46f-8gbc3711a866",
-    "collectionId": "0d1c9aea-e935-4d25-83c3-8675f6aa062a",
-    "path": "/fc831123-5657-4c7d-b778-e30b4793321b/0000113c-e46c-4772-b2af-ef73a5c1aa32/SM-XXXXX.vcf.gz.md5sum",
-    "size": 34,
-    "checksums": [
-        {
-            "checksum": "g10e4e8e",
-            "type": "crc32c"
-        },
-        {
-            "checksum": "29bd10731cbfcf4cfabfff4cba063d9c",
-            "type": "md5"
-        }
-    ],
-    "created": "2024-07-27T17:26:09.724Z",
-    "description": null,
-    "fileType": "file",
-    "fileDetail": {
-        "datasetId": "0d1c9aea-e944-4d19-83c3-8675f6aa123a",
-        "mimeType": null,
-        "accessUrl": "gs://datarepo-34a4ac45-bucket/0d1c9aea-e944-4d19-83c3-8675f6aa062a/cf198fcc-3564-46ad-b73f-8bbc3711a866/SM-XXXXX.vcf.gz.md5sum",  # noqa: E501
-        "loadTag": "0d1c9aea-e944-4d19-83c3-8675f6aa123a"
-    },
-    "directoryDetail": null
-}
+        Args:
+            dataset_id (str): The ID of the dataset.
+            limit (int, optional): The maximum number of records to retrieve per batch. Defaults to 1000.
+
+        Returns:
+            list[dict]: A list of dictionaries containing the metadata of the files in the dataset.
         """
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files"
         logging.info(f"Getting all files in dataset {dataset_id}")
         return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
     def create_file_dict(self, dataset_id: str, limit: int = 20000) -> dict:
-        """Create a dictionary of all files in a dataset where key is the file uuid."""
+        """
+        Create a dictionary of all files in a dataset where the key is the file UUID.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            limit (int, optional): The maximum number of records to retrieve per batch. Defaults to 20000.
+
+        Returns:
+            dict: A dictionary where the key is the file UUID and the value is the file metadata.
+        """
         return {
             file_dict['fileId']: file_dict
             for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
         }
 
     def get_sas_token(self, snapshot_id: str = "", dataset_id: str = "") -> dict:
+        """
+        Get the SAS token for a snapshot or dataset.
+
+        Args:
+            snapshot_id (str, optional): The ID of the snapshot. Defaults to "".
+            dataset_id (str, optional): The ID of the dataset. Defaults to "".
+
+        Returns:
+            dict: A dictionary containing the SAS token and its expiry time.
+
+        Raises:
+            ValueError: If neither snapshot_id nor dataset_id is provided.
+        """
         if snapshot_id:
             uri = f"{self.TDR_LINK}/snapshots/{snapshot_id}?include=ACCESS_INFORMATION"
             response = self.request_util.run_request(uri=uri, method=GET)
@@ -144,7 +158,16 @@ class TDR:
         return {"sas_token": sas_token, "expiry_time": time_str}
 
     def delete_file(self, file_id: str, dataset_id: str) -> str:
-        """Delete a file from a dataset. Return delete job id"""
+        """
+        Delete a file from a dataset.
+
+        Args:
+            file_id (str): The ID of the file to be deleted.
+            dataset_id (str): The ID of the dataset.
+
+        Returns:
+            str: The job ID of the delete operation.
+        """
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files/{file_id}"
         response = self.request_util.run_request(uri=uri, method=DELETE)
         job_id = json.loads(response.text)['id']
@@ -152,8 +175,14 @@ class TDR:
         return job_id
 
     def delete_files(self, file_ids: list[str], dataset_id: str, batch_size_to_delete_files: int = 100) -> None:
-        """Delete multiple files from a dataset in batches and monitor delete jobs until completion for each batch.
-        Will submit batch of delete jobs, monitor all, and then proceed to next batch until all files are deleted."""
+        """
+        Delete multiple files from a dataset in batches and monitor delete jobs until completion for each batch.
+
+        Args:
+            file_ids (list[str]): A list of file IDs to be deleted.
+            dataset_id (str): The ID of the dataset.
+            batch_size_to_delete_files (int, optional): The number of files to delete per batch. Defaults to 100.
+        """
         logging.info(f"Deleting {len(file_ids)} files from dataset {dataset_id}")
         total_files = len(file_ids)
         job_ids = []
@@ -181,7 +210,18 @@ class TDR:
         logging.info(f"Successfully deleted {total_files} files from dataset {dataset_id}")
 
     def add_user_to_dataset(self, dataset_id: str, user: str, policy: str) -> None:
-        """Add user to dataset."""
+        """
+        Add a user to a dataset with a specified policy.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            user (str): The email of the user to be added.
+            policy (str): The policy to be assigned to the user.
+                Must be one of "steward", "custodian", or "snapshot_creator".
+
+        Raises:
+            ValueError: If the policy is not valid.
+        """
         if policy not in ["steward", "custodian", "snapshot_creator"]:
             raise ValueError(f"Policy {policy} is not valid. Must be READER, WRITER, or OWNER")
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/policies/{policy}/members"
@@ -194,7 +234,12 @@ class TDR:
         )
 
     def delete_dataset(self, dataset_id: str) -> None:
-        """Delete dataset."""
+        """
+        Delete a dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset to be deleted.
+        """
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}"
         logging.info(f"Deleting dataset {dataset_id}")
         response = self.request_util.run_request(uri=uri, method=DELETE)
@@ -202,7 +247,12 @@ class TDR:
         MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
 
     def delete_snapshot(self, snapshot_id: str) -> None:
-        """Delete snapshot."""
+        """
+        Delete a snapshot.
+
+        Args:
+            snapshot_id (str): The ID of the snapshot to be deleted.
+        """
         uri = f"{self.TDR_LINK}/snapshots/{snapshot_id}"
         logging.info(f"Deleting snapshot {snapshot_id}")
         response = self.request_util.run_request(uri=uri, method=DELETE)
@@ -212,7 +262,17 @@ class TDR:
     def _yield_existing_datasets(
             self, filter: Optional[str] = None, batch_size: int = 100, direction: str = "asc"
     ) -> Any:
-        """Get all datasets in TDR. Filter can be dataset name"""
+        """
+        Get all datasets in TDR, optionally filtered by dataset name.
+
+        Args:
+            filter (Optional[str]): A filter string to match dataset names. Defaults to None.
+            batch_size (int): The number of datasets to retrieve per batch. Defaults to 100.
+            direction (str): The direction to sort the datasets by creation date. Defaults to "asc".
+
+        Yields:
+            Any: A generator yielding datasets.
+        """
         offset = 0
         if filter:
             filter_str = f"&filter={filter}"
@@ -231,8 +291,17 @@ class TDR:
             break
 
     def check_if_dataset_exists(self, dataset_name: str, billing_profile: Optional[str]) -> list[dict]:
+        """
+        Check if a dataset exists by name and optionally by billing profile.
+
+        Args:
+            dataset_name (str): The name of the dataset to check.
+            billing_profile (Optional[str]): The billing profile ID to match. Defaults to None.
+
+        Returns:
+            list[dict]: A list of matching datasets.
+        """
         matching_datasets = []
-        # If exists then get dataset id
         for dataset in self._yield_existing_datasets(filter=dataset_name):
             if billing_profile:
                 if dataset["defaultProfileId"] == billing_profile:
@@ -250,7 +319,19 @@ class TDR:
         return matching_datasets
 
     def get_dataset_info(self, dataset_id: str, info_to_include: Optional[list[str]] = None) -> dict:
-        """Get dataset info"""
+        """
+        Get information about a dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            info_to_include (Optional[list[str]]): A list of additional information to include. Defaults to None.
+
+        Returns:
+            dict: A dictionary containing the dataset information.
+
+        Raises:
+            ValueError: If info_to_include contains invalid information types.
+        """
         acceptable_include_info = [
             "SCHEMA",
             "ACCESS_INFORMATION",
@@ -271,7 +352,16 @@ class TDR:
         return json.loads(response.text)
 
     def get_table_schema_info(self, dataset_id: str, table_name: str) -> Union[dict, None]:
-        """get schema information on one table within dataset"""
+        """
+        Get schema information for a specific table within a dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            table_name (str): The name of the table.
+
+        Returns:
+            Union[dict, None]: A dictionary containing the table schema information, or None if the table is not found.
+        """
         dataset_info = self.get_dataset_info(dataset_id=dataset_id, info_to_include=["SCHEMA"])
         for table in dataset_info["schema"]["tables"]:
             if table["name"] == table_name:
@@ -279,17 +369,34 @@ class TDR:
         return None
 
     def get_job_result(self, job_id: str) -> dict:
-        """retrieveJobResult"""
+        """
+        Retrieve the result of a job.
+
+        Args:
+            job_id (str): The ID of the job.
+
+        Returns:
+            dict: A dictionary containing the job result.
+        """
         uri = f"{self.TDR_LINK}/jobs/{job_id}/result"
         response = self.request_util.run_request(uri=uri, method=GET)
         return json.loads(response.text)
 
     def ingest_to_dataset(self, dataset_id: str, data: dict) -> dict:
-        """Load data into TDR with ingestDataset."""
+        """
+        Load data into a TDR dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            data (dict): The data to be ingested.
+
+        Returns:
+            dict: A dictionary containing the response from the ingest operation.
+        """
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/ingest"
         logging.info(
             "If recently added TDR SA to source bucket/dataset/workspace and you receive a 400/403 error, " +
-            "it can somtimes take up to 12/24 hours for permissions to propagate. Try rerunning the script later.")
+            "it can sometimes take up to 12/24 hours for permissions to propagate. Try rerunning the script later.")
         response = self.request_util.run_request(
             uri=uri,
             method=POST,
@@ -301,7 +408,17 @@ class TDR:
     def get_data_set_table_metrics(
             self, dataset_id: str, target_table_name: str, query_limit: int = 1000
     ) -> list[dict]:
-        """Use yield data_set_metrics and get all metrics returned in one list"""
+        """
+        Retrieve all metrics for a specific table within a dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            target_table_name (str): The name of the target table.
+            query_limit (int, optional): The maximum number of records to retrieve per batch. Defaults to 1000.
+
+        Returns:
+            list[dict]: A list of dictionaries containing the metrics for the specified table.
+        """
         return [
             metric
             for metric in self._yield_data_set_metrics(
@@ -312,7 +429,17 @@ class TDR:
         ]
 
     def _yield_data_set_metrics(self, dataset_id: str, target_table_name: str, query_limit: int = 1000) -> Any:
-        """Yield all entity metrics from dataset."""
+        """
+        Yield all entity metrics from a dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            target_table_name (str): The name of the target table.
+            query_limit (int, optional): The maximum number of records to retrieve per batch. Defaults to 1000.
+
+        Yields:
+            Any: A generator yielding dictionaries containing the metrics for the specified table.
+        """
         search_request = {
             "offset": 0,
             "limit": query_limit,
@@ -338,18 +465,44 @@ class TDR:
             search_request["offset"] += query_limit  # type: ignore[operator]
 
     def get_data_set_sample_ids(self, dataset_id: str, target_table_name: str, entity_id: str) -> list[str]:
-        """Get existing ids from dataset."""
+        """
+        Get existing IDs from a dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            target_table_name (str): The name of the target table.
+            entity_id (str): The entity ID to retrieve.
+
+        Returns:
+            list[str]: A list of entity IDs from the specified table.
+        """
         data_set_metadata = self._yield_data_set_metrics(dataset_id=dataset_id, target_table_name=target_table_name)
         return [str(sample_dict[entity_id]) for sample_dict in data_set_metadata]
 
     def get_job_status(self, job_id: str) -> requests.Response:
-        """retrieveJobStatus"""
-        # first check job status - retrieveJob
+        """
+        Retrieve the status of a job.
+
+        Args:
+            job_id (str): The ID of the job.
+
+        Returns:
+            requests.Response: The response object containing the job status.
+        """
         uri = f"{self.TDR_LINK}/jobs/{job_id}"
         response = self.request_util.run_request(uri=uri, method=GET)
         return response
 
     def get_data_set_file_uuids_from_metadata(self, dataset_id: str) -> list[str]:
+        """
+        Get all file UUIDs from the metadata of a dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+
+        Returns:
+            list[str]: A list of file UUIDs from the dataset metadata.
+        """
         data_set_info = self.get_dataset_info(dataset_id=dataset_id, info_to_include=["SCHEMA"])
         all_metadata_file_uuids = []
         tables = 0
@@ -384,6 +537,24 @@ class TDR:
             cloud_platform: str,
             additional_properties_dict: Optional[dict] = None
     ) -> str:
+        """
+        Get or create a dataset.
+
+        Args:
+            dataset_name (str): The name of the dataset.
+            billing_profile (str): The billing profile ID.
+            schema (dict): The schema of the dataset.
+            description (str): The description of the dataset.
+            cloud_platform (str): The cloud platform for the dataset.
+            additional_properties_dict (Optional[dict], optional): Additional properties
+                for the dataset. Defaults to None.
+
+        Returns:
+            str: The ID of the dataset.
+
+        Raises:
+            ValueError: If multiple datasets with the same name are found under the billing profile.
+        """
         existing_data_sets = self.check_if_dataset_exists(dataset_name, billing_profile)
         if existing_data_sets:
             if len(existing_data_sets) > 1:
@@ -415,7 +586,24 @@ class TDR:
             profile_id: str,
             additional_dataset_properties: Optional[dict] = None
     ) -> Optional[str]:
+        """
+        Create a new dataset.
 
+        Args:
+            schema (dict): The schema of the dataset.
+            cloud_platform (str): The cloud platform for the dataset.
+            dataset_name (str): The name of the dataset.
+            description (str): The description of the dataset.
+            profile_id (str): The billing profile ID.
+            additional_dataset_properties (Optional[dict], optional): Additional
+                properties for the dataset. Defaults to None.
+
+        Returns:
+            Optional[str]: The ID of the created dataset, or None if creation failed.
+
+        Raises:
+            ValueError: If the schema validation fails.
+        """
         dataset_properties = {
             "name": dataset_name,
             "description": description,
@@ -453,7 +641,22 @@ class TDR:
             relationships_to_add: Optional[list[dict]] = None,
             columns_to_add: Optional[list[dict]] = None
     ) -> Optional[str]:
-        """Update dataset schema."""
+        """
+        Update the schema of a dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            update_note (str): A note describing the update.
+            tables_to_add (Optional[list[dict]], optional): A list of tables to add. Defaults to None.
+            relationships_to_add (Optional[list[dict]], optional): A list of relationships to add. Defaults to None.
+            columns_to_add (Optional[list[dict]], optional): A list of columns to add. Defaults to None.
+
+        Returns:
+            Optional[str]: The ID of the updated dataset, or None if the update failed.
+
+        Raises:
+            ValueError: If the schema validation fails.
+        """
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/updateSchema"
         request_body: dict = {"description": f"{update_note}", "changes": {}}
         if tables_to_add:
@@ -481,9 +684,17 @@ class TDR:
             return dataset_id
 
     def _get_response_from_batched_endpoint(self, uri: str, limit: int = 1000) -> list[dict]:
-        """Helper method for all GET endpoints that require batching. Given the URI and the limit (optional), will
-        loop through batches until all metadata is retrieved. NOTE: when providing the URI, provide only the BASE
-        URI (i.e. without the query params for offset or limit)."""
+        """
+        Helper method for all GET endpoints that require batching. Given the URI and the limit (optional), will
+        loop through batches until all metadata is retrieved.
+
+        Args:
+            uri (str): The base URI for the endpoint (without query params for offset or limit).
+            limit (int, optional): The maximum number of records to retrieve per batch. Defaults to 1000.
+
+        Returns:
+            list[dict]: A list of dictionaries containing the metadata retrieved from the endpoint.
+        """
         batch = 1
         offset = 0
         metadata: list = []
@@ -503,20 +714,51 @@ class TDR:
         return metadata
 
     def get_files_from_snapshot(self, snapshot_id: str, limit: int = 1000) -> list[dict]:
-        """Returns all the metadata about files in a given snapshot. Not all files can be returned at once, so the API
-        is used repeatedly until all "batches" have been returned"""
+        """
+        Returns all the metadata about files in a given snapshot. Not all files can be returned at once, so the API
+        is used repeatedly until all "batches" have been returned.
+
+        Args:
+            snapshot_id (str): The ID of the snapshot.
+            limit (int, optional): The maximum number of records to retrieve per batch. Defaults to 1000.
+
+        Returns:
+            list[dict]: A list of dictionaries containing the metadata of the files in the snapshot.
+        """
         uri = f"{self.TDR_LINK}/snapshots/{snapshot_id}/files"
         return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
 
 class MonitorTDRJob:
+    """
+    A class to monitor the status of a TDR job until completion.
+
+    Attributes:
+        tdr (TDR): An instance of the TDR class.
+        job_id (str): The ID of the job to be monitored.
+        check_interval (int): The interval in seconds to wait between status checks.
+    """
+
     def __init__(self, tdr: TDR, job_id: str, check_interval: int):
+        """
+        Initialize the MonitorTDRJob class.
+
+        Args:
+            tdr (TDR): An instance of the TDR class.
+            job_id (str): The ID of the job to be monitored.
+            check_interval (int): The interval in seconds to wait between status checks.
+        """
         self.tdr = tdr
         self.job_id = job_id
         self.check_interval = check_interval
 
     def run(self) -> bool:
-        """Monitor ingest until completion."""
+        """
+        Monitor the job until completion.
+
+        Returns:
+            bool: True if the job succeeded, raises an error otherwise.
+        """
         while True:
             ingest_response = self.tdr.get_job_status(self.job_id)
             if ingest_response.status_code == 202:
@@ -541,6 +783,10 @@ class MonitorTDRJob:
 
 
 class StartAndMonitorIngest:
+    """
+    A class to start and monitor the ingestion of records into a TDR dataset.
+    """
+
     def __init__(
             self, tdr: TDR,
             ingest_records: list[dict],
@@ -551,6 +797,19 @@ class StartAndMonitorIngest:
             update_strategy: str,
             waiting_time_to_poll: int
     ):
+        """
+        Initialize the StartAndMonitorIngest class.
+
+        Args:
+            tdr (TDR): An instance of the TDR class.
+            ingest_records (list[dict]): The records to be ingested.
+            target_table_name (str): The name of the target table.
+            dataset_id (str): The ID of the dataset.
+            load_tag (str): A tag to identify the load.
+            bulk_mode (bool): Flag indicating if bulk mode should be used.
+            update_strategy (str): The strategy for updating existing records.
+            waiting_time_to_poll (int): The time to wait between polling for job status.
+        """
         self.tdr = tdr
         self.ingest_records = ingest_records
         self.target_table_name = target_table_name
@@ -561,7 +820,12 @@ class StartAndMonitorIngest:
         self.waiting_time_to_poll = waiting_time_to_poll
 
     def _create_ingest_dataset_request(self) -> Any:
-        """Create the ingestDataset request body."""
+        """
+        Create the ingestDataset request body.
+
+        Returns:
+            Any: The request body for ingesting the dataset.
+        """
         # https://support.terra.bio/hc/en-us/articles/23460453585819-How-to-ingest-and-update-TDR-data-with-APIs
         load_dict = {
             "format": "array",
@@ -575,6 +839,9 @@ class StartAndMonitorIngest:
         return json.dumps(load_dict)  # dict -> json
 
     def run(self) -> None:
+        """
+        Run the ingestion process and monitor the job until completion.
+        """
         ingest_request = self._create_ingest_dataset_request()
         logging.info(f"Starting ingest to {self.dataset_id}")
         ingest_response = self.tdr.ingest_to_dataset(dataset_id=self.dataset_id, data=ingest_request)
@@ -586,17 +853,18 @@ class StartAndMonitorIngest:
 
 
 class ReformatMetricsForIngest:
-    """Reformat metrics for ingest.
-    If file_list is True, then it is a list of file paths and formats differently assumes input json for that will be
-    like below or similar for azure:
+    """
+    Reformat metrics for ingest.
+    If file_list is True, then it is a list of file paths and formats differently. Assumes input JSON for that will be
+    like below or similar for Azure:
     {
-                "file_name": blob.name,
-                "file_path": f"gs://{self.bucket_name}/{blob.name}",
-                "content_type": blob.content_type or guess_type(blob.name)[0] or "application/octet-stream",
-                "file_extension": os.path.splitext(blob.name)[1],
-                "size_in_bytes": blob.size,
-                "md5_hash": blob.md5_hash
-            }
+        "file_name": blob.name,
+        "file_path": f"gs://{self.bucket_name}/{blob.name}",
+        "content_type": blob.content_type or guess_type(blob.name)[0] or "application/octet-stream",
+        "file_extension": os.path.splitext(blob.name)[1],
+        "size_in_bytes": blob.size,
+        "md5_hash": blob.md5_hash
+    }
     """
 
     def __init__(
@@ -610,6 +878,21 @@ class ReformatMetricsForIngest:
             file_to_uuid_dict: Optional[dict] = None,
             schema_info: Optional[dict] = None
     ):
+        """
+        Initialize the ReformatMetricsForIngest class.
+
+        Args:
+            ingest_metadata (list[dict]): The metadata to be ingested.
+            cloud_type (str): The type of cloud (GCP or AZURE).
+            storage_container (Optional[str], optional): The storage container name. For Azure only. Defaults to None.
+            sas_token_string (Optional[str], optional): The SAS token string for Azure. Defaults to None.
+            file_list (bool, optional): Flag indicating if the input is a list of file paths. Defaults to False.
+            dest_file_path_flat (bool, optional): Flag indicating if the destination file path should
+                be flattened. Defaults to False.
+            file_to_uuid_dict (Optional[dict], optional): A dictionary mapping file paths to UUIDs. Speeds up ingest
+                dramatically as it can skip uploading files or looking up file UUIDs in TDR. Defaults to None.
+            schema_info (Optional[dict], optional): Schema information for the tables. Defaults to None.
+        """
         self.file_list = file_list
         self.ingest_metadata = ingest_metadata
         self.cloud_type = cloud_type
@@ -618,28 +901,35 @@ class ReformatMetricsForIngest:
         self.workspace_storage_container = storage_container
         self.dest_file_path_flat = dest_file_path_flat
         self.file_to_uuid_dict = file_to_uuid_dict
-        # Used if you want to provide schema info for tables to make sure values match.
-        # Should be dict with key being column name and value being dict with datatype
         self.schema_info = schema_info
 
     def _add_file_ref(self, file_details: dict) -> None:
-        """Create file ref for ingest."""
+        """
+        Create file ref for ingest.
+
+        Args:
+            file_details (dict): The details of the file to be ingested.
+        """
         file_details["file_ref"] = {
             "sourcePath": file_details["path"],
-            # https://some_url.blob.core.windows.net/container_name/dir/file.txt
-            # Remove url and container name with. Result will be /dir/file.txt
             "targetPath": self._format_relative_tdr_path(file_details["path"]),
             "description": f"Ingest of {file_details['path']}",
             "mimeType": file_details["content_type"]
         }
 
     def _format_relative_tdr_path(self, cloud_path: str) -> str:
-        """Format cloud path to TDR path"""
+        """
+        Format cloud path to TDR path.
+
+        Args:
+            cloud_path (str): The cloud path to be formatted.
+
+        Returns:
+            str: The formatted TDR path.
+        """
         if self.cloud_type == GCP:
-            # Cloud path will be gs://bucket/path/to/file convert to /path/to/file
             relative_path = "/".join(cloud_path.split("/")[3:])
         else:
-            # Cloud path will be https://landing_zone/storage_account/path/to/file convert to /path/to/file
             split_path = cloud_path.split("/")
             file_path_storage_container = split_path[3]
             if file_path_storage_container != self.workspace_storage_container:
@@ -649,22 +939,25 @@ class ReformatMetricsForIngest:
                 )
             relative_path = "/".join(split_path[4:])
         if self.dest_file_path_flat:
-            return "/" + relative_path.replace(
-                "/", "_"
-            ).replace("#", "").replace("?", "")
+            return "/" + relative_path.replace("/", "_").replace("#", "").replace("?", "")
         else:
-            # Target paths in TDR must start with a leading slash
             return f"/{relative_path}"
 
     def _check_and_format_file_path(self, column_value: str) -> tuple[Any, bool]:
-        """Check if column value is a gs:// path and reformat to TDR's dataset relative path. if file_to_uuid_dict is
-        provided then it will add existing uuid. If file_to_uuid_dict provided and file not found then will warn and
-        return None"""
+        """
+        Check if column value is a gs:// path and reformat to dict with ingest information. If file_to_uuid_dict is
+        provided then it will add existing UUID. If file_to_uuid_dict provided and file not found then will warn and
+        return None.
+
+        Args:
+            column_value (str): The column value to be checked and formatted.
+
+        Returns:
+            tuple[Any, bool]: The formatted column value and a validity flag.
+        """
         valid = True
         if isinstance(column_value, str):
-            # If it is a file path then reformat to TDR's dataset relative path
             if column_value.startswith(self.file_prefix):
-                # If file to uuid provided then get uuid there
                 if self.file_to_uuid_dict:
                     uuid = self.file_to_uuid_dict.get(column_value)
                     if uuid:
@@ -677,16 +970,25 @@ class ReformatMetricsForIngest:
                         column_value = None  # type: ignore[assignment]
                         valid = False
                 else:
-                    # If azure sas token will be '?{sas_token}', if gcp it just be file path
+                    source_path = f"{column_value}{self.sas_token_string}" if self.cloud_type == AZURE else column_value
                     source_dest_mapping = {
-                        "sourcePath": f"{column_value}{self.sas_token_string}" if self.cloud_type == AZURE else column_value,  # noqa: E501
+                        "sourcePath": source_path,
                         "targetPath": self._format_relative_tdr_path(column_value)
                     }
                     return source_dest_mapping, valid
         return column_value, valid
 
     def _validate_and_update_column_for_schema(self, column_name: str, column_value: Any) -> tuple[str, bool]:
-        """Check if column matches what schema expects and attempt to update if not. Changes to string at the end"""
+        """
+        Check if column matches what schema expects and attempt to update if not. Changes to string at the end.
+
+        Args:
+            column_name (str): The name of the column.
+            column_value (Any): The value of the column.
+
+        Returns:
+            tuple[str, bool]: The validated and updated column value and a validity flag.
+        """
         valid = True
         if self.schema_info:
             if column_name in self.schema_info.keys():
@@ -730,30 +1032,30 @@ class ReformatMetricsForIngest:
                 if expected_data_type == "fileref" and not column_value.startswith(self.file_prefix):
                     valid = False
                     logging.warning(f"Column {column_name} with value {column_value} is not a file path")
-        # Ingest should be able to convert from string to correct format
         return str(column_value), valid
 
     def _reformat_metric(self, row_dict: dict) -> Optional[dict]:
-        """Reformat metric for ingest."""
+        """
+        Reformat metric for ingest.
+
+        Args:
+            row_dict (dict): The row dictionary to be reformatted.
+
+        Returns:
+            Optional[dict]: The reformatted row dictionary or None if invalid.
+        """
         reformatted_dict = {}
-        # Set to make sure row valid and should be included
         row_valid = True
-        #  If a specific file list is provided, then add file ref. Different than all other ingests
         if self.file_list:
             self._add_file_ref(row_dict)
             reformatted_dict = row_dict
         else:
-            # Go through each value in row and reformat if needed
             for key, value in row_dict.items():
-                # Ignore where there is no value. 0 is valid value
                 if value or value == 0:
-                    # If schema info passed in then check if column matches what
-                    # schema expect and attempt to update if not
                     if self.schema_info:
                         value, valid = self._validate_and_update_column_for_schema(key, value)
                         if not valid:
                             row_valid = False
-                    # If it is a list go through each item and recreate items in list
                     if isinstance(value, list):
                         updated_value_list = []
                         for item in value:
@@ -767,10 +1069,7 @@ class ReformatMetricsForIngest:
                         reformatted_dict[key] = update_value
                         if not valid:
                             row_valid = False
-        # add in timestamp
-        reformatted_dict["last_modified_date"] = datetime.now(
-            tz=pytz.UTC).strftime("%Y-%m-%dT%H:%M:%S")
-        # Only return if file list or row is valid
+        reformatted_dict["last_modified_date"] = datetime.now(tz=pytz.UTC).strftime("%Y-%m-%dT%H:%M:%S")
         if row_valid:
             return reformatted_dict
         else:
@@ -778,8 +1077,13 @@ class ReformatMetricsForIngest:
             return None
 
     def run(self) -> list[dict]:
+        """
+        Run the reformatting process for all metrics.
+
+        Returns:
+            list[dict]: A list of reformatted metrics.
+        """
         reformatted_metrics = []
-        # Do not do list comprehension as we need to check if row is valid based on what is returned
         for row_dict in self.ingest_metadata:
             reformatted_row = self._reformat_metric(row_dict)
             if reformatted_row:
@@ -788,18 +1092,41 @@ class ReformatMetricsForIngest:
 
 
 class SetUpTDRTables:
-    """dict of dicts containing table info list;
-    expected columns are table_name, primary_key,
-    ingest metadata, table_unique_id and key should be table name"""
+    """
+    A class to set up TDR tables by comparing and updating schemas.
+
+    Attributes:
+        tdr (TDR): An instance of the TDR class.
+        dataset_id (str): The ID of the dataset.
+        table_info_dict (dict): A dictionary containing table information.
+    """
 
     def __init__(self, tdr: TDR, dataset_id: str, table_info_dict: dict):
+        """
+        Initialize the SetUpTDRTables class.
+
+        Args:
+            tdr (TDR): An instance of the TDR class.
+            dataset_id (str): The ID of the dataset.
+            table_info_dict (dict): A dictionary containing table information.
+        """
         self.tdr = tdr
         self.dataset_id = dataset_id
         self.table_info_dict = table_info_dict
 
     @staticmethod
     def _compare_table(reference_dataset_table: dict, target_dataset_table: list[dict], table_name: str) -> list[dict]:
-        """Compare tables between two datasets."""
+        """
+        Compare tables between two datasets.
+
+        Args:
+            reference_dataset_table (dict): The reference dataset table schema.
+            target_dataset_table (list[dict]): The target dataset table schema.
+            table_name (str): The name of the table being compared.
+
+        Returns:
+            list[dict]: A list of columns that need to be updated.
+        """
         logging.info(f"Comparing table {reference_dataset_table['name']} to existing target table")
         columns_to_update = []
         # Convert target table to dict for easier comparison
@@ -825,6 +1152,16 @@ class SetUpTDRTables:
     def _compare_dataset_relationships(
             reference_dataset_relationships: dict, target_dataset_relationships: list
     ) -> list[dict]:
+        """
+        Compare dataset relationships between two datasets.
+
+        Args:
+            reference_dataset_relationships (dict): The reference dataset relationships.
+            target_dataset_relationships (list): The target dataset relationships.
+
+        Returns:
+            list[dict]: A list of relationships that need to be modified.
+        """
         dataset_relationships_to_modify = []
         for dataset in reference_dataset_relationships:
             if dataset not in target_dataset_relationships:
@@ -832,6 +1169,12 @@ class SetUpTDRTables:
         return dataset_relationships_to_modify
 
     def run(self) -> dict:
+        """
+        Run the setup process to ensure tables are created or updated as needed.
+
+        Returns:
+            dict: A dictionary with table names as keys and column information as values.
+        """
         data_set_info = self.tdr.get_dataset_info(dataset_id=self.dataset_id, info_to_include=["SCHEMA"])
         existing_tdr_table_schema_info = {
             table_dict["name"]: table_dict["columns"]
@@ -904,10 +1247,15 @@ class SetUpTDRTables:
 
 
 class BatchIngest:
+    """
+    A class to handle batch ingestion of metadata into TDR (Terra Data Repository).
+    """
+
     def __init__(
             self,
             ingest_metadata: list[dict],
-            tdr: TDR, target_table_name: str,
+            tdr: TDR,
+            target_table_name: str,
             dataset_id: str,
             batch_size: int,
             file_list_bool: bool,
@@ -924,6 +1272,36 @@ class BatchIngest:
             schema_info: Optional[dict] = None,
             skip_reformat: bool = False
     ):
+        """
+        Initialize the BatchIngest class.
+
+        Args:
+            ingest_metadata (list[dict]): The metadata to be ingested.
+            tdr (TDR): An instance of the TDR class.
+            target_table_name (str): The name of the target table.
+            dataset_id (str): The ID of the dataset.
+            batch_size (int): The size of each batch for ingestion.
+            file_list_bool (bool): Flag indicating if the input is a list of file paths.
+            bulk_mode (bool): Flag indicating if bulk mode should be used.
+            cloud_type (str): The type of cloud (GCP or AZURE).
+            terra_workspace (Optional[TerraWorkspace], optional): An instance of the TerraWorkspace class. Used for Azure
+                ingests so sas token can be created. Defaults to None.
+            update_strategy (str, optional): The strategy for updating existing records. Defaults to "replace".
+            waiting_time_to_poll (int, optional): The time to wait between polling for job status. Defaults to 60.
+            sas_expire_in_secs (int, optional): The expiration time for SAS tokens in seconds.
+                Azure only. Defaults to 3600.
+            test_ingest (bool, optional): Flag indicating if only the first batch should be
+                ingested for testing. Defaults to False.
+            load_tag (Optional[str], optional): A tag to identify the load. Used so future ingests
+                can pick up where left off. Defaults to None.
+            dest_file_path_flat (bool, optional): Flag indicating if the destination file
+                path should be flattened. Defaults to False.
+            file_to_uuid_dict (Optional[dict], optional): A dictionary mapping file paths to UUIDs. If used
+                will make ingest much quicker since no ingest or look up of file needed. Defaults to None.
+            schema_info (Optional[dict], optional): Schema information for the tables. Validates ingest data matches up
+                with schema info. Defaults to None.
+            skip_reformat (bool, optional): Flag indicating if reformatting should be skipped. Defaults to False.
+        """
         self.ingest_metadata = ingest_metadata
         self.tdr = tdr
         self.target_table_name = target_table_name
@@ -949,6 +1327,15 @@ class BatchIngest:
         self.skip_reformat = skip_reformat
 
     def _reformat_metadata(self, metrics_batch: list[dict]) -> list[dict]:
+        """
+        Reformat the metadata for ingestion based on the cloud type.
+
+        Args:
+            metrics_batch (list[dict]): A batch of metrics to be reformatted.
+
+        Returns:
+            list[dict]: The reformatted batch of metrics.
+        """
         if self.cloud_type == AZURE:
             sas_token = self.terra_workspace.retrieve_sas_token(  # type: ignore[union-attr]
                 sas_expiration_in_secs=self.sas_expire_in_secs)
@@ -976,6 +1363,9 @@ class BatchIngest:
             raise ValueError(f"Cloud type {self.cloud_type} not supported. Must be {GCP} or {AZURE}")
 
     def run(self) -> None:
+        """
+        Run the batch ingestion process.
+        """
         logging.info(
             f"Batching {len(self.ingest_metadata)} total rows into batches of {self.batch_size} for ingest")
         total_batches = len(self.ingest_metadata) // self.batch_size + 1
@@ -1017,31 +1407,45 @@ class ConvertTerraTableInfoForIngest:
     """Converts each row of table metadata into a dictionary that can be ingested into TDR.
 
     Input looks like
-[{
-  "attributes": {
-    "some_metric": 99.99,
-    "some_file_path": "gs://path/to/file",
-    "something_to_exclude": "exclude_me"
-  },
-  "entityType": "sample",
-  "name": "SM-MVVVV"
-}]
+    [{
+      "attributes": {
+        "some_metric": 99.99,
+        "some_file_path": "gs://path/to/file",
+        "something_to_exclude": "exclude_me"
+      },
+      "entityType": "sample",
+      "name": "SM-MVVVV"
+    }]
 
-converts to
+    converts to
 
-[{
-  "sample_id": "SM-MVVVV",
-  "some_metric": 99.99,
-  "some_file_path": "gs://path/to/file"
-}]
-"""
+    [{
+      "sample_id": "SM-MVVVV",
+      "some_metric": 99.99,
+      "some_file_path": "gs://path/to/file"
+    }]
+    """
 
     def __init__(self, table_metadata: list[dict], tdr_row_id: str = 'sample_id', columns_to_ignore: list[str] = []):
+        """
+        Initialize the ConvertTerraTableInfoForIngest class.
+
+        Args:
+            table_metadata (list[dict]): The metadata of the table to be converted.
+            tdr_row_id (str): The row ID to be used in the TDR. Defaults to 'sample_id'.
+            columns_to_ignore (list[str]): List of columns to ignore during conversion. Defaults to an empty list.
+        """
         self.table_metadata = table_metadata
         self.tdr_row_id = tdr_row_id
         self.columns_to_ignore = columns_to_ignore
 
     def run(self) -> list[dict]:
+        """
+        Convert the table metadata into a format suitable for TDR ingestion.
+
+        Returns:
+            list[dict]: A list of dictionaries containing the converted table metadata.
+        """
         return [
             {
                 self.tdr_row_id: row["name"],
@@ -1054,6 +1458,10 @@ converts to
 
 
 class InferTDRSchema:
+    """
+    A class to infer the schema for a table in TDR (Terra Data Repository) based on input metadata.
+    """
+
     PYTHON_TDR_DATA_TYPE_MAPPING = {
         str: "string",
         "fileref": "fileref",
@@ -1069,14 +1477,28 @@ class InferTDRSchema:
     }
 
     def __init__(self, input_metadata: list[dict], table_name: str):
+        """
+        Initialize the InferTDRSchema class.
+
+        Args:
+            input_metadata (list[dict]): The input metadata to infer the schema from.
+            table_name (str): The name of the table for which the schema is being inferred.
+        """
         self.input_metadata = input_metadata
         self.table_name = table_name
 
     @staticmethod
     def _check_type_consistency(key_value_type_mappings: dict) -> None:
-        """Receives a dictionary where the key is the header, and the value is a list of values
-        for the header. Checks if all values for a given header are of the same type. Doesn't return anything, but
-        raises an Exception if types do not match and provides the headers with types that are different"""
+        """
+        Check if all values for each header are of the same type.
+
+        Args:
+            key_value_type_mappings (dict): A dictionary where the key is the header,
+                and the value is a list of values for the header.
+
+        Raises:
+            Exception: If types do not match for any header.
+        """
         matching = []
 
         for header, values_for_header in key_value_type_mappings.items():
@@ -1101,6 +1523,15 @@ class InferTDRSchema:
                 f"Not all values for the following headers are of the same type: {problematic_headers}")
 
     def _python_type_to_tdr_type_conversion(self, value_for_header: Any) -> str:
+        """
+        Convert Python data types to TDR data types.
+
+        Args:
+            value_for_header (Any): The value to determine the TDR type for.
+
+        Returns:
+            str: The TDR data type.
+        """
         az_filref_regex = "^https.*sc-.*"
         gcp_fileref_regex = "^gs://.*"
 
@@ -1138,7 +1569,16 @@ class InferTDRSchema:
         return self.PYTHON_TDR_DATA_TYPE_MAPPING[type(value_for_header)]
 
     def _format_column_metadata(self, key_value_type_mappings: dict) -> list[dict]:
-        """Generates the metadata for each column's header name, data type, and whether it's an array of values"""
+        """
+        Generate the metadata for each column's header name, data type, and whether it's an array of values.
+
+        Args:
+            key_value_type_mappings (dict): A dictionary where the key is the header,
+                and the value is a list of values for the header.
+
+        Returns:
+            list[dict]: A list of dictionaries containing column metadata.
+        """
         columns = []
 
         for header, values_for_header in key_value_type_mappings.items():
@@ -1160,10 +1600,16 @@ class InferTDRSchema:
 
     @staticmethod
     def _gather_required_and_non_required_headers(metadata_df: Any, dataframe_headers: list[str]) -> list[dict]:
-        """Takes in the original dataframe and determines whether each header is required or not. A header is required
-        if all values are populated for that header. Otherwise, if some values are missing, or all values are missing,
-        it's not considered a required header."""
+        """
+        Determine whether each header is required or not.
 
+        Args:
+            metadata_df (Any): The original dataframe.
+            dataframe_headers (list[str]): A list of dataframe headers.
+
+        Returns:
+            list[dict]: A list of dictionaries containing header requirements.
+        """
         header_requirements = []
 
         na_replaced = metadata_df.replace({None: np.nan})
@@ -1182,9 +1628,15 @@ class InferTDRSchema:
 
     @staticmethod
     def _reformat_metadata(cleaned_metadata: list[dict]) -> dict:
-        """Creates a dictionary where the key is the header name, and the value is a list of all values for that header
-        using the newly cleaned data"""
+        """
+        Create a dictionary where the key is the header name, and the value is a list of all values for that header.
 
+        Args:
+            cleaned_metadata (list[dict]): The cleaned metadata.
+
+        Returns:
+            dict: A dictionary with header names as keys and lists of values as values.
+        """
         key_value_type_mappings = {}
         unique_headers = {key for row in cleaned_metadata for key in row}
 
@@ -1198,6 +1650,12 @@ class InferTDRSchema:
         return key_value_type_mappings
 
     def infer_schema(self) -> dict:
+        """
+        Infer the schema for the table based on the input metadata.
+
+        Returns:
+            dict: The inferred schema in TDR format.
+        """
         logging.info(f"Inferring schema for table {self.table_name}")
         # create the dataframe
         metadata_df = pd.DataFrame(self.input_metadata)
@@ -1238,11 +1696,27 @@ class InferTDRSchema:
 
 class GetPermissionsForWorkspaceIngest:
     def __init__(self, terra_workspace: TerraWorkspace, dataset_info: dict, added_to_auth_domain: bool = False):
+        """
+        Initialize the GetPermissionsForWorkspaceIngest class.
+
+        Args:
+            terra_workspace (TerraWorkspace): Instance of the TerraWorkspace class.
+            dataset_info (dict): Information about the dataset.
+            added_to_auth_domain (bool, optional): Flag indicating if the SA account
+                has been added to the auth domain. Defaults to False.
+        """
         self.terra_workspace = terra_workspace
         self.dataset_info = dataset_info
         self.added_to_auth_domain = added_to_auth_domain
 
     def run(self) -> None:
+        """
+        Ensure the dataset SA account has the necessary permissions on the Terra workspace.
+
+        This method updates the user ACL to make the SA account a reader on the Terra workspace.
+        It also checks if the workspace has an authorization domain and logs the
+        necessary steps to add the SA account to the auth domain.
+        """
         # Ensure dataset SA account is reader on Terra workspace.
         tdr_sa_account = self.dataset_info["ingestServiceAccount"]
         self.terra_workspace.update_user_acl(email=tdr_sa_account, access_level="READER")
@@ -1288,6 +1762,34 @@ class FilterAndBatchIngest:
             schema_info: Optional[dict] = None,
             terra_workspace: Optional[TerraWorkspace] = None
     ):
+        """
+        Initialize the FilterAndBatchIngest class.
+
+        Args:
+            tdr (TDR): Instance of the TDR class.
+            filter_existing_ids (bool): Whether to filter out sample IDs that already exist in the dataset.
+            unique_id_field (str): The unique ID field to filter on.
+            table_name (str): The name of the table to ingest data into.
+            ingest_metadata (list[dict]): The metadata to ingest.
+            dataset_id (str): The ID of the dataset.
+            file_list_bool (bool): Whether the ingest metadata is a list of files.
+            ingest_waiting_time_poll (int): The waiting time to poll for ingest status.
+            ingest_batch_size (int): The batch size for ingest.
+            bulk_mode (bool): Whether to use bulk mode for ingest.
+            cloud_type (str): The type of cloud (e.g., GCP, AZURE).
+            update_strategy (str): The update strategy to use.
+            load_tag (str): The load tag for the ingest. Used to make future ingests of same files go faster.
+            test_ingest (bool, optional): Whether to run a test ingest. Defaults to False.
+            dest_file_path_flat (bool, optional): Whether to flatten the destination file path. Defaults to False.
+            file_to_uuid_dict (Optional[dict], optional): A dictionary mapping files to UUIDs.
+                If supplied makes ingest run faster due to just linking to already ingested file UUID. Defaults to None.
+            sas_expire_in_secs (int, optional): The expiration time for SAS tokens in seconds.
+                Azure only. Defaults to 3600.
+            schema_info (Optional[dict], optional): Schema information for the tables.
+                Used to validate ingest metrics match. Defaults to None.
+            terra_workspace (Optional[TerraWorkspace], optional): Instance of the TerraWorkspace class.
+                Only used for azure ingests to get token. Defaults to None.
+        """
         self.tdr = tdr
         self.filter_existing_ids = filter_existing_ids
         self.unique_id_field = unique_id_field
@@ -1306,11 +1808,15 @@ class FilterAndBatchIngest:
         self.sas_expire_in_secs = sas_expire_in_secs
         self.terra_workspace = terra_workspace
         self.file_to_uuid_dict = file_to_uuid_dict
-        # Used if you want to provide schema info for tables to make sure values match.
-        # Should be dict with key being column name and value being dict with datatype
         self.schema_info = schema_info
 
     def run(self) -> None:
+        """
+        Run the filter and batch ingest process.
+
+        This method filters out sample IDs that already exist in the dataset (if specified),
+        and then performs a batch ingest of the remaining metadata into the specified table.
+        """
         if self.filter_existing_ids:
             # Filter out sample ids that are already in the dataset
             filtered_metrics = FilterOutSampleIdsAlreadyInDataset(
@@ -1353,6 +1859,16 @@ class FilterOutSampleIdsAlreadyInDataset:
             target_table_name: str,
             filter_entity_id: str
     ):
+        """
+        Initialize the FilterOutSampleIdsAlreadyInDataset class.
+
+        Args:
+            ingest_metrics (list[dict]): The metrics to be ingested.
+            dataset_id (str): The ID of the dataset.
+            tdr (TDR): Instance of the TDR class.
+            target_table_name (str): The name of the target table.
+            filter_entity_id (str): The entity ID to filter on.
+        """
         self.ingest_metrics = ingest_metrics
         self.tdr = tdr
         self.dataset_id = dataset_id
@@ -1360,6 +1876,12 @@ class FilterOutSampleIdsAlreadyInDataset:
         self.filter_entity_id = filter_entity_id
 
     def run(self) -> list[dict]:
+        """
+        Run the filter process to remove sample IDs that already exist in the dataset.
+
+        Returns:
+            list[dict]: The filtered ingest metrics.
+        """
         # Get all sample ids that already exist in dataset
         logging.info(
             f"Getting all {self.filter_entity_id} that already exist in table {self.target_table_name} in "
