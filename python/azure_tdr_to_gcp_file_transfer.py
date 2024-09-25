@@ -9,7 +9,7 @@ from datetime import datetime, timezone, timedelta
 from argparse import ArgumentParser, Namespace
 from typing import Union
 
-from utils.tdr_util import TDR
+from utils.tdr_utils.tdr_api_utils import TDR
 from utils.request_util import RunRequest
 from utils.token_util import Token
 
