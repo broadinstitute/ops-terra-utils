@@ -12,7 +12,7 @@ workflow ExportDataFromDatasetToBucket {
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
-    call CopyFilesFromSnapshotToBucket {
+    call CopyFilesFromDatasetToBucket {
         input:
             dataset_id = dataset_id,
             output_bucket = output_bucket,
@@ -24,7 +24,7 @@ workflow ExportDataFromDatasetToBucket {
 
 }
 
-task CopyFilesFromSnapshotToBucket {
+task CopyFilesFromDatasetToBucket {
     input {
         String dataset_id
         String output_bucket
