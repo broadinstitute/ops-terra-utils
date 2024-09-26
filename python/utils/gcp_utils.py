@@ -187,7 +187,8 @@ class GCPCloudFunctions:
             files_to_delete: list[str],
             workers: int = 5,
             max_retries: int = 3,
-            verbose: bool = False
+            verbose: bool = False,
+            job_complete_for_logging: int = 500
     ) -> None:
         """
         Delete multiple cloud files in parallel using multi-threading.
@@ -197,6 +198,7 @@ class GCPCloudFunctions:
             workers (int, optional): Number of worker threads. Defaults to 5.
             max_retries (int, optional): Maximum number of retries. Defaults to 3.
             verbose (bool, optional): Whether to log each job's success. Defaults to False.
+            job_complete_for_logging (int, optional): The number of jobs to complete before logging. Defaults to 500.
         """
         list_of_jobs_args_list = [[file_path] for file_path in files_to_delete]
 
@@ -207,7 +209,8 @@ class GCPCloudFunctions:
             max_retries=max_retries,
             fail_on_error=True,
             verbose=verbose,
-            collect_output=False
+            collect_output=False,
+            jobs_complete_for_logging=job_complete_for_logging
         )
 
     def validate_file_pair(self, source_file: str, full_destination_path: str) -> Optional[dict]:
@@ -230,7 +233,8 @@ class GCPCloudFunctions:
             files_to_validate: list[dict],
             log_difference: bool,
             workers: int = 5,
-            max_retries: int = 3
+            max_retries: int = 3,
+            job_complete_for_logging: int = 500
     ) -> list[dict]:
         """
         Validate if multiple cloud files are identical based on their MD5 hashes using multithreading.
@@ -241,6 +245,7 @@ class GCPCloudFunctions:
                                    this at the start of a copy/move operation to check if files are already copied.
             workers (int, optional): Number of worker threads. Defaults to 5.
             max_retries (int, optional): Maximum number of retries for all jobs. Defaults to 3.
+            job_complete_for_logging (int, optional): The number of jobs to complete before logging. Defaults to 500.
 
         Returns:
             list[Dict]: List of dictionaries containing files that are not identical.
@@ -256,7 +261,8 @@ class GCPCloudFunctions:
             function=self.validate_file_pair,
             list_of_jobs_args_list=jobs,
             collect_output=True,
-            max_retries=max_retries
+            max_retries=max_retries,
+            jobs_complete_for_logging=job_complete_for_logging
         )
 
         # If only here so linting will be happy
@@ -312,7 +318,12 @@ class GCPCloudFunctions:
         return None
 
     def move_or_copy_multiple_files(
-            self, files_to_move: list[dict], action: str, workers: int, max_retries: int, verbose: bool = False
+            self, files_to_move: list[dict],
+            action: str,
+            workers: int,
+            max_retries: int,
+            verbose: bool = False,
+            jobs_complete_for_logging: int = 500
     ) -> None:
         """
         Move or copy multiple files in parallel.
@@ -323,6 +334,7 @@ class GCPCloudFunctions:
             workers (int): Number of worker threads.
             max_retries (int): Maximum number of retries.
             verbose (bool, optional): Whether to log each job's success. Defaults to False.
+            jobs_complete_for_logging (int, optional): The number of jobs to complete before logging. Defaults to 500.
 
         Raises:
             Exception: If the action is not 'move' or 'copy'.
@@ -347,5 +359,6 @@ class GCPCloudFunctions:
             max_retries=max_retries,
             fail_on_error=True,
             verbose=verbose,
-            collect_output=False
+            collect_output=False,
+            jobs_complete_for_logging=jobs_complete_for_logging
         )
