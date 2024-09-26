@@ -10,7 +10,11 @@ COPY = "copy"
 
 
 class GCPCloudFunctions:
-    """List contents of a GCS bucket. Does NOT take in a token and auths as current user"""
+    """
+    A class to interact with Google Cloud Storage (GCS) for various file operations.
+    Authenticates using the default credentials and sets up the storage client.
+    Does NOT use Token class for authentication.
+    """
 
     def __init__(self) -> None:
         """
