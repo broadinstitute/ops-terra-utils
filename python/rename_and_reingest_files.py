@@ -304,6 +304,10 @@ class BatchCopyAndIngest:
                 max_retries=5
             )
 
+            logging.info(
+                f"Batch {batch_number} of {total_batches} batches being ingested to dataset. "
+                f"{len(ingest_metadata_batch)} total rows in current ingest."
+            )
             # Ingest renamed files into dataset
             StartAndMonitorIngest(
                 tdr=self.tdr,

@@ -83,13 +83,14 @@ class GCPCloudFunctions:
         logging.info(f"Found {len(file_list)} files in bucket")
         return file_list
 
-    def copy_cloud_file(self, src_cloud_path: str, full_destination_path: str) -> None:
+    def copy_cloud_file(self, src_cloud_path: str, full_destination_path: str, verbose: bool = False) -> None:
         """
         Copy a file from one GCS location to another.
 
         Args:
             src_cloud_path (str): The source GCS path.
             full_destination_path (str): The destination GCS path.
+            verbose (bool, optional): Whether to log progress. Defaults to False.
         """
         source_file_path_components = self.process_cloud_path(src_cloud_path)
         destination_file_path_components = self.process_cloud_path(full_destination_path)
@@ -109,7 +110,8 @@ class GCPCloudFunctions:
                 rewrite_token, bytes_rewritten, bytes_to_rewrite = dest_blob.rewrite(
                     src_blob, token=rewrite_token
                 )
-                print(f"{full_destination_path}: Progress so far: {bytes_rewritten}/{bytes_to_rewrite} bytes.")
+                if verbose:
+                    logging.info(f"{full_destination_path}: Progress so far: {bytes_rewritten}/{bytes_to_rewrite} bytes.")
                 if not rewrite_token:
                     break
 
