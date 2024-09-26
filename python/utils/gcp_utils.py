@@ -1,8 +1,7 @@
 import os
 import logging
 from mimetypes import guess_type
-
-from schema import Optional
+from typing import Optional
 
 from .thread_pool_executor_util import MultiThreadedJobs
 
