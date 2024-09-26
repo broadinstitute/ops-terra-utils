@@ -39,7 +39,8 @@ class MultiThreadedJobs:
             collect_output: bool = False,
             max_retries: int = 3,
             fail_on_error: bool = True,
-            verbose: bool = False
+            verbose: bool = False,
+            jobs_complete_for_logging: int = 500
     ) -> Optional[list[Any]]:
         """
         Run jobs in parallel and allow for retries. Optionally collect outputs of the jobs.
@@ -52,6 +53,7 @@ class MultiThreadedJobs:
             max_retries (int, optional): The maximum number of retries. Defaults to 3.
             fail_on_error (bool, optional): Whether to fail on error. Defaults to True.
             verbose (bool, optional): Whether to log each job's success. Defaults to False.
+            jobs_complete_for_logging (int, optional): The number of jobs to complete before logging. Defaults to 250.
 
         Returns:
             Optional[list[Any]]: A list of job results if `collect_output` is True, otherwise None.
@@ -76,7 +78,8 @@ class MultiThreadedJobs:
                     result = future.result()
                     if result or result is None:  # Successful result or no result (for jobs that don't return anything)
                         completed_jobs += 1
-                        if completed_jobs % 100 == 0:
+                        # Log progress every `jobs_complete_for_logging` jobs
+                        if completed_jobs % jobs_complete_for_logging == 0:
                             logging.info(f"Completed {completed_jobs}/{total_jobs} jobs")
                         # Log success for each job if verbose
                         if verbose:
