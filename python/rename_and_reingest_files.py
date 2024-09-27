@@ -127,9 +127,10 @@ class GetRowAndFileInfoForReingest:
         access_url = file_info["fileDetail"]["accessUrl"]
         # Get basename of file
         file_name = os.path.basename(access_url)
-        # Replace basename with new basename
+        file_safe_new_basename = new_basename.replace(" ", "_")
+        # Replace basename with new basename and replace spaces with underscores
         new_file_name = file_name.replace(
-            f'{og_basename}.', f'{new_basename}.')
+            f'{og_basename}.', f'{file_safe_new_basename}.')
         # get tdr path. Not real path, just the metadata
         tdr_file_path = file_info["path"]
         # Create full path to updated tdr metadata file path
