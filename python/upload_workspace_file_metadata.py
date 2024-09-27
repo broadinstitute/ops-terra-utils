@@ -20,23 +20,31 @@ def get_args() -> Namespace:
     search_options = parser.add_argument_group('Search Options', 'Modifiers to file search functionality')
     file_list_options = search_options.add_mutually_exclusive_group(required=False)
     file_list_options.add_argument("--extension_exclude_list", "-El", type=str,
-                                   help="list of file extensions to be excluded from data loaded into the file metadata table")
+                                   help="list of file extensions to be excluded from \
+                                    data loaded into the file metadata table")
     file_list_options.add_argument("--extension_include_list", "-Il", type=str,
-                                   help="list of file extensions to include in data loaded into the file metadata table, all other file extensions wil be ignored")
+                                   help="list of file extensions to include in \
+                                   data loaded into the file metadata table,\
+                                   all other file extensions wil be ignored")
     return parser.parse_args()
 
 
 def write_entities_tsv(file_dicts: list[dict]) -> None:
     headers = ['entity:file_metadata_id', 'file_path', 'file_name',
                'content_type', 'file_extension', 'size_in_bytes', 'md5_hash']
-    logging.info(f"writing file metadata to entities.tsv")
+    logging.info("writing file metadata to entities.tsv")
     with open('entities.tsv', 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=headers, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL)
         writer.writeheader()
         for file_dict in file_dicts:
             file_id = file_dict['path'].removeprefix("gs://").replace('/', '_')
-            formatted_dict = {'entity:file_metadata_id': file_id, "file_path": f"{file_dict['path']}", 'file_name': f"{file_dict['name']}", 'content_type': f"{file_dict['content_type']}",
-                              'file_extension': f"{file_dict['file_extension']}", 'size_in_bytes': f"{file_dict['size_in_bytes']}", 'md5_hash': f"{file_dict['md5_hash']}"}
+            formatted_dict = {'entity:file_metadata_id': file_id,
+                              "file_path": f"{file_dict['path']}",
+                              'file_name': f"{file_dict['name']}",
+                              'content_type': f"{file_dict['content_type']}",
+                              'file_extension': f"{file_dict['file_extension']}",
+                              'size_in_bytes': f"{file_dict['size_in_bytes']}",
+                              'md5_hash': f"{file_dict['md5_hash']}"}
             writer.writerow(formatted_dict)
 
 

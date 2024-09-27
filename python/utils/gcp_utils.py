@@ -43,8 +43,10 @@ class GCPCloudFunctions:
         }
         return path_components
 
-    def list_bucket_contents(self, bucket_name: str, file_extensions_to_ignore: list[str] = [],
-                             file_strings_to_ignore: list[str] = [], file_extensions_to_include: list[str] = []) -> list[dict]:
+    def list_bucket_contents(self, bucket_name: str,
+                             file_extensions_to_ignore: list[str] = [],
+                             file_strings_to_ignore: list[str] = [],
+                             file_extensions_to_include: list[str] = []) -> list[dict]:
         """
         List contents of a GCS bucket and return a list of dictionaries with file information.
 
