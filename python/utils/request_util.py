@@ -76,11 +76,22 @@ class RunRequest:
 
         return _make_request()
 
-    def create_headers(self, content_type: Optional[str] = None) -> dict:
+    def create_headers(self, content_type: Optional[str] = None, accept: Optional[str] = "application/json") -> dict:
         """Create headers for API calls."""
         self.token.get_token()
         headers = {"Authorization": f"Bearer {self.token.token_string}",
-                   "accept": "application/json"}
+                   "accept": accept}
         if content_type:
             headers["Content-Type"] = content_type
+        if accept:
+            headers["accept"] = accept
         return headers
+
+    def upload_file(self, uri: str, data: dict) -> str:
+        """Run Post request with files parameter."""
+        headers = self.create_headers(accept=None)
+        response = requests.post(uri, headers=headers, files=data)
+        if 300 <= response.status_code or response.status_code < 200:
+            print(response.text)
+            response.raise_for_status()  # Raise an exception for non-200 status codes
+        return response.text
