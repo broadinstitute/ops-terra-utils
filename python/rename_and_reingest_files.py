@@ -154,6 +154,9 @@ class GetRowAndFileInfoForReingest:
         # Get basename to replace
         og_basename = row_dict[self.og_file_basename_column]
         new_basename = row_dict[self.new_file_basename_column]
+        # If the new basename is the same as the old one, don't do anything
+        if og_basename == new_basename:
+            return None, None
         for column_name in row_dict:
             # Check if column is a fileref and cell is not empty
             if column_name in file_ref_columns and row_dict[column_name]:
