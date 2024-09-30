@@ -47,8 +47,10 @@ class GCPCloudFunctions:
         }
         return path_components
 
-    def list_bucket_contents(self, bucket_name: str, file_extensions_to_ignore: list[str] = [],
-                             file_strings_to_ignore: list[str] = []) -> list[dict]:
+    def list_bucket_contents(self, bucket_name: str,
+                             file_extensions_to_ignore: list[str] = [],
+                             file_strings_to_ignore: list[str] = [],
+                             file_extensions_to_include: list[str] = []) -> list[dict]:
         """
         List contents of a GCS bucket and return a list of dictionaries with file information.
 
@@ -56,6 +58,7 @@ class GCPCloudFunctions:
             bucket_name (str): The name of the GCS bucket.
             file_extensions_to_ignore (list[str], optional): List of file extensions to ignore. Defaults to [].
             file_strings_to_ignore (list[str], optional): List of file name substrings to ignore. Defaults to [].
+            file_extensions_to_include (list[str], optional): List of file extensions to include. Defaults to [].
 
         Returns:
             list[dict]: A list of dictionaries containing file information.
@@ -66,6 +69,9 @@ class GCPCloudFunctions:
         file_list = []
         for blob in blobs:
             if blob.name.endswith(tuple(file_extensions_to_ignore)):
+                logging.info(f"Skipping file {blob.name}")
+                continue
+            if file_extensions_to_include and not blob.name.endswith(tuple(file_extensions_to_include)):
                 logging.info(f"Skipping file {blob.name}")
                 continue
             if any(file_string in blob.name for file_string in file_strings_to_ignore):
