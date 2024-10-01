@@ -114,6 +114,8 @@ if __name__ == "__main__":
     )
     tdr = TDR(request_util=request_util)
 
+    #for table in
+
     # Get sample metrics from Terra
     sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name)
     logging.info(f"Got {len(sample_metrics)} samples")
