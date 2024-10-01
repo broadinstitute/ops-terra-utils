@@ -217,3 +217,12 @@ class TerraWorkspace:
             data=data
         )
         return response
+
+    def add_worklfow_to_workspace(self, workflow_json: dict) -> dict:
+        uri = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/methodconfigs"
+        response = self.request_util.run_request(
+            uri=uri,
+            method=POST,
+            data=workflow_json
+        )
+        return response
