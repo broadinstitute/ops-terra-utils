@@ -110,8 +110,8 @@ class WorkflowConfigs:
             "max_retries": "Int",
             "docker": "String"
         }
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FExportDataFromDatasetToBucket/main"  # mypy: disable-error-code="index"
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/ExportDataFromDatasetToBucket"  # mypy: disable-error-code="index"
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FExportDataFromDatasetToBucket/main"  # mypy: disable-error-code="index"  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/ExportDataFromDatasetToBucket"  # mypy: disable-error-code="index"  # noqa: E501
         return workflow_config
     """
 
