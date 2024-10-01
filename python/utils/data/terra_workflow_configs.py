@@ -57,8 +57,8 @@ class WorkflowConfigs:
             "max_retries": "Int",
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FAnvilGcpWorkspaceToDatasetCreationAndIngest/main"  # type: ignore[index]  # noqa: E501
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/AnvilGcpWorkspaceToDatasetCreationAndIngest"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FAnvilGcpWorkspaceToDatasetCreationAndIngestion/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/AnvilGcpWorkspaceToDatasetCreationAndIngestion"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
     def CopyDatasetToNewBillingProfile(self, billing_project: str) -> dict:
@@ -96,7 +96,6 @@ class WorkflowConfigs:
         workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/GetAndDeleteOrphanedFilesFromDataset"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
-    """
     def ExportDataFromDatasetToBucket(self, billing_project: str) -> dict:
         workflow_config = self.base_dict.copy()
         workflow_config["name"] = "ExportDataFromDatasetToBucket"
@@ -110,10 +109,9 @@ class WorkflowConfigs:
             "max_retries": "Int",
             "docker": "String"
         }
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FExportDataFromDatasetToBucket/main"  # mypy: disable-error-code="index"  # noqa: E501
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/ExportDataFromDatasetToBucket"  # mypy: disable-error-code="index"  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FExportDataFromDatasetToOutputBucket/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/ExportDataFromDatasetToOutputBucket"  # type: ignore[index]  # noqa: E501
         return workflow_config
-    """
 
     def ExportDataFromSnapshotToBucket(self, billing_project: str) -> dict:
         workflow_config = self.base_dict.copy()
@@ -129,8 +127,8 @@ class WorkflowConfigs:
             "docker": "String"
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FExportDataFromSnapshotToBucket/main"  # type: ignore[index]  # noqa: E501
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/ExportDataFromSnapshotToBucket"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FExportDataFromSnapshotToOutputBucket/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/ExportDataFromSnapshotToOutputBucket"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
     def FileExportAzureTdrToGcp(self, billing_project: str) -> dict:
@@ -215,6 +213,6 @@ class WorkflowConfigs:
             "docker": "String",
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FTerraWorkspaceTableIngest/main"  # type: ignore[index]  # noqa: E501
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/TerraWorkspaceTableIngest"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FTerraWorkspaceTableToTDRIngest/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/TerraWorkspaceTableToTDRIngest"  # type: ignore[index]  # noqa: E501
         return workflow_config
