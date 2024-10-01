@@ -1,6 +1,6 @@
 import logging
 import argparse
-from typing import Any, Optional
+from typing import Any
 from utils.terra_util import TerraWorkspace
 from utils.request_util import RunRequest
 from utils.token_util import Token
@@ -19,14 +19,14 @@ def get_args() -> argparse.Namespace:
         "--workflow_list",
         required=True,
         choices=WorkflowConfigs().list_workflows(),
-        help=f"Workflows to import into specified workspace. --workflow_list Workflow1 Workflow2 ...",
+        help="Workflows to import into specified workspace. --workflow_list Workflow1 Workflow2 ...",
         nargs='+'
     )
     return parser.parse_args()
 
 
 def workflow_already_in_workspace(workflow_name: str, workspace_workflows: list[dict]) -> Any:
-    return any(workflow_name == workflow['name'] for workflow in workspace_workflows if workflow['methodRepoMethod']['methodPath'] == f"github.com/broadinstitute/ops-terra-utils/{workflow_name}")
+    return any(workflow_name == workflow['name'] for workflow in workspace_workflows if workflow['methodRepoMethod']['methodPath'] == f"github.com/broadinstitute/ops-terra-utils/{workflow_name}")  # noqa: E501
 
 
 if __name__ == '__main__':
