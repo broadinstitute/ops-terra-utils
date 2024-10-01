@@ -218,11 +218,21 @@ class TerraWorkspace:
         )
         return response
 
-    def add_worklfow_to_workspace(self, workflow_json: dict) -> dict:
+    def get_workspace_workflows(self) -> dict:
+        uri = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/methodconfigs?allRepos=true"
+        response = self.request_util.run_request(
+            uri=uri,
+            method=GET
+        )
+        return response.json()
+
+    def import_workflow(self, workflow_dict: dict) -> dict:
         uri = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/methodconfigs"
+        workflow_json = json.dumps(workflow_dict)
         response = self.request_util.run_request(
             uri=uri,
             method=POST,
-            data=workflow_json
+            data=workflow_json,
+            content_type="application/json"
         )
         return response
