@@ -57,8 +57,8 @@ class WorkflowConfigs:
             "max_retries": "Int",
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FAnvilGcpWorkspaceToDatasetCreationAndIngest/main"  # mypy: disable-error-code="index"
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/AnvilGcpWorkspaceToDatasetCreationAndIngest"  # mypy: disable-error-code="index"
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FAnvilGcpWorkspaceToDatasetCreationAndIngest/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/AnvilGcpWorkspaceToDatasetCreationAndIngest"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
     def CopyDatasetToNewBillingProfile(self, billing_project: str) -> dict:
@@ -77,8 +77,8 @@ class WorkflowConfigs:
             "docker_name": "String"
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FCopyDatasetToNewBillingProfile/main"  # mypy: disable-error-code="index"
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/CopyDatasetToNewBillingProfile"  # mypy: disable-error-code="index"
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FCopyDatasetToNewBillingProfile/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/CopyDatasetToNewBillingProfile"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
     def DeleteBadStateFilesFromDataset(self, billing_project: str) -> dict:
@@ -92,8 +92,8 @@ class WorkflowConfigs:
             "docker": "String"
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FGetAndDeleteOrphanedFilesFromDataset/main"  # mypy: disable-error-code="index"
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/GetAndDeleteOrphanedFilesFromDataset"  # mypy: disable-error-code="index"
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FGetAndDeleteOrphanedFilesFromDataset/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/GetAndDeleteOrphanedFilesFromDataset"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
     """
@@ -129,8 +129,8 @@ class WorkflowConfigs:
             "docker": "String"
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FExportDataFromSnapshotToBucket/main"  # mypy: disable-error-code="index"
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/ExportDataFromSnapshotToBucket"  # mypy: disable-error-code="index"
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FExportDataFromSnapshotToBucket/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/ExportDataFromSnapshotToBucket"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
     def FileExportAzureTdrToGcp(self, billing_project: str) -> dict:
@@ -146,8 +146,8 @@ class WorkflowConfigs:
             "retain_path_structure": "Boolean",
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FFileExportAzureTdrToGcp/main"  # mypy: disable-error-code="index"
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/FileExportAzureTdrToGcp"  # mypy: disable-error-code="index"
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FFileExportAzureTdrToGcp/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/FileExportAzureTdrToGcp"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
     def GetAndDeleteOrphanedFilesFromDataset(self, billing_project: str) -> dict:
@@ -165,8 +165,8 @@ class WorkflowConfigs:
             "delete_orphaned_files": "Boolean"
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FGetAndDeleteOrphanedFilesFromDataset/main"  # mypy: disable-error-code="index"
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/GetAndDeleteOrphanedFilesFromDataset"  # mypy: disable-error-code="index"
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FGetAndDeleteOrphanedFilesFromDataset/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/GetAndDeleteOrphanedFilesFromDataset"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
     def RenameAndReingestFiles(self, billing_project: str) -> dict:
@@ -191,8 +191,8 @@ class WorkflowConfigs:
             "report_updates_only": "Boolean"
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FRenameAndReingestFiles/main"  # mypy: disable-error-code="index"
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/RenameAndReingestFiles"  # mypy: disable-error-code="index"
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FRenameAndReingestFiles/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/RenameAndReingestFiles"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
     def TerraWorkspaceTableIngest(self, billing_project: str) -> dict:
@@ -215,6 +215,6 @@ class WorkflowConfigs:
             "docker": "String",
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FTerraWorkspaceTableIngest/main"  # mypy: disable-error-code="index"
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/TerraWorkspaceTableIngest"  # mypy: disable-error-code="index"
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FTerraWorkspaceTableIngest/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/TerraWorkspaceTableIngest"  # type: ignore[index]  # noqa: E501
         return workflow_config
