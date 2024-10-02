@@ -5,9 +5,7 @@ workflow GCPWorkspaceToDatasetIngest {
         String billing_project
         String workspace_name
         String dataset_id
-        String terra_table_name
-        String? target_table_name
-        String primary_key_column_name
+        String terra_tables
         String? update_strategy
         String? records_to_ingest
         Boolean bulk_mode
@@ -23,9 +21,7 @@ workflow GCPWorkspaceToDatasetIngest {
             billing_project = billing_project,
             workspace_name = workspace_name,
             dataset_id = dataset_id,
-            terra_table_name = terra_table_name,
-            target_table_name = target_table_name,
-            primary_key_column_name = primary_key_column_name,
+            terra_tables = terra_tables,
             update_strategy = update_strategy,
             records_to_ingest = records_to_ingest,
             bulk_mode = bulk_mode,
@@ -40,9 +36,7 @@ task IngestWorkspaceDataToDataset {
         String billing_project
         String workspace_name
         String dataset_id
-        String terra_table_name
-        String? target_table_name
-        String primary_key_column_name
+        String terra_tables
         String? update_strategy
         String? records_to_ingest
         Boolean bulk_mode
@@ -56,9 +50,7 @@ task IngestWorkspaceDataToDataset {
         --billing_project  ~{billing_project} \
         --workspace_name  ~{workspace_name} \
         --dataset_id  ~{dataset_id} \
-        --terra_table_name  ~{terra_table_name} \
-        ~{"--target_table_name " + target_table_name} \
-        --primary_key_column_name  ~{primary_key_column_name} \
+        --terra_tables  ~{terra_tables} \
         ~{"--update_strategy " + update_strategy} \
         ~{if bulk_mode then "--bulk_mode" else ""} \
         ~{"--max_retries " + max_retries} \
