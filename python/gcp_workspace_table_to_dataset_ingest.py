@@ -110,13 +110,13 @@ if __name__ == "__main__":
         dataset_info=tdr.get_dataset_info(dataset_id=dataset_id),
         added_to_auth_domain=True,
     ).run()
+    entity_metrics = terra_workspace.get_workspace_entity_info()
 
     for terra_table_name in terra_tables:
         target_table_name = terra_table_name
 
         # Get sample metrics from Terra
         sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name)
-        entity_metrics = terra_workspace.get_workspace_entity_info()
         primary_key_column_name = entity_metrics[terra_table_name]["idName"]
         logging.info(f"Got {len(sample_metrics)} samples")
 
