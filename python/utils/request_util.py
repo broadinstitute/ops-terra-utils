@@ -44,8 +44,9 @@ class RunRequest:
             max_time=max_time
         )
 
-    def run_request(self, uri: str, method: str, data: Any = None, params: Optional[dict] = None,
-                    factor: int = 15, content_type: Optional[str] = None, accept_return_codes: list[int] = []) -> requests.Response:
+    def run_request(
+            self, uri: str, method: str, data: Any = None, params: Optional[dict] = None, factor: int = 15,
+            content_type: Optional[str] = None, accept_return_codes: list[int] = []) -> requests.Response:
         """
         Run an HTTP request with retries and backoff.
 

@@ -42,12 +42,12 @@ task hard_clone_terra_workspace {
 	command <<<
 		python /etc/terra_utils/hard_clone_workspace.py \
 		--source_billing_project ~{source_billing_project} \
-        --source_workspace_name ~{source_workspace_name} \
-        --dest_billing_project ~{dest_billing_project} \
-        --dest_workspace_name ~{dest_workspace_name} \
-        ~{if allow_already_created then "--allow_already_created" else ""} \
-        ~{"--workers " + workers} \
-        ~{"--extensions_to_ignore " + extensions_to_ignore}
+		--source_workspace_name ~{source_workspace_name} \
+		--dest_billing_project ~{dest_billing_project} \
+		--dest_workspace_name ~{dest_workspace_name} \
+		~{if allow_already_created then "--allow_already_created" else ""} \
+		~{"--workers " + workers} \
+		~{"--extensions_to_ignore " + extensions_to_ignore}
 	>>>
 
 	runtime {
