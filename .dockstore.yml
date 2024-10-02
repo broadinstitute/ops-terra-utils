@@ -55,3 +55,10 @@ workflows:
     readMePath: /wdl/ExportDataFromDataset/README.md
     testParameterFiles:
       - /wdl/ExportDataFromDataset/ExportDataFromDataset.wdl
+
+  - name: HardCloneWorkspace
+    subclass: WDL
+    primaryDescriptorPath: /wdl/HardCloneWorkspace/HardCloneWorkspace.wdl
+    readMePath: /wdl/HardCloneWorkspace/README.md
+    testParameterFiles:
+      - /wdl/HardCloneWorkspace/HardCloneWorkspace.wdl
