@@ -66,7 +66,6 @@ def get_args() -> argparse.Namespace:
              a large number of files (e.g. more than 10,000 files) at once. The performance does come at the cost of
              some safeguards (such as guaranteed rollbacks and potential recopying of files) and it also forces
              exclusive  locking of the dataset (i.e. you can’t run multiple ingests at once)"""
-
     )
     parser.add_argument(
         "--max_retries",
@@ -80,6 +79,17 @@ def get_args() -> argparse.Namespace:
         default=MAX_BACKOFF_TIME,
         help=f"""The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds
         if not provided"""
+    )
+    parser.add_argument(
+        "--filter_existing_ids",
+        action="store_true",
+        help=f"""Whether records that exist in the dataset should be re-ingested. Defaults to false"""
+    )
+    parser.add_argument(
+        "--batch_size",
+        required=False,
+        default=BATCH_SIZE,
+        help=f"""The number of rows to ingest at a time. Defaults to {BATCH_SIZE} if not provided"""
     )
 
     return parser.parse_args()
@@ -96,6 +106,8 @@ if __name__ == "__main__":
     bulk_mode = args.bulk_mode
     max_retries = args.max_retries
     max_backoff_time = args.max_backoff_time
+    filter_existing_ids = args.filter_existing_ids
+    batch_size = args.batch_size
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -133,7 +145,7 @@ if __name__ == "__main__":
                 metric for metric in updated_metrics if metric[primary_key_column_name] in records_to_ingest
             ]
 
-        if FILTER_EXISTING_IDS:
+        if filter_existing_ids:
             # Filter out sample ids that are already in the dataset
             filtered_metrics = FilterOutSampleIdsAlreadyInDataset(
                 ingest_metrics=updated_metrics,
@@ -162,7 +174,7 @@ if __name__ == "__main__":
             tdr=tdr,
             target_table_name=target_table_name,
             dataset_id=dataset_id,
-            batch_size=BATCH_SIZE,
+            batch_size=batch_size,
             bulk_mode=bulk_mode,
             cloud_type=CLOUD_TYPE,
             update_strategy=update_strategy,
