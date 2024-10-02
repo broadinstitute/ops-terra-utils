@@ -83,7 +83,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--filter_existing_ids",
         action="store_true",
-        help=f"""Whether records that exist in the dataset should be re-ingested. Defaults to false"""
+        help="Whether records that exist in the dataset should be re-ingested. Defaults to false"
     )
     parser.add_argument(
         "--batch_size",
