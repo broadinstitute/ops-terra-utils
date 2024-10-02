@@ -1,7 +1,7 @@
 {
     "HardCloneWorkspace.source_billing_project": "String",
     "HardCloneWorkspace.source_workspace_name": "String",
-	"HardCloneWorkspace.dest_billing_project": "String",
+    "HardCloneWorkspace.dest_billing_project": "String",
     "HardCloneWorkspace.dest_workspace_name": "String",
     "HardCloneWorkspace.allow_already_created": "Boolean"
 }
