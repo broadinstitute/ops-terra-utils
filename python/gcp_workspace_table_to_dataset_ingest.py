@@ -105,6 +105,12 @@ if __name__ == "__main__":
     )
     tdr = TDR(request_util=request_util)
 
+    GetPermissionsForWorkspaceIngest(
+        terra_workspace=terra_workspace,
+        dataset_info=tdr.get_dataset_info(dataset_id=dataset_id),
+        added_to_auth_domain=True,
+    ).run()
+
     for terra_table_name in terra_tables:
         target_table_name = terra_table_name
 
@@ -150,11 +156,6 @@ if __name__ == "__main__":
 
         }
         SetUpTDRTables(tdr=tdr, dataset_id=dataset_id, table_info_dict=table_info_dict).run()
-        GetPermissionsForWorkspaceIngest(
-            terra_workspace=terra_workspace,
-            dataset_info=tdr.get_dataset_info(dataset_id=dataset_id),
-            added_to_auth_domain=True,
-        ).run()
 
         BatchIngest(
             ingest_metadata=filtered_metrics,
