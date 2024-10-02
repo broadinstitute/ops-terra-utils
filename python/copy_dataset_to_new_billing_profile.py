@@ -1,7 +1,6 @@
 """Take in billing profile and dataset and recreate the dataset in a new billing profile."""
 import logging
 import sys
-import os
 from argparse import ArgumentParser, Namespace
 
 from utils.tdr_utils.tdr_api_utils import TDR
@@ -21,9 +20,9 @@ DEFAULT_BATCH_SIZE = 500
 
 def get_args() -> Namespace:
     parser = ArgumentParser(
-        description="""Copy dataset to new billing profile""")
-    parser.add_argument("--new_billing_profile", required=True)
-    parser.add_argument("--orig_dataset_id", required=True)
+        description="""This script will copy a dataset to a new billing profile""")
+    parser.add_argument("--new_billing_profile", "-nb", required=True)
+    parser.add_argument("--orig_dataset_id", "-od", required=True)
     parser.add_argument(
         "--ingest_batch_size",
         help=f"Batch size for ingest. Default to {DEFAULT_BATCH_SIZE}",
@@ -31,7 +30,7 @@ def get_args() -> Namespace:
     )
     parser.add_argument("--update_strategy", choices=["REPLACE", "APPEND", "UPDATE"], default="REPLACE")
     parser.add_argument(
-        "--new_dataset_name", required=True,
+        "--new_dataset_name", "-nd", required=True,
         help="Cannot be named the same as original dataset"
     )
     parser.add_argument(
@@ -51,23 +50,45 @@ def get_args() -> Namespace:
 
 
 def create_additional_properties(orig_dataset_info: dict) -> dict:
+    """
+    Create additional properties for the new dataset based on the original dataset information.
+
+    Args:
+        orig_dataset_info (dict): The original dataset information.
+
+    Returns:
+        dict: A dictionary containing additional properties for the new dataset.
+    """
     additional_properties = {
         "experimentalSelfHosted": False,
         "dedicatedIngestServiceAccount": True,
         "experimentalPredictableFileIds": False,
         "enableSecureMonitoring": True
     }
-    if orig_dataset_info['phsId']:
+    if orig_dataset_info.get('phsId'):
         additional_properties['phsId'] = orig_dataset_info['phsId']
-    if orig_dataset_info['tags']:
+    if orig_dataset_info.get('tags'):
         additional_properties['tags'] = orig_dataset_info['tags']
-    if orig_dataset_info['properties']:
+    if orig_dataset_info.get('properties'):
         additional_properties['properties'] = orig_dataset_info['properties']
     return additional_properties
 
 
 class CreateIngestRecords:
+    """
+    A class to create ingest records for a new dataset based on the original dataset information.
+    """
+
     def __init__(self, tdr: TDR, orig_dataset_id: str, table_schema_info: dict, orig_dataset_file_info: dict):
+        """
+        Initialize the CreateIngestRecords class.
+
+        Args:
+            tdr (TDR): An instance of the TDR class.
+            orig_dataset_id (str): The ID of the original dataset.
+            table_schema_info (dict): The schema information of the table.
+            orig_dataset_file_info (dict): The file information of the original dataset.
+        """
         self.tdr = tdr
         self.orig_dataset_id = orig_dataset_id
         self.table_schema_info = table_schema_info
@@ -75,11 +96,20 @@ class CreateIngestRecords:
 
     @staticmethod
     def _create_new_file_ref(file_details: dict) -> dict:
+        """
+        Create a new file reference dictionary based on the file details.
+
+        Args:
+            file_details (dict): The details of the file.
+
+        Returns:
+            dict: A dictionary containing the new file reference.
+        """
         file_ref_dict = {
             # source path is the full gs path to original file in TDR
             "sourcePath": file_details['fileDetail']['accessUrl'],
             # Keep the same target path
-            "targetPath": f"/new/{os.path.basename(file_details['fileDetail']['accessUrl'])}",
+            "targetPath": file_details['path'],
         }
         # Get md5 from file details
         md5_checksum = next(
@@ -94,6 +124,12 @@ class CreateIngestRecords:
         return file_ref_dict
 
     def run(self) -> list[dict]:
+        """
+        Run the process to create new ingest records for the new dataset.
+
+        Returns:
+            list[dict]: A list of dictionaries containing the new ingest records.
+        """
         # Get all file ref columns in table
         file_ref_columns = [
             col['name'] for col in self.table_schema_info['columns'] if col['datatype'] == 'fileref']
