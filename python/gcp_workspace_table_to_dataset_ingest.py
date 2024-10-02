@@ -110,7 +110,8 @@ if __name__ == "__main__":
 
         # Get sample metrics from Terra
         sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name)
-        primary_key_column_name = f"{terra_table_name}_id"
+        entity_metrics = terra_workspace.get_workspace_entity_info()
+        primary_key_column_name = entity_metrics[terra_table_name]["idName"]
         logging.info(f"Got {len(sample_metrics)} samples")
 
         # Convert sample dict into list of usable dicts for ingestion
