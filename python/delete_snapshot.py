@@ -18,7 +18,7 @@ CLOUD_TYPE = GCP
 
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Delete a snapshot in TDR")
-    parser.add_argument("--snapshot_id", required=True)
+    parser.add_argument("--snapshot_id", "-i", required=True)
     return parser.parse_args()
 
 
