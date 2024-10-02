@@ -1,4 +1,5 @@
 """Take in billing profile and dataset and recreate the dataset in a new billing profile."""
+import json
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
@@ -20,9 +21,9 @@ DEFAULT_BATCH_SIZE = 500
 
 def get_args() -> Namespace:
     parser = ArgumentParser(
-        description="""Copy dataset to a new billing profile. This script will copy a dataset to a new billing profile""")
-    parser.add_argument("--new_billing_profile", required=True)
-    parser.add_argument("--orig_dataset_id", required=True)
+        description="""This script will copy a dataset to a new billing profile""")
+    parser.add_argument("--new_billing_profile", "-nb", required=True)
+    parser.add_argument("--orig_dataset_id", "-od", required=True)
     parser.add_argument(
         "--ingest_batch_size",
         help=f"Batch size for ingest. Default to {DEFAULT_BATCH_SIZE}",
@@ -30,7 +31,7 @@ def get_args() -> Namespace:
     )
     parser.add_argument("--update_strategy", choices=["REPLACE", "APPEND", "UPDATE"], default="REPLACE")
     parser.add_argument(
-        "--new_dataset_name", required=True,
+        "--new_dataset_name", "-nd", required=True,
         help="Cannot be named the same as original dataset"
     )
     parser.add_argument(
