@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from utils import GCP
+from utils import GCP, comma_separated_list
 from utils.terra_util import TerraWorkspace
 from utils.tdr_utils.tdr_api_utils import TDR, FilterOutSampleIdsAlreadyInDataset
 from utils.tdr_utils.tdr_ingest_utils import (
@@ -28,10 +28,6 @@ MAX_BACKOFF_TIME = 5 * 60  # The maximum backoff time for a failed request
 TEST_INGEST = False  # Whether to test the ingest by just doing first batch
 # Filter for out rows where it already exists within the dataset
 FILTER_EXISTING_IDS = False
-
-
-def comma_separated_list(value: str) -> list:
-    return value.split(",")
 
 
 def get_args() -> argparse.Namespace:

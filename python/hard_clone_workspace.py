@@ -2,7 +2,7 @@ import logging
 from typing import Any
 from argparse import Namespace, ArgumentParser
 
-from utils import GCP
+from utils import GCP, comma_separated_list
 from utils.terra_util import TerraWorkspace
 from utils.request_util import RunRequest
 from utils.token_util import Token
@@ -26,7 +26,7 @@ def get_args() -> Namespace:
                         help="Allow the destination workspace to already exist")
     parser.add_argument('--workers', "-w", type=int, default=DEFAULT_WORKERS,
                         help="Number of workers to use when copying files")
-    parser.add_argument('--extensions_to_ignore', "-i", type=str,
+    parser.add_argument('--extensions_to_ignore', "-i", type=comma_separated_list,
                         help="comma separated list of file extensions to ignore when copying files")
     return parser.parse_args()
 
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     dest_workspace_name = args.dest_workspace_name
     allow_already_created = args.allow_already_created
     workers = args.workers
-    extensions_to_ignore = args.extensions_to_ignore.split(",") if args.extensions_to_ignore else None
+    extensions_to_ignore = args.extensions_to_ignore
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
