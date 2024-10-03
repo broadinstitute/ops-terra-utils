@@ -30,10 +30,6 @@ TEST_INGEST = False  # Whether to test the ingest by just doing first batch
 FILTER_EXISTING_IDS = False
 
 
-def comma_separated_list(value: str) -> list:
-    return value.split(",")
-
-
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Ingest data into an existing dataset from a GCP workspace")
