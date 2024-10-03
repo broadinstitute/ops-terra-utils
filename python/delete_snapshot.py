@@ -39,6 +39,7 @@ def delete_snapshots_in_batches(tdr: TDR, snapshot_ids: list[str], batch_size: i
     # Step 1: Group snapshots by dataset
     dataset_def_dict = defaultdict(list)  # Dictionary to group snapshots by dataset_id
 
+    # Create a dictionary with dataset IDs as keys and a list of snapshot IDs as values
     for snapshot_id in snapshot_ids:
         snapshot_info = tdr.get_snapshot_info(snapshot_id=snapshot_id, continue_not_found=True)
         if snapshot_info:
@@ -50,6 +51,7 @@ def delete_snapshots_in_batches(tdr: TDR, snapshot_ids: list[str], batch_size: i
 
     # Step 2: Build batches of snapshots with different dataset IDs
     snapshots_to_delete = []  # Final ordered list of snapshots for batch processing
+    # Loop until all no datasets are left with snapshots to delete
     while dataset_def_dict:
         current_batch: list[str] = []
         dataset_ids_to_remove = []
@@ -64,7 +66,8 @@ def delete_snapshots_in_batches(tdr: TDR, snapshot_ids: list[str], batch_size: i
             if not snapshots:
                 dataset_ids_to_remove.append(dataset_id)
 
-        # Remove empty dataset entries
+        # Remove empty dataset entries outside the loop to avoid
+        # modifying the dictionary during iteration
         for dataset_id in dataset_ids_to_remove:
             del dataset_def_dict[dataset_id]
 
