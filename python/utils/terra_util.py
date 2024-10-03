@@ -196,6 +196,14 @@ class TerraWorkspace:
             )
         return request_json
 
+    def put_metadata_for_library_dataset(self, library_metadata: dict, validate: bool = False) -> None:
+        acl = f"{self.TERRA_LINK}/library/{self.billing_project}/{self.workspace_name}/metadata?validate={str(validate).lower()}"
+        response = self.request_util.run_request(
+            uri=acl,
+            method=PUT,
+            data=json.dumps(library_metadata)
+        )
+
     def update_multiple_users_acl(self, acl_list: list[dict]) -> dict:
         """acl list should be a list of dictionaries with the following format:
         [{"email": "email", "accessLevel": "access_level", "canShare": "can_share", "canCompute": "can_compute"}]"""

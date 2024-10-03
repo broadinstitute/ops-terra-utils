@@ -1,4 +1,6 @@
+import json
 import logging
+import sys
 from typing import Any
 from argparse import Namespace, ArgumentParser
 
@@ -171,13 +173,14 @@ if __name__ == '__main__':
     src_auth_domain = src_workspace_info["workspace"]["authorizationDomain"]
     src_bucket = src_workspace_info["workspace"]["bucketName"]
 
-    # Removing library attributes from the source workspace attributes
-    # This is specific to published firecloud info which this does not support
-    src_attributes = {
-        k: v
-        for k, v in src_workspace_info["workspace"]["attributes"].items()
-        if not k.startswith('library:')
-    }
+    # Separate the source workspace attributes into src and library attributes
+    src_attributes = {}
+    library_attributes = {}
+    for k, v in src_workspace_info['workspace']['attributes'].items():
+        if k.startswith('library:'):
+            library_attributes[k] = v
+        else:
+            src_attributes[k] = v
 
     # Create the destination workspace
     dest_workspace.create_workspace(
@@ -185,6 +188,11 @@ if __name__ == '__main__':
         auth_domain=src_auth_domain,
         continue_if_exists=allow_already_created
     )
+
+    # Add the library attributes to the destination workspace if they exist
+    if library_attributes:
+        dest_workspace.put_metadata_for_library_dataset(library_metadata=library_attributes)
+
     dest_workspace_info = dest_workspace.get_workspace_info()
     dest_bucket = dest_workspace_info["workspace"]["bucketName"]
 

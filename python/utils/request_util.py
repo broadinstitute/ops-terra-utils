@@ -104,7 +104,8 @@ class RunRequest:
             elif method == PUT:
                 response = requests.put(
                     uri,
-                    headers=self.create_headers(content_type=content_type)
+                    headers=self.create_headers(content_type=content_type),
+                    data=data
                 )
             else:
                 raise ValueError(f"Method {method} is not supported")
