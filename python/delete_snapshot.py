@@ -25,9 +25,11 @@ def get_args() -> Namespace:
     input_group.add_argument("--snapshot_id", "-i")
     input_group.add_argument("--snapshot_id_file", "-f")
     parser.add_argument(
-        "--batch_size", "-b", default=BATCH_SIZE, type=int, help="Number of snapshots to delete at once if passing in file")
+        "--batch_size", "-b", default=BATCH_SIZE, type=int,
+        help="Number of snapshots to delete at once if passing in file")
     parser.add_argument(
-        "--check_interval", "-c", default=CHECK_INTERVAL, type=int, help="Time in seconds to check for deletion completion")
+        "--check_interval", "-c", default=CHECK_INTERVAL, type=int,
+        help="Time in seconds to check for deletion completion")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging for batching")
     return parser.parse_args()
 

@@ -1,6 +1,5 @@
 import json
 import logging
-from tabnanny import verbose
 
 import requests
 import re
