@@ -66,4 +66,4 @@ if __name__ == '__main__':
     workspace_files = GCPCloudFunctions().list_bucket_contents(bucket_name=gcp_bucket)
     logging.info(f"Found {len(workspace_files)} files in bucket")
     write_entities_tsv(workspace_files)
-    metadata_upload = workspace.upload_data_to_workspace_table(entities_tsv='entities.tsv')
+    metadata_upload = workspace.upload_metadata_to_workspace_table(entities_tsv='entities.tsv')

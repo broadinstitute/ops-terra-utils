@@ -68,7 +68,7 @@ class GCPCloudFunctions:
 
         file_list = []
         for blob in blobs:
-            if blob.name.endswith(tuple(file_extensions_to_ignore)):
+            if file_extensions_to_ignore and blob.name.endswith(tuple(file_extensions_to_ignore)):
                 logging.info(f"Skipping file {blob.name}")
                 continue
             if file_extensions_to_include and not blob.name.endswith(tuple(file_extensions_to_include)):

@@ -3,6 +3,8 @@ import logging
 from typing import Any, Optional
 from urllib.parse import urlparse
 
+from . import GCP
+
 from .request_util import GET, POST, PATCH, PUT
 
 
@@ -68,7 +70,7 @@ class TerraWorkspace:
         """Get workspace info."""
         url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}"
         logging.info(
-            f"Getting workspace ID for {self.billing_project}/{self.workspace_name}")
+            f"Getting workspace info for {self.billing_project}/{self.workspace_name}")
         response = self.request_util.run_request(uri=url, method=GET)
         return json.loads(response.text)
 
@@ -159,6 +161,14 @@ class TerraWorkspace:
         response = self.request_util.run_request(uri=url, method=GET)
         return json.loads(response.text)
 
+    def get_workspace_acl(self) -> dict:
+        url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl"
+        response = self.request_util.run_request(
+            uri=url,
+            method=GET
+        )
+        return response.json()
+
     def update_user_acl(
             self, email: str, access_level: str, can_share: bool = False, can_compute: bool = False
     ) -> dict:
@@ -186,6 +196,67 @@ class TerraWorkspace:
             )
         return request_json
 
+    def put_metadata_for_library_dataset(self, library_metadata: dict, validate: bool = False) -> None:
+        acl = f"{self.TERRA_LINK}/library/{self.billing_project}/{self.workspace_name}" + \
+              f"/metadata?validate={str(validate).lower()}"
+        self.request_util.run_request(
+            uri=acl,
+            method=PUT,
+            data=json.dumps(library_metadata)
+        )
+
+    def update_multiple_users_acl(self, acl_list: list[dict]) -> dict:
+        """acl list should be a list of dictionaries with the following format:
+        [{"email": "email", "accessLevel": "access_level", "canShare": "can_share", "canCompute": "can_compute"}]"""
+        url = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl"
+        logging.info(
+            f"Updating users in workspace {self.billing_project}/{self.workspace_name}")
+        response = self.request_util.run_request(
+            uri=url,
+            method=PATCH,
+            content_type="application/json",
+            data=json.dumps(acl_list)
+        )
+        return response.json()
+
+    def create_workspace(
+        self, auth_domain: list[dict] = [], attributes: dict = {},
+        continue_if_exists: bool = False, cloud_platform: str = GCP
+    ) -> Optional[dict]:
+        """
+        Create a new workspace in Terra.
+
+        Args:
+            auth_domain (list[dict], optional): A list of authorization domains. Should look
+                like [{"membersGroupName": "some_auth_domain"}]. Defaults to an empty list.
+            attributes (dict, optional): A dictionary of attributes for the workspace. Defaults to an empty dictionary.
+            continue_if_exists (bool, optional): Whether to continue if the workspace already exists. Defaults to False.
+            cloud_platform (str, optional): The cloud platform for the workspace. Defaults to GCP.
+
+        Returns:
+            dict: The response from the Terra API containing the workspace details.
+        """
+        payload = {
+            "namespace": self.billing_project,
+            "name": self.workspace_name,
+            "authorizationDomain": auth_domain,
+            "attributes": attributes,
+            "cloudPlatform": cloud_platform
+        }
+        # If workspace already exists then continue if exists
+        accept_return_codes = [409] if continue_if_exists else []
+        logging.info(f"Creating workspace {self.billing_project}/{self.workspace_name}")
+        response = self.request_util.run_request(
+            uri=f"{self.TERRA_LINK}/workspaces",
+            method=POST,
+            content_type="application/json",
+            data=json.dumps(payload),
+            accept_return_codes=accept_return_codes
+        )
+        if continue_if_exists and response.status_code == 409:
+            logging.info(f"Workspace {self.billing_project}/{self.workspace_name} already exists")
+        return response.json()
+
     def create_workspace_attributes_ingest_dict(self, workspace_attributes: Optional[dict] = None) -> list[dict]:
         """Create ingest dictionary for workspace attributes. If attributes passed in should JUST be attributes
         and not whole workspace info."""
@@ -209,7 +280,7 @@ class TerraWorkspace:
             )
         return ingest_dict
 
-    def upload_data_to_workspace_table(self, entities_tsv: str) -> str:
+    def upload_metadata_to_workspace_table(self, entities_tsv: str) -> str:
         endpoint = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/flexibleImportEntities"
         data = {"entities": open(entities_tsv, "rb")}
         response = self.request_util.upload_file(
