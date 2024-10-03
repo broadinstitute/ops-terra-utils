@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from ..request_util import GET, POST, DELETE
 from ..tdr_api_schema.create_dataset_schema import CreateDatasetSchema
 from ..tdr_api_schema.update_dataset_schema import UpdateSchema
-from .tdr_job_utils import MonitorTDRJob
+from .tdr_job_utils import MonitorTDRJob, SubmitAndMonitorMultipleJobs
 
 # Can be used when creating a new dataset
 FILE_INVENTORY_DEFAULT_SCHEMA = {
@@ -165,7 +165,12 @@ class TDR:
         logging.info(f"Submitted delete job {job_id} for file {file_id}")
         return job_id
 
-    def delete_files(self, file_ids: list[str], dataset_id: str, batch_size_to_delete_files: int = 100) -> None:
+    def delete_files(
+            self,
+            file_ids: list[str],
+            dataset_id: str,
+            batch_size_to_delete_files: int = 100,
+            check_interval: int = 15) -> None:
         """
         Delete multiple files from a dataset in batches and monitor delete jobs until completion for each batch.
 
@@ -173,32 +178,15 @@ class TDR:
             file_ids (list[str]): A list of file IDs to be deleted.
             dataset_id (str): The ID of the dataset.
             batch_size_to_delete_files (int, optional): The number of files to delete per batch. Defaults to 100.
+            check_interval (int, optional): The interval in seconds to wait between status checks. Defaults to 15.
         """
-        logging.info(f"Deleting {len(file_ids)} files from dataset {dataset_id}")
-        total_files = len(file_ids)
-        job_ids = []
-
-        # Process files in batches
-        for i in range(0, total_files, batch_size_to_delete_files):
-            current_batch = file_ids[i:i + batch_size_to_delete_files]
-            logging.info(
-                f"Submitting delete jobs for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} "
-                f"files."
-            )
-
-            # Submit delete jobs for the current batch
-            for file_id in current_batch:
-                job_id = self.delete_file(file_id=file_id, dataset_id=dataset_id)
-                job_ids.append(job_id)
-            # Monitor delete jobs for the current batch
-            logging.info(f"Monitoring {len(current_batch)} delete jobs in batch {i // batch_size_to_delete_files + 1}")
-            for job_id in job_ids:
-                MonitorTDRJob(tdr=self, job_id=job_id, check_interval=5).run()
-            logging.info(
-                f"Completed deletion for batch {i // batch_size_to_delete_files + 1} with {len(current_batch)} files."
-            )
-
-        logging.info(f"Successfully deleted {total_files} files from dataset {dataset_id}")
+        SubmitAndMonitorMultipleJobs(
+            tdr=self,
+            job_function=self.delete_file,
+            job_args_list=[(file_id, dataset_id) for file_id in file_ids],
+            batch_size=batch_size_to_delete_files,
+            check_interval=check_interval
+        ).run()
 
     def add_user_to_dataset(self, dataset_id: str, user: str, policy: str) -> None:
         """
@@ -237,7 +225,45 @@ class TDR:
         job_id = response.json()['id']
         MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
 
-    def delete_snapshot(self, snapshot_id: str) -> None:
+    def get_snapshot_info(self, snapshot_id: str, continue_not_found: bool = False) -> dict:
+        """
+        Get information about a snapshot.
+
+        Args:
+            snapshot_id (str): The ID of the snapshot.
+            continue_not_found (bool, optional): Whether to accept a 404 response. Defaults to False.
+
+        Returns:
+            dict: A dictionary containing the snapshot information.
+        """
+        acceptable_return_code = [404, 403] if continue_not_found else []
+        uri = f"{self.TDR_LINK}/snapshots/{snapshot_id}"
+        response = self.request_util.run_request(uri=uri, method=GET, accept_return_codes=acceptable_return_code)
+        if response.status_code == 404:
+            logging.warning(f"Snapshot {snapshot_id} not found")
+            return {}
+        if response.status_code == 403:
+            logging.warning(f"Access denied for snapshot {snapshot_id}")
+            return {}
+        return json.loads(response.text)
+
+    def delete_snapshots(self, snapshot_ids: list[str], batch_size: int = 25, check_interval: int = 10) -> None:
+        """
+        Delete multiple snapshots.
+
+        Args:
+            snapshot_ids (list[str]): A list of snapshot IDs to be deleted.
+            batch_size (int, optional): The number of snapshots to delete per batch. Defaults to 25.
+            check_interval (int, optional): The interval in seconds to wait between status checks. Defaults to 10.
+        """
+        SubmitAndMonitorMultipleJobs(
+            tdr=self,
+            job_function=self.delete_snapshot,
+            job_args_list=[(snapshot_id,) for snapshot_id in snapshot_ids],
+            batch_size=batch_size
+        ).run()
+
+    def delete_snapshot(self, snapshot_id: str) -> str:
         """
         Delete a snapshot.
 
@@ -248,7 +274,7 @@ class TDR:
         logging.info(f"Deleting snapshot {snapshot_id}")
         response = self.request_util.run_request(uri=uri, method=DELETE)
         job_id = response.json()['id']
-        MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
+        return job_id
 
     def _yield_existing_datasets(
             self, filter: Optional[str] = None, batch_size: int = 100, direction: str = "asc"
