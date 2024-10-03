@@ -1,5 +1,7 @@
 import json
 import logging
+from tabnanny import verbose
+
 import requests
 import re
 from typing import Any, Optional, Union
@@ -247,7 +249,12 @@ class TDR:
             return {}
         return json.loads(response.text)
 
-    def delete_snapshots(self, snapshot_ids: list[str], batch_size: int = 25, check_interval: int = 10) -> None:
+    def delete_snapshots(
+            self,
+            snapshot_ids: list[str],
+            batch_size: int = 25,
+            check_interval: int = 10,
+            verbose: bool = False) -> None:
         """
         Delete multiple snapshots.
 
@@ -255,12 +262,15 @@ class TDR:
             snapshot_ids (list[str]): A list of snapshot IDs to be deleted.
             batch_size (int, optional): The number of snapshots to delete per batch. Defaults to 25.
             check_interval (int, optional): The interval in seconds to wait between status checks. Defaults to 10.
+            verbose (bool, optional): Whether to log detailed information about each job. Defaults to False.
         """
         SubmitAndMonitorMultipleJobs(
             tdr=self,
             job_function=self.delete_snapshot,
             job_args_list=[(snapshot_id,) for snapshot_id in snapshot_ids],
-            batch_size=batch_size
+            batch_size=batch_size,
+            check_interval=check_interval,
+            verbose=verbose
         ).run()
 
     def delete_snapshot(self, snapshot_id: str) -> str:

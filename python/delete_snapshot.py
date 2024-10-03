@@ -15,6 +15,8 @@ logging.basicConfig(
 )
 
 CLOUD_TYPE = GCP
+BATCH_SIZE = 10
+CHECK_INTERVAL = 5
 
 
 def get_args() -> Namespace:
@@ -22,74 +24,90 @@ def get_args() -> Namespace:
     input_group = parser.add_mutually_exclusive_group(required=True)
     input_group.add_argument("--snapshot_id", "-i")
     input_group.add_argument("--snapshot_id_file", "-f")
+    parser.add_argument(
+        "--batch_size", "-b", default=BATCH_SIZE, type=int, help="Number of snapshots to delete at once if passing in file")
+    parser.add_argument(
+        "--check_interval", "-c", default=CHECK_INTERVAL, type=int, help="Time in seconds to check for deletion completion")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging for batching")
     return parser.parse_args()
 
 
-def delete_snapshots_in_batches(tdr: TDR, snapshot_ids: list[str], batch_size: int = 10, check_interval: int = 5) -> None:
-    """
-    Delete snapshots in batches, ensuring that snapshots from the same dataset are not batched together.
+class DeleteSnapshots:
+    def __init__(self, tdr: TDR, snapshot_ids: list[str], batch_size: int, check_interval: int, verbose: bool):
+        self.tdr = tdr
+        self.snapshot_ids = snapshot_ids
+        self.batch_size = batch_size
+        self.check_interval = check_interval
+        self.verbose = verbose
 
-    Args:
-        tdr: TDR instance for interacting with TDR.
-        snapshot_ids (list[str]): List of snapshot IDs to delete.
-        batch_size (int, optional): Number of snapshots to delete per batch. Defaults to 10.
-        check_interval (int, optional): Interval between job status checks. Defaults to 5 seconds.
-    """
-    # Step 1: Group snapshots by dataset
-    dataset_def_dict = defaultdict(list)  # Dictionary to group snapshots by dataset_id
+    def _create_default_dict(self) -> defaultdict:
+        dataset_def_dict = defaultdict(list)  # Dictionary to group snapshots by dataset_id
 
-    # Create a dictionary with dataset IDs as keys and a list of snapshot IDs as values
-    for snapshot_id in snapshot_ids:
-        snapshot_info = tdr.get_snapshot_info(snapshot_id=snapshot_id, continue_not_found=True)
-        if snapshot_info:
-            for source_dict in snapshot_info['source']:
-                # Check if the source is a dataset
-                if 'dataset' in source_dict:
-                    dataset_id = source_dict['dataset']['id']
-                    dataset_def_dict[dataset_id].append(snapshot_id)
+        # Create a dictionary with dataset IDs as keys and a list of snapshot IDs as values
+        for snapshot_id in self.snapshot_ids:
+            snapshot_info = self.tdr.get_snapshot_info(snapshot_id=snapshot_id, continue_not_found=True)
+            if snapshot_info:
+                for source_dict in snapshot_info['source']:
+                    # Check if the source is a dataset
+                    if 'dataset' in source_dict:
+                        dataset_id = source_dict['dataset']['id']
+                        dataset_def_dict[dataset_id].append(snapshot_id)
+        return dataset_def_dict
 
-    # Step 2: Build batches of snapshots with different dataset IDs
-    snapshots_to_delete = []  # Final ordered list of snapshots for batch processing
-    # Loop until all no datasets are left with snapshots to delete
-    while dataset_def_dict:
-        current_batch: list[str] = []
-        dataset_ids_to_remove = []
+    def _create_batches_to_delete(self, dataset_default_dict: defaultdict) -> list[list[str]]:
+        # Final ordered list of snapshots for batch processing
+        snapshots_to_delete = []
+        # Loop until all no datasets are left with snapshots to delete
+        while dataset_default_dict:
+            current_batch: list[str] = []
+            dataset_ids_to_remove = []
 
-        for dataset_id, snapshots in dataset_def_dict.items():
-            if len(current_batch) >= batch_size:
-                break  # Stop adding to batch if we reach the batch size
+            for dataset_id, snapshots in dataset_default_dict.items():
+                if len(current_batch) >= self.batch_size:
+                    break  # Stop adding to batch if we reach the batch size
 
-            # Add one snapshot from the current dataset to the batch
-            current_batch.append(snapshots.pop(0))
-            # Mark dataset to remove if there are no more snapshots left
-            if not snapshots:
-                dataset_ids_to_remove.append(dataset_id)
+                # Add one snapshot from the current dataset to the batch
+                current_batch.append(snapshots.pop(0))
+                # Mark dataset to remove if there are no more snapshots left
+                if not snapshots:
+                    dataset_ids_to_remove.append(dataset_id)
 
-        # Remove empty dataset entries outside the loop to avoid
-        # modifying the dictionary during iteration
-        for dataset_id in dataset_ids_to_remove:
-            del dataset_def_dict[dataset_id]
+            # Remove empty dataset entries outside the loop to avoid
+            # modifying the dictionary during iteration
+            for dataset_id in dataset_ids_to_remove:
+                del dataset_default_dict[dataset_id]
 
-        # Add the batch to the final list
-        snapshots_to_delete.append(current_batch)
+            # Add the batch to the final list
+            snapshots_to_delete.append(current_batch)
+        return snapshots_to_delete
 
-    # Step 3: Submit and monitor batches
-    for batch in snapshots_to_delete:
-        logging.info(f"Deleting batch of {len(batch)} snapshots: {batch}")
-        tdr.delete_snapshots(
-            check_interval=check_interval,
-            batch_size=batch_size,
-            snapshot_ids=batch
-        )
-        logging.info(f"Completed deletion of batch: {batch}")
+    def _run_batch_deletes(self, snapshots_batches_to_delete: list[list[str]]) -> None:
+        for batch in snapshots_batches_to_delete:
+            snapshot_str = ', '.join(batch)
+            logging.info(f"Deleting batch of {len(batch)} snapshots: \n{snapshot_str}")
+            self.tdr.delete_snapshots(
+                check_interval=self.check_interval,
+                batch_size=self.batch_size,
+                snapshot_ids=batch,
+                verbose=self.verbose
+            )
+            logging.info(f"Completed deletion of batch: {batch}")
 
-    logging.info("Successfully deleted all snapshots.")
+        logging.info("Successfully deleted all snapshots.")
+
+    def run(self) -> None:
+        dataset_default_dict = self._create_default_dict()
+        snapshot_batches_to_delete = self._create_batches_to_delete(dataset_default_dict)
+        self._run_batch_deletes(snapshot_batches_to_delete)
 
 
 if __name__ == '__main__':
     args = get_args()
     snapshot_id = args.snapshot_id
     snap_shot_id_file = args.snapshot_id_file
+    batch_size = args.batch_size
+    check_interval = args.check_interval
+    verbose = args.verbose
 
     token = Token(cloud=CLOUD_TYPE)
     request_util = RunRequest(token=token)
@@ -97,8 +115,14 @@ if __name__ == '__main__':
 
     if snapshot_id:
         job_id = tdr.delete_snapshot(snapshot_id=snapshot_id)
-        MonitorTDRJob(tdr=tdr, job_id=job_id, check_interval=5).run()
+        MonitorTDRJob(tdr=tdr, job_id=job_id, check_interval=check_interval).run()
     else:
         with open(snap_shot_id_file) as file:
             snapshot_ids = [line.strip() for line in file]
-        delete_snapshots_in_batches(tdr=tdr, snapshot_ids=snapshot_ids, batch_size=2, check_interval=5)
+        DeleteSnapshots(
+            tdr=tdr,
+            snapshot_ids=snapshot_ids,
+            batch_size=batch_size,
+            check_interval=check_interval,
+            verbose=verbose
+        ).run()
