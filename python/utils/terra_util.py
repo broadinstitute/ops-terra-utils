@@ -271,7 +271,7 @@ class TerraWorkspace:
             )
         return ingest_dict
 
-    def upload_data_to_workspace_table(self, entities_tsv: str) -> str:
+    def upload_metadata_to_workspace_table(self, entities_tsv: str) -> str:
         endpoint = f"{self.TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/flexibleImportEntities"
         data = {"entities": open(entities_tsv, "rb")}
         response = self.request_util.upload_file(

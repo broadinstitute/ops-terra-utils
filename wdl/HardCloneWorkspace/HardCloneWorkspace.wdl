@@ -1,6 +1,6 @@
 version 1.0
 
-workflow hard_clone_terra_workspace {
+workflow HardCloneTerraWorkspace {
     input {
 		String source_billing_project
 		String source_workspace_name
@@ -14,7 +14,7 @@ workflow hard_clone_terra_workspace {
 
 	String docker = select_first([docker_name, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
-	call hard_clone_terra_workspace {
+	call HardCloneTerraWorkspaceTask {
 		input:
 			source_billing_project=source_billing_project,
 			source_workspace_name=source_workspace_name,
@@ -27,7 +27,7 @@ workflow hard_clone_terra_workspace {
 	}
 }
 
-task hard_clone_terra_workspace {
+task HardCloneTerraWorkspaceTask {
 	input {
 		String source_billing_project
         String source_workspace_name

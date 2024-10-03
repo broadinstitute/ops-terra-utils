@@ -13,6 +13,8 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
+DEFAULT_WORKERS = 10
+
 
 def get_args() -> Namespace:
     parser = ArgumentParser(description='Clone a Terra workspace')
@@ -22,7 +24,7 @@ def get_args() -> Namespace:
     parser.add_argument('--dest_workspace_name', "-dn", type=str, required=True)
     parser.add_argument('--allow_already_created', "-a", action="store_true",
                         help="Allow the destination workspace to already exist")
-    parser.add_argument('--workers', "-w", type=int, default=10,
+    parser.add_argument('--workers', "-w", type=int, default=DEFAULT_WORKERS,
                         help="Number of workers to use when copying files")
     parser.add_argument('--extensions_to_ignore', "-i", type=str,
                         help="comma separated list of file extensions to ignore when copying files")
@@ -195,7 +197,7 @@ if __name__ == '__main__':
 
     for tsv in tsvs_to_upload:
         logging.info(f"Uploading {tsv} to destination workspace")
-        dest_workspace.upload_data_to_workspace_table(entities_tsv=tsv)
+        dest_workspace.upload_metadata_to_workspace_table(entities_tsv=tsv)
 
     CopyFilesToDestWorkspace(
         src_bucket=src_bucket,
