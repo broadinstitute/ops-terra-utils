@@ -96,10 +96,9 @@ class SubmitAndMonitorMultipleJobs:
         total_jobs = len(self.job_args_list)
         logging.info(f"Processing {total_jobs} {self.job_function.__name__} jobs in batches of {self.batch_size}")
 
-        job_ids = []
-
         # Process jobs in batches
         for i in range(0, total_jobs, self.batch_size):
+            job_ids = []
             current_batch = self.job_args_list[i:i + self.batch_size]
             logging.info(
                 f"Submitting jobs for batch {i // self.batch_size + 1} with {len(current_batch)} jobs."
@@ -107,6 +106,7 @@ class SubmitAndMonitorMultipleJobs:
 
             # Submit jobs for the current batch
             for job_args in current_batch:
+                # Submit job with arguments and store the job ID
                 job_id = self.job_function(*job_args)
                 if self.verbose:
                     logging.info(f"Submitted job {job_id} with args {job_args}")
