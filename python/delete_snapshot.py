@@ -1,6 +1,5 @@
 """Delete a dataset(s) in TDR"""
 import logging
-import sys
 from argparse import ArgumentParser, Namespace
 
 from utils.tdr_utils.tdr_api_utils import TDR
