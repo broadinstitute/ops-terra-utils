@@ -1,6 +1,6 @@
 """Delete a dataset(s) in TDR"""
-
 import logging
+import sys
 from argparse import ArgumentParser, Namespace
 
 from utils.tdr_utils.tdr_api_utils import TDR
@@ -16,7 +16,7 @@ logging.basicConfig(
 
 CLOUD_TYPE = GCP
 BATCH_SIZE = 10
-CHECK_INTERVAL = 5
+CHECK_INTERVAL = 20
 
 
 def get_args() -> Namespace:

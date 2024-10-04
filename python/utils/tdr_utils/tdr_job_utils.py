@@ -115,7 +115,7 @@ class SubmitAndMonitorMultipleJobs:
             # Monitor jobs for the current batch
             logging.info(f"Monitoring {len(current_batch)} jobs in batch {i // self.batch_size + 1}")
             for job_id in job_ids:
-                MonitorTDRJob(tdr=self, job_id=job_id, check_interval=self.check_interval).run()
+                MonitorTDRJob(tdr=self.tdr, job_id=job_id, check_interval=self.check_interval).run()
 
             logging.info(f"Completed batch {i // self.batch_size + 1} with {len(current_batch)} jobs.")
 
