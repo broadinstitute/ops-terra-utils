@@ -255,6 +255,9 @@ def test_multithread_copy_of_files_with_validation() -> None:
     GCPCloudFunctions().multithread_copy_of_files_with_validation(
         files_to_move=input_dict_list, workers=2, max_retries=1)
 
+    for item in expected_files:
+        assert item["check_passed"] == True, "Files were not in expected end state"
+
 
 def test_move_or_copy_multiple_files() -> None:
     cloud_resources = gcp_test_resource_json()
@@ -271,8 +274,27 @@ def test_move_or_copy_multiple_files() -> None:
         expected_files = [
             {"Path": {
                 "bucket": cloud_resources['bucket'],
+                "file_path": cloud_resources['test_resources']['move_or_copy_multiple_files'][0]
+            },
+                "should_exist": True
+            },
+            {"Path": {
+                "bucket": cloud_resources['bucket'],
+                "file_path": cloud_resources['test_resources']['move_or_copy_multiple_files'][1]
+            },
+                "should_exist": True
+            },
+            {"Path": {
+                "bucket": cloud_resources['bucket'],
                 "file_path": ""
-            }
+            },
+                "should_exist": True
+            },
+            {"Path": {
+                "bucket": cloud_resources['bucket'],
+                "file_path": ""
+            },
+                "should_exist": True
             }
         ]
 
