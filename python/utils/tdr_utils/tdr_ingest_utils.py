@@ -10,7 +10,7 @@ from .. import GCP, AZURE
 
 from .tdr_api_utils import TDR, FilterOutSampleIdsAlreadyInDataset
 from .tdr_job_utils import MonitorTDRJob
-from ..terra_util import TerraWorkspace
+from ..terra_utils.terra_util import TerraWorkspace
 
 
 class BatchIngest:

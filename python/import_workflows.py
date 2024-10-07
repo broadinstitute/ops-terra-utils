@@ -1,10 +1,10 @@
 import logging
 import argparse
 from typing import Any
-from utils.terra_util import TerraWorkspace
+from utils.terra_utils.terra_util import TerraWorkspace
 from utils.request_util import RunRequest
 from utils.token_util import Token
-from utils.data.terra_workflow_configs import WorkflowConfigs
+from utils.terra_utils.terra_workflow_configs import WorkflowConfigs
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
