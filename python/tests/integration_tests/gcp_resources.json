@@ -1,0 +1,38 @@
+{
+	"bucket":"ops_dev_bucket",
+	"test_resources":{
+		"list_bucket":["list_bucket_test/ex_file_1.txt",
+							"list_bucket_test/ex_file_2.txt",
+							"list_bucket_test/ex_file_3.txt"],
+		"copy_file": "copy_cloud_file_test/original_file.txt",
+		"delete_file": "delete_cloud_file_test/delete_this_file.txt",
+		"move_file": "move_cloud_file_test/move_test_file.txt",
+		"get_filesize": "get_filesize_test/file_size_test.txt",
+		"validate_files_are_same": [
+			"validate_file_pair_test/file_1.txt",
+			"validate_file_pair_test/file_2.txt"
+		],
+		"delete_multiple_files": [
+			"delete_cloud_file_test_multiple/delete_this_file.txt",
+			"delete_cloud_file_test_multiple/also_delete_this_file.txt"
+								],
+		"validate_file_pair": [
+			"validate_file_pair_test/file_1.txt",
+			"validate_file_pair_test/file_2.txt"
+		],
+		"loop_and_log_validation_files_multithreaded": [
+			"loop_and_log_validation_files_test/file_1.txt",
+			"loop_and_log_validation_files_test/file_2.txt",
+			"loop_and_log_validation_files_test/file_3.txt",
+			"loop_and_log_validation_files_test/file_4.txt"
+		],
+		"multithread_copy_of_files_with_validation": [
+			"copy_and_validate/file_1.txt",
+			"copy_and_validate/file_2.txt"
+		],
+		"move_or_copy_multiple_files": [
+			"move_or_copy_multiple_files/file_1.txt",
+			"move_or_copy_multiple_files/file_2.txt"
+		]
+	}
+}
