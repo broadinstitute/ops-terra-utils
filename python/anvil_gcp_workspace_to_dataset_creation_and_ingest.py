@@ -15,7 +15,7 @@ from utils.tdr_utils.tdr_ingest_utils import (
 from utils.tdr_utils.tdr_table_utils import SetUpTDRTables
 from utils.request_util import RunRequest
 from utils.token_util import Token
-from utils.terra_util import TerraWorkspace, Terra
+from utils.terra_utils.terra_util import TerraWorkspace
 from utils.gcp_utils import GCPCloudFunctions
 
 logging.basicConfig(
@@ -298,7 +298,6 @@ if __name__ == "__main__":
         token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     terra_workspace = TerraWorkspace(
         billing_project=billing_project, workspace_name=workspace_name, request_util=request_util)
-    terra = Terra(request_util=request_util)
     tdr = TDR(request_util=request_util)
 
     # Get Terra Workspace info

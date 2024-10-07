@@ -1,4 +1,4 @@
-from utils.terra_util import TerraWorkspace
+from utils.terra_utils.terra_util import TerraWorkspace
 from utils.gcp_utils import GCPCloudFunctions
 from utils.request_util import RunRequest
 from utils.token_util import Token

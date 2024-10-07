@@ -3,7 +3,7 @@ from typing import Any
 from argparse import Namespace, ArgumentParser
 
 from utils import GCP, comma_separated_list
-from utils.terra_util import TerraWorkspace
+from utils.terra_utils.terra_util import TerraWorkspace
 from utils.request_util import RunRequest
 from utils.token_util import Token
 from utils.csv_util import Csv
