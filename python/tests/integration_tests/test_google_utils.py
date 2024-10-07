@@ -1,15 +1,11 @@
 import pytest
 import json
 import pathlib
-from types import SimpleNamespace
 from typing import Any
-
 import random
 import string
 
-from unittest.mock import patch, MagicMock
-from python.utils.request_util import RunRequest
-from python.utils.token_util import Token
+
 from python.utils.gcp_utils import GCPCloudFunctions
 from google.cloud import storage
 from google.auth import default
