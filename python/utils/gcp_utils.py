@@ -94,7 +94,7 @@ class GCPCloudFunctions:
         Returns:
             bool: True if the blob should be included, False otherwise.
         """
-        if file_extensions_to_ignore and not blob.name.endswith(tuple(file_extensions_to_ignore)):
+        if file_extensions_to_ignore and blob.name.endswith(tuple(file_extensions_to_ignore)):
             if verbose:
                 logging.info(f"Skipping {blob.name} as it has an extension to ignore")
             return False
