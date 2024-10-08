@@ -1,3 +1,4 @@
+from typing import Optional
 import logging
 from typing import Any
 from argparse import Namespace, ArgumentParser
@@ -28,6 +29,9 @@ def get_args() -> Namespace:
                         help="Number of workers to use when copying files")
     parser.add_argument('--extensions_to_ignore', "-i", type=comma_separated_list,
                         help="comma separated list of file extensions to ignore when copying files")
+    parser.add_argument('--batch_size', "-b", type=int,
+                        help="Number of files validate and copy at a time. If not specified, "
+                             "all files will be copied at once")
     return parser.parse_args()
 
 
@@ -87,20 +91,22 @@ class CreateEntityTsv:
 
 
 class CopyFilesToDestWorkspace:
-    def __init__(self, src_bucket: str, dest_bucket: str, workers: int, extensions_to_ignore: list[str] = []):
+    def __init__(self, src_bucket: str, dest_bucket: str, workers: int, extensions_to_ignore: list[str] = [],
+                 batch_size: Optional[int] = None):
         self.src_bucket = src_bucket
         self.dest_bucket = dest_bucket
         self.extensions_to_ignore = extensions_to_ignore
         self.gcp_cloud_functions = GCPCloudFunctions()
         self.workers = workers
+        self.batch_size = batch_size
 
     def run(self) -> None:
-        GCPCloudFunctions()
         logging.info(f"Getting all files from source bucket {self.src_bucket}")
         list_bucket_contents = self.gcp_cloud_functions.list_bucket_contents(
             bucket_name=self.src_bucket,
             file_extensions_to_ignore=self.extensions_to_ignore
         )
+
         files_to_copy = [
             {
                 "source_file": file_info['path'],
@@ -108,16 +114,32 @@ class CopyFilesToDestWorkspace:
             }
             for file_info in list_bucket_contents
         ]
+
         if not files_to_copy:
             logging.info("No files to copy")
             return
+
+        # If a batch size is specified, break files into chunks
+        if self.batch_size:
+            file_batches = self._batch_files(files_to_copy, self.batch_size)
         else:
-            logging.info(f"Copying {len(files_to_copy)} files to destination bucket {self.dest_bucket}")
+            file_batches = [files_to_copy]  # Process everything at once if no batch size is given
+
+        # Process each batch separately
+        for i, batch in enumerate(file_batches):
+            logging.info(
+                f"Copying batch {i + 1}/{len(file_batches)} with {len(batch)} files to "
+                f"destination bucket {self.dest_bucket}")
             self.gcp_cloud_functions.multithread_copy_of_files_with_validation(
-                files_to_move=files_to_copy,
+                files_to_move=batch,
                 workers=self.workers,
                 max_retries=5
             )
+
+    @staticmethod
+    def _batch_files(files: list[dict], batch_size: int) -> list[list[dict]]:
+        """Helper function to split a list of files into batches."""
+        return [files[i:i + batch_size] for i in range(0, len(files), batch_size)]
 
 
 class UpdateWorkspaceAcls:
@@ -150,6 +172,7 @@ if __name__ == '__main__':
     allow_already_created = args.allow_already_created
     workers = args.workers
     extensions_to_ignore = args.extensions_to_ignore
+    batch_size = args.batch_size
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -209,7 +232,8 @@ if __name__ == '__main__':
         src_bucket=src_bucket,
         dest_bucket=dest_bucket,
         extensions_to_ignore=extensions_to_ignore,
-        workers=workers
+        workers=workers,
+        batch_size=batch_size
     ).run()
 
     # Set the destination workspace ACLs
