@@ -30,7 +30,8 @@ def get_args() -> Namespace:
     parser.add_argument('--extensions_to_ignore', "-i", type=comma_separated_list,
                         help="comma separated list of file extensions to ignore when copying files")
     parser.add_argument('--batch_size', "-b", type=int,
-                        help="Number of files validate and copy at a time. If not specified, all files will be copied at once")
+                        help="Number of files validate and copy at a time. If not specified, "
+                             "all files will be copied at once")
     return parser.parse_args()
 
 
@@ -127,7 +128,8 @@ class CopyFilesToDestWorkspace:
         # Process each batch separately
         for i, batch in enumerate(file_batches):
             logging.info(
-                f"Copying batch {i + 1}/{len(file_batches)} with {len(batch)} files to destination bucket {self.dest_bucket}")
+                f"Copying batch {i + 1}/{len(file_batches)} with {len(batch)} files to "
+                f"destination bucket {self.dest_bucket}")
             self.gcp_cloud_functions.multithread_copy_of_files_with_validation(
                 files_to_move=batch,
                 workers=self.workers,
