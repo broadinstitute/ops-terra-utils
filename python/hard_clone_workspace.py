@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 import logging
 from typing import Any
 from argparse import Namespace, ArgumentParser
@@ -135,7 +135,7 @@ class CopyFilesToDestWorkspace:
             )
 
     @staticmethod
-    def _batch_files(files: List[dict], batch_size: int) -> List[List[dict]]:
+    def _batch_files(files: list[dict], batch_size: int) -> list[list[dict]]:
         """Helper function to split a list of files into batches."""
         return [files[i:i + batch_size] for i in range(0, len(files), batch_size)]
 
