@@ -28,8 +28,8 @@ def check_cloud_paths(path_dicts: list[dict]) -> None:
 
     client = gcs_client()
     for validation in path_dicts:
-        bucket = client.bucket(validation["path"]["bucket"])
-        blob = bucket.blob(validation["path"]["file_path"])
+        bucket = client.bucket(validation["Path"]["bucket"])
+        blob = bucket.blob(validation["Path"]["file_path"])
         check_passed = blob.exists() == validation["should_exist"]
         validation["check_passed"] = check_passed
 
@@ -94,12 +94,12 @@ def test_copy_cloud_file() -> None:
     src_path = f"gs://{cloud_resources['bucket']}/{cloud_resources['test_resources']['copy_file']}"
     dest_path = f"gs://{cloud_resources['bucket']}/tmp/file_copied.txt"
     expected_files = [
-        {"path": {
+        {"Path": {
             "bucket": cloud_resources['bucket'],
             "file_path": cloud_resources['test_resources']['copy_file']
         },
             "should_exist": True},
-        {"path": {
+        {"Path": {
             "bucket": cloud_resources['bucket'],
             "file_path": "tmp/file_copied.txt"
         },
@@ -123,7 +123,7 @@ def test_delete_cloud_file() -> None:
         }
     ]
     GCPCloudFunctions().delete_cloud_file(full_cloud_path=file_to_del)
-
+    check_cloud_paths(expected_files)
     for item in expected_files:
         assert item["check_passed"] == True, "Files were not in expected end state"
 
@@ -149,6 +149,7 @@ def test_move_cloud_file() -> None:
     ]
 
     GCPCloudFunctions().move_cloud_file(src_cloud_path=src_blob_path, full_destination_path=dest_blob_path)
+    check_cloud_paths(expected_files)
     for item in expected_files:
         assert item["check_passed"] == True, "Files were not in expected end state"
 
@@ -189,7 +190,7 @@ def test_delete_multiple_files() -> None:
     ]
 
     GCPCloudFunctions().delete_multiple_files(files_to_delete=deletion_files)
-
+    check_cloud_paths(expected_files)
     for item in expected_files:
         assert item["check_passed"] == True, "Files were not in expected end state"
 
@@ -219,10 +220,10 @@ def test_multithread_copy_of_files_with_validation() -> None:
     test_files = [transform_components_to_full_cloud_path(bucket=cloud_resources['bucket'], file_path=file)
                   for file in cloud_resources['test_resources']['multithread_copy_of_files_with_validation']]
     input_dict_list = [
-        {"source_file": test_files[0], "full_destination_path": cloud_resources['bucket'] +
-            "/tmp/multi_copy/test_1.txt"},
-        {"source_file": test_files[1], "full_destination_path": cloud_resources['bucket'] +
-            "/tmp/multi_copy/test_2.txt"}
+        {"source_file": test_files[0],
+            "full_destination_path": f"gs://{cloud_resources['bucket']}/tmp/multi_copy/test_1.txt"},
+        {"source_file": test_files[1],
+            "full_destination_path": f"gs://{cloud_resources['bucket']}/tmp/multi_copy/test_2.txt"}
     ]
 
     expected_files = [
@@ -240,13 +241,13 @@ def test_multithread_copy_of_files_with_validation() -> None:
         },
         {"Path": {
             "bucket": cloud_resources['bucket'],
-            "file_path": "/tmp/multi_copy/test_1.txt"
+            "file_path": "tmp/multi_copy/test_1.txt"
         },
             "should_exist": True
         },
         {"Path": {
             "bucket": cloud_resources['bucket'],
-            "file_path": "/tmp/multi_copy/test_2.txt"
+            "file_path": "tmp/multi_copy/test_2.txt"
         },
             "should_exist": True
         }
@@ -254,7 +255,7 @@ def test_multithread_copy_of_files_with_validation() -> None:
 
     GCPCloudFunctions().multithread_copy_of_files_with_validation(
         files_to_move=input_dict_list, workers=2, max_retries=1)
-
+    check_cloud_paths(expected_files)
     for item in expected_files:
         assert item["check_passed"] == True, "Files were not in expected end state"
 
@@ -263,13 +264,13 @@ def test_move_or_copy_multiple_files() -> None:
     cloud_resources = gcp_test_resource_json()
     test_files = [transform_components_to_full_cloud_path(
         bucket=cloud_resources['bucket'], file_path=file) for file in cloud_resources['test_resources']['move_or_copy_multiple_files']]
-    ouput_copy_path = cloud_resources['bucket'] + "/tmp/copy/"
-    output_mv_path = cloud_resources['bucket'] + "/tmp/mv/"
 
     def run_copy_test() -> None:
         input_dict_list = [
-            {"source_file": test_files[0], "full_destination_path": cloud_resources['bucket'] + "/tmp/copy/file_1.txt"},
-            {"source_file": test_files[1], "full_destination_path": cloud_resources['bucket'] + "/tmp/copy/file_2.txt"}
+            {"source_file": test_files[0],
+                "full_destination_path": f"gs://{cloud_resources['bucket']}/tmp/copy/file_1.txt"},
+            {"source_file": test_files[1],
+                "full_destination_path": f"gs://{cloud_resources['bucket']}/tmp/copy/file_2.txt"}
         ]
         expected_files = [
             {"Path": {
@@ -286,26 +287,29 @@ def test_move_or_copy_multiple_files() -> None:
             },
             {"Path": {
                 "bucket": cloud_resources['bucket'],
-                "file_path": cloud_resources['bucket'] + "/tmp/copy/file_1.txt"
+                "file_path": "tmp/copy/file_1.txt"
             },
                 "should_exist": True
             },
             {"Path": {
                 "bucket": cloud_resources['bucket'],
-                "file_path": cloud_resources['bucket'] + "/tmp/copy/file_2.txt"
+                "file_path": "tmp/copy/file_2.txt"
             },
                 "should_exist": True
             }
         ]
 
         GCPCloudFunctions().move_or_copy_multiple_files(files_to_move=input_dict_list, action="copy", workers=2, max_retries=1)
+        check_cloud_paths(expected_files)
         for item in expected_files:
             assert item["check_passed"] == True, "Files were not in expected end state"
 
     def run_mv_test() -> None:
         input_dict_list = [
-            {"source_file": test_files[0], "full_destination_path": cloud_resources['bucket'] + "/tmp/mv/file_1.txt"},
-            {"source_file": test_files[1], "full_destination_path": cloud_resources['bucket'] + "/tmp/mv/file_2.txt"}
+            {"source_file": test_files[0],
+                "full_destination_path": f"gs://{cloud_resources['bucket']}/tmp/mv/file_1.txt"},
+            {"source_file": test_files[1],
+                "full_destination_path": f"gs://{cloud_resources['bucket']}/tmp/mv/file_2.txt"}
         ]
 
         expected_files = [
@@ -323,19 +327,20 @@ def test_move_or_copy_multiple_files() -> None:
             },
             {"Path": {
                 "bucket": cloud_resources['bucket'],
-                "file_path": cloud_resources['bucket'] + "/tmp/mv/file_1.txt"
+                "file_path": "tmp/mv/file_1.txt"
             },
                 "should_exist": True
             },
             {"Path": {
                 "bucket": cloud_resources['bucket'],
-                "file_path": cloud_resources['bucket'] + "/tmp/mv/file_1.txt"
+                "file_path": "tmp/mv/file_1.txt"
             },
                 "should_exist": True
             }
         ]
 
         GCPCloudFunctions().move_or_copy_multiple_files(files_to_move=input_dict_list, action="move", workers=2, max_retries=1)
+        check_cloud_paths(expected_files)
         for item in expected_files:
             assert item["check_passed"] == True, "Files were not in expected end state"
 
