@@ -2,8 +2,6 @@ import pytest
 import json
 import pathlib
 from typing import Any
-import random
-import string
 
 
 from python.utils.gcp_utils import GCPCloudFunctions
