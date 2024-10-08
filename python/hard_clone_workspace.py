@@ -139,7 +139,10 @@ class CopyFilesToDestWorkspace:
 
     def _batch_files(self, files: list[dict]) -> list[list[dict]]:
         """Helper function to split a list of files into batches."""
-        return [files[i:i + self.batch_size] for i in range(0, len(files), self.batch_size)]  # type: ignore[operator, arg-type]
+        return [
+            files[i:i + self.batch_size]  # type: ignore[operator]
+            for i in range(0, len(files), self.batch_size)  # type: ignore[arg-type]
+        ]
 
 
 class UpdateWorkspaceAcls:
