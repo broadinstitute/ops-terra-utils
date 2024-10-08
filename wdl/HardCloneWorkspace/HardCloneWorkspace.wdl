@@ -10,9 +10,12 @@ workflow HardCloneTerraWorkspace {
         Int? workers
         String? extensions_to_ignore
 		String? docker_name
+		Int? memory_gb
+		Int? batch_size
 	}
 
 	String docker = select_first([docker_name, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
+	Int memory = select_first([memory_gb, 8])
 
 	call HardCloneTerraWorkspaceTask {
 		input:
@@ -23,7 +26,9 @@ workflow HardCloneTerraWorkspace {
 			allow_already_created=allow_already_created,
 			workers=workers,
 			extensions_to_ignore=extensions_to_ignore,
-			docker_name=docker
+			docker_name=docker,
+			memory_gb=memory,
+			batch_size=batch_size
 	}
 }
 
@@ -37,6 +42,8 @@ task HardCloneTerraWorkspaceTask {
         Int? workers
         String? extensions_to_ignore
         String docker_name
+		Int memory_gb
+		Int? batch_size
 	}
 
 	command <<<
@@ -47,10 +54,12 @@ task HardCloneTerraWorkspaceTask {
 		--dest_workspace_name ~{dest_workspace_name} \
 		~{if allow_already_created then "--allow_already_created" else ""} \
 		~{"--workers " + workers} \
-		~{"--extensions_to_ignore " + extensions_to_ignore}
+		~{"--extensions_to_ignore " + extensions_to_ignore} \
+		~{"--batch_size " + batch_size}
 	>>>
 
 	runtime {
 		docker: docker_name
+		memory: "${memory_gb} GiB"
 	}
 }
