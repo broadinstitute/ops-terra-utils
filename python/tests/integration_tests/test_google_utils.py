@@ -89,10 +89,11 @@ def test_copy_cloud_file() -> None:
     validations = test_data['validation']
 
     GCPCloudFunctions().copy_cloud_file(
-        src_cloud_path=test_data['function_input']['source_path'], full_destination_path=test_data['function_input']['destination_path'])
+        src_cloud_path=test_data['function_input']['source_path'],
+        full_destination_path=test_data['function_input']['destination_path'])
     check_cloud_paths(validations)
     for item in validations:
-        assert item["check_passed"] == True, "Files were not in expected end state"
+        assert item["check_passed"], "Files were not in expected end state"
 
 
 def test_delete_cloud_file() -> None:
@@ -102,7 +103,7 @@ def test_delete_cloud_file() -> None:
     GCPCloudFunctions().delete_cloud_file(full_cloud_path=test_data['function_input']['deletion_path'])
     check_cloud_paths(validations)
     for item in validations:
-        assert item["check_passed"] == True, "Files were not in expected end state"
+        assert item["check_passed"], "Files were not in expected end state"
 
 
 def test_move_cloud_file() -> None:
@@ -110,10 +111,11 @@ def test_move_cloud_file() -> None:
     validations = test_data['validation']
 
     GCPCloudFunctions().move_cloud_file(
-        src_cloud_path=test_data['function_input']['source_path'], full_destination_path=test_data['function_input']['destination_path'])
+        src_cloud_path=test_data['function_input']['source_path'],
+        full_destination_path=test_data['function_input']['destination_path'])
     check_cloud_paths(validations)
     for item in validations:
-        assert item["check_passed"] == True, "Files were not in expected end state"
+        assert item["check_passed"], "Files were not in expected end state"
 
 
 def test_get_filesize() -> None:
@@ -130,7 +132,7 @@ def test_validate_files_are_same() -> None:
         src_cloud_path=test_data['function_input']['file_1'], dest_cloud_path=test_data['function_input']['file_1'])
     files_do_not_match = GCPCloudFunctions().validate_files_are_same(
         src_cloud_path=test_data['function_input']['file_1'], dest_cloud_path=test_data['function_input']['file_2'])
-    assert files_match == True and files_do_not_match == False, "File validations did not return expected results"
+    assert files_match and not files_do_not_match, "File validations did not return expected results"
 
 
 def test_delete_multiple_files() -> None:
@@ -140,7 +142,7 @@ def test_delete_multiple_files() -> None:
     GCPCloudFunctions().delete_multiple_files(files_to_delete=test_data['function_input']['files_to_delete'])
     check_cloud_paths(validations)
     for item in validations:
-        assert item["check_passed"] == True, "Files were not in expected end state"
+        assert item["check_passed"], "Files were not in expected end state"
 
 
 def test_validate_file_pair() -> None:
@@ -152,7 +154,7 @@ def test_validate_file_pair() -> None:
     files_do_not_match = GCPCloudFunctions().validate_file_pair(
         source_file=test_data['function_input']['file_1'], full_destination_path=test_data['function_input']['file_2'])
 
-    assert files_match == None and files_do_not_match != None, "File validations did not return expected results"
+    assert files_match is None and files_do_not_match is not None, "File validations did not return expected results"
 
 
 def test_loop_and_log_validation_files_multithreaded() -> None:
@@ -172,7 +174,7 @@ def test_multithread_copy_of_files_with_validation() -> None:
         files_to_move=test_data['function_input'], workers=2, max_retries=1)
     check_cloud_paths(validation)
     for item in validation:
-        assert item["check_passed"] == True, "Files were not in expected end state"
+        assert item["check_passed"], "Files were not in expected end state"
 
 
 def test_move_or_copy_multiple_files() -> None:
@@ -185,7 +187,7 @@ def test_move_or_copy_multiple_files() -> None:
             files_to_move=test_data['function_input']['copy_test_input'], action="copy", workers=2, max_retries=1)
         check_cloud_paths(validation['copy_test'])
         for item in validation['copy_test']:
-            assert item["check_passed"] == True, "Files were not in expected end state"
+            assert item["check_passed"], "Files were not in expected end state"
 
     def run_mv_test() -> None:
 
@@ -193,7 +195,7 @@ def test_move_or_copy_multiple_files() -> None:
             files_to_move=test_data['function_input']['move_test_input'], action="move", workers=2, max_retries=1)
         check_cloud_paths(validation['move_test'])
         for item in validation['move_test']:
-            assert item["check_passed"] == True, "Files were not in expected end state"
+            assert item["check_passed"], "Files were not in expected end state"
 
     run_copy_test()
     run_mv_test()
