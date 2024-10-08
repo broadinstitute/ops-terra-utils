@@ -122,7 +122,7 @@ class CopyFilesToDestWorkspace:
 
         # If a batch size is specified, break files into chunks
         if self.batch_size:
-            file_batches = self._batch_files(files_to_copy, self.batch_size)
+            file_batches = self._batch_files(files_to_copy)
         else:
             file_batches = [files_to_copy]  # Process everything at once if no batch size is given
 
@@ -137,10 +137,9 @@ class CopyFilesToDestWorkspace:
                 max_retries=5
             )
 
-    @staticmethod
-    def _batch_files(files: list[dict], batch_size: int) -> list[list[dict]]:
+    def _batch_files(self, files: list[dict]) -> list[list[dict]]:
         """Helper function to split a list of files into batches."""
-        return [files[i:i + batch_size] for i in range(0, len(files), batch_size)]
+        return [files[i:i + self.batch_size] for i in range(0, len(files), self.batch_size)]  # type: ignore[operator, arg-type]
 
 
 class UpdateWorkspaceAcls:
