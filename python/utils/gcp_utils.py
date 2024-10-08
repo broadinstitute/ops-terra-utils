@@ -128,7 +128,7 @@ class GCPCloudFunctions:
         """
         logging.info(f"Running list_blobs on gs://{bucket_name}/")
         blobs = self.client.list_blobs(bucket_name)
-        logging.info(f"Finished running. Processing files now")
+        logging.info("Finished running. Processing files now")
         # Create a list of dictionaries containing file information
         file_list = [
             self._create_bucket_contents_dict(
