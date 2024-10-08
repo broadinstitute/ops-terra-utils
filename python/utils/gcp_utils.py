@@ -1,7 +1,7 @@
 import os
 import logging
 from mimetypes import guess_type
-from typing import Optional
+from typing import Optional, Any
 
 from .thread_pool_executor_util import MultiThreadedJobs
 
@@ -47,10 +47,72 @@ class GCPCloudFunctions:
         }
         return path_components
 
+    @staticmethod
+    def _create_bucket_contents_dict(bucket_name: str, blob: Any, file_name_only: bool) -> dict:
+        """
+        Create a dictionary containing file information.
+
+        Args:
+            bucket_name (str): The name of the GCS bucket.
+            blob (Any): The GCS blob object.
+            file_name_only (bool): Whether to return only the file list.
+
+        Returns:
+            dict: A dictionary containing file information.
+        """
+        if file_name_only:
+            return {
+                "path": f"gs://{bucket_name}/{blob.name}"
+            }
+        return {
+            "name": os.path.basename(blob.name),
+            "path": f"gs://{bucket_name}/{blob.name}",
+            "content_type": blob.content_type or guess_type(blob.name)[0] or "application/octet-stream",
+            "file_extension": os.path.splitext(blob.name)[1],
+            "size_in_bytes": blob.size,
+            "md5_hash": blob.md5_hash
+        }
+
+    @staticmethod
+    def _validate_include_blob(
+            blob: Any,
+            file_extensions_to_ignore: list[str] = [],
+            file_strings_to_ignore: list[str] = [],
+            file_extensions_to_include: list[str] = [],
+            verbose: bool = False
+    ) -> bool:
+        """
+        Validate if a blob should be included based on its file extension.
+
+        Args:
+            file_extensions_to_include (list[str]): List of file extensions to include.
+            file_extensions_to_ignore (list[str]): List of file extensions to ignore.
+            file_strings_to_ignore (list[str]): List of file name substrings to ignore.
+            blob (Any): The GCS blob object.
+            verbose (bool): Whether to log files not being included.
+
+        Returns:
+            bool: True if the blob should be included, False otherwise.
+        """
+        if file_extensions_to_ignore and blob.name.endswith(tuple(file_extensions_to_ignore)):
+            if verbose:
+                logging.info(f"Skipping {blob.name} as it has an extension to ignore")
+            return False
+        if file_extensions_to_include and not blob.name.endswith(tuple(file_extensions_to_include)):
+            if verbose:
+                logging.info(f"Skipping {blob.name} as it does not have an extension to include")
+            return False
+        if file_strings_to_ignore and any(file_string in blob.name for file_string in file_strings_to_ignore):
+            if verbose:
+                logging.info(f"Skipping {blob.name} as it has a string to ignore")
+            return False
+        return True
+
     def list_bucket_contents(self, bucket_name: str,
                              file_extensions_to_ignore: list[str] = [],
                              file_strings_to_ignore: list[str] = [],
-                             file_extensions_to_include: list[str] = []) -> list[dict]:
+                             file_extensions_to_include: list[str] = [],
+                             file_name_only: bool = False) -> list[dict]:
         """
         List contents of a GCS bucket and return a list of dictionaries with file information.
 
@@ -59,34 +121,25 @@ class GCPCloudFunctions:
             file_extensions_to_ignore (list[str], optional): List of file extensions to ignore. Defaults to [].
             file_strings_to_ignore (list[str], optional): List of file name substrings to ignore. Defaults to [].
             file_extensions_to_include (list[str], optional): List of file extensions to include. Defaults to [].
+            file_name_only (bool, optional): Whether to return only the file list and no extra info. Defaults to False.
 
         Returns:
             list[dict]: A list of dictionaries containing file information.
         """
-        logging.info(f"Listing contents of bucket gs://{bucket_name}/")
+        logging.info(f"Running list_blobs on gs://{bucket_name}/")
         blobs = self.client.list_blobs(bucket_name)
-        logging.info(f"Found {len(blobs)} files in bucket")
-
-        file_list = []
-        for blob in blobs:
-            if file_extensions_to_ignore and blob.name.endswith(tuple(file_extensions_to_ignore)):
-                logging.info(f"Skipping file {blob.name}")
-                continue
-            if file_extensions_to_include and not blob.name.endswith(tuple(file_extensions_to_include)):
-                logging.info(f"Skipping file {blob.name}")
-                continue
-            if any(file_string in blob.name for file_string in file_strings_to_ignore):
-                logging.info(f"Skipping file {blob.name}")
-                continue
-            file_info = {
-                "name": os.path.basename(blob.name),
-                "path": f"gs://{bucket_name}/{blob.name}",
-                "content_type": blob.content_type or guess_type(blob.name)[0] or "application/octet-stream",
-                "file_extension": os.path.splitext(blob.name)[1],
-                "size_in_bytes": blob.size,
-                "md5_hash": blob.md5_hash
-            }
-            file_list.append(file_info)
+        logging.info("Finished running. Processing files now")
+        # Create a list of dictionaries containing file information
+        file_list = [
+            self._create_bucket_contents_dict(
+                blob=blob, bucket_name=bucket_name, file_name_only=file_name_only
+            )
+            for blob in blobs
+            if self._validate_include_blob(
+                blob=blob, file_extensions_to_ignore=file_extensions_to_ignore,
+                file_strings_to_ignore=file_strings_to_ignore, file_extensions_to_include=file_extensions_to_include
+            )
+        ]
         logging.info(f"Found {len(file_list)} files in bucket")
         return file_list
 
