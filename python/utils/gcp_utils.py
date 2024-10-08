@@ -65,7 +65,7 @@ class GCPCloudFunctions:
         """
         logging.info(f"Listing contents of bucket gs://{bucket_name}/")
         blobs = self.client.list_blobs(bucket_name)
-        logging.info(f"Found {len(blobs)} files in bucket")
+        logging.info(f"Finished listing all contents in bucket")
 
         file_list = []
         for blob in blobs:
