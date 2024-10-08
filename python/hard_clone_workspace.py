@@ -104,7 +104,8 @@ class CopyFilesToDestWorkspace:
         logging.info(f"Getting all files from source bucket {self.src_bucket}")
         list_bucket_contents = self.gcp_cloud_functions.list_bucket_contents(
             bucket_name=self.src_bucket,
-            file_extensions_to_ignore=self.extensions_to_ignore
+            file_extensions_to_ignore=self.extensions_to_ignore,
+            file_name_only=True
         )
 
         files_to_copy = [
