@@ -31,7 +31,7 @@ def check_cloud_paths(path_dicts: list[dict]) -> None:
 @pytest.fixture(scope='session', autouse=True)
 def setup_test_gcs_resources() -> Any:
 
-    #def gen_rand_str() -> str:
+    # def gen_rand_str() -> str:
     #    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=30))
 
     def gcp_test_resource_json() -> dict:
@@ -59,7 +59,7 @@ def setup_test_gcs_resources() -> Any:
     client = gcs_client()
     json_data = gcp_test_resource_json()
     test_bucket = client.bucket(json_data["bucket"])
-    #cleanup bucket if any left over objects are present before creating new ones
+    # cleanup bucket if any left over objects are present before creating new ones
     blob_list = test_bucket.list_blobs()
     if blob_list.num_results > 0:
         del_bucket_objs(obj_list=blob_list)
@@ -69,7 +69,7 @@ def setup_test_gcs_resources() -> Any:
 
     yield
 
-    #teardown resources
+    # teardown resources
     blob_list = test_bucket.list_blobs()
     del_bucket_objs(blob_list)
 
