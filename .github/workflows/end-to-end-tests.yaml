@@ -32,7 +32,9 @@ jobs:
   integration_tests:
     needs: linting_check
     uses: ./.github/workflows/integration_tests.yaml
+    secrets: inherit
 
   build_and_push_docker:
     needs: integration_tests
     uses: ./.github/workflows/docker-BuildAndPush.yaml
+    secrets: inherit
