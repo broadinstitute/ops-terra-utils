@@ -1,5 +1,7 @@
 version 1.0
 
+import "utils/gcp_utils.wdl" as gcp_utils
+
 workflow HardCloneTerraWorkspace {
     input {
 		String source_billing_project
@@ -7,6 +9,7 @@ workflow HardCloneTerraWorkspace {
 		String dest_billing_project
         String dest_workspace_name
         Boolean allow_already_created
+		Boolean rsync_workspace
         Int? workers
         String? extensions_to_ignore
 		String? docker_name
@@ -28,7 +31,18 @@ workflow HardCloneTerraWorkspace {
 			extensions_to_ignore=extensions_to_ignore,
 			docker_name=docker,
 			memory_gb=memory,
-			batch_size=batch_size
+			batch_size=batch_size,
+			metadata_only=rsync_workspace
+	}
+
+	if (rsync_workspace) {
+		String source_bucket = read_string(HardCloneTerraWorkspaceTask.src_bucket)
+		String dest_bucket = read_string(HardCloneTerraWorkspaceTask.dest_bucket)
+		call gcp_utils.GcloudRsync {
+			input:
+				source=source_bucket,
+				destination=dest_bucket
+		}
 	}
 }
 
@@ -43,6 +57,7 @@ task HardCloneTerraWorkspaceTask {
         String? extensions_to_ignore
         String docker_name
 		Int memory_gb
+		Boolean metadata_only
 		Int? batch_size
 	}
 
@@ -55,8 +70,14 @@ task HardCloneTerraWorkspaceTask {
 		~{if allow_already_created then "--allow_already_created" else ""} \
 		~{"--workers " + workers} \
 		~{"--extensions_to_ignore " + extensions_to_ignore} \
-		~{"--batch_size " + batch_size}
+		~{"--batch_size " + batch_size} \
+		~{if metadata_only then "--metadata_only" else ""}
 	>>>
+
+	output {
+		String dest_bucket = "dest_workspace_bucket.txt"
+		String src_bucket = "source_workspace_bucket.txt"
+	}
 
 	runtime {
 		docker: docker_name
