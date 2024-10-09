@@ -1,6 +1,6 @@
 version 1.0
 
-import "utils/gcp_utils.wdl" as gcp_utils
+import "../utils/GcpUtils.wdl" as gcp_utils
 
 workflow HardCloneTerraWorkspace {
     input {
