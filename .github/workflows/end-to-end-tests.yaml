@@ -3,11 +3,9 @@ name: merge validations
 on:
   pull_request:
     branches: [ main ]
-    types:
-      - opened
+    types: [ opened ]
   issue_comment:
-    types:
-      - created
+    types: [ created ]
 
 jobs:
   linting_check:
