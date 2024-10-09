@@ -1,0 +1,374 @@
+{
+    "bucket": "ops_dev_bucket",
+    "tests": {
+        "list_bucket": {
+            "resources": [
+                {
+                    "path": "list_bucket_test/ex_file_1.txt",
+                    "data": "kw5z3qci2nwrvw9rtgeu7puawfcqak"
+                },
+                {
+                    "path": "list_bucket_test/ex_file_2.txt",
+                    "data": "s3amaa8o56hppijna8p57gijakeiv9"
+                },
+                {
+                    "path": "list_bucket_test/ex_file_3.txt",
+                    "data": "fabbon74i9p7qfbv1tacu9m9a6ligj"
+                }
+            ]
+        },
+        "copy_file": {
+            "resources": [
+                {
+                    "path": "copy_cloud_file_test/original_file.txt",
+                    "data": "p6znd6b4krh6c4g5gg1x4j6cexlw18"
+                }
+            ],
+            "test_data": {
+                "function_input": {
+                    "source_path": "gs://ops_dev_bucket/copy_cloud_file_test/original_file.txt",
+                    "destination_path": "gs://ops_dev_bucket/tmp/file_copied.txt"
+                },
+                "validation": [
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "copy_cloud_file_test/original_file.txt"
+                        },
+                        "should_exist": true
+                    },
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "tmp/file_copied.txt"
+                        },
+                        "should_exist": true
+                    }
+                ]
+            }
+        },
+        "delete_file": {
+            "resources": [
+                {
+                    "path": "delete_cloud_file_test/delete_this_file.txt",
+                    "data": "6682b9bs4z5u1die0n4w2s9wqpnoyy"
+                }
+            ],
+            "test_data": {
+                "function_input": {
+                    "deletion_path": "gs://ops_dev_bucket/delete_cloud_file_test/delete_this_file.txt"
+                },
+                "validation": [
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "delete_cloud_file_test/delete_this_file.txt"
+                        },
+                        "should_exist": false
+                    }
+                ]
+            }
+        },
+        "move_file": {
+            "resources": [
+                {
+                    "path": "move_cloud_file_test/move_test_file.txt",
+                    "data": "1rqtpxh13egp1pwfgl6eb3tnhtpg31"
+                }
+            ],
+            "test_data": {
+                "function_input": {
+                    "source_path": "gs://ops_dev_bucket/move_cloud_file_test/move_test_file.txt",
+                    "destination_path": "gs://ops_dev_bucket/tmp/file_moved.txt"
+                },
+                "validation": [
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "move_cloud_file_test/move_test_file.txt"
+                        },
+                        "should_exist": false
+                    },
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "tmp/file_moved.txt"
+                        },
+                        "should_exist": true
+                    }
+                ]
+            }
+        },
+        "get_filesize": {
+            "resources": [
+                {
+                    "path": "get_filesize_test/file_size_test.txt",
+                    "data": "w0v5fxcm73vgq1k8hsilv5el0h8472"
+                }
+            ],
+            "test_data": {
+                "function_input": {
+                    "source_path": "gs://ops_dev_bucket/get_filesize_test/file_size_test.txt"
+                }
+            }
+        },
+        "validate_files_are_same": {
+            "resources": [
+                {
+                    "path": "check_files_identitical/file_1.txt",
+                    "data": "3bl1wwqclz758qvureo0rm2hqrjrxn"
+                },
+                {
+                    "path": "check_files_identitical/file_2.txt",
+                    "data": "yb5kk4mvixcfvs09hzza3kfq17jbor"
+                }
+            ],
+            "test_data": {
+                "function_input": {
+                    "file_1": "gs://ops_dev_bucket/check_files_identitical/file_1.txt",
+                    "file_2": "gs://ops_dev_bucket/check_files_identitical/file_2.txt"
+                }
+            }
+        },
+        "delete_multiple_files": {
+            "resources": [
+                {
+                    "path": "delete_cloud_file_test_multiple/delete_this_file.txt",
+                    "data": "fm9zha7akodl9pf09im7ujxg5xkps7"
+                },
+                {
+                    "path": "delete_cloud_file_test_multiple/also_delete_this_file.txt",
+                    "data": "zc7me0occoquzzs5ljabdtjhexe805"
+                }
+            ],
+            "test_data": {
+                "function_input": {
+                    "files_to_delete": [
+                        "gs://ops_dev_bucket/delete_cloud_file_test_multiple/delete_this_file.txt",
+                        "gs://ops_dev_bucket/delete_cloud_file_test_multiple/also_delete_this_file.txt"
+                    ]
+                },
+                "validation": [
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "delete_cloud_file_test_multiple/delete_this_file.txt"
+                        },
+                        "should_exist": false
+                    },
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "delete_cloud_file_test_multiple/also_delete_this_file.txt"
+                        },
+                        "should_exist": false
+                    }
+                ]
+            }
+        },
+        "validate_file_pair": {
+            "resources": [
+                {
+                    "path": "validate_file_pair_test/file_1.txt",
+                    "data": "ig3ggd1r9a00g8gbhlqcgx53zao9sq"
+                },
+                {
+                    "path": "validate_file_pair_test/file_2.txt",
+                    "data": "6bmblqllf8d7nafr88p2jfbsuewltq"
+                }
+            ],
+            "test_data": {
+                "function_input": {
+                    "file_1": "gs://ops_dev_bucket/validate_file_pair_test/file_1.txt",
+                    "file_2": "gs://ops_dev_bucket/validate_file_pair_test/file_2.txt"
+                }
+            }
+        },
+        "loop_and_log_validation_files_multithreaded": {
+            "resources": [
+                {
+                    "path": "loop_and_log_validation_files_test/file_1.txt",
+                    "data": "hhetd7flcygjxy0e3cya6dmzyk1pav"
+                },
+                {
+                    "path": "loop_and_log_validation_files_test/file_2.txt",
+                    "data": "f07t4a605k5hdqc1gnw8zb2e4kvayo"
+                },
+                {
+                    "path": "loop_and_log_validation_files_test/file_3.txt",
+                    "data": "xeo7j2wwnbqxmcct5v4k2x1hqjg7yk"
+                },
+                {
+                    "path": "loop_and_log_validation_files_test/file_4.txt",
+                    "data": "p5l1qvqf09oh6eghhx31he8dyzb52x"
+                }
+            ],
+            "test_data": {
+                "function_input": {
+                    "input_list": [
+                        {
+                            "source_file": "gs://ops_dev_bucket/loop_and_log_validation_files_test/file_1.txt",
+                            "full_destination_path": "gs://ops_dev_bucket/loop_and_log_validation_files_test/file_2.txt"
+                        },
+                        {
+                            "source_file": "gs://ops_dev_bucket/loop_and_log_validation_files_test/file_3.txt",
+                            "full_destination_path": "gs://ops_dev_bucket/loop_and_log_validation_files_test/file_3.txt"
+                        }
+                    ]
+                }
+            }
+        },
+        "multithread_copy_of_files_with_validation": {
+            "resources": [
+                {
+                    "path": "copy_and_validate/file_1.txt",
+                    "data": "nsutgzemvip72eq11hc0j36sxwt064"
+                },
+                {
+                    "path": "copy_and_validate/file_2.txt",
+                    "data": "x6jgl0bkzca5dgkrlnspz3m9smbrov"
+                }
+            ],
+            "test_data": {
+                "function_input": [
+                    {
+                        "source_file": "gs://ops_dev_bucket/copy_and_validate/file_1.txt",
+                        "full_destination_path": "gs://ops_dev_bucket/tmp/multi_copy/test_1.txt"
+                    },
+                    {
+                        "source_file": "gs://ops_dev_bucket/copy_and_validate/file_2.txt",
+                        "full_destination_path": "gs://ops_dev_bucket/tmp/multi_copy/test_2.txt"
+                    }
+                ],
+                "validation": [
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "copy_and_validate/file_1.txt"
+                        },
+                        "should_exist": true
+                    },
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "copy_and_validate/file_2.txt"
+                        },
+                        "should_exist": true
+                    },
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "tmp/multi_copy/test_1.txt"
+                        },
+                        "should_exist": true
+                    },
+                    {
+                        "path": {
+                            "bucket": "ops_dev_bucket",
+                            "file_path": "tmp/multi_copy/test_2.txt"
+                        },
+                        "should_exist": true
+                    }
+                ]
+            }
+        },
+        "move_or_copy_multiple_files": {
+            "resources": [
+                {
+                    "path": "move_or_copy_multiple_files/file_1.txt",
+                    "data": "1jd759idx764p4nr476ymjd0tr59n5"
+                },
+                {
+                    "path": "move_or_copy_multiple_files/file_2.txt",
+                    "data": "umzpqcyxe9rsqdxr06m4tf3funwusu"
+                }
+            ],
+            "test_data": {
+                "function_input": {
+                    "copy_test_input": [
+                        {
+                            "source_file": "gs://ops_dev_bucket/move_or_copy_multiple_files/file_1.txt",
+                            "full_destination_path": "gs://ops_dev_bucket/tmp/copy/file_1.txt"
+                        },
+                        {
+                            "source_file": "gs://ops_dev_bucket/move_or_copy_multiple_files/file_2.txt",
+                            "full_destination_path": "gs://ops_dev_bucket/tmp/copy/file_2.txt"
+                        }
+                    ],
+                    "move_test_input": [
+                        {
+                            "source_file": "gs://ops_dev_bucket/move_or_copy_multiple_files/file_1.txt",
+                            "full_destination_path": "gs://ops_dev_bucket/tmp/mv/file_1.txt"
+                        },
+                        {
+                            "source_file": "gs://ops_dev_bucket/move_or_copy_multiple_files/file_2.txt",
+                            "full_destination_path": "gs://ops_dev_bucket/tmp/mv/file_2.txt"
+                        }
+                    ]
+                },
+                "validation": {
+                    "copy_test": [
+                        {
+                            "path": {
+                                "bucket": "ops_dev_bucket",
+                                "file_path": "move_or_copy_multiple_files/file_1.txt"
+                            },
+                            "should_exist": true
+                        },
+                        {
+                            "path": {
+                                "bucket": "ops_dev_bucket",
+                                "file_path": "move_or_copy_multiple_files/file_2.txt"
+                            },
+                            "should_exist": true
+                        },
+                        {
+                            "path": {
+                                "bucket": "ops_dev_bucket",
+                                "file_path": "tmp/copy/file_1.txt"
+                            },
+                            "should_exist": true
+                        },
+                        {
+                            "path": {
+                                "bucket": "ops_dev_bucket",
+                                "file_path": "tmp/copy/file_2.txt"
+                            },
+                            "should_exist": true
+                        }
+                    ],
+                    "move_test": [
+                        {
+                            "path": {
+                                "bucket": "ops_dev_bucket",
+                                "file_path": "move_or_copy_multiple_files/file_1.txt"
+                            },
+                            "should_exist": false
+                        },
+                        {
+                            "path": {
+                                "bucket": "ops_dev_bucket",
+                                "file_path": "move_or_copy_multiple_files/file_2.txt"
+                            },
+                            "should_exist": false
+                        },
+                        {
+                            "path": {
+                                "bucket": "ops_dev_bucket",
+                                "file_path": "tmp/mv/file_1.txt"
+                            },
+                            "should_exist": true
+                        },
+                        {
+                            "path": {
+                                "bucket": "ops_dev_bucket",
+                                "file_path": "tmp/mv/file_2.txt"
+                            },
+                            "should_exist": true
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
