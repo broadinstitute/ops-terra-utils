@@ -3,14 +3,14 @@ name: merge validations
 on:
   pull_request:
     branches: [ main ]
-    #types: [ opened ]
+    types: [ opened ]
   issue_comment:
     types: [ created ]
 
 jobs:
   linting_check:
     # only run newly created PR or comment with /run_tests
-    #if: ${{ github.event.action == 'opened' || github.event.comment.body == '/run_tests' }}
+    if: ${{ github.event.action == 'opened' || github.event.comment.body == '/run_tests' }}
     uses: ./.github/workflows/linting_check.yaml
 
   wdl_validation:
