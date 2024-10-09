@@ -28,3 +28,11 @@ jobs:
         - name: run_wdl_validation
           if: steps.get_updated_wdls.outputs.any_changed == 'true'
           uses: ./.github/workflows/validate_wdls.yaml
+
+  integration_tests:
+    needs: linting_check
+    uses: ./.github/workflows/integration_tests.yaml
+
+  build_and_push_docker:
+    needs: integration_tests
+    uses: ./.github/workflows/docker-BuildAndPush.yaml
