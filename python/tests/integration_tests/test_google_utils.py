@@ -22,8 +22,8 @@ def check_cloud_paths(path_dicts: list[dict]) -> None:
 
     client = gcs_client()
     for validation in path_dicts:
-        bucket = client.bucket(validation["Path"]["bucket"])
-        blob = bucket.blob(validation["Path"]["file_path"])
+        bucket = client.bucket(validation["path"]["bucket"])
+        blob = bucket.blob(validation["path"]["file_path"])
         check_passed = blob.exists() == validation["should_exist"]
         validation["check_passed"] = check_passed
 
