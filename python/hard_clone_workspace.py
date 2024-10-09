@@ -15,6 +15,8 @@ logging.basicConfig(
 )
 
 DEFAULT_WORKERS = 10
+DEST_BUCKET_FILE = "dest_workspace_bucket.txt"
+SOURCE_BUCKET_FILE = "source_workspace_bucket.txt"
 
 
 def get_args() -> Namespace:
@@ -32,6 +34,8 @@ def get_args() -> Namespace:
     parser.add_argument('--batch_size', "-b", type=int,
                         help="Number of files validate and copy at a time. If not specified, "
                              "all files will be copied at once")
+    parser.add_argument('--metadata_only', "-m", action="store_true",
+                        help="Only copy metadata, no actual file copy")
     return parser.parse_args()
 
 
@@ -166,6 +170,16 @@ class UpdateWorkspaceAcls:
         self.dest_workspace.update_multiple_users_acl(acl_list=src_workspace_acls_list)
 
 
+def make_bucket_files(src_bucket: str, dest_bucket: str) -> None:
+    logging.info(f"Creating {DEST_BUCKET_FILE}")
+    with open(DEST_BUCKET_FILE, "w") as f:
+        f.write(f"gs://{dest_bucket}/")
+
+    logging.info(f"Creating {SOURCE_BUCKET_FILE}")
+    with open(SOURCE_BUCKET_FILE, "w") as f:
+        f.write(f"gs://{src_bucket}/")
+
+
 if __name__ == '__main__':
     args = get_args()
     source_billing_project = args.source_billing_project
@@ -176,6 +190,7 @@ if __name__ == '__main__':
     workers = args.workers
     extensions_to_ignore = args.extensions_to_ignore
     batch_size = args.batch_size
+    metadata_only = args.metadata_only
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -231,13 +246,18 @@ if __name__ == '__main__':
         logging.info(f"Uploading {tsv} to destination workspace")
         dest_workspace.upload_metadata_to_workspace_table(entities_tsv=tsv)
 
-    CopyFilesToDestWorkspace(
-        src_bucket=src_bucket,
-        dest_bucket=dest_bucket,
-        extensions_to_ignore=extensions_to_ignore,
-        workers=workers,
-        batch_size=batch_size
-    ).run()
+    if not metadata_only:
+        # Copy files from source workspace to destination workspace
+        CopyFilesToDestWorkspace(
+            src_bucket=src_bucket,
+            dest_bucket=dest_bucket,
+            extensions_to_ignore=extensions_to_ignore,
+            workers=workers,
+            batch_size=batch_size
+        ).run()
+
+    # This is just done for the wdl to run rsync
+    make_bucket_files(src_bucket, dest_bucket)
 
     # Set the destination workspace ACLs
     UpdateWorkspaceAcls(src_workspace=src_workspace, dest_workspace=dest_workspace).run()
