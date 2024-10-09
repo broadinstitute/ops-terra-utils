@@ -7,11 +7,11 @@ workflow HardCloneTerraWorkspace {
 		String source_billing_project
 		String source_workspace_name
 		String dest_billing_project
-        String dest_workspace_name
-        Boolean allow_already_created
+		String dest_workspace_name
+		Boolean allow_already_created
 		Boolean rsync_workspace
-        Int? workers
-        String? extensions_to_ignore
+		Int? workers
+		String? extensions_to_ignore
 		String? docker_name
 		Int? memory_gb
 		Int? batch_size
@@ -49,13 +49,13 @@ workflow HardCloneTerraWorkspace {
 task HardCloneTerraWorkspaceTask {
 	input {
 		String source_billing_project
-        String source_workspace_name
-        String dest_billing_project
-        String dest_workspace_name
-        Boolean allow_already_created
-        Int? workers
-        String? extensions_to_ignore
-        String docker_name
+		String source_workspace_name
+		String dest_billing_project
+		String dest_workspace_name
+		Boolean allow_already_created
+		Int? workers
+		String? extensions_to_ignore
+		String docker_name
 		Int memory_gb
 		Boolean metadata_only
 		Int? batch_size
