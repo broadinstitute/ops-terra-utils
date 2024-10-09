@@ -31,14 +31,14 @@
                 },
                 "validation": [
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "copy_cloud_file_test/original_file.txt"
                         },
                         "should_exist": true
                     },
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "tmp/file_copied.txt"
                         },
@@ -60,7 +60,7 @@
                 },
                 "validation": [
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "delete_cloud_file_test/delete_this_file.txt"
                         },
@@ -83,14 +83,14 @@
                 },
                 "validation": [
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "move_cloud_file_test/move_test_file.txt"
                         },
                         "should_exist": false
                     },
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "tmp/file_moved.txt"
                         },
@@ -150,14 +150,14 @@
                 },
                 "validation": [
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "delete_cloud_file_test_multiple/delete_this_file.txt"
                         },
                         "should_exist": false
                     },
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "delete_cloud_file_test_multiple/also_delete_this_file.txt"
                         },
@@ -242,28 +242,28 @@
                 ],
                 "validation": [
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "copy_and_validate/file_1.txt"
                         },
                         "should_exist": true
                     },
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "copy_and_validate/file_2.txt"
                         },
                         "should_exist": true
                     },
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "tmp/multi_copy/test_1.txt"
                         },
                         "should_exist": true
                     },
                     {
-                        "Path": {
+                        "path": {
                             "bucket": "ops_dev_bucket",
                             "file_path": "tmp/multi_copy/test_2.txt"
                         },
@@ -309,28 +309,28 @@
                 "validation": {
                     "copy_test": [
                         {
-                            "Path": {
+                            "path": {
                                 "bucket": "ops_dev_bucket",
                                 "file_path": "move_or_copy_multiple_files/file_1.txt"
                             },
                             "should_exist": true
                         },
                         {
-                            "Path": {
+                            "path": {
                                 "bucket": "ops_dev_bucket",
                                 "file_path": "move_or_copy_multiple_files/file_2.txt"
                             },
                             "should_exist": true
                         },
                         {
-                            "Path": {
+                            "path": {
                                 "bucket": "ops_dev_bucket",
                                 "file_path": "tmp/copy/file_1.txt"
                             },
                             "should_exist": true
                         },
                         {
-                            "Path": {
+                            "path": {
                                 "bucket": "ops_dev_bucket",
                                 "file_path": "tmp/copy/file_2.txt"
                             },
@@ -339,28 +339,28 @@
                     ],
                     "move_test": [
                         {
-                            "Path": {
+                            "path": {
                                 "bucket": "ops_dev_bucket",
                                 "file_path": "move_or_copy_multiple_files/file_1.txt"
                             },
                             "should_exist": false
                         },
                         {
-                            "Path": {
+                            "path": {
                                 "bucket": "ops_dev_bucket",
                                 "file_path": "move_or_copy_multiple_files/file_2.txt"
                             },
                             "should_exist": false
                         },
                         {
-                            "Path": {
+                            "path": {
                                 "bucket": "ops_dev_bucket",
                                 "file_path": "tmp/mv/file_1.txt"
                             },
                             "should_exist": true
                         },
                         {
-                            "Path": {
+                            "path": {
                                 "bucket": "ops_dev_bucket",
                                 "file_path": "tmp/mv/file_2.txt"
                             },
