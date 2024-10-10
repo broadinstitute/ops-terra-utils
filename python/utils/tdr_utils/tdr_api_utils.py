@@ -340,6 +340,10 @@ class TDR:
                         f"Dataset {dataset['name']} exists but is under {dataset['defaultProfileId']} " +
                         f"and not under billing profile {billing_profile}"
                     )
+                    # Datasets names need to be unique regardless of billing profile, so raise an error if
+                    # a dataset with the same name is found but is not under the requested billing profile
+                    raise ValueError(
+                        f"Dataset {dataset_name} already exists but is not under billing profile {billing_profile}")
             else:
                 matching_datasets.append(dataset)
         return matching_datasets
