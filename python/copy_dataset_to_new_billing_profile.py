@@ -1,10 +1,11 @@
 """Take in billing profile and dataset and recreate the dataset in a new billing profile."""
+import json
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
 
 from utils.tdr_utils.tdr_api_utils import TDR
-from utils.tdr_utils.tdr_ingest_utils import BatchIngest
+from utils.tdr_utils.tdr_ingest_utils import FilterAndBatchIngest
 from utils.request_util import RunRequest
 from utils.token_util import Token
 from utils import GCP
@@ -23,6 +24,8 @@ def get_args() -> Namespace:
         description="""This script will copy a dataset to a new billing profile""")
     parser.add_argument("--new_billing_profile", "-nb", required=True)
     parser.add_argument("--orig_dataset_id", "-od", required=True)
+    parser.add_argument("--filter_out_existing_ids", action="store_true",
+                        help="If used, will filter out existing ids in the dest dataset")
     parser.add_argument(
         "--ingest_batch_size",
         help=f"Batch size for ingest. Default to {DEFAULT_BATCH_SIZE}",
@@ -162,9 +165,8 @@ class CreateIngestRecords:
 if __name__ == "__main__":
     args = get_args()
 
-    orig_dataset_id, update_strategy, time_to_poll = (
-        args.orig_dataset_id, args.update_strategy, args.waiting_time_to_poll
-    )
+    orig_dataset_id, update_strategy, time_to_poll = args.orig_dataset_id, args.update_strategy, args.waiting_time_to_poll
+    filter_out_existing_ids = args.filter_out_existing_ids
     bulk_mode, ingest_batch_size, billing_profile = args.bulk_mode, args.ingest_batch_size, args.new_billing_profile
     new_dataset_name = args.new_dataset_name
     # Initialize the Terra and TDR classes
@@ -228,18 +230,19 @@ if __name__ == "__main__":
         table_name = table_dict['name']
         logging.info(
             f"Starting ingest for table {table_name} with total of {len(ingest_records)} rows")
-        BatchIngest(
-            ingest_metadata=ingest_records,
+        FilterAndBatchIngest(
             tdr=tdr,
-            target_table_name=table_name,
+            filter_existing_ids=filter_out_existing_ids,
+            unique_id_field=table_dict['primaryKey'][0],  # Assumes only one primary key
+            table_name=table_name,
+            ingest_metadata=ingest_records,
             dataset_id=dest_dataset_id,
-            batch_size=ingest_batch_size,
-            bulk_mode=bulk_mode,
+            file_list_bool=False,
+            ingest_waiting_time_poll=time_to_poll,
+            ingest_batch_size=ingest_batch_size,
+            bulk_mode=False,
             cloud_type=GCP,
             update_strategy=update_strategy,
-            waiting_time_to_poll=time_to_poll,
-            test_ingest=False,
             load_tag=f"{orig_dataset_info['name']}-{new_dataset_name}",
-            file_list_bool=False,
             skip_reformat=True
         ).run()

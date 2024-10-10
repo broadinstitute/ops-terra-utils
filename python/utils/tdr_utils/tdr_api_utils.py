@@ -811,7 +811,7 @@ class FilterOutSampleIdsAlreadyInDataset:
         if len(filtered_ingest_metrics) < len(self.ingest_metrics):
             logging.info(
                 f"Filtered out {len(self.ingest_metrics) - len(filtered_ingest_metrics)} rows that already exist in "
-                f"dataset"
+                f"dataset. There is {len(filtered_ingest_metrics)} rows left to ingest"
             )
 
             if filtered_ingest_metrics:

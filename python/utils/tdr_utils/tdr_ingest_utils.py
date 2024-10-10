@@ -554,7 +554,8 @@ class FilterAndBatchIngest:
             file_to_uuid_dict: Optional[dict] = None,
             sas_expire_in_secs: int = 3600,
             schema_info: Optional[dict] = None,
-            terra_workspace: Optional[TerraWorkspace] = None
+            terra_workspace: Optional[TerraWorkspace] = None,
+            skip_reformat: bool = False
     ):
         """
         Initialize the FilterAndBatchIngest class.
@@ -583,6 +584,7 @@ class FilterAndBatchIngest:
                 Used to validate ingest metrics match. Defaults to None.
             terra_workspace (Optional[TerraWorkspace], optional): Instance of the TerraWorkspace class.
                 Only used for azure ingests to get token. Defaults to None.
+            skip_reformat (bool, optional): Whether to skip reformatting of metrics. Defaults to False.
         """
         self.tdr = tdr
         self.filter_existing_ids = filter_existing_ids
@@ -603,6 +605,7 @@ class FilterAndBatchIngest:
         self.terra_workspace = terra_workspace
         self.file_to_uuid_dict = file_to_uuid_dict
         self.schema_info = schema_info
+        self.skip_reformat = skip_reformat
 
     def run(self) -> None:
         """
@@ -625,7 +628,7 @@ class FilterAndBatchIngest:
         # If there are metrics to ingest then ingest them
         if filtered_metrics:
             # Batch ingest of table to table within dataset
-            logging.info(f"Starting ingest of {self.table_name} into {self.dataset_id}")
+            logging.info(f"Starting ingest into {self.table_name} in dataset {self.dataset_id}")
             BatchIngest(
                 ingest_metadata=filtered_metrics,
                 tdr=self.tdr,
@@ -641,7 +644,8 @@ class FilterAndBatchIngest:
                 file_list_bool=self.file_list_bool,
                 dest_file_path_flat=self.dest_file_path_flat,
                 file_to_uuid_dict=self.file_to_uuid_dict,
-                schema_info=self.schema_info
+                schema_info=self.schema_info,
+                skip_reformat=self.skip_reformat
             ).run()
 
 
