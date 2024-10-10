@@ -1,0 +1,30 @@
+name: run integrtaion tests
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Login to GCP
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.INTEGRATION_TEST_ACCOUNT }}
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Run tests
+      run: |
+        pip install pytest
+        pytest python/tests/

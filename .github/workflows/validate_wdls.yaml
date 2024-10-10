@@ -3,14 +3,7 @@
 name: WomtoolCheck
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'wdl/**'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'wdl/**'
+  workflow_call:
 
 jobs:
   validate_wdl_job:
