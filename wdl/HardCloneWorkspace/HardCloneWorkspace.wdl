@@ -36,12 +36,10 @@ workflow HardCloneTerraWorkspace {
 	}
 
 	if (rsync_workspace) {
-		String source_bucket = read_string(HardCloneTerraWorkspaceTask.src_bucket)
-		String dest_bucket = read_string(HardCloneTerraWorkspaceTask.dest_bucket)
 		call gcp_utils.GcloudRsync {
 			input:
-				source=source_bucket,
-				destination=dest_bucket
+				source=HardCloneTerraWorkspaceTask.src_bucket,
+				destination=HardCloneTerraWorkspaceTask.dest_bucket
 		}
 	}
 }
@@ -75,8 +73,8 @@ task HardCloneTerraWorkspaceTask {
 	>>>
 
 	output {
-		String dest_bucket = "dest_workspace_bucket.txt"
-		String src_bucket = "source_workspace_bucket.txt"
+		String dest_bucket = read_string("dest_workspace_bucket.txt")
+		String src_bucket = read_string("source_workspace_bucket.txt")
 	}
 
 	runtime {
