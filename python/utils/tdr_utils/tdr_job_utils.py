@@ -27,12 +27,23 @@ class MonitorTDRJob:
         self.job_id = job_id
         self.check_interval = check_interval
 
-    def run(self) -> bool:
+    def _raise_for_failed_job(self) -> None:
+        """
+        Raise an error with useful information if the job has failed.
+
+        Raises:
+            ValueError: If the job has failed.
+        """
+        job_result = self.tdr.get_job_result(self.job_id, expect_failure=True)
+        raise Exception(
+            f"Status code {job_result.status_code}: {job_result.text}")
+
+    def run(self) -> dict:
         """
         Monitor the job until completion.
 
         Returns:
-            bool: True if the job succeeded, raises an error otherwise.
+            dict: The result of the job.
         """
         while True:
             ingest_response = self.tdr.get_job_status(self.job_id)
@@ -44,17 +55,14 @@ class MonitorTDRJob:
                 response_json = json.loads(ingest_response.text)
                 if response_json["job_status"] == "succeeded":
                     logging.info(f"TDR job {self.job_id} succeeded")
-                    return True
+                    request = self.tdr.get_job_result(self.job_id)
+                    return json.loads(request.text)
                 else:
                     logging.error(f"TDR job {self.job_id} failed")
-                    job_result = self.tdr.get_job_result(self.job_id)
-                    raise ValueError(
-                        f"Status code {ingest_response.status_code}: {response_json}\n{job_result}")
+                    self._raise_for_failed_job()
             else:
                 logging.error(f"TDR job {self.job_id} failed")
-                job_result = self.tdr.get_job_result(self.job_id)
-                raise ValueError(
-                    f"Status code {ingest_response.status_code}: {ingest_response.text}\n{job_result}")
+                self._raise_for_failed_job()
 
 
 class SubmitAndMonitorMultipleJobs:

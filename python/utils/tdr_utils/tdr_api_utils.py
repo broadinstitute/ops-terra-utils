@@ -398,19 +398,22 @@ class TDR:
                 return table
         return None
 
-    def get_job_result(self, job_id: str) -> dict:
+    def get_job_result(self, job_id: str, expect_failure: bool = False) -> requests.Response:
         """
         Retrieve the result of a job.
 
         Args:
             job_id (str): The ID of the job.
+            expect_failure (bool, optional): Whether the job is expected to fail. Defaults to False.
 
         Returns:
             dict: A dictionary containing the job result.
         """
         uri = f"{self.TDR_LINK}/jobs/{job_id}/result"
-        response = self.request_util.run_request(uri=uri, method=GET)
-        return json.loads(response.text)
+        # If job is expected to fail, accept any return code
+        acceptable_return_code = list(range(100, 600)) if expect_failure else []
+        response = self.request_util.run_request(uri=uri, method=GET, accept_return_codes=acceptable_return_code)
+        return response
 
     def ingest_to_dataset(self, dataset_id: str, data: dict) -> dict:
         """
@@ -658,11 +661,10 @@ class TDR:
             content_type="application/json"
         )
         job_id = response.json()["id"]
-        completed = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
-        if completed:
-            dataset_id = self.get_job_result(job_id)["id"]
-            logging.info(f"Successfully created dataset {dataset_name}: {dataset_id}")
-            return dataset_id
+        job_results = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
+        dataset_id = job_results["id"]
+        logging.info(f"Successfully created dataset {dataset_name}: {dataset_id}")
+        return dataset_id
 
     def update_dataset_schema(  # type: ignore[return]
             self, dataset_id: str,
@@ -707,11 +709,10 @@ class TDR:
             data=json.dumps(request_body)
         )
         job_id = response.json()["id"]
-        completed = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
-        if completed:
-            dataset_id = self.get_job_result(job_id)["id"]
-            logging.info(f"Successfully ran schema updates in dataset {dataset_id}")
-            return dataset_id
+        job_results = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
+        dataset_id = job_results["id"]
+        logging.info(f"Successfully ran schema updates in dataset {dataset_id}")
+        return dataset_id
 
     def _get_response_from_batched_endpoint(self, uri: str, limit: int = 1000) -> list[dict]:
         """
