@@ -25,8 +25,13 @@ jobs:
 
   linting_check:
     # only run newly created PR or comment with /run_tests
-    if: ${{ github.event.action == 'opened' || github.event.comment.body == '/run_tests' }}
-    uses: ./.github/workflows/linting_check.yaml
+    steps:
+        - name: remove whitespace
+          run: |
+            echo "FORMATTED_COMMENT=$(echo ${{github.event.comment.body}} | tr -d "[:blank:])" >> $GITHUB_ENV
+        - name: Perform linting checks
+          if: ${{ github.event.action == 'opened' || env.FORMATTED_COMMENT == '/run_tests' }}
+          uses: ./.github/workflows/linting_check.yaml
 
   wdl_validation:
     runs-on: ubuntu-latest
