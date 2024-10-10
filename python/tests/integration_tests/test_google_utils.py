@@ -74,7 +74,6 @@ def setup_test_gcs_resources() -> Any:
     del_bucket_objs(blob_list)
 
 
-@pytest.mark.order1
 def test_list_bucket_contents() -> None:
     resources = gcp_test_resource_json()['tests']
     gcp_blob_count = 0
@@ -85,7 +84,6 @@ def test_list_bucket_contents() -> None:
     assert len(result) == gcp_blob_count, f"Expected {gcp_blob_count} files, got {len(result)}"
 
 
-@pytest.mark.order2
 def test_copy_cloud_file() -> None:
     test_data = gcp_test_resource_json()['tests']['copy_file']['test_data']
     validations = test_data['validation']
@@ -98,7 +96,6 @@ def test_copy_cloud_file() -> None:
         assert item["check_passed"], "Files were not in expected end state"
 
 
-@pytest.mark.order3
 def test_delete_cloud_file() -> None:
     test_data = gcp_test_resource_json()['tests']['delete_file']['test_data']
     validations = test_data['validation']
@@ -109,7 +106,6 @@ def test_delete_cloud_file() -> None:
         assert item["check_passed"], "Files were not in expected end state"
 
 
-@pytest.mark.order4
 def test_move_cloud_file() -> None:
     test_data = gcp_test_resource_json()['tests']['move_file']['test_data']
     validations = test_data['validation']
@@ -122,7 +118,6 @@ def test_move_cloud_file() -> None:
         assert item["check_passed"], "Files were not in expected end state"
 
 
-@pytest.mark.order5
 def test_get_filesize() -> None:
     test_data = gcp_test_resource_json()['tests']['get_filesize']['test_data']
 
@@ -130,7 +125,6 @@ def test_get_filesize() -> None:
     assert filesize == 30, "Filesize was not as expected"
 
 
-@pytest.mark.order6
 def test_validate_files_are_same() -> None:
     test_data = gcp_test_resource_json()['tests']['validate_files_are_same']['test_data']
 
@@ -141,7 +135,6 @@ def test_validate_files_are_same() -> None:
     assert files_match and not files_do_not_match, "File validations did not return expected results"
 
 
-@pytest.mark.order7
 def test_delete_multiple_files() -> None:
     test_data = gcp_test_resource_json()['tests']['delete_multiple_files']['test_data']
     validations = test_data['validation']
@@ -152,7 +145,6 @@ def test_delete_multiple_files() -> None:
         assert item["check_passed"], "Files were not in expected end state"
 
 
-@pytest.mark.order8
 def test_validate_file_pair() -> None:
     test_data = gcp_test_resource_json()['tests']['validate_file_pair']['test_data']
 
@@ -165,7 +157,6 @@ def test_validate_file_pair() -> None:
     assert files_match is None and files_do_not_match is not None, "File validations did not return expected results"
 
 
-@pytest.mark.order9
 def test_loop_and_log_validation_files_multithreaded() -> None:
     test_data = gcp_test_resource_json()['tests']['loop_and_log_validation_files_multithreaded']['test_data']
 
@@ -175,7 +166,6 @@ def test_loop_and_log_validation_files_multithreaded() -> None:
     assert len(result) == 1, "Expected one file to be different, got more or less"
 
 
-@pytest.mark.order10
 def test_multithread_copy_of_files_with_validation() -> None:
     test_data = gcp_test_resource_json()['tests']['multithread_copy_of_files_with_validation']['test_data']
     validation = test_data['validation']
@@ -187,7 +177,6 @@ def test_multithread_copy_of_files_with_validation() -> None:
         assert item["check_passed"], "Files were not in expected end state"
 
 
-@pytest.mark.order11
 def test_move_or_copy_multiple_files() -> None:
     test_data = gcp_test_resource_json()['tests']['move_or_copy_multiple_files']['test_data']
     validation = test_data['validation']
