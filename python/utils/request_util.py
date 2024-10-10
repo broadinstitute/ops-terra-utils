@@ -45,7 +45,8 @@ class RunRequest:
         )
 
     def run_request(
-            self, uri: str,
+            self,
+            uri: str,
             method: str,
             data: Any = None,
             params: Optional[dict] = None,
@@ -130,8 +131,10 @@ class RunRequest:
             dict: The headers for the request.
         """
         self.token.get_token()
-        headers = {"Authorization": f"Bearer {self.token.token_string}",
-                   "accept": accept}
+        headers = {
+            "Authorization": f"Bearer {self.token.token_string}",
+            "accept": accept
+        }
         if content_type:
             headers["Content-Type"] = content_type
         if accept:
