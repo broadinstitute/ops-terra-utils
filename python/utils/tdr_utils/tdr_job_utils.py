@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 
 class MonitorTDRJob:
@@ -14,7 +14,7 @@ class MonitorTDRJob:
         check_interval (int): The interval in seconds to wait between status checks.
     """
 
-    def __init__(self, tdr: Any, job_id: str, check_interval: int):
+    def __init__(self, tdr: Any, job_id: str, check_interval: int, return_json: bool):
         """
         Initialize the MonitorTDRJob class.
 
@@ -22,10 +22,12 @@ class MonitorTDRJob:
             tdr (TDR): An instance of the TDR class.
             job_id (str): The ID of the job to be monitored.
             check_interval (int): The interval in seconds to wait between status checks.
+            return_json (bool): Whether to get and return the result of the job as json.
         """
         self.tdr = tdr
         self.job_id = job_id
         self.check_interval = check_interval
+        self.return_json = return_json
 
     def _raise_for_failed_job(self) -> None:
         """
@@ -38,7 +40,7 @@ class MonitorTDRJob:
         raise Exception(
             f"Status code {job_result.status_code}: {job_result.text}")
 
-    def run(self) -> dict:
+    def run(self) -> Optional[dict]:
         """
         Monitor the job until completion.
 
@@ -55,8 +57,9 @@ class MonitorTDRJob:
                 response_json = json.loads(ingest_response.text)
                 if response_json["job_status"] == "succeeded":
                     logging.info(f"TDR job {self.job_id} succeeded")
-                    request = self.tdr.get_job_result(self.job_id)
-                    return json.loads(request.text)
+                    if self.return_json:
+                        request = self.tdr.get_job_result(self.job_id)
+                        return json.loads(request.text)
                 else:
                     logging.error(f"TDR job {self.job_id} failed")
                     self._raise_for_failed_job()
@@ -123,7 +126,12 @@ class SubmitAndMonitorMultipleJobs:
             # Monitor jobs for the current batch
             logging.info(f"Monitoring {len(current_batch)} jobs in batch {i // self.batch_size + 1}")
             for job_id in job_ids:
-                MonitorTDRJob(tdr=self.tdr, job_id=job_id, check_interval=self.check_interval).run()
+                MonitorTDRJob(
+                    tdr=self.tdr,
+                    job_id=job_id,
+                    check_interval=self.check_interval,
+                    return_json=False
+                ).run()
 
             logging.info(f"Completed batch {i // self.batch_size + 1} with {len(current_batch)} jobs.")
 

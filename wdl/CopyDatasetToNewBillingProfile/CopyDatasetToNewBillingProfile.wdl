@@ -10,6 +10,7 @@ workflow CopyToNewBillingProfile {
 		Int? ingest_batch_size
 		String? update_strategy
 		String? docker_name
+		Boolean filter_out_entity_already_in_dataset
 	}
 
 	String docker = select_first([docker_name, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -24,7 +25,8 @@ workflow CopyToNewBillingProfile {
 			new_dataset_name=new_dataset_name,
 			waiting_time_to_poll=waiting_time_to_poll,
 			bulk_mode=bulk_mode,
-			docker_name=docker
+			docker_name=docker,
+			filter_out_entity_already_in_dataset=filter_out_entity_already_in_dataset
 	}
 }
 
@@ -38,6 +40,7 @@ task RunCopyToNewBillingProfile {
 		String? update_strategy
 		Int? waiting_time_to_poll
 		Boolean bulk_mode
+		Boolean filter_out_entity_already_in_dataset
 	}
 
 	command <<<
@@ -49,6 +52,7 @@ task RunCopyToNewBillingProfile {
 		~{"--update_strategy " + update_strategy} \
 		~{"--waiting_time_to_poll " + waiting_time_to_poll} \
 		~{if bulk_mode then "--bulk_mode" else ""}
+		~{if filter_out_entity_already_in_dataset then "--filter_out_existing_ids" else ""}
 	>>>
 
 	runtime {

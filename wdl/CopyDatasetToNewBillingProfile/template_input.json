@@ -2,5 +2,6 @@
     "CopyToNewBillingProfile.new_billing_profile": "String",
     "CopyToNewBillingProfile.orig_dataset_id": "String",
 	"CopyToNewBillingProfile.new_dataset_name": "String",
-	"CopyToNewBillingProfile.bulk_mode": "Boolean"
+	"CopyToNewBillingProfile.bulk_mode": "Boolean",
+    "CopyToNewBillingProfile.filter_out_entity_already_in_dataset": "Boolean"
 }
