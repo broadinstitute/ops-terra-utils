@@ -43,7 +43,7 @@ class DeleteFilesFromDatasetsInBadState:
     def delete_file(self, file_id: str) -> None:
         logging.info(f"Could not list all file because of file, {file_id}, in bad state. Attempting to delete file.")
         job_id = self.tdr.delete_file(file_id=file_id, dataset_id=self.dataset_id)
-        MonitorTDRJob(tdr=self.tdr, job_id=job_id, check_interval=10).run()
+        MonitorTDRJob(tdr=self.tdr, job_id=job_id, check_interval=10, return_json=False).run()
 
     def find_and_delete_files_in_bad_state(self) -> list:
         batch = 1

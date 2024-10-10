@@ -224,7 +224,7 @@ class TDR:
         logging.info(f"Deleting dataset {dataset_id}")
         response = self.request_util.run_request(uri=uri, method=DELETE)
         job_id = response.json()['id']
-        MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
+        MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30, return_json=False).run()
 
     def get_snapshot_info(self, snapshot_id: str, continue_not_found: bool = False) -> dict:
         """
@@ -661,8 +661,8 @@ class TDR:
             content_type="application/json"
         )
         job_id = response.json()["id"]
-        job_results = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
-        dataset_id = job_results["id"]
+        job_results = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30, return_json=True).run()
+        dataset_id = job_results["id"]  # type: ignore[index]
         logging.info(f"Successfully created dataset {dataset_name}: {dataset_id}")
         return dataset_id
 
@@ -709,8 +709,8 @@ class TDR:
             data=json.dumps(request_body)
         )
         job_id = response.json()["id"]
-        job_results = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30).run()
-        dataset_id = job_results["id"]
+        job_results = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30, return_json=True).run()
+        dataset_id = job_results["id"]  # type: ignore[index]
         logging.info(f"Successfully ran schema updates in dataset {dataset_id}")
         return dataset_id
 

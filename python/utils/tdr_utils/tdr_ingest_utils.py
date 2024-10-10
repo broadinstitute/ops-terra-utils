@@ -236,7 +236,8 @@ class StartAndMonitorIngest:
         MonitorTDRJob(
             tdr=self.tdr,
             job_id=ingest_response["id"],
-            check_interval=self.waiting_time_to_poll
+            check_interval=self.waiting_time_to_poll,
+            return_json=False
         ).run()
 
 

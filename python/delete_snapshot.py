@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
     if snapshot_id:
         job_id = tdr.delete_snapshot(snapshot_id=snapshot_id)
-        MonitorTDRJob(tdr=tdr, job_id=job_id, check_interval=check_interval).run()
+        MonitorTDRJob(tdr=tdr, job_id=job_id, check_interval=check_interval, return_json=False).run()
     else:
         with open(snap_shot_id_file) as file:
             snapshot_ids = [line.strip() for line in file]
