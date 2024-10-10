@@ -1,5 +1,4 @@
 """Take in billing profile and dataset and recreate the dataset in a new billing profile."""
-import json
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
