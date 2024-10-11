@@ -9,9 +9,6 @@ on:
 
 jobs:
 
-  setup:
-    uses: actions/checkout@v4
-
   add_comment_to_pr:
     runs-on: ubuntu-latest
     if: ${{ github.event.action == 'opened' }}
@@ -31,6 +28,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: remove comment whitespace
         run: |
             echo "FORMATTED_COMMENT=$(echo ${{github.event.comment.body}} | tr -d "[:blank:]")" >> $GITHUB_ENV
