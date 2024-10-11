@@ -9,6 +9,9 @@ on:
 
 jobs:
 
+  setup:
+    uses: actions/checkout@v4
+
   add_comment_to_pr:
     runs-on: ubuntu-latest
     if: ${{ github.event.action == 'opened' }}
@@ -28,16 +31,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: remove comment whitespace
         run: |
             echo "FORMATTED_COMMENT=$(echo ${{github.event.comment.body}} | tr -d "[:blank:]")" >> $GITHUB_ENV
       - name: Perform linting checks
         if: ${{ github.event.action == 'opened' || env.FORMATTED_COMMENT == '/run_tests' }}
-        uses: ./.github/workflows/linting_check.yaml
+        uses: broadinstitute/ops-terra-utils/.github/workflows/linting_check.yaml@main
       - name: create github status check
-        uses: ./.github/workflows/create_status_check.yaml
+        uses: broadinstitute/ops-terra-utils/.github/workflows/create_status_check.yaml@main
         with:
           CheckName: 'linting_check'
 
