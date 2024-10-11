@@ -1,5 +1,10 @@
 name: create github status check
-description:
+description: test description
+inputs:
+  check-name:
+    description: 'The name of the check to create'
+    required: true
+
 
 runs:
   using: 'composite'

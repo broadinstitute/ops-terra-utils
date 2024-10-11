@@ -38,7 +38,7 @@ jobs:
       - name: create github status check
         uses: ./.github/actions/status-check
         with:
-          CheckName: 'linting_check'
+          check-name: 'linting_check'
 
   wdl_validation:
     runs-on: ubuntu-latest
