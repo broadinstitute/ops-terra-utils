@@ -1,14 +1,12 @@
 name: run integrtaion tests
+description: test description
+
+runs:
+  using: 'composite'
 
 
-on:
-  workflow_call:
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
+  steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
@@ -25,7 +23,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+      shell: bash
+
     - name: Run tests
       run: |
         pip install pytest
         pytest python/tests/
+      shell: bash
