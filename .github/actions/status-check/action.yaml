@@ -4,6 +4,9 @@ inputs:
   check-name:
     description: 'The name of the check to create'
     required: true
+  status:
+    description: 'The status of the check'
+    required: true
 
 
 runs:
