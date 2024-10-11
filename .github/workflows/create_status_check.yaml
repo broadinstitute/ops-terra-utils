@@ -1,0 +1,23 @@
+name: create github status check
+
+on:
+  workflow_call:
+    inputs:
+      CheckName:
+        description: "Name of Github status check"
+        required: true
+        type: string
+
+jobs:
+
+  create_status_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head_sha: context.sha
+              })
