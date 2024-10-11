@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: remove comment whitespace
         run: |
-            echo FORMATTED_COMMENT=$(echo ${{github.event.comment.body}} | tr -d '[:blank:]') >> $GITHUB_ENV
+            echo "FORMATTED_COMMENT=$(echo ${{ github.event.comment.body }} | tr -d '[:blank:]') >> $GITHUB_ENV
       - name: Perform linting checks
         if: ${{ github.event.action == 'opened' || env.FORMATTED_COMMENT == '/run_tests' }}
         uses: ./.github/workflows/linting_check.yaml
