@@ -17,5 +17,6 @@ runs:
         github.rest.checks.create({
         owner: context.repo.owner,
         repo: context.repo.repo,
-        head_sha: context.sha
+        head_sha: context.sha,
+        name: ${{ inputs.check-name }}
             })
