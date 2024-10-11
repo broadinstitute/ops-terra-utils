@@ -34,9 +34,9 @@ jobs:
             echo "FORMATTED_COMMENT=$(echo ${{ github.event.comment.body }} | tr -d '[:blank:]')" >> $GITHUB_ENV
       - name: Perform linting checks
         #if: ${{ github.event.action == 'opened' || env.FORMATTED_COMMENT == '/run_tests' }}
-        uses: ./.github/workflows/linting_check.yaml
+        uses: ./.github/actions/linting-check
       - name: create github status check
-        uses: ./.github/workflows/create_status_check.yaml
+        uses: ./.github/actions/status-check
         with:
           CheckName: 'linting_check'
 
