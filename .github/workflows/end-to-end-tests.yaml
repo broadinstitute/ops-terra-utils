@@ -55,13 +55,8 @@ jobs:
     needs: linting_check
 
     steps:
+      - uses: actions/checkout@v4
       - name: Perform integration tests
         uses: ./.github/workflows/integration_tests.yaml
         with:
           secrets: inherit
-      - name: create github status check
-        if: always()
-        uses: ./.github/workflows/create_status_check.yaml
-        with:
-          CheckName: 'integration_check'
-          status: ${{ job.status }}
