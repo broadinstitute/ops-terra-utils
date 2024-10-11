@@ -26,40 +26,13 @@ jobs:
   linting_check:
     # only run newly created PR or comment with /run_tests
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-      - name: create status check
-        id: create_status_check
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              head_sha: context.sha,
-              name: 'linting_check'
-            })
-      - name: echo output
-        run: echo "${{steps.create_status_check.outputs.result}}"
-
       - name: remove comment whitespace
         run: |
             echo "FORMATTED_COMMENT=$(echo ${{ github.event.comment.body }} | tr -d '[:blank:]')" >> $GITHUB_ENV
       - name: Perform linting checks
         #if: ${{ github.event.action == 'opened' || env.FORMATTED_COMMENT == '/run_tests' }}
         uses: ./.github/actions/linting-check
-      - name: update status check
-        uses: actions/github-script@v7
-        with:
-          script: |
-            octokit.rest.checks.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              runId: ${{ steps.create_status_check.outputs.checkId }},
-              head_sha: context.sha,
-              name: 'linting_check'
-            })
 
   wdl_validation:
     runs-on: ubuntu-latest
