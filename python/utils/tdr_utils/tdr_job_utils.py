@@ -60,6 +60,7 @@ class MonitorTDRJob:
                     if self.return_json:
                         request = self.tdr.get_job_result(self.job_id)
                         return json.loads(request.text)
+                    return None
                 else:
                     logging.error(f"TDR job {self.job_id} failed")
                     self._raise_for_failed_job()
