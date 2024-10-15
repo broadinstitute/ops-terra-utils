@@ -436,9 +436,9 @@ class TerraWorkspace:
         request_json = response.json()
         if request_json["usersNotFound"] and not invite_users_not_found:
             # Will be a list of one user
-            user_not_found = request_json["usersNotFound"][0]
+            users_not_found = [u["email"] for u in request_json["usersNotFound"]]
             raise Exception(
-                f'The user {user_not_found["email"]} was not found and access was not updated'
+                f"The following users were not found and access was not updated: {users_not_found}"
             )
         return request_json
 
