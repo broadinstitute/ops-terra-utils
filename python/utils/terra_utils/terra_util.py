@@ -45,7 +45,7 @@ class TerraGroups:
         if role not in self.GROUP_MEMBERSHIP_OPTIONS:
             raise ValueError(f"Role must be one of {self.GROUP_MEMBERSHIP_OPTIONS}")
 
-    def remove_user_from_group(self, group: str, email: str, role: str) -> None:
+    def remove_user_from_group(self, group: str, email: str, role: str) -> int:
         """
         Remove a user from a group.
 
@@ -53,22 +53,27 @@ class TerraGroups:
             group (str): The name of the group.
             email (str): The email of the user to remove.
             role (str): The role of the user in the group.
+        Returns:
+            int: The response code
         """
         url = f"{SAM_LINK}/groups/v1/{group}/{role}/{email}"
         self._check_role(role)
-        self.request_util.run_request(
+        res = self.request_util.run_request(
             uri=url,
             method=DELETE
         )
         logging.info(f"Removed {email} from group {group}")
+        return res.status_code
 
-    def create_group(self, group_name: str, continue_if_exists: bool = False) -> None:
+    def create_group(self, group_name: str, continue_if_exists: bool = False) -> int:
         """
         Create a new group.
 
         Args:
             group_name (str): The name of the group to create.
             continue_if_exists (bool, optional): Whether to continue if the group already exists. Defaults to False.
+        Returns:
+            int: The response code
         """
         url = f"{SAM_LINK}/groups/v1/{group_name}"
         accept_return_codes = [409] if continue_if_exists else []
@@ -81,22 +86,26 @@ class TerraGroups:
             logging.info(f"Group {group_name} already exists. Continuing.")
         else:
             logging.info(f"Created group {group_name}")
+            return response.status_code
 
-    def delete_group(self, group_name: str) -> None:
+    def delete_group(self, group_name: str) -> int:
         """
         Delete a group.
 
         Args:
             group_name (str): The name of the group to delete.
+        Returns:
+            int: The status code
         """
         url = f"{SAM_LINK}/groups/v1/{group_name}"
-        self.request_util.run_request(
+        res = self.request_util.run_request(
             uri=url,
             method=DELETE
         )
         logging.info(f"Deleted group {group_name}")
+        return res.status_code
 
-    def add_user_to_group(self, group: str, email: str, role: str) -> None:
+    def add_user_to_group(self, group: str, email: str, role: str) -> int:
         """
         Add a user to a group.
 
@@ -104,14 +113,17 @@ class TerraGroups:
             group (str): The name of the group.
             email (str): The email of the user to add.
             role (str): The role of the user in the group.
+        Returns:
+            int: The response code
         """
         url = f"{SAM_LINK}/groups/v1/{group}/{role}/{email}"
         self._check_role(role)
-        self.request_util.run_request(
+        res = self.request_util.run_request(
             uri=url,
             method=PUT
         )
         logging.info(f"Added {email} to group {group} as {role}")
+        return res.status_code
 
 
 class TerraWorkspace:

@@ -1,14 +1,16 @@
 import pytest
 import requests
 import os
+import re
 
 from python.utils.request_util import RunRequest
-from python.utils.terra_utils.terra_util import TerraWorkspace
+from python.utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER
 from python.utils.terra_utils.terra_workflow_configs import WorkflowConfigs
 from python.utils.token_util import Token
 
 INTEGRATION_TEST_TERRA_BILLING_PROJECT = "ops-integration-billing"
 INTEGRATION_TEST_TERRA_WORKSPACE_NAME = "ops-integration-test-workspace"
+INTEGRATION_TEST_GROUP_NAME = "ops-integration-test-group"
 
 auth_token = Token(cloud="gcp")
 request_util = RunRequest(token=auth_token)
@@ -17,11 +19,12 @@ terra_workspace = TerraWorkspace(
     workspace_name=INTEGRATION_TEST_TERRA_WORKSPACE_NAME,
     request_util=request_util
 )
+terra_groups = TerraGroups(request_util=request_util)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_terra_resources():
-    # Attempt to delete the workspace before starting any tests
+    # Attempt to delete the test workspace before starting any tests
     try:
         terra_workspace.delete_workspace()
     except requests.exceptions.HTTPError:
@@ -145,3 +148,32 @@ def test_get_workspace_entity_info():
     res = terra_workspace.get_workspace_entity_info()
     expected_res = {"sample": {"attributeNames": ["sample_alias"], "count": 1, "idName": "sample_id"}}
     assert res == expected_res
+
+
+def test_delete_group():
+    res = terra_groups.delete_group(group_name=INTEGRATION_TEST_GROUP_NAME)
+    assert res == 204
+
+
+def test_create_group():
+    res = terra_groups.create_group(group_name=INTEGRATION_TEST_GROUP_NAME)
+    assert res == 201
+
+
+def test_add_user_to_group():
+    res = terra_groups.add_user_to_group(
+        group=INTEGRATION_TEST_GROUP_NAME, email="test@broadinstitute.org", role=MEMBER,
+    )
+    assert res == 204
+
+
+def test_remove_user_from_group():
+    res = terra_groups.remove_user_from_group(
+        group=INTEGRATION_TEST_GROUP_NAME, email="test@broadinstitute.org", role=MEMBER
+    )
+    assert res == 204
+
+
+def test__check_role():
+    with pytest.raises(ValueError, match=re.escape(f"Role must be one of {terra_groups.GROUP_MEMBERSHIP_OPTIONS}")):
+        terra_groups._check_role(role="members")
