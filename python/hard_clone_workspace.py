@@ -109,7 +109,9 @@ class CopyFilesToDestWorkspace:
         list_bucket_contents = self.gcp_cloud_functions.list_bucket_contents(
             bucket_name=self.src_bucket,
             file_extensions_to_ignore=self.extensions_to_ignore,
-            file_name_only=True
+            file_name_only=True,
+            # Ignore log files for this workflow since could be updating as running
+            file_strings_to_ignore=["call-HardCloneTerraWorkspaceTask"]
         )
 
         files_to_copy = [

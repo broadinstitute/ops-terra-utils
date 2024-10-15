@@ -39,7 +39,9 @@ workflow HardCloneTerraWorkspace {
 		call gcp_utils.GcloudRsync {
 			input:
 				source=HardCloneTerraWorkspaceTask.src_bucket,
-				destination=HardCloneTerraWorkspaceTask.dest_bucket
+				destination=HardCloneTerraWorkspaceTask.dest_bucket,
+				# Exclude the running hard clone submissions files
+				exclude_regex="^.*/submissions/.*/HardCloneTerraWorkspace/.*$"
 		}
 	}
 }
