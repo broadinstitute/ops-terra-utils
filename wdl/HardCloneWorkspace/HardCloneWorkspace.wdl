@@ -19,7 +19,7 @@ workflow HardCloneTerraWorkspace {
 
 	String docker = select_first([docker_name, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 	# Ignore HardCloneTerraWorkspace submisisons files
-	String rysnc_regex_exclude = "^HardCloneTerraWorkspace/.*"
+	String rysnc_regex_exclude = ".*/HardCloneTerraWorkspace/.*"
 	Int memory = select_first([memory_gb, 8])
 
 	call HardCloneTerraWorkspaceTask {
