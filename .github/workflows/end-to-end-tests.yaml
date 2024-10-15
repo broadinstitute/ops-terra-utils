@@ -34,8 +34,28 @@ jobs:
         run: |
             echo "FORMATTED_COMMENT=$(echo ${{ github.event.comment.body }} | tr -d '[:blank:]')" >> $GITHUB_ENV
       - name: Perform linting checks
+        id: linting-step
         if: ${{ github.event.action == 'opened' || env.FORMATTED_COMMENT == '/run_tests' }}
         uses: ./.github/actions/linting-check
+      - name: Report tests check
+        if: ${{ github.event.comment && steps.linting-step.outcome }}
+        uses: actions/github-script@v3
+        with:
+          script: |
+            github.checks.create({
+                    name: 'E2E_linting_check',
+                    head_sha: '${{ github.event.issue.pull_request.head.sha }}',
+                    status: 'completed',
+                    conclusion: '${{ steps.linting-step.outcome }}',
+                    output: {
+                      title: 'Linting Check',
+                      summary: 'Results: ${{ steps.linting-step.outcome }}'
+                    },
+                      owner: context.repo.owner,
+                      repo: context.repo.repo
+                    })
+
+
 
   E2E_wdl_validation:
     runs-on: ubuntu-latest
@@ -48,10 +68,56 @@ jobs:
           with:
             files: 'wdl/**.wdl'
         - name: run_wdl_validation
+          id: wdl-validation
           if: steps.get_updated_wdls.outputs.any_changed == 'true'
           uses: ./.github/workflows/validate_wdls.yaml
+        - name: Report tests check
+          if: ${{ github.event.comment && steps.wdl-validation.outcome }}
+          uses: actions/github-script@v3
+          with:
+            script: |
+              github.checks.create({
+                      name: 'E2E_linting_check',
+                      head_sha: '${{ github.event.issue.pull_request.head.sha }}',
+                      status: 'completed',
+                      conclusion: '${{ steps.wdl-validation.outcome }}',
+                      output: {
+                        title: 'Linting Check',
+                        summary: 'Results: ${{ steps.wdl-validation.outcome }}'
+                      },
+                        owner: context.repo.owner,
+                        repo: context.repo.repo
+                      })
+
 
   E2E_integration_tests:
-    needs: E2E_linting_check
-    uses: ./.github/workflows/integration-tests.yaml
-    secrets: inherit
+      needs: E2E_linting_check
+      runs-on: ubuntu-latest
+
+      steps:
+      - name: run integration_tests
+        id: integration-tests
+        uses: ./.github/workflows/integration-tests.yaml
+        secrets: inherit
+      - name: Report tests check
+        if: ${{ github.event.comment && steps.integration-tests.outcome }}
+        uses: actions/github-script@v3
+        with:
+          script: |
+            github.checks.create({
+                    name: 'E2E_linting_check',
+                    head_sha: '${{ github.event.issue.pull_request.head.sha }}',
+                    status: 'completed',
+                    conclusion: '${{ steps.integration-tests.outcome }}',
+                    output: {
+                      title: 'Linting Check',
+                      summary: 'Results: ${{ steps.integration-tests.outcome }}'
+                    },
+                      owner: context.repo.owner,
+                      repo: context.repo.repo
+                    })
+
+#  E2E_integration_tests:
+#    needs: E2E_linting_check
+#    uses: ./.github/workflows/integration-tests.yaml
+#    secrets: inherit
