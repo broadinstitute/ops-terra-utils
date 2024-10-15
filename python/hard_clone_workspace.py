@@ -111,7 +111,7 @@ class CopyFilesToDestWorkspace:
             file_extensions_to_ignore=self.extensions_to_ignore,
             file_name_only=True,
             # Ignore log files for this workflow since could be updating as running
-            file_strings_to_ignore=["call-HardCloneTerraWorkspaceTask"]
+            file_strings_to_ignore=["/HardCloneTerraWorkspace/"]
         )
 
         files_to_copy = [

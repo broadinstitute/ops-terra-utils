@@ -12,15 +12,14 @@ workflow HardCloneTerraWorkspace {
 		Boolean rsync_workspace
 		Int? workers
 		String? extensions_to_ignore
-		String? rysnc_regex_exclude
 		String? docker_name
 		Int? memory_gb
 		Int? batch_size
 	}
 
 	String docker = select_first([docker_name, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
-	# Default to ignore HardCloneTerraWorkspace submisisons files
-	String rsync_regex = select_first([rysnc_regex_exclude, "^.*/submissions/.*/HardCloneTerraWorkspace/.*$"])
+	# Ignore HardCloneTerraWorkspace submisisons files
+	String rysnc_regex_exclude = "^.*/submissions/.*/HardCloneTerraWorkspace/.*$"
 	Int memory = select_first([memory_gb, 8])
 
 	call HardCloneTerraWorkspaceTask {
@@ -43,7 +42,7 @@ workflow HardCloneTerraWorkspace {
 			input:
 				source=HardCloneTerraWorkspaceTask.src_bucket,
 				destination=HardCloneTerraWorkspaceTask.dest_bucket,
-				exclude_regex=rsync_regex
+				exclude_regex=rysnc_regex_exclude
 		}
 	}
 }
