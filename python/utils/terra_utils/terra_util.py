@@ -572,10 +572,8 @@ class TerraWorkspace:
         Returns:
             int: The response status code
         """
-        print(f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}")
         response = self.request_util.run_request(
             uri=f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}",
             method=DELETE
         )
-        print(response)
         return response
