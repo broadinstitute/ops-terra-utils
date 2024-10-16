@@ -14,10 +14,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: get sha
+        id: gitsha
+        uses: actions/github-script@v7
+        with:
+          script: |
+            cond: ${{ github.event_name == 'pull_request' }}
+            if_true: ${{ github.event.pull_request.head.sha }}
+            if_false: ${{ github.sha }}
+
       - name: Checkout PR Branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.issue.number }}
+          ref: ${{ steps.gitsha.outputs.value }}
+
 
       - name: Comment on PR
         if: ${{ github.event.action == 'opened' }}
