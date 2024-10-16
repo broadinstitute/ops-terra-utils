@@ -83,8 +83,18 @@ jobs:
           with:
             files: 'wdl/**.wdl'
         - name: run_wdl_validation
+          id: wdl-validation
           if: steps.get_updated_wdls.outputs.any_changed == 'true'
           uses: ./.github/workflows/validate_wdls.yaml
+        - name: report status
+          uses: LouisBrunner/checks-action@v2.0.0
+          if: always()
+          with:
+            token: ${{ secrets.GITHUB_TOKEN }}
+            name: Test XYZ
+            conclusion: ${{ job.status }}
+            output: |
+              {"summary":"${{ steps.wdl-validation.outputs.summary }}"}
 
   E2E_integration_tests:
     needs: E2E_linting_check
