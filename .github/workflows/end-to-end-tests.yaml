@@ -19,9 +19,10 @@ jobs:
     steps:
       - name: Github API Request
         id: request
-        uses: octokit/request-action@v2.0.2
+        uses: actions/github-script@v7
         with:
-          route: ${{ github.event.issue.pull_request.url }}
+          script: |
+            ${{ github.event.issue.pull_request.url }}
       - name: get pr info
         id: pr-info
         uses: actions/github-script@v7
