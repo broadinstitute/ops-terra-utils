@@ -4,9 +4,7 @@ on:
   pull_request:
     branches: [ main ]
     types: [ opened ]
-  issue_comment:
-    types: [ created ]
-  workflow_dispatch:
+
 jobs:
 
 
