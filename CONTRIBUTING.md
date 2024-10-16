@@ -28,8 +28,6 @@ terra = Terra(request_util=request_util)
 ```
 You should not be interacting with Terra or TDR directly in your script. Instead, you should use the `Terra` and `TDR` classes to interact with Terra and TDR respectively. If an API call is not available in the `Terra` or `TDR` classes, you can add it to the respective class.
 
-
-
 ## Workflow for Adding WDLs
 
 1. **Create a WDL**: Add your new WDL to the `wdl/` directory.
