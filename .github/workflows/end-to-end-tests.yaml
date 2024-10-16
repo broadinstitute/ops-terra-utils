@@ -14,29 +14,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: GitHub API Request
-        if: github.event.comment.body
-        id: request
-        uses: octokit/request-action@v2.0.0
+      - uses: actions/github-script@v3
+        id: get-pr
         with:
-          route: ${{ github.event.issue.pull_request.url }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Get PR informations
-        if: github.event.comment.body
-        id: pr_data
-        run: |
-          echo "::set-output name=branch::${{ fromJson(steps.request.outputs.data).head.ref }}"
-          echo "::set-output name=repo_name::${{ fromJson(steps.request.outputs.data).base.repo.full_name }}"
-          echo "::set-output name=repo_clone_url::${{ fromJson(steps.request.outputs.data).base.repo.clone_url }}"
-          echo "::set-output name=repo_ssh_url::${{ fromJson(steps.request.outputs.data).base.repo.ssh_url }}"
-      - name: clone branch of PR
-        if: steps.check.outputs.triggered == 'true'
-        uses: actions/checkout@v3
+          script: |
+            const request = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            }
+            core.info(`Getting PR #${request.pull_number} from ${request.owner}/${request.repo}`)
+            try {
+              const result = await github.pulls.get(request)
+              return result.data
+            } catch (err) {
+              core.setFailed(`Request failed with error ${err}`)
+            }
+      - uses: actions/checkout@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ steps.pr_data.outputs.branch }}
-
+          repository: ${{ fromJSON(steps.get-pr.outputs.result).head.repo.full_name }}
+          ref: ${{ fromJSON(steps.get-pr.outputs.result).head.sha }} # or .head.ref for branch name
 
       - name: Comment on PR
         if: ${{ github.event.action == 'opened' }}
