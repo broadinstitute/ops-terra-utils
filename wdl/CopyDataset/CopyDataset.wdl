@@ -1,6 +1,6 @@
 version 1.0
 
-workflow CopyToNewBillingProfile {
+workflow CopyDataset {
     input {
 		String new_billing_profile
 		String orig_dataset_id
@@ -16,7 +16,7 @@ workflow CopyToNewBillingProfile {
 	String docker = select_first([docker_name, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
 
-	call RunCopyToNewBillingProfile {
+	call RunCopyDataset {
 		input:
 			new_billing_profile=new_billing_profile,
 			orig_dataset_id=orig_dataset_id,
@@ -30,7 +30,7 @@ workflow CopyToNewBillingProfile {
 	}
 }
 
-task RunCopyToNewBillingProfile {
+task RunCopyDataset {
 	input {
 		String new_billing_profile
 		String orig_dataset_id
@@ -44,7 +44,7 @@ task RunCopyToNewBillingProfile {
 	}
 
 	command <<<
-		python /etc/terra_utils/copy_dataset_to_new_billing_profile.py \
+		python /etc/terra_utils/copy_dataset.py \
 		--new_billing_profile ~{new_billing_profile} \
 		--orig_dataset_id ~{orig_dataset_id} \
 		--new_dataset_name ~{new_dataset_name} \
