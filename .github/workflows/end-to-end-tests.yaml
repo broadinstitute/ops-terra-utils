@@ -38,8 +38,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup_gha
     steps:
-      - name: Setup Job
-        uses: ./.github/actions/setup-gha
+      - name: Checkout PR Branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
       - name: remove comment whitespace
         id: regex-match
         uses: actions-ecosystem/action-regex-match@v2
@@ -54,8 +56,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: E2E_linting_check
     steps:
-        - name: Setup Job
-          uses: ./.github/actions/setup-gha
+        - name: Checkout PR Branch
+          uses: actions/checkout@v3
+          with:
+            ref: ${{ github.head_ref }}
         - name: find any changed wdl files
           id: get_updated_wdls
           uses: tj-actions/changed-files@v45
