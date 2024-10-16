@@ -1,6 +1,6 @@
 # WDL Input Overview
 
-This WDL script transfers an existing dataset to a new dataset. It either uses an existing dataset or creates a new dataset in the requested billing profile. The script ensures that the required tables are created or confirmed in the new dataset and then ingests all metadata and files from the original dataset into the new one. The original dataset will not be deleted after the process.
+This WDL script copies a dataset. It either uses an existing dataset or creates a new dataset in the requested billing profile for the destination. The script ensures that the required tables are created or confirmed in the new dataset and then ingests all metadata and files from the original dataset into the new one. The original dataset will not be deleted after the process. If tables already exist in destination dataset there is no check to see if schema matches the source dataset table.
 
 It can take from 12-24 hours for TDR SA ingest account permissions to propagate to the dataset. If fails with permission error, wait 24 hours and try again.
 
