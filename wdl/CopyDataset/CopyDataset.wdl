@@ -51,7 +51,7 @@ task RunCopyDataset {
 		~{"--ingest_batch_size " + ingest_batch_size} \
 		~{"--update_strategy " + update_strategy} \
 		~{"--waiting_time_to_poll " + waiting_time_to_poll} \
-		~{if bulk_mode then "--bulk_mode" else ""}
+		~{if bulk_mode then "--bulk_mode" else ""} \
 		~{if filter_out_entity_already_in_dataset then "--filter_out_existing_ids" else ""}
 	>>>
 
