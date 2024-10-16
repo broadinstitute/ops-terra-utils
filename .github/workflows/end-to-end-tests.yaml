@@ -54,7 +54,7 @@ jobs:
           text: ${{ github.event.comment.body }}
           regex: '/(?<![\w\d])\/run_tests(?![\w\d])/gm'
       - name: Perform linting checks
-        if: ${{ github.event.action == 'opened' || steps.regex-match.outputs.match == '/run_tests' }}
+        if: ${{ github.event.action == 'opened' || steps.regex-match.outputs.match == '/run_tests' || 1 == 1 }}
         uses: ./.github/actions/linting-check
 
   E2E_wdl_validation:
