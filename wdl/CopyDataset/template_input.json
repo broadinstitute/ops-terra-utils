@@ -1,7 +1,7 @@
 {
     "CopyDataset.new_billing_profile": "String",
     "CopyDataset.orig_dataset_id": "String",
-	"CopyDataset.new_dataset_name": "String",
-	"CopyDataset.bulk_mode": "Boolean",
+    "CopyDataset.new_dataset_name": "String",
+    "CopyDataset.bulk_mode": "Boolean",
     "CopyDataset.filter_out_entity_already_in_dataset": "Boolean"
 }
