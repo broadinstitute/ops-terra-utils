@@ -17,8 +17,24 @@ jobs:
       repo_clone_url: ${{ steps.pr-info.outputs.repo_clone_url }}
       repo_ssh_url: ${{ steps.pr-info.outputs.repo_ssh_url }}
     steps:
-      - name: Setup Job
-        uses: ./.github/actions/setup-gha
+      - name: Github API Request
+        id: request
+        uses: octokit/request-action@v2.0.2
+        with:
+          route: ${{ github.event.issue.pull_request.url }}
+      - name: get pr info
+        id: pr-info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            echo repo_name=${{ fromJson(steps.request.outputs.data).head.repo.full_name }}" >> "$GITHUB_OUTPUT"
+            echo repo_clone_url=${{ fromJson(steps.request.outputs.data).head.repo.clone_url }}" >> "$GITHUB_OUTPUT"
+            echo repo_ssh_url=${{ fromJson(steps.request.outputs.data).head.repo.ssh_url }}" >> "$GITHUB_OUTPUT"
+      - name: Checkout PR Branch
+        uses: actions/checkout@v3
+        with:
+          repository: ${{fromJson(steps.request.outputs.data).head.repo.full_name}}
+          ref: ${{fromJson(steps.request.outputs.data).head.ref}}
       - name: Comment on PR
         if: ${{ github.event.action == 'opened' }}
         uses: actions/github-script@v7
