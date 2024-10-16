@@ -1,11 +1,11 @@
 version: 1.2
 workflows:
-  - name: CopyDatasetToNewBillingProfile
+  - name: CopyDatasetToNewDataset
     subclass: WDL
-    primaryDescriptorPath: /wdl/CopyDatasetToNewBillingProfile/CopyDatasetToNewBillingProfile.wdl
-    readMePath: /wdl/CopyDatasetToNewBillingProfile/README.md
+    primaryDescriptorPath: /wdl/CopyDatasetToNewDataset/CopyDatasetToNewDataset.wdl
+    readMePath: /wdl/CopyDatasetToNewDataset/README.md
     testParameterFiles:
-      - /wdl/copyDatasetToNewBillingProfile.wdl
+      - /wdl/CopyDatasetToNewDataset.wdl
 
   - name: AnvilGcpWorkspaceToDatasetCreationAndIngestion
     subclass: WDL

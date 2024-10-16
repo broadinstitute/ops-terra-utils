@@ -2,6 +2,8 @@
 
 This WDL script creates a new workspace that is nearly identical to the source workspace. It updates all metadata to point towards the new bucket and copies all files into this new bucket. Note that if metadata contains references to other tables, they may not transfer correctly and might appear as dictionaries or JSON in the new workspace.
 
+This script will run into issues when trying to update permissions if user running script does NOT have owner permissions on source workspace.
+
 ## Inputs Table:
 
 | Input Name                  | Description                                                                                                                                   | Type     | Required | Default |
