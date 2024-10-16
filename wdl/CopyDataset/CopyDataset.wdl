@@ -1,6 +1,6 @@
 version 1.0
 
-workflow CopyToNewBillingProfile {
+workflow CopyDatasetToNewDataset {
     input {
 		String new_billing_profile
 		String orig_dataset_id
@@ -30,7 +30,7 @@ workflow CopyToNewBillingProfile {
 	}
 }
 
-task RunCopyToNewBillingProfile {
+task RunCopyDatasetToNewDataset {
 	input {
 		String new_billing_profile
 		String orig_dataset_id
@@ -44,7 +44,7 @@ task RunCopyToNewBillingProfile {
 	}
 
 	command <<<
-		python /etc/terra_utils/copy_dataset_to_new_billing_profile.py \
+		python /etc/terra_utils/copy_dataset.py \
 		--new_billing_profile ~{new_billing_profile} \
 		--orig_dataset_id ~{orig_dataset_id} \
 		--new_dataset_name ~{new_dataset_name} \

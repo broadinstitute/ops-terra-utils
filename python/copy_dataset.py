@@ -1,4 +1,5 @@
 """Take in billing profile and dataset and recreate the dataset in a new billing profile."""
+import json
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
@@ -161,6 +162,49 @@ class CreateIngestRecords:
         return new_ingest_records
 
 
+class MatchSchemas:
+    def __init__(self, orig_dataset_info: dict, dest_dataset_info: dict, dest_dataset_id: str, tdr: TDR):
+        """
+        Initialize the MatchSchemas class.
+
+        Args:
+            orig_dataset_info (dict): The original dataset information.
+            dest_dataset_info (dict): The destination dataset information.
+            dest_dataset_id (str): The ID of the destination dataset.
+            tdr (TDR): An instance of the TDR class.
+        """
+        self.orig_dataset_info = orig_dataset_info
+        self.dest_dataset_info = dest_dataset_info
+        self.dest_dataset_id = dest_dataset_id
+        self.tdr = tdr
+
+    def run(self) -> None:
+        """
+        Run the process to match tables between the original and destination datasets and add missing tables.
+
+        Returns:
+            None
+        """
+        tables_to_update = []
+        dest_tables = [table['name'] for table in self.dest_dataset_info["schema"]["tables"]]
+        # If table exists already assumes it is the same schema
+        for table in self.orig_dataset_info["schema"]["tables"]:
+            if table['name'] not in dest_tables:
+                logging.info(
+                    f"Table {table['name']} not found in new dataset {new_dataset_name}. will add table"
+                )
+                tables_to_update.append(table)
+        if tables_to_update:
+            logging.info(
+                f"Adding {len(tables_to_update)} tables to new dataset {new_dataset_name}"
+            )
+            self.tdr.update_dataset_schema(
+                dataset_id=self.dest_dataset_id,
+                tables_to_add=tables_to_update,
+                update_note=f"Adding tables to dataset {new_dataset_name}"
+            )
+
+
 if __name__ == "__main__":
     args = get_args()
 
@@ -176,11 +220,10 @@ if __name__ == "__main__":
     orig_dataset_info = tdr.get_dataset_info(orig_dataset_id)
 
     # Check dataset id is not already in requested billing profile
-    if orig_dataset_info['defaultProfileId'] == billing_profile:
+    if orig_dataset_info['name'] == new_dataset_name:
         logging.info(
-            f"Dataset {orig_dataset_id} already in billing profile {billing_profile}")
+            f"Dataset {orig_dataset_id} is already named {new_dataset_name}. Exiting")
         sys.exit(0)
-
     additional_properties = create_additional_properties(orig_dataset_info)
     # Check if new dataset already created. If not then create it.
     logging.info(
@@ -194,8 +237,15 @@ if __name__ == "__main__":
         cloud_platform=GCP,
         additional_properties_dict=additional_properties
     )
-    # Assumes if dataset exists then it is with same schema
     dest_dataset_info = tdr.get_dataset_info(dest_dataset_id)
+
+    # Check if schema matches and update if needed. Only will be possibly updated if dataset already exists
+    MatchSchemas(
+        orig_dataset_info=orig_dataset_info,
+        dest_dataset_info=dest_dataset_info,
+        dest_dataset_id=dest_dataset_id,
+        tdr=tdr
+    ).run()
 
     # Add ingest service account for new dataset to original dataset
     logging.info(
