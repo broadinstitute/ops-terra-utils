@@ -50,7 +50,7 @@ jobs:
       - name: Checkout PR Branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.issue.number }}
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: remove comment whitespace
         id: regex-match
         uses: actions-ecosystem/action-regex-match@v2
@@ -68,7 +68,7 @@ jobs:
         - name: Checkout PR Branch
           uses: actions/checkout@v3
           with:
-            ref: ${{ github.event.issue.number }}
+            ref: ${{ github.event.pull_request.head.sha }}
         - name: find any changed wdl files
           id: get_updated_wdls
           uses: tj-actions/changed-files@v45
