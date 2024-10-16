@@ -14,18 +14,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: get sha
-        id: gitsha
-        uses: haya14busa/action-cond@v1
+      - name: GitHub API Request
+        if: github.event.comment.body
+        id: request
+        uses: octokit/request-action@v2.0.0
         with:
-          cond: ${{ github.event_name == 'pull_request' }}
-          if_true: ${{ github.event.pull_request.head.sha }}
-          if_false: ${{ github.sha }}
-
-      - name: Checkout PR Branch
+          route: ${{ github.event.issue.pull_request.url }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get PR informations
+        if: github.event.comment.body
+        id: pr_data
+        run: |
+          echo "::set-output name=branch::${{ fromJson(steps.request.outputs.data).head.ref }}"
+          echo "::set-output name=repo_name::${{ fromJson(steps.request.outputs.data).base.repo.full_name }}"
+          echo "::set-output name=repo_clone_url::${{ fromJson(steps.request.outputs.data).base.repo.clone_url }}"
+          echo "::set-output name=repo_ssh_url::${{ fromJson(steps.request.outputs.data).base.repo.ssh_url }}"
+      - name: clone branch of PR
+        if: steps.check.outputs.triggered == 'true'
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.gitsha.outputs.value }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ steps.pr_data.outputs.branch }}
 
 
       - name: Comment on PR
@@ -47,6 +57,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup_gha
     steps:
+      - name: Get PR informations
+        if: github.event.comment.body
+        id: pr_data
+        run: |
+          echo "::set-output name=branch::${{ fromJson(steps.request.outputs.data).head.ref }}"
+          echo "::set-output name=repo_name::${{ fromJson(steps.request.outputs.data).base.repo.full_name }}"
+          echo "::set-output name=repo_clone_url::${{ fromJson(steps.request.outputs.data).base.repo.clone_url }}"
+          echo "::set-output name=repo_ssh_url::${{ fromJson(steps.request.outputs.data).base.repo.ssh_url }}"
+      - name: clone branch of PR
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.pr_data.outputs.branch }}
+
       - name: Checkout PR Branch
         uses: actions/checkout@v3
         with:
