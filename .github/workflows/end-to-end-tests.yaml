@@ -17,7 +17,7 @@ jobs:
       - name: Checkout PR Branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.issue.number }}
 
       - name: Comment on PR
         if: ${{ github.event.action == 'opened' }}
@@ -41,7 +41,7 @@ jobs:
       - name: Checkout PR Branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.issue.number }}
       - name: remove comment whitespace
         id: regex-match
         uses: actions-ecosystem/action-regex-match@v2
@@ -59,7 +59,7 @@ jobs:
         - name: Checkout PR Branch
           uses: actions/checkout@v3
           with:
-            ref: ${{ github.head_ref }}
+            ref: ${{ github.event.issue.number }}
         - name: find any changed wdl files
           id: get_updated_wdls
           uses: tj-actions/changed-files@v45
