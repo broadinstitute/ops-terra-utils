@@ -42,10 +42,10 @@ jobs:
     needs: setup_gha
     steps:
       - name: Get PR branch
-        uses: xt0rted/pull-request-comment-branch
+        uses: xt0rted/pull-request-comment-branch@v1
         id: comment-branch
       - name: Set latest commit status as pending
-        uses: myrotvorets/set-commit-status-action
+        uses: myrotvorets/set-commit-status-action@master
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
           status: pending
