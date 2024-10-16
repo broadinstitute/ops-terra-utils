@@ -25,7 +25,6 @@ class BatchIngest:
             target_table_name: str,
             dataset_id: str,
             batch_size: int,
-            file_list_bool: bool,
             bulk_mode: bool,
             cloud_type: str,
             terra_workspace: Optional[TerraWorkspace] = None,
@@ -37,7 +36,8 @@ class BatchIngest:
             dest_file_path_flat: bool = False,
             file_to_uuid_dict: Optional[dict] = None,
             schema_info: Optional[dict] = None,
-            skip_reformat: bool = False
+            skip_reformat: bool = False,
+            file_list_bool: bool = False
     ):
         """
         Initialize the BatchIngest class.
