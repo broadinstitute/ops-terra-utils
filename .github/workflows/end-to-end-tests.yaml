@@ -14,10 +14,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - run: |
-          gh pr checkout ${{ github.event.issue.number }}
-
+      - name: Determine Target Branch
+        id: determine-branch
+        run: |
+            echo "TARGET_BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
+      - name: checkout
+        uses: actions/checkout@v3 # checkout the cromwell repo
+        with:
+         ref: $TARGET_BRANCH
       - name: Comment on PR
         if: ${{ github.event.action == 'opened' }}
         uses: actions/github-script@v7
@@ -37,23 +41,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup_gha
     steps:
-      - name: Get PR informations
-        if: github.event.comment.body
-        id: pr_data
-        run: |
-          echo "::set-output name=branch::${{ fromJson(steps.request.outputs.data).head.ref }}"
-          echo "::set-output name=repo_name::${{ fromJson(steps.request.outputs.data).base.repo.full_name }}"
-          echo "::set-output name=repo_clone_url::${{ fromJson(steps.request.outputs.data).base.repo.clone_url }}"
-          echo "::set-output name=repo_ssh_url::${{ fromJson(steps.request.outputs.data).base.repo.ssh_url }}"
+
       - name: clone branch of PR
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.pr_data.outputs.branch }}
+          ref: $TARGET_BRANCH
 
-      - name: Checkout PR Branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
       - name: remove comment whitespace
         id: regex-match
         uses: actions-ecosystem/action-regex-match@v2
@@ -71,7 +64,7 @@ jobs:
         - name: Checkout PR Branch
           uses: actions/checkout@v3
           with:
-            ref: ${{ github.event.pull_request.head.sha }}
+            ref: $TARGET_BRANCH
         - name: find any changed wdl files
           id: get_updated_wdls
           uses: tj-actions/changed-files@v45
