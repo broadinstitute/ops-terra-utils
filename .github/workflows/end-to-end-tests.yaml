@@ -41,10 +41,13 @@ jobs:
       - name: Setup Job
         uses: ./.github/actions/setup-gha
       - name: remove comment whitespace
-        run: |
-            echo "FORMATTED_COMMENT=$(echo ${{ github.event.comment.body }} | tr -d '[:blank:]')" >> $GITHUB_ENV
+        id: regex-match
+        uses: actions-ecosystem/action-regex-match@v2
+        with:
+          text: ${{ github.event.comment.body }}
+          regex: '/(?<![\w\d])\/run_tests(?![\w\d])/gm'
       - name: Perform linting checks
-        if: ${{ github.event.action == 'opened' || env.FORMATTED_COMMENT == '/run_tests' }}
+        if: ${{ github.event.action == 'opened' || steps.regex-match.outputs.match == '/run_tests' }}
         uses: ./.github/actions/linting-check
 
   E2E_wdl_validation:
