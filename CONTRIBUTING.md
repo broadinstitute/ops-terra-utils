@@ -156,3 +156,11 @@ Before merging any branches to main:
 3. Update WDL-specific README with any new information about the WDLs.
 4. Test Python code locally and if WDL changes are made, test the WDLs in a Terra Workspace.
 5. Get approval on the PR from a team member
+
+## New Workflow Checklist
+If you're adding a new workflow, use the following checklist as a guide for changes that are required:
+- [ ] A new WDL and associated Python script that's been tested (see [here](#testing-wdls-locally) for guidance on testing)
+- [ ] A README has been added with information regarding the new workflow and it's inputs/outputs. This should live next to the WDL file. (See [here](wdl/CopyDataset/README.md) as an example README)
+- [ ] The [.dockstore.yml](.dockstore.yml) has been updated to add your new workflow name and point it to the new WDL file and README
+- [ ] A `template_input.json` file (named exactly like this) has been created to be used for testing. This should also live next to the WDL file. (See [here](wdl/CopyDataset/template_input.json) as an example JSON)
+- [ ] The [Terra workflow configs](python/utils/terra_utils/terra_workflow_configs.py) file has been updated so that your new workflow can be imported via our scripts. First define the workflow as one that is available for import ([here](https://github.com/broadinstitute/ops-terra-utils/blob/main/python/utils/terra_utils/terra_workflow_configs.py#L14)) and then define the configuration parameters (see [CopyDataset](https://github.com/broadinstitute/ops-terra-utils/blob/main/python/utils/terra_utils/terra_workflow_configs.py#L64C9-L64C20) as an example).
