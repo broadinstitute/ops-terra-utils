@@ -3,16 +3,18 @@ import requests
 import os
 import re
 
+from python.utils import GCP
 from python.utils.request_util import RunRequest
 from python.utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER
 from python.utils.terra_utils.terra_workflow_configs import WorkflowConfigs
 from python.utils.token_util import Token
 
+
 INTEGRATION_TEST_TERRA_BILLING_PROJECT = "ops-integration-billing"
 INTEGRATION_TEST_TERRA_WORKSPACE_NAME = "ops-integration-test-workspace"
 INTEGRATION_TEST_GROUP_NAME = "ops-integration-test-group"
 
-auth_token = Token(cloud="gcp")
+auth_token = Token(cloud=GCP)
 request_util = RunRequest(token=auth_token)
 terra_workspace = TerraWorkspace(
     billing_project=INTEGRATION_TEST_TERRA_BILLING_PROJECT,
