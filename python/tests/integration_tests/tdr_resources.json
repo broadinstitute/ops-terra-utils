@@ -10,51 +10,51 @@
 						"columns":[
 							{
 								"name":"sample_id",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"individual_id",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"cram",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"alignment_method",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"analyte_type",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"data_processing_pipeline",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"library_prep_kit_method",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"reference_genome_build",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"sequencing_assay",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"sequencing_platform",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"sequencing_strategy",
-								"datatype": ""
+								"datatype": "string"
 							},
 							{
 								"name":"tissue_source",
-								"datatype": ""
+								"datatype": "string"
 							}
 						]
 					}]
