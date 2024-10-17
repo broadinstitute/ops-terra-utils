@@ -19,14 +19,8 @@ jobs:
         uses: ./.github/actions/linting-check
 
   E2E_wdl_validation:
-    runs-on: ubuntu-latest
     needs: E2E_linting_check
-    steps:
-        - name: Checkout PR Branch
-          uses: actions/checkout@v3
-
-        - name: run_wdl_validation
-          uses: ./.github/workflows/validate_wdls.yaml
+    uses: ./.github/workflows/validate_wdls.yaml
 
   E2E_integration_tests:
     needs: E2E_linting_check
