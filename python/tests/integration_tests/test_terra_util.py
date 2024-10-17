@@ -29,6 +29,7 @@ def setup_test_terra_resources():
     # Attempt to delete the test workspace before starting any tests
     try:
         terra_workspace.delete_workspace()
+        terra_groups.delete_group(group_name=INTEGRATION_TEST_GROUP_NAME)
     except requests.exceptions.HTTPError:
         pass
 
@@ -150,11 +151,6 @@ def test_get_workspace_entity_info():
     res = terra_workspace.get_workspace_entity_info()
     expected_res = {"sample": {"attributeNames": ["sample_alias"], "count": 1, "idName": "sample_id"}}
     assert res == expected_res
-
-
-def test_delete_group():
-    res = terra_groups.delete_group(group_name=INTEGRATION_TEST_GROUP_NAME)
-    assert res == 204
 
 
 def test_create_group():
