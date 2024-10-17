@@ -1,0 +1,72 @@
+{
+	"resources":{
+		"datasets":[
+			{
+				"name":"tmp_ops_dataset_test",
+				"defaultProfileId": "ce149ca7-608b-4d5d-9612-2a43a7378885",
+				"schema":{
+					"tables":[{
+						"name":"samples",
+						"columns":[
+							{
+								"name":"sample_id",
+								"datatype": ""
+							},
+							{
+								"name":"individual_id",
+								"datatype": ""
+							},
+							{
+								"name":"cram",
+								"datatype": ""
+							},
+							{
+								"name":"alignment_method",
+								"datatype": ""
+							},
+							{
+								"name":"analyte_type",
+								"datatype": ""
+							},
+							{
+								"name":"data_processing_pipeline",
+								"datatype": ""
+							},
+							{
+								"name":"library_prep_kit_method",
+								"datatype": ""
+							},
+							{
+								"name":"reference_genome_build",
+								"datatype": ""
+							},
+							{
+								"name":"sequencing_assay",
+								"datatype": ""
+							},
+							{
+								"name":"sequencing_platform",
+								"datatype": ""
+							},
+							{
+								"name":"sequencing_strategy",
+								"datatype": ""
+							},
+							{
+								"name":"tissue_source",
+								"datatype": ""
+							}
+						]
+					}]
+				}
+			}
+		],
+		"tables":{}, 
+		"snapshots": {},
+		"files":{}
+	},
+	"tests": {
+		"test_1": {},
+		"test_2": {}
+	}
+}
