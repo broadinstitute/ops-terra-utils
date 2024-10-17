@@ -62,3 +62,10 @@ workflows:
     readMePath: /wdl/HardCloneWorkspace/README.md
     testParameterFiles:
       - /wdl/HardCloneWorkspace/HardCloneWorkspace.wdl
+
+  - name: FileExportAzureTdrToGcp
+    subclass: WDL
+    primaryDescriptorPath: /wdl/FileExportAzureTdrToGcp/FileExportAzureTdrToGcp.wdl
+    readMePath: /wdl/FileExportAzureTdrToGcp/README.md
+    testParameterFiles:
+      - /wdl/FileExportAzureTdrToGcp/FileExportAzureTdrToGcp.wdl
