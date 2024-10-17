@@ -3,58 +3,19 @@ name: merge validations
 on:
   pull_request:
     branches: [ main ]
-    types: [ opened ]
-  issue_comment:
-    types: [ created ]
-  workflow_dispatch:
+
 jobs:
 
-
-  setup_gha:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Determine Target Branch
-        id: determine-branch
-        run: |
-            echo "TARGET_BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
-      - name: checkout
-        uses: actions/checkout@v3 # checkout the cromwell repo
-        with:
-         ref: ${{ env.TARGET_BRANCH }}
-      - name: Comment on PR
-        if: ${{ github.event.action == 'opened' }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: 'Thank you for contributing to the ops-terra-utils repo! \n A test suite will now begin running to ensure that no breaking changes are made.\n If these tests fail you can have them re-run after making changes by commenting `/run_tests`'
-            })
 
 
 
   E2E_linting_check:
-    # only run newly created PR or comment with /run_tests
     runs-on: ubuntu-latest
-    needs: setup_gha
     steps:
-
       - name: clone branch of PR
         uses: actions/checkout@v3
-        with:
-          ref: ${{ env.TARGET_BRANCH }}
 
-      - name: remove comment whitespace
-        id: regex-match
-        uses: actions-ecosystem/action-regex-match@v2
-        with:
-          text: ${{ github.event.comment.body }}
-          regex: '/(?<![\w\d])\/run_tests(?![\w\d])/gm'
       - name: Perform linting checks
-        if: ${{ github.event.action == 'opened' || steps.regex-match.outputs.match == '/run_tests' || 1 == 1 }}
         uses: ./.github/actions/linting-check
 
   E2E_wdl_validation:
@@ -63,15 +24,8 @@ jobs:
     steps:
         - name: Checkout PR Branch
           uses: actions/checkout@v3
-          with:
-            ref: ${{ env.TARGET_BRANCH }}
-        - name: find any changed wdl files
-          id: get_updated_wdls
-          uses: tj-actions/changed-files@v45
-          with:
-            files: 'wdl/**.wdl'
+
         - name: run_wdl_validation
-          if: steps.get_updated_wdls.outputs.any_changed == 'true'
           uses: ./.github/workflows/validate_wdls.yaml
 
   E2E_integration_tests:
