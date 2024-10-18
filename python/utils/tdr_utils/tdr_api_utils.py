@@ -213,6 +213,25 @@ class TDR:
             data=json.dumps(member_dict), content_type="application/json"
         )
 
+    def remove_user_from_dataset(self, dataset_id: str, user: str, policy: str) -> None:
+        """
+        Remove a user from a dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            user (str): The email of the user to be removed.
+            policy (str): The policy to be removed from the user.
+                Must be one of "steward", "custodian", or "snapshot_creator".
+
+        Raises:
+            ValueError: If the policy is not valid.
+        """
+        if policy not in ["steward", "custodian", "snapshot_creator"]:
+            raise ValueError(f"Policy {policy} is not valid. Must be steward, custodian, or snapshot_creator")
+        uri = f"{self.TDR_LINK}/datasets/{dataset_id}/policies/{policy}/members/{user}"
+        logging.info(f"Removing user {user} from dataset {dataset_id} with policy {policy}")
+        self.request_util.run_request(uri=uri, method=DELETE)
+
     def delete_dataset(self, dataset_id: str) -> None:
         """
         Delete a dataset.
@@ -316,7 +335,7 @@ class TDR:
             offset += batch_size
             break
 
-    def check_if_dataset_exists(self, dataset_name: str, billing_profile: Optional[str]) -> list[dict]:
+    def check_if_dataset_exists(self, dataset_name: str, billing_profile: Optional[str] = None) -> list[dict]:
         """
         Check if a dataset exists by name and optionally by billing profile.
 

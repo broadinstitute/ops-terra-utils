@@ -84,6 +84,7 @@ class TerraGroups:
         )
         if continue_if_exists and response.status_code == 409:
             logging.info(f"Group {group_name} already exists. Continuing.")
+            return response.status_code
         else:
             logging.info(f"Created group {group_name}")
             return response.status_code
@@ -381,7 +382,8 @@ class TerraWorkspace:
         Returns:
             dict: The JSON response containing the updated ACL.
         """
-        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl?inviteUsersNotFound={str(invite_users_not_found).lower()}"  # noqa
+        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl?" + \
+              f"inviteUsersNotFound={str(invite_users_not_found).lower()}"
         payload = {
             "email": email,
             "accessLevel": access_level,
@@ -436,7 +438,8 @@ class TerraWorkspace:
         Returns:
             dict: The JSON response containing the updated ACL.
         """
-        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl?inviteUsersNotFound={str(invite_users_not_found).lower()}"  # noqa
+        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl?" + \
+            f"inviteUsersNotFound={str(invite_users_not_found).lower()}"
         logging.info(
             f"Updating users in workspace {self.billing_project}/{self.workspace_name}")
         response = self.request_util.run_request(
@@ -589,3 +592,35 @@ class TerraWorkspace:
             method=DELETE
         )
         return response
+
+    def update_workspace_attributes(self, attributes: list[dict]) -> None:
+        """
+        Update the attributes for the workspace.
+
+        Args:
+            attributes (dict): The attributes to update.
+
+        Returns:
+            int: The response status code
+        """
+        self.request_util.run_request(
+            uri=f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/updateAttributes",
+            method=PATCH,
+            data=json.dumps(attributes),
+            content_type="application/json"
+        )
+
+    def leave_workspace(self, workspace_id: Optional[str] = None) -> None:
+        """
+        Leave a workspace. If workspace ID not supplied will look it up
+
+        Args:
+            workspace_id (Optional[str], optional): The workspace ID. Defaults to None.
+        """
+        if not workspace_id:
+            workspace_info = self.get_workspace_info()
+            workspace_id = workspace_info['workspace']['workspaceId']
+        self.request_util.run_request(
+            uri=f"{SAM_LINK}/resources/v2/workspace/{workspace_id}/leave",
+            method=DELETE
+        )

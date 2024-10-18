@@ -226,7 +226,7 @@ if __name__ == "__main__":
     additional_properties = create_additional_properties(orig_dataset_info)
     # Check if new dataset already created. If not then create it.
     logging.info(
-        f"Searching for and creating new dataset {new_dataset_name} in billing profile {billing_profile} if needed"
+        f"Creating new dataset {new_dataset_name} in billing profile {billing_profile} if needed"
     )
     dest_dataset_id = tdr.get_or_create_dataset(
         dataset_name=new_dataset_name,
