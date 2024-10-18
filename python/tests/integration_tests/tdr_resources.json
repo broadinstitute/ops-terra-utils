@@ -1,7 +1,17 @@
 {
 	"tests": {
 		"get_data_set_files": {"function_input":"0981274b-61e3-4efb-99f2-eaea57075612"},
-		"test_2": {"function_input":{}},
+		"create_file_dict": {"function_input":"0981274b-61e3-4efb-99f2-eaea57075612"},
+		"get_snapshot_info": {"function_input":{}},
+		"check_if_dataset_exists": {"function_input":{}},
+		"get_dataset_info": {"function_input":{}},
+		"get_table_schema_info": {"function_input":{}},
+		"get_data_set_table_metrics": {"function_input":{}},
+		"get_data_set_sample_ids": {"function_input":{}},
+		"get_data_set_file_uuids_from_metadata": {"function_input":{}},
+		"get_files_from_snapshot": {"function_input":{}},
+		"InferTDRSchema": {"function_input":{}},
+
 		"test_get_or_create_dataset": {
 			"function_input":{
 				"dataset_name": "tmp_integration_test_dataset",
@@ -64,7 +74,7 @@
 				"description": "test dataset for ops integration tests",
 				"cloud_platform": "gcp"
 		}
-	},
+		},
 		"test_batch_ingest":{
 			"file_ingest":{
 				"function_input":{
@@ -88,6 +98,8 @@
 					"cloud_type": "gcp"	
 				}
 			}
-		}
+		},
+		"test_12": {"function_input":{}},
+		"test_13": {"function_input":{}},
 	}
 }

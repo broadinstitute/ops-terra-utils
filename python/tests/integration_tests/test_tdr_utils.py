@@ -11,6 +11,7 @@ from python.utils.tdr_utils.tdr_ingest_utils import BatchIngest
 from python.utils.token_util import Token
 from python.utils.request_util import RunRequest
 
+@pytest.fixture()
 def tdr_test_resource_json() -> dict:
     resource_json = pathlib.Path(__file__).parent.joinpath("tdr_resources.json")
     json_data = json.loads(resource_json.read_text())
@@ -25,15 +26,16 @@ def tdr_client() -> Any:
 
 
 class TestGetUtils:
+    
     @pytest.fixture(autouse=True)
-    def _get_tdr_client(self, tdr_client):
+    def _get_tdr_client(self, tdr_client, tdr_test_resource_json):
         self.tdr_client = tdr_client
+        self.test_info = tdr_test_resource_json
 
     def test_get_data_set_files(self):
-        test_data = tdr_test_resource_json()['tests']['get_data_set_files']
+        test_data = self.test_info['tests']['get_data_set_files']
         file_list = self.tdr_client.get_data_set_files(dataset_id=test_data['function_input'])
         assert len(file_list) == 20
-
 
     def test_create_file_dict(self):
         cmd = self.tdr_client.create_file_dict(dataset_id='str')
@@ -70,8 +72,9 @@ class TestGetUtils:
 class TestCreateUtils:
 
     @pytest.fixture(autouse=True)
-    def _get_tdr_client(self, tdr_client):
+    def _get_tdr_client(self, tdr_client, tdr_test_resource_json):
         self.tdr_client = tdr_client
+        self.test_info = tdr_test_resource_json
 
     def test_add_user_to_dataset(self):
         cmd = self.tdr_client.add_user_to_dataset(dataset_id=str, user=str, policy=str)
@@ -105,8 +108,9 @@ class TestCreateUtils:
 class TestDeleteUtils:
 
     @pytest.fixture(autouse=True)
-    def _get_tdr_client(self, tdr_client):
+    def _get_tdr_client(self, tdr_client, tdr_test_resource_json):
         self.tdr_client = tdr_client
+        self.test_info = tdr_test_resource_json
 
     def test_delete_file(self):
         cmd = self.tdr_client.delete_file(file_id='str', dataset_id='str')
