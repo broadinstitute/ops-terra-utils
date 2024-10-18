@@ -158,8 +158,6 @@ class SetUpDataset:
         self.tdr_billing_profile = tdr_billing_profile
         self.resource_owners = resource_owners
         self.auth_group = auth_group
-        self.dbgap_consent_code = dbgap_consent_code
-        self.duos_identifier = duos_identifier
         self.controlled_access = controlled_access
 
     def _create_dataset_properties(self) -> dict:
@@ -173,20 +171,12 @@ class SetUpDataset:
             additional_properties["phsId"] = self.phs_id  # type: ignore[assignment]
         return additional_properties
 
-    def _create_ingest_record(self) -> list[dict]:
-        ingest_records = [
-            {"key": "Staging Workspace", "value": f'{self.terra_billing_project}/{self.workspace_name}'},
-            {"key": "Authorization Group", "value": self.auth_group}
-        ]
-        if self.dbgap_consent_code:
-            ingest_records.append({"key": "consent_code", "value": self.dbgap_consent_code})
-        if self.duos_identifier:
-            ingest_records.append({"key": "duos_id", "value": self.duos_identifier})
-        return ingest_records
-
     def _add_row_to_table(self, dataset_id: str) -> None:
         StartAndMonitorIngest(
-            ingest_records=self._create_ingest_record(),
+            ingest_records=[
+                {"key": "Staging Workspace", "value": f'{self.terra_billing_project}/{self.workspace_name}'},
+                {"key": "Authorization Group", "value": self.auth_group}
+            ],
             target_table_name=self.REFERENCE_TABLE,
             dataset_id=dataset_id,
             load_tag=f"{dataset_name}_initial_load",
