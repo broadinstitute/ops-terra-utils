@@ -1,4 +1,3 @@
-import json
 import logging
 from argparse import ArgumentParser, Namespace
 
@@ -92,7 +91,8 @@ class SetUpTerraWorkspace:
     def _validate_auth_domain(self) -> None:
         workspace_info = self.terra_workspace.get_workspace_info()
         auth_domain_list = workspace_info['workspace']['authorizationDomain']
-        if self.controlled_access and (not auth_domain_list or auth_domain_list[0]['membersGroupName'] != self.auth_group):
+        if (self.controlled_access and
+                (not auth_domain_list or auth_domain_list[0]['membersGroupName'] != self.auth_group)):
             logging.error(
                 f"Controlled access set for {self.terra_workspace}, but either auth domain is not used or "
                 f"does not match expected group name. Auth domain list: {auth_domain_list}")
