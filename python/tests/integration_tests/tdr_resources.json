@@ -1,9 +1,11 @@
 {
-	"resources":{
-		"datasets":[
-			{
-				"name":"tmp_ops_dataset_test",
-				"defaultProfileId": "ce149ca7-608b-4d5d-9612-2a43a7378885",
+	"tests": {
+		"get_data_set_files": {"function_input":"0981274b-61e3-4efb-99f2-eaea57075612"},
+		"test_2": {"function_input":{}},
+		"test_get_or_create_dataset": {
+			"function_input":{
+				"dataset_name": "tmp_integration_test_dataset",
+				"billing_profile":"ce149ca7-608b-4d5d-9612-2a43a7378885",
 				"schema":{
 					"tables":[{
 						"name":"samples",
@@ -58,15 +60,34 @@
 							}
 						]
 					}]
+				},
+				"description": "test dataset for ops integration tests",
+				"cloud_platform": "gcp"
+		}
+	},
+		"test_batch_ingest":{
+			"file_ingest":{
+				"function_input":{
+					"ingest_metadata": ["gs://tdr_test_resources/file001.bin","gs://tdr_test_resources/file002.bin","gs://tdr_test_resources/file003.bin","gs://tdr_test_resources/file004.bin","gs://tdr_test_resources/file005.bin","gs://tdr_test_resources/file006.bin","gs://tdr_test_resources/file007.bin","gs://tdr_test_resources/file008.bin","gs://tdr_test_resources/file009.bin","gs://tdr_test_resources/file010.bin","gs://tdr_test_resources/file011.bin","gs://tdr_test_resources/file012.bin","gs://tdr_test_resources/file013.bin","gs://tdr_test_resources/file014.bin","gs://tdr_test_resources/file015.bin","gs://tdr_test_resources/file016.bin","gs://tdr_test_resources/file017.bin","gs://tdr_test_resources/file018.bin","gs://tdr_test_resources/file019.bin","gs://tdr_test_resources/file020.bin"],
+					"target_table_name": "samples",
+					"dataset_id": "str",
+					"batch_size": 5,
+					"file_list_bool": true,
+					"bulk_mode": false,
+					"cloud_type": "gcp"	
+				}
+			},
+			"metadata_ingest":{
+				"function_input":{
+					"ingest_metadata": "list[dict]",
+					"target_table_name": "samples",
+					"dataset_id": "str",
+					"batch_size": 5,
+					"file_list_bool": false,
+					"bulk_mode": false,
+					"cloud_type": "gcp"	
 				}
 			}
-		],
-		"tables":{}, 
-		"snapshots": {},
-		"files":{}
-	},
-	"tests": {
-		"test_1": {},
-		"test_2": {}
+		}
 	}
 }
