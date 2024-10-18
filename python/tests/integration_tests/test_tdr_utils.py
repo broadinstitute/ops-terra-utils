@@ -26,7 +26,7 @@ def tdr_client() -> Any:
 
 
 class TestGetUtils:
-    
+
     @pytest.fixture(autouse=True)
     def _get_tdr_client(self, tdr_client, tdr_test_resource_json):
         self.tdr_client = tdr_client
@@ -38,34 +38,44 @@ class TestGetUtils:
         assert len(file_list) == 20
 
     def test_create_file_dict(self):
-        cmd = self.tdr_client.create_file_dict(dataset_id='str')
+        test_data = self.test_info['tests']['create_file_dict']
+        file_dict = self.tdr_client.create_file_dict(dataset_id=test_data['function_input'])
 
     def test_get_snapshot_info(self):
-        cmd = self.tdr_client.get_snapshot_info(snapshot_id=str)
+        test_data = self.test_info['tests']['get_snapshot_info']
+        cmd = self.tdr_client.get_snapshot_info(snapshot_id=test_data['function_input'])
 
     
     def test_check_if_dataset_exists(self):
-        cmd = self.tdr_client.check_if_dataset_exists(dataset_name=str, billing_profile=str)
+        test_data = self.test_info['tests']['check_if_dataset_exists']
+        cmd = self.tdr_client.check_if_dataset_exists(dataset_name=test_data['function_input']['dataset_name'], billing_profile=test_data['function_input']['billing_profile'])
 
     def test_get_dataset_info(self):
-        cmd = self.tdr_client.get_dataset_info(dataset_id=str)
+        test_data = self.test_info['tests']['get_dataset_info']
+        cmd = self.tdr_client.get_dataset_info(dataset_id=test_data['function_input'])
 
     def test_get_table_schema_info(self):
-        cmd = self.tdr_client.get_table_schema_info(dataset_id=str, table_name=str)
+        test_data = self.test_info['tests']['get_table_schema_info']
+        cmd = self.tdr_client.get_table_schema_info(dataset_id=test_data['function_input']['dataset_id'], table_name=test_data['function_input']['table_name'])
 
     def test_get_data_set_table_metrics(self):
-        cmd = self.tdr_client.get_data_set_table_metrics(dataset_id=str, target_table_name=str)
+        test_data = self.test_info['tests']['get_data_set_table_metrics']
+        cmd = self.tdr_client.get_data_set_table_metrics(dataset_id=test_data['function_input']['dataset_id'], target_table_name=test_data['function_input']['table_name'])
 
     def test_get_data_set_sample_ids(self):
-        cmd = self.tdr_client.get_data_set_sample_ids(dataset_id=str, target_table_name=str, entity_id=str)
+        test_data = self.test_info['tests']['get_data_set_sample_ids']
+        cmd = self.tdr_client.get_data_set_sample_ids(dataset_id=test_data['function_input']['dataset_id'], target_table_name=test_data['function_input']['table_name'], entity_id=test_data['function_input']['entity_id'])
 
     def test_get_data_set_file_uuids_from_metadata(self):
-        cmd = self.tdr_client.get_data_set_file_uuids_from_metadata(dataset_id=str)
+        test_data = self.test_info['tests']['get_data_set_file_uuids_from_metadata']
+        cmd = self.tdr_client.get_data_set_file_uuids_from_metadata(dataset_id=test_data['function_input'])
 
     def test_get_files_from_snapshot(self):
+        test_data = self.test_info['tests']['get_files_from_snapshot']
         cmd = self.tdr_client.get_files_from_snapshot(snapshot_id=str)
 
     def test_InferTDRSchema(self):
+        test_data = self.test_info['tests']['InferTDRSchema']
         cmd = InferTDRSchema().infer_schema()
 
 
