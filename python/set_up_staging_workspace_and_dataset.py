@@ -111,7 +111,7 @@ class SetUpTerraWorkspace:
 
 
 class SetUpDataset:
-    REFERENCE_TABLE = "ingestion_reference"  # TODO: Change this to the correct table name
+    REFERENCE_TABLE = "ingestion_reference"
     SCHEMA = {
         "tables": [
             {
