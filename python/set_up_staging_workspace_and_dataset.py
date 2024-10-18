@@ -145,8 +145,6 @@ class SetUpDataset:
             auth_group: str,
             controlled_access: bool,
             terra_billing_project: str,
-            dbgap_consent_code: Optional[str] = None,
-            duos_identifier: Optional[str] = None,
             phs_id: Optional[str] = None
     ):
         self.tdr = tdr
@@ -326,6 +324,7 @@ if __name__ == '__main__':
     workspace_name = f'{dataset_name}_Staging'
     auth_group = f"AUTH_{dataset_name}"
 
+    # Set up Terra, TerraGroups, and TDR classes
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token, max_retries=5, max_backoff_time=60)
     tdr = TDR(request_util=request_util)
@@ -359,9 +358,7 @@ if __name__ == '__main__':
         workspace_name=workspace_name,
         resource_owners=resource_owners,
         auth_group=auth_group,
-        controlled_access=controlled_access,
-        dbgap_consent_code=dbgap_consent_code,
-        duos_identifier=duos_identifier
+        controlled_access=controlled_access
     ).run()
 
     data_ingest_sa = dataset_info["ingestServiceAccount"]
@@ -377,6 +374,7 @@ if __name__ == '__main__':
         role="member"
     )
 
+    # Update workspace attributes
     UpdateWorkspaceAttributes(
         terra_workspace=terra_workspace,
         auth_group=auth_group,
