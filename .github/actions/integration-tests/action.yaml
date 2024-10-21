@@ -21,12 +21,13 @@ runs:
     - name: Login to GCP
       uses: google-github-actions/auth@v1
       with:
-        credentials_json: ${{ inputs.gcp_credentials }}
+        credentials_json: ${{ secrets.INTEGRATION_TEST_ACCOUNT }}
 
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ inputs.python_version }}
+        python-version: '3.11'
+
 
     - name: Install dependencies
       run: |
