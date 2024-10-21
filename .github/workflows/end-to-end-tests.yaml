@@ -29,7 +29,7 @@ jobs:
           ref: ${{ github.head_ref }}  # This ensures it checks out the feature branch of the PR
 
       - name: Run WDL validation
-        uses: ./.github/workflows/validate_wdls.yaml
+        uses: ./.github/actions/validate-wdls
 
   E2E_integration_tests:
     if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/run-tests'))
@@ -42,5 +42,5 @@ jobs:
           ref: ${{ github.head_ref }}  # Checkout the feature branch of the PR
 
       - name: Run integration tests
-        uses: ./.github/workflows/integration-tests.yaml
+        uses: ./.github/actions/integration-tests
 

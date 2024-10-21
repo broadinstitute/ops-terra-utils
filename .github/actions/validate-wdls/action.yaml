@@ -1,0 +1,25 @@
+name: WomtoolCheck
+description: "This action validates all pipeline WDL files using womtool."
+
+inputs:
+  java-version:
+    description: "The Java version to use for womtool"
+    default: "17"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: ${{ inputs.java-version }}
+
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Run Womtool to validate WDL files
+      run: |
+        ./scripts/validate_wdls.sh
+      shell: bash
