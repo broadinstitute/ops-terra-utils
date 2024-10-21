@@ -1,4 +1,5 @@
 import logging
+import os
 from argparse import ArgumentParser, Namespace
 
 from typing import Optional
@@ -6,18 +7,21 @@ from typing import Optional
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest
 from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups
+from utils.terra_utils.terra_workflow_configs import WorkflowConfigs
 from utils.request_util import RunRequest
 from utils.token_util import Token
+from utils.gcp_utils import GCPCloudFunctions
 from utils import GCP, comma_separated_list
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-ANVIL_TDR_BILLING_PROFILE = "e0e03e48-5b96-45ec-baa4-8cc1ebf74c61"
-ANVIL_TERRA_BILLING_PROJECT = "anvil-datastorage"
-ANVIL_ADMINS = "anvil-admins@firecloud.org"
-ANVIL_DEVS = "anvil_devs@firecloud.org"
+# Define the relative path to the file
+STAGING_WORKSPACE_DESCRIPTION_FILE = "./utils/terra_utils/staging_workspace_description.md"
+# Get the absolute path to the file based on the script's location
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+STAGING_WORKSPACE_DESCRIPTION_FILE_FULL_PATH = os.path.join(SCRIPT_DIR, STAGING_WORKSPACE_DESCRIPTION_FILE)
 
 
 def get_args() -> Namespace:
@@ -39,6 +43,11 @@ def get_args() -> Namespace:
                         help="dbGaP consent code for controlled access datasets. Optional")
     parser.add_argument("--duos_identifier",
                         help="DUOS identifier. Optional")
+    parser.add_argument("--wdls_to_import", type=comma_separated_list,
+                        help=f"wdls to import in comma seperated list. Options are \n"
+                             f"{WorkflowConfigs().list_workflows()}\n Optional")
+    parser.add_argument("--notebooks_to_import", type=comma_separated_list,
+                        help=f"gcp paths to notebooks to import in comma seperated list. Optional")
     return parser.parse_args()
 
 
@@ -64,10 +73,12 @@ class SetUpTerraWorkspace:
     def _set_up_access_group(self) -> None:
         logging.info(f"Creating group {self.auth_group}")
         self.terra_groups.create_group(group_name=self.auth_group, continue_if_exists=self.continue_if_exists)
-        for user in resource_owners:
-            self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role="admin")
-        for user in resource_members:
-            self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role="member")
+        if self.resource_owners:
+            for user in self.resource_owners:
+                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role="admin")
+        if self.resource_members:
+            for user in self.resource_members:
+                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role="member")
 
     def _add_permissions_to_workspace(self) -> None:
         logging.info(f"Adding permissions to workspace {self.terra_workspace}")
@@ -285,12 +296,17 @@ class UpdateWorkspaceAttributes:
             "addUpdateAttribute": attribute_value
         }
 
+    def _get_staging_workspace_description(self) -> str:
+        with open(STAGING_WORKSPACE_DESCRIPTION_FILE_FULL_PATH, "r") as file:
+            return file.read()
+
     def run(self) -> None:
         attributes = [
             self._create_attribute_dict_for_pair("dataset_id", self.dataset_id),
             self._create_attribute_dict_for_pair("dataset_name", self.dataset_name),
             self._create_attribute_dict_for_pair("auth_group", self.auth_group),
-            self._create_attribute_dict_for_pair("data_ingest_sa", self.data_ingest_sa)
+            self._create_attribute_dict_for_pair("data_ingest_sa", self.data_ingest_sa),
+            self._create_attribute_dict_for_pair("description", self._get_staging_workspace_description())
         ]
         if self.dbgap_consent_code:
             attributes.append(
@@ -308,6 +324,46 @@ class UpdateWorkspaceAttributes:
         self.terra_workspace.update_workspace_attributes(attributes)
 
 
+class ImportWorkflowsAndNotebooks:
+    def __init__(
+            self,
+            billing_project: str,
+            terra_workspace: TerraWorkspace,
+            continue_if_exists: bool,
+            wdl_names: Optional[list[str]] = None,
+            notebooks: Optional[list[str]] = None
+    ):
+        self.billing_project = billing_project
+        self.terra_workspace = terra_workspace
+        self.continue_if_exists = continue_if_exists
+        self.wdl_names = wdl_names
+        self.notebooks = notebooks
+
+    def _import_workflow(self) -> None:
+        for wdl_name in self.wdl_names:  # type: ignore[union-attr]
+            workflow_config = getattr(WorkflowConfigs(), wdl_name)(billing_project=self.billing_project)
+            self.terra_workspace.import_workflow(
+                workflow_dict=workflow_config,
+                continue_if_exists=self.continue_if_exists
+            )
+
+    def _copy_in_notebooks(self) -> None:
+        gcp_functions = GCPCloudFunctions()
+        workspace_bucket = self.terra_workspace.get_workspace_bucket()
+        for notebook in self.notebooks:  # type: ignore[union-attr]
+            os.path.basename(notebook)
+            gcp_functions.copy_cloud_file(
+                src_cloud_path=notebook,
+                full_destination_path=f'gs://{workspace_bucket}/{os.path.basename(notebook)}'
+            )
+
+    def run(self) -> None:
+        if self.wdl_names:
+            self._import_workflow()
+        if self.notebooks:
+            self._copy_in_notebooks()
+
+
 if __name__ == '__main__':
     args = get_args()
 
@@ -323,6 +379,21 @@ if __name__ == '__main__':
     tdr_billing_profile = args.tdr_billing_profile
     dbgap_consent_code = args.dbgap_consent_code
     duos_identifier = args.duos_identifier
+    wdls_to_import = args.wdls_to_import
+    notebooks_to_import = args.notebooks_to_import
+
+    # Validate wdls to import are valid
+    if wdls_to_import:
+        for wdl in wdls_to_import:
+            if wdl not in WorkflowConfigs().list_workflows():
+                logging.error(f"Invalid wdl {wdl}. Options are {WorkflowConfigs().list_workflows()}")
+                exit(1)
+
+    if notebooks_to_import:
+        for notebook in notebooks_to_import:
+            if not notebook.startswith("gs://"):
+                logging.error(f"Invalid notebook path {notebook}. Must start with gs://")
+                exit(1)
 
     workspace_name = f'{dataset_name}_Staging'
     auth_group = f"AUTH_{dataset_name}"
@@ -374,8 +445,18 @@ if __name__ == '__main__':
     terra_groups.add_user_to_group(
         email=data_ingest_sa,
         group=auth_group,
-        role="member"
+        role="member",
+        continue_if_exists=continue_if_exists
     )
+
+    # Import workflows and notebooks
+    ImportWorkflowsAndNotebooks(
+        billing_project=terra_billing_project,
+        terra_workspace=terra_workspace,
+        wdl_names=wdls_to_import,
+        notebooks=notebooks_to_import,
+        continue_if_exists=continue_if_exists
+    ).run()
 
     # Update workspace attributes
     UpdateWorkspaceAttributes(

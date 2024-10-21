@@ -106,7 +106,7 @@ class TerraGroups:
         logging.info(f"Deleted group {group_name}")
         return res.status_code
 
-    def add_user_to_group(self, group: str, email: str, role: str) -> int:
+    def add_user_to_group(self, group: str, email: str, role: str, continue_if_exists: bool = False) -> int:
         """
         Add a user to a group.
 
@@ -114,14 +114,18 @@ class TerraGroups:
             group (str): The name of the group.
             email (str): The email of the user to add.
             role (str): The role of the user in the group.
+            continue_if_exists (bool, optional): Whether to continue if the user is already in the group.
+                Defaults to False.
         Returns:
             int: The response code
         """
         url = f"{SAM_LINK}/groups/v1/{group}/{role}/{email}"
         self._check_role(role)
+        accept_return_codes = [409] if continue_if_exists else []
         res = self.request_util.run_request(
             uri=url,
-            method=PUT
+            method=PUT,
+            accept_return_codes=accept_return_codes
         )
         logging.info(f"Added {email} to group {group} as {role}")
         return res.status_code
@@ -560,23 +564,27 @@ class TerraWorkspace:
         )
         return response.json()
 
-    def import_workflow(self, workflow_dict: dict) -> int:
+    def import_workflow(self, workflow_dict: dict, continue_if_exists: bool = False) -> int:
         """
         Import a workflow into the workspace.
 
         Args:
             workflow_dict (dict): The dictionary containing the workflow information.
+            continue_if_exists (bool, optional): Whether to continue if the workflow
+                already exists. Defaults to False.
 
         Returns:
             dict: The response from the import request.
         """
         uri = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/methodconfigs"
         workflow_json = json.dumps(workflow_dict)
+        accept_return_codes = [409] if continue_if_exists else []
         response = self.request_util.run_request(
             uri=uri,
             method=POST,
             data=workflow_json,
-            content_type="application/json"
+            content_type="application/json",
+            accept_return_codes=accept_return_codes
         )
         return response.status_code
 
