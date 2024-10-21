@@ -43,6 +43,4 @@ jobs:
 
       - name: Run integration tests
         uses: ./.github/workflows/integration-tests.yaml
-    secrets: inherit
-
 
