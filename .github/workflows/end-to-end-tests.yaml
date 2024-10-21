@@ -8,6 +8,10 @@ on:
     types:
       - created
 
+permissions:
+  contents: write
+  statuses: write
+
 jobs:
 
   E2E_linting_check:
