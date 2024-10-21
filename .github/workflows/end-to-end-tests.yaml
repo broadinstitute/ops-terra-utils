@@ -2,14 +2,16 @@ name: merge validations
 
 on:
   pull_request:
-    branches: [ main ]
+    types:
+      - opened
+  issue_comment:
+    types:
+      - created
 
 jobs:
 
-
-
-
   E2E_linting_check:
+    if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/run-tests'))
     runs-on: ubuntu-latest
     steps:
       - name: clone branch of PR
@@ -19,10 +21,12 @@ jobs:
         uses: ./.github/actions/linting-check
 
   E2E_wdl_validation:
+    if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/run-tests'))
     needs: E2E_linting_check
     uses: ./.github/workflows/validate_wdls.yaml
 
   E2E_integration_tests:
+    if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/run-tests'))
     needs: E2E_linting_check
     uses: ./.github/workflows/integration-tests.yaml
     secrets: inherit
