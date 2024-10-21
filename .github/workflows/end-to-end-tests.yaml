@@ -2,20 +2,13 @@ name: merge validations
 
 on:
   pull_request:
-    types:
-      - opened
+    types: [opened]  # Only run when the PR is opened
   issue_comment:
-    types:
-      - created
-
-permissions:
-  contents: write
-  statuses: write
+    types: [created]  # Run when a comment is created
 
 jobs:
-
   E2E_linting_check:
-    if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/run-tests'))
+    if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/run-tests')) # Run only if PR is opened or if comment '/run-tests' is added
     runs-on: ubuntu-latest
     steps:
       - name: clone branch of PR
