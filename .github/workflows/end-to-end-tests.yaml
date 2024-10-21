@@ -2,10 +2,11 @@ name: merge validations
 
 on:
   pull_request:
-    types: [opened]
+    types:
+      - opened
   issue_comment:
-    types: [created]
-
+    types:
+      - created
 jobs:
   E2E_linting_check:
     if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/run-tests'))
