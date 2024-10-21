@@ -264,6 +264,7 @@ class UpdateWorkspaceAttributes:
             auth_group: str,
             dataset_id: str,
             dataset_name: str,
+            data_ingest_sa: str,
             dbgap_consent_code: Optional[str] = None,
             duos_identifier: Optional[str] = None,
             phs_id: Optional[str] = None
@@ -272,6 +273,7 @@ class UpdateWorkspaceAttributes:
         self.auth_group = auth_group
         self.dataset_id = dataset_id
         self.dataset_name = dataset_name
+        self.data_ingest_sa = data_ingest_sa
         self.dbgap_consent_code = dbgap_consent_code
         self.duos_identifier = duos_identifier
         self.phs_id = phs_id
@@ -287,7 +289,8 @@ class UpdateWorkspaceAttributes:
         attributes = [
             self._create_attribute_dict_for_pair("dataset_id", self.dataset_id),
             self._create_attribute_dict_for_pair("dataset_name", self.dataset_name),
-            self._create_attribute_dict_for_pair("auth_group", self.auth_group)
+            self._create_attribute_dict_for_pair("auth_group", self.auth_group),
+            self._create_attribute_dict_for_pair("data_ingest_sa", self.data_ingest_sa)
         ]
         if self.dbgap_consent_code:
             attributes.append(
@@ -382,7 +385,8 @@ if __name__ == '__main__':
         dbgap_consent_code=dbgap_consent_code,
         duos_identifier=duos_identifier,
         phs_id=phs_id,
-        dataset_name=dataset_name
+        dataset_name=dataset_name,
+        data_ingest_sa=data_ingest_sa
     ).run()
 
     # Remove current user from workspace and dataset if not a resource owner
