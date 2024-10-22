@@ -52,16 +52,16 @@ class WorkflowConfigs:
             ValueError: If the workflow name is not found in the YAML file.
         """
         self.workflow_name = workflow_name
-        # Load the YAML file
-        with open(YAML_FILE_FULL_PATH, 'r') as file:
-            yaml_data = yaml.safe_load(file)
 
         # Check if the workflow name is in the YAML file
         available_workflows = GetWorkflowNames().get_workflow_names()
         if workflow_name not in available_workflows:
             raise ValueError(f"Workflow name {workflow_name} not found in {YAML_FILE_FULL_PATH}: {available_workflows}")
 
-        # Extract workflow information from yaml_data
+        # Load the YAML file
+        with open(YAML_FILE_FULL_PATH, 'r') as file:
+            yaml_data = yaml.safe_load(file)
+        # Extract specific workflow information from yaml_data
         yaml_info = next(workflow for workflow in yaml_data['workflows'] if workflow['name'] == self.workflow_name)
         self.workflow_info = {
             'wdl_path': os.path.join(WDL_ROOT_DIR_FULL_PATH, yaml_info['primaryDescriptorPath'].lstrip('/')),
