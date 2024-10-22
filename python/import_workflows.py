@@ -40,8 +40,8 @@ if __name__ == '__main__':
     for workflow in workflows_to_import:
         if not workflow_already_in_workspace(workflow_name=workflow, workspace_workflows=imported_workflows):
             logging.info(f"Importing {workflow} into {args.billing_project}/{args.workspace_name}")
-            workflow_config = WorkflowConfigs(workflow_name=workflow)
-            status_code = workspace.import_workflow(workflow_dict=workflow_config)
+            workflow_config = WorkflowConfigs(workflow_name=workflow, billing_project=args.billing_project)
+            status_code = workspace.import_workflow(workflow_dict=workflow_config.workflow_config)
             if status_code == 201:
                 logging.info(
                     f"Successfully started import for workflow '{workflow}' into workspace '{args.workspace_name}'"
