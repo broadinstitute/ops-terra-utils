@@ -44,7 +44,7 @@ task RunCopyDataset {
 	}
 
 	command <<<
-		python /etc/terra_utils/copy_dataset.py \
+		python /etc/terra_utils/python/copy_dataset.py \
 		--new_billing_profile ~{new_billing_profile} \
 		--orig_dataset_id ~{orig_dataset_id} \
 		--new_dataset_name ~{new_dataset_name} \

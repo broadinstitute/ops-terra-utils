@@ -35,7 +35,7 @@ task CopyFilesFromDatasetToBucket {
     }
 
     command <<<
-        python /etc/terra_utils/export_data_from_snapshot_or_dataset.py \
+        python /etc/terra_utils/python/export_data_from_snapshot_or_dataset.py \
         --dataset_id  ~{dataset_id} \
         --output_bucket  ~{output_bucket} \
         --download_type  ~{download_type} \

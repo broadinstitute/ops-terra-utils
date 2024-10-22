@@ -63,7 +63,7 @@ task HardCloneTerraWorkspaceTask {
 	}
 
 	command <<<
-		python /etc/terra_utils/hard_clone_workspace.py \
+		python /etc/terra_utils/python/hard_clone_workspace.py \
 		--source_billing_project ~{source_billing_project} \
 		--source_workspace_name ~{source_workspace_name} \
 		--dest_billing_project ~{dest_billing_project} \

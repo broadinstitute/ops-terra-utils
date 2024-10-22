@@ -18,10 +18,13 @@ logging.basicConfig(
 )
 
 # Define the relative path to the file
-STAGING_WORKSPACE_DESCRIPTION_FILE = "./utils/terra_utils/staging_workspace_description.md"
+STAGING_WORKSPACE_DESCRIPTION_FILE = "../general_markdown/staging_workspace_description.md"
+WDL_READ_ME_PATH = "../wdl/{script_name}/README.md"
+
 # Get the absolute path to the file based on the script's location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 STAGING_WORKSPACE_DESCRIPTION_FILE_FULL_PATH = os.path.join(SCRIPT_DIR, STAGING_WORKSPACE_DESCRIPTION_FILE)
+WDL_READ_ME_PATH_FULL_PATH = os.path.join(SCRIPT_DIR, WDL_READ_ME_PATH)
 
 
 def get_args() -> Namespace:
@@ -278,7 +281,8 @@ class UpdateWorkspaceAttributes:
             data_ingest_sa: str,
             dbgap_consent_code: Optional[str] = None,
             duos_identifier: Optional[str] = None,
-            phs_id: Optional[str] = None
+            phs_id: Optional[str] = None,
+            wdls_to_import: Optional[list[str]] = None
     ):
         self.terra_workspace = terra_workspace
         self.auth_group = auth_group
@@ -288,6 +292,7 @@ class UpdateWorkspaceAttributes:
         self.dbgap_consent_code = dbgap_consent_code
         self.duos_identifier = duos_identifier
         self.phs_id = phs_id
+        self.wdls_to_import = wdls_to_import
 
     def _create_attribute_dict_for_pair(self, attribute_key: str, attribute_value: str) -> dict:
         return {
@@ -298,7 +303,15 @@ class UpdateWorkspaceAttributes:
 
     def _get_staging_workspace_description(self) -> str:
         with open(STAGING_WORKSPACE_DESCRIPTION_FILE_FULL_PATH, "r") as file:
-            return file.read()
+            workspace_description = file.read()
+        if self.wdls_to_import:
+            workspace_description += "\n\n# Imported WDLs Information\n"
+            for wdl_name in self.wdls_to_import:
+                with open(WDL_READ_ME_PATH_FULL_PATH.format(script_name=wdl_name), "r") as file:
+                    wdl_description = file.read().replace("# ", "### ")
+                # Add wdl readme to workspace description
+                workspace_description += f"\n\n## {wdl_name}\n{wdl_description}"
+        return workspace_description
 
     def run(self) -> None:
         attributes = [
@@ -467,7 +480,8 @@ if __name__ == '__main__':
         duos_identifier=duos_identifier,
         phs_id=phs_id,
         dataset_name=dataset_name,
-        data_ingest_sa=data_ingest_sa
+        data_ingest_sa=data_ingest_sa,
+        wdls_to_import=wdls_to_import
     ).run()
 
     # Remove current user from workspace and dataset if not a resource owner

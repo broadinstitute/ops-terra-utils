@@ -24,7 +24,9 @@ RUN apt-get install -yq --no-install-recommends \
     gnupg
 
 COPY requirements.txt /etc/terra-docker/
-COPY python/ /etc/terra_utils
+COPY python/ /etc/terra_utils/python
+COPY wdl/ /etc/terra_utils/wdl
+COPY general_markdown/ /etc/terra_utils/general_markdown
 
 
 RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg

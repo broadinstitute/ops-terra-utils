@@ -67,7 +67,7 @@ task RunGCPWorkspaceToDataset {
     }
 
     command <<<
-        python /etc/terra_utils/anvil_gcp_workspace_to_dataset_creation_and_ingest.py \
+        python /etc/terra_utils/python/anvil_gcp_workspace_to_dataset_creation_and_ingest.py \
         --billing_project  ~{billing_project} \
         --workspace_name  ~{workspace_name} \
         --phs_id  ~{phs_id} \
