@@ -4,7 +4,7 @@ from typing import Any
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils.request_util import RunRequest
 from utils.token_util import Token
-from utils.terra_utils.terra_workflow_configs import WorkflowConfigs
+from utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -18,7 +18,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--workflow_list",
         required=True,
-        choices=WorkflowConfigs().list_workflows(),
+        choices=GetWorkflowNames().get_workflow_names(),
         help="Workflows to import into specified workspace. --workflow_list Workflow1 Workflow2 ...",
         nargs='+'
     )
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     for workflow in workflows_to_import:
         if not workflow_already_in_workspace(workflow_name=workflow, workspace_workflows=imported_workflows):
             logging.info(f"Importing {workflow} into {args.billing_project}/{args.workspace_name}")
-            workflow_config = getattr(WorkflowConfigs(), workflow)(billing_project=args.billing_project)
+            workflow_config = WorkflowConfigs(workflow_name=workflow)
             status_code = workspace.import_workflow(workflow_dict=workflow_config)
             if status_code == 201:
                 logging.info(

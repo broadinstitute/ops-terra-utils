@@ -402,9 +402,8 @@ if __name__ == '__main__':
     workflow_config_list = []
     for workflow_name in wdls_to_import:
         # Set workflow config
-        workflow_config = WorkflowConfigs(workflow_name)
-        # Set workflow import dict
-        workflow_config.set_workflow_import_dict(
+        workflow_config = WorkflowConfigs(
+            workflow_name=workflow_name,
             billing_project=terra_billing_project
         )
         if is_anvil:

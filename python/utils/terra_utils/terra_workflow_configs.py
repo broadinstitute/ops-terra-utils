@@ -41,7 +41,7 @@ class GetWorkflowNames:
 
 
 class WorkflowConfigs:
-    def __init__(self, workflow_name: str):
+    def __init__(self, workflow_name: str, billing_project: str):
         """
         Initialize the WorkflowConfigs class.
 
@@ -77,8 +77,14 @@ class WorkflowConfigs:
             "methodConfigVersion": 0,
             "methodRepoMethod": {
                 "sourceRepo": "dockstore",
-                "methodVersion": "main"
-            }
+                "methodVersion": "main",
+                "methodUri": f"dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%{self.workflow_name}/main",
+                "methodPath": f"github.com/broadinstitute/ops-terra-utils/{self.workflow_name}"
+            },
+            "name": self.workflow_name,
+            "namespace": billing_project,
+            "outputs": {},
+            "inputs": {}
         }
 
     def get_wdl_workflow_name(self, wdl_file_path: str) -> str:
@@ -101,20 +107,6 @@ class WorkflowConfigs:
                 if match:
                     return match.group(1)
         raise ValueError(f"Workflow name not found in {wdl_file_path}")
-
-    def set_workflow_import_dict(self, billing_project: str) -> None:
-        """
-        Set the workflow import dictionary with the given billing project.
-
-        Args:
-            billing_project (str): The billing project to set in the workflow configuration.
-        """
-        self.workflow_config["name"] = self.workflow_name
-        self.workflow_config["namespace"] = billing_project
-        self.workflow_config["outputs"] = {}
-        self.workflow_config["inputs"] = {}
-        self.workflow_config["methodRepoMethod"]["methodUri"] = f"dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%{self.workflow_name}/main"  # type: ignore[index]  # noqa: E501
-        self.workflow_config["methodRepoMethod"]["methodPath"] = f"github.com/broadinstitute/ops-terra-utils/{self.workflow_name}"  # type: ignore[index]  # noqa: E501
 
     def set_input_defaults(self) -> None:
         """
