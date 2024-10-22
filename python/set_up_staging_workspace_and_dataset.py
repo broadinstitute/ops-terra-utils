@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from argparse import ArgumentParser, Namespace
@@ -7,7 +8,7 @@ from typing import Optional
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest
 from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups
-from utils.terra_utils.terra_workflow_configs import WorkflowConfigs
+from utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
 from utils.request_util import RunRequest
 from utils.token_util import Token
 from utils.gcp_utils import GCPCloudFunctions
@@ -48,9 +49,11 @@ def get_args() -> Namespace:
                         help="DUOS identifier. Optional")
     parser.add_argument("--wdls_to_import", type=comma_separated_list,
                         help=f"wdls to import in comma seperated list. Options are \n"
-                             f"{WorkflowConfigs().list_workflows()}\n Optional")
+                             f"{GetWorkflowNames().get_workflow_names()}\n Optional")
     parser.add_argument("--notebooks_to_import", type=comma_separated_list,
-                        help=f"gcp paths to notebooks to import in comma seperated list. Optional")
+                        help="gcp paths to notebooks to import in comma seperated list. Optional")
+    parser.add_argument("--is_anvil", action='store_true',
+                        help="Use if you want to import workflows for Anvil")
     return parser.parse_args()
 
 
@@ -282,7 +285,7 @@ class UpdateWorkspaceAttributes:
             dbgap_consent_code: Optional[str] = None,
             duos_identifier: Optional[str] = None,
             phs_id: Optional[str] = None,
-            wdls_to_import: Optional[list[str]] = None
+            workflow_config_list: Optional[list[WorkflowConfigs]] = None
     ):
         self.terra_workspace = terra_workspace
         self.auth_group = auth_group
@@ -292,7 +295,7 @@ class UpdateWorkspaceAttributes:
         self.dbgap_consent_code = dbgap_consent_code
         self.duos_identifier = duos_identifier
         self.phs_id = phs_id
-        self.wdls_to_import = wdls_to_import
+        self.workflow_config_list = workflow_config_list
 
     def _create_attribute_dict_for_pair(self, attribute_key: str, attribute_value: str) -> dict:
         return {
@@ -304,13 +307,13 @@ class UpdateWorkspaceAttributes:
     def _get_staging_workspace_description(self) -> str:
         with open(STAGING_WORKSPACE_DESCRIPTION_FILE_FULL_PATH, "r") as file:
             workspace_description = file.read()
-        if self.wdls_to_import:
+        if self.workflow_config_list:
             workspace_description += "\n\n# Imported WDLs Information\n"
-            for wdl_name in self.wdls_to_import:
-                with open(WDL_READ_ME_PATH_FULL_PATH.format(script_name=wdl_name), "r") as file:
+            for workflow_config in self.workflow_config_list:
+                with open(workflow_config.workflow_info['read_me'], "r") as file:
                     wdl_description = file.read().replace("# ", "### ")
                 # Add wdl readme to workspace description
-                workspace_description += f"\n\n## {wdl_name}\n{wdl_description}"
+                workspace_description += f"\n\n## {workflow_config.workflow_name}\n{wdl_description}"
         return workspace_description
 
     def run(self) -> None:
@@ -343,20 +346,19 @@ class ImportWorkflowsAndNotebooks:
             billing_project: str,
             terra_workspace: TerraWorkspace,
             continue_if_exists: bool,
-            wdl_names: Optional[list[str]] = None,
+            workflow_config_list: Optional[list[WorkflowConfigs]] = None,
             notebooks: Optional[list[str]] = None
     ):
         self.billing_project = billing_project
         self.terra_workspace = terra_workspace
         self.continue_if_exists = continue_if_exists
-        self.wdl_names = wdl_names
+        self.workflow_config_list = workflow_config_list
         self.notebooks = notebooks
 
     def _import_workflow(self) -> None:
-        for wdl_name in self.wdl_names:  # type: ignore[union-attr]
-            workflow_config = getattr(WorkflowConfigs(), wdl_name)(billing_project=self.billing_project)
+        for workflow in self.workflow_config_list:  # type: ignore[union-attr]
             self.terra_workspace.import_workflow(
-                workflow_dict=workflow_config,
+                workflow_dict=workflow.workflow_config,
                 continue_if_exists=self.continue_if_exists
             )
 
@@ -367,11 +369,11 @@ class ImportWorkflowsAndNotebooks:
             os.path.basename(notebook)
             gcp_functions.copy_cloud_file(
                 src_cloud_path=notebook,
-                full_destination_path=f'gs://{workspace_bucket}/{os.path.basename(notebook)}'
+                full_destination_path=f'gs://{workspace_bucket}/notebooks/{os.path.basename(notebook)}'
             )
 
     def run(self) -> None:
-        if self.wdl_names:
+        if self.workflow_config_list:
             self._import_workflow()
         if self.notebooks:
             self._copy_in_notebooks()
@@ -394,18 +396,29 @@ if __name__ == '__main__':
     duos_identifier = args.duos_identifier
     wdls_to_import = args.wdls_to_import
     notebooks_to_import = args.notebooks_to_import
+    is_anvil = args.is_anvil
 
     # Validate wdls to import are valid
-    if wdls_to_import:
-        for wdl in wdls_to_import:
-            if wdl not in WorkflowConfigs().list_workflows():
-                logging.error(f"Invalid wdl {wdl}. Options are {WorkflowConfigs().list_workflows()}")
-                exit(1)
+    workflow_config_list = []
+    for workflow_name in wdls_to_import:
+        # Set workflow config
+        workflow_config = WorkflowConfigs(workflow_name)
+        # Set workflow import dict
+        workflow_config.set_workflow_import_dict(
+            billing_project=terra_billing_project
+        )
+        if is_anvil:
+            # Set anvil defaults
+            workflow_config.set_anvil_defaults()
+        else:
+            # Set input defaults
+            workflow_config.set_input_defaults()
+        workflow_config_list.append(workflow_config)
 
     if notebooks_to_import:
         for notebook in notebooks_to_import:
-            if not notebook.startswith("gs://"):
-                logging.error(f"Invalid notebook path {notebook}. Must start with gs://")
+            if not notebook.startswith("gs://") or not notebook.endswith(".ipynb"):
+                logging.error(f"Invalid notebook path {notebook}. Must start with gs:// and end with .ipynb")
                 exit(1)
 
     workspace_name = f'{dataset_name}_Staging'
@@ -466,7 +479,7 @@ if __name__ == '__main__':
     ImportWorkflowsAndNotebooks(
         billing_project=terra_billing_project,
         terra_workspace=terra_workspace,
-        wdl_names=wdls_to_import,
+        workflow_config_list=workflow_config_list,
         notebooks=notebooks_to_import,
         continue_if_exists=continue_if_exists
     ).run()
@@ -481,7 +494,7 @@ if __name__ == '__main__':
         phs_id=phs_id,
         dataset_name=dataset_name,
         data_ingest_sa=data_ingest_sa,
-        wdls_to_import=wdls_to_import
+        workflow_config_list=workflow_config_list
     ).run()
 
     # Remove current user from workspace and dataset if not a resource owner
