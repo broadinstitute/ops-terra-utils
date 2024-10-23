@@ -136,7 +136,7 @@ def test_get_workspace_workflows() -> None:
 
 
 def test_import_workflow() -> None:
-    workflow_name = "ExportDataFromSnapshotToBucket"
+    workflow_name = "ExportDataFromSnapshotToOutputBucket"
     status_code = WorkflowConfigs(
         workflow_name=workflow_name,
         billing_project=INTEGRATION_TEST_TERRA_BILLING_PROJECT,
