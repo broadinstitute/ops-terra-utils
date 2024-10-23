@@ -35,14 +35,15 @@ def get_args() -> argparse.Namespace:
         "--max_backoff_time",
         required=False,
         default=ARG_DEFAULTS["max_backoff_time"],
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {ARG_DEFAULTS['max_backoff_time']} seconds if "
-             f"not provided"
+        help=f"The maximum backoff time for a failed request (in seconds). " +
+             f"Defaults to {ARG_DEFAULTS['max_backoff_time']} seconds if not provided"
     )
     parser.add_argument(
         "--max_retries",
         required=False,
         default=ARG_DEFAULTS["max_retries"],
-        help=f"The maximum number of retries for a failed request. Defaults to {ARG_DEFAULTS['max_retries']} if not provided"
+        help="The maximum number of retries for a failed request. " +
+             f"Defaults to {ARG_DEFAULTS['max_retries']} if not provided"
     )
     return parser.parse_args()
 

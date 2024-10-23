@@ -126,27 +126,29 @@ class WorkflowConfigs:
         """
         Set the default input values for the workflow configuration.
         """
+        workflow = self.workflow_info['wdl_workflow_name']
         return {
-            f"{self.workflow_info['wdl_workflow_name']}.docker": f"\"{ARG_DEFAULTS['docker_image']}\"",
-            f"{self.workflow_info['wdl_workflow_name']}.max_retries": f"{ARG_DEFAULTS['max_retries']}",
-            f"{self.workflow_info['wdl_workflow_name']}.max_backoff_time": f"{ARG_DEFAULTS['max_backoff_time']}",
-            f"{self.workflow_info['wdl_workflow_name']}.update_strategy": f"\"{ARG_DEFAULTS['update_strategy']}\"",
-            f"{self.workflow_info['wdl_workflow_name']}.bulk_mode": "false",
-            f"{self.workflow_info['wdl_workflow_name']}.workers": f"{ARG_DEFAULTS['multithread_workers']}",
-            f"{self.workflow_info['wdl_workflow_name']}.batch_size": f"{ARG_DEFAULTS['batch_size']}",
-            f"{self.workflow_info['wdl_workflow_name']}.batch_size_to_list_files": f"{ARG_DEFAULTS['batch_size_to_list_files']}",
-            f"{self.workflow_info['wdl_workflow_name']}.file_ingest_batch_size": f"{ARG_DEFAULTS['file_ingest_batch_size']}",
-            f"{self.workflow_info['wdl_workflow_name']}.waiting_time_to_poll": f"{ARG_DEFAULTS['waiting_time_to_poll']}",
+            f"{workflow}.docker": f"\"{ARG_DEFAULTS['docker_image']}\"",
+            f"{workflow}.max_retries": f"{ARG_DEFAULTS['max_retries']}",
+            f"{workflow}.max_backoff_time": f"{ARG_DEFAULTS['max_backoff_time']}",
+            f"{workflow}.update_strategy": f"\"{ARG_DEFAULTS['update_strategy']}\"",
+            f"{workflow}.bulk_mode": "false",
+            f"{workflow}.workers": f"{ARG_DEFAULTS['multithread_workers']}",
+            f"{workflow}.batch_size": f"{ARG_DEFAULTS['batch_size']}",
+            f"{workflow}.batch_size_to_list_files": f"{ARG_DEFAULTS['batch_size_to_list_files']}",
+            f"{workflow}.file_ingest_batch_size": f"{ARG_DEFAULTS['file_ingest_batch_size']}",
+            f"{workflow}.waiting_time_to_poll": f"{ARG_DEFAULTS['waiting_time_to_poll']}",
         }
 
     def _create_anvil_defaults(self) -> dict:
         """
         Set the default input values for the Anvil project in the workflow configuration.
         """
+        workflow = self.workflow_info['wdl_workflow_name']
         input_defaults = self._create_input_defaults()
         anvil_defaults = {
-            f"{self.workflow_info['wdl_workflow_name']}.billing_project": f"\"{ANVIL_TERRA_BILLING_PROJECT}\"",
-            f"{self.workflow_info['wdl_workflow_name']}.tdr_billing_profile": f"\"{ANVIL_TDR_BILLING_PROFILE}\""
+            f"{workflow}.billing_project": f"\"{ANVIL_TERRA_BILLING_PROJECT}\"",
+            f"{workflow}.tdr_billing_profile": f"\"{ANVIL_TDR_BILLING_PROFILE}\""
         }
         full_defaults = {**input_defaults, **anvil_defaults}
         return full_defaults
@@ -207,7 +209,8 @@ class WorkflowConfigs:
         """
         Set up the default input values for the workflow configuration.
 
-        If `set_defaults` is True, it sets the default input values. If `is_anvil` is True, it sets the Anvil-specific defaults.
+        If `set_defaults` is True, it sets the default input values.
+        If `is_anvil` is True, it sets the Anvil-specific defaults.
         """
         return {
             "deleted": False,

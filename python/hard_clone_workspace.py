@@ -27,7 +27,8 @@ def get_args() -> Namespace:
     parser.add_argument('--allow_already_created', "-a", action="store_true",
                         help="Allow the destination workspace to already exist")
     parser.add_argument('--workers', "-w", type=int, default=ARG_DEFAULTS['multithread_workers'],
-                        help=f"Number of workers to use when copying files. Defaults to {ARG_DEFAULTS['multithread_workers']}")
+                        help="Number of workers to use when copying files. " +
+                             f"Defaults to {ARG_DEFAULTS['multithread_workers']}")
     parser.add_argument('--extensions_to_ignore', "-i", type=comma_separated_list,
                         help="comma separated list of file extensions to ignore when copying files")
     parser.add_argument('--batch_size', "-b", type=int,
