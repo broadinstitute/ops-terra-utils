@@ -17,7 +17,7 @@ workflow HardCloneTerraWorkspace {
 		Int? batch_size
 	}
 
-	String docker = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
+	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 	# Ignore HardCloneTerraWorkspace submisisons files so do not write to src as copying to dest
 	String rysnc_regex_exclude = ".*/HardCloneTerraWorkspace/.*"
 	Int memory = select_first([memory_gb, 8])
@@ -31,7 +31,7 @@ workflow HardCloneTerraWorkspace {
 			allow_already_created=allow_already_created,
 			workers=workers,
 			extensions_to_ignore=extensions_to_ignore,
-			docker_name=docker,
+			docker_name=docker_name,
 			memory_gb=memory,
 			batch_size=batch_size,
 			metadata_only=rsync_workspace
