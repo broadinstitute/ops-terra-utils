@@ -438,6 +438,39 @@ class TDR:
         )
         return json.loads(response.text)
 
+    def file_ingest_to_dataset(self, dataset_id: str, profile_id: str, file_list: list[dict], load_tag: str = "file_ingest_load_tag") -> dict:
+        """
+        Load files into a TDR dataset.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            data (dict): list of cloud file paths to be ingested.
+            {
+                "sourcePath":"gs:{bucket_name}/{file_path}",
+                "targetPath":"/{path}/{file_name}"
+            }
+
+        Returns:
+            dict: A dictionary containing the response from the ingest operation.
+        """
+        uri = f"{self.TDR_LINK}/datasets/{dataset_id}/files/bulk/array"
+        data = {
+            "profileId": profile_id,
+            "loadTag": f"{load_tag}",
+            "maxFailedFileLoads": 0,
+            "loadArray": file_list
+        }
+
+        response = self.request_util.run_request(
+            uri=uri,
+            method=POST,
+            content_type="application/json",
+            data=json.dumps(data)
+        )
+        job_id = response.json()['id']
+        job_results = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30, return_json=True).run()
+        return job_results
+
     def get_data_set_table_metrics(
             self, dataset_id: str, target_table_name: str, query_limit: int = 1000
     ) -> list[dict]:
@@ -758,6 +791,23 @@ class TDR:
         """
         uri = f"{self.TDR_LINK}/snapshots/{snapshot_id}/files"
         return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
+
+    def get_dataset_snapshots(self, dataset_id: str) -> list[dict]:
+        """
+        Returns snapshots belonging to specified datset.
+
+        Args:
+            dataset_id: uuid of dataset to query.
+
+        Returns:
+            list[dict]: A list of dictionaries containing the metadata of snapshots in the dataset.
+        """
+        uri = f"{self.TDR_LINK}/snapshots?datasetIds={dataset_id}"
+        response = self.request_util.run_request(
+            uri=uri,
+            method=GET
+        )
+        return response.json()
 
 
 class FilterOutSampleIdsAlreadyInDataset:
