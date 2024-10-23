@@ -18,6 +18,12 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
+GROUP_MEMBER = "member"
+GROUP_ADMIN = "admin"
+OWNER = "OWNER"
+WRITER = "WRITER"
+READER = "READER"
+
 # Define the relative path to the file
 STAGING_WORKSPACE_DESCRIPTION_FILE = "../general_markdown/staging_workspace_description.md"
 WDL_READ_ME_PATH = "../wdl/{script_name}/README.md"
@@ -81,16 +87,16 @@ class SetUpTerraWorkspace:
         self.terra_groups.create_group(group_name=self.auth_group, continue_if_exists=self.continue_if_exists)
         if self.resource_owners:
             for user in self.resource_owners:
-                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role="admin")
+                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=GROUP_ADMIN)
         if self.resource_members:
             for user in self.resource_members:
-                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role="member")
+                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=GROUP_MEMBER)
 
     def _add_permissions_to_workspace(self) -> None:
         logging.info(f"Adding permissions to workspace {self.terra_workspace}")
         for user in self.resource_owners:
-            self.terra_workspace.update_user_acl(email=user, access_level="OWNER")
-        self.terra_workspace.update_user_acl(email=f'{self.auth_group}@firecloud.org', access_level="WRITER")
+            self.terra_workspace.update_user_acl(email=user, access_level=OWNER)
+        self.terra_workspace.update_user_acl(email=f'{self.auth_group}@firecloud.org', access_level=WRITER)
 
     def _set_up_workspace(self) -> None:
         # Only add auth domain if workspace is controlled
@@ -478,12 +484,12 @@ if __name__ == '__main__':
     # Add data ingest service account to workspace and auth group
     terra_workspace.update_user_acl(
         email=data_ingest_sa,
-        access_level="READER"
+        access_level=READER
     )
     terra_groups.add_user_to_group(
         email=data_ingest_sa,
         group=auth_group,
-        role="member",
+        role=GROUP_MEMBER,
         continue_if_exists=continue_if_exists
     )
 
