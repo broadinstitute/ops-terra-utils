@@ -438,7 +438,7 @@ class TDR:
         )
         return json.loads(response.text)
 
-    def file_ingest_to_dataset(self, dataset_id: str, 
+    def file_ingest_to_dataset(self, dataset_id: str,
                                profile_id: str,
                                file_list: list[dict],
                                load_tag: str = "file_ingest_load_tag") -> dict:
