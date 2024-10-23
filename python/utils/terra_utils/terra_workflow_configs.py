@@ -51,7 +51,7 @@ class WorkflowConfigs:
             workflow_name: str,
             billing_project: str,
             terra_workspace_util: TerraWorkspace,
-            set_defaults: bool = False,
+            set_input_defaults: bool = False,
             is_anvil: bool = False
     ):
         """
@@ -61,7 +61,7 @@ class WorkflowConfigs:
             workflow_name (str): The name of the workflow to configure.
             billing_project (str): The billing project to use for the workflow.
             terra_workspace_util (TerraWorkspace): The TerraWorkspace utility object.
-            set_defaults (bool): Whether to set the default input values for the workflow configuration.
+            set_input_defaults (bool): Whether to set the default input values for the workflow configuration.
             is_anvil (bool): Whether the workflow is for an Anvil project.
 
         Raises:
@@ -69,8 +69,9 @@ class WorkflowConfigs:
         """
         self.workflow_name = workflow_name
         self.terra_workspace_util = terra_workspace_util
-        self.set_defaults = set_defaults
+        self.set_input_defaults = set_input_defaults
         self.is_anvil = is_anvil
+        self.billing_project = billing_project
 
         # Check if the workflow name is in the YAML file
         available_workflows = GetWorkflowNames().get_workflow_names()
@@ -81,33 +82,22 @@ class WorkflowConfigs:
         with open(YAML_FILE_FULL_PATH, 'r') as file:
             yaml_data = yaml.safe_load(file)
         # Extract specific workflow information from yaml_data
-        yaml_info = next(workflow for workflow in yaml_data['workflows'] if workflow['name'] == self.workflow_name)
-        self.workflow_info = {
-            # Remove the leading slash from the path so join works correctly
-            'wdl_path': os.path.join(WDL_ROOT_DIR_FULL_PATH, yaml_info['primaryDescriptorPath'].lstrip('/')),
-            'read_me': os.path.join(WDL_ROOT_DIR_FULL_PATH, yaml_info['readMePath'].lstrip('/')),
-            'wdl_name': os.path.basename(yaml_info['primaryDescriptorPath']).rstrip('.wdl'),
-            'wdl_workflow_name': self._get_wdl_workflow_name(
-                os.path.join(WDL_ROOT_DIR_FULL_PATH, yaml_info['primaryDescriptorPath'].lstrip('/'))
-            )
-        }
+        self.yaml_info = next(workflow for workflow in yaml_data['workflows'] if workflow['name'] == self.workflow_name)
+        self.workflow_info = self._create_workflow_info_dict()
         # Set the initial workflow configuration
-        self.workflow_config = {
-            "deleted": False,
-            "methodConfigVersion": 0,
-            "methodRepoMethod": {
-                "sourceRepo": "dockstore",
-                "methodVersion": "main",
-                "methodUri": f"dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%{self.workflow_name}/main",
-                "methodPath": f"github.com/broadinstitute/ops-terra-utils/{self.workflow_name}"
-            },
-            "name": self.workflow_name,
-            "namespace": billing_project,
-            "outputs": {},
-            "inputs": {}
-        }
-        # Set the default input values. Will not change anything if set_defaults is False
-        self._set_up_input_defaults()
+        self.workflow_config = self._create_up_workflow_config()
+
+    def _create_wdl_absolute_path(self, relative_path: str) -> str:
+        """
+        Create an absolute path from a relative path. Will join the relative path with the script's directory.
+
+        Args:
+            relative_path (str): The relative path to convert.
+
+        Returns:
+            str: The absolute path.
+        """
+        return os.path.join(WDL_ROOT_DIR_FULL_PATH, relative_path.lstrip('/'))
 
     @staticmethod
     def _get_wdl_workflow_name(wdl_file_path: str) -> str:
@@ -131,11 +121,11 @@ class WorkflowConfigs:
                     return match.group(1)
         raise ValueError(f"Workflow name not found in {wdl_file_path}")
 
-    def _set_input_defaults(self) -> None:
+    def _create_input_defaults(self) -> dict:
         """
         Set the default input values for the workflow configuration.
         """
-        self.workflow_config["inputs"] = {
+        return {
             f"{self.workflow_info['wdl_workflow_name']}.docker": f"\"{DOCKER_IMAGE}\"",
             f"{self.workflow_info['wdl_workflow_name']}.max_retries": "5",
             f"{self.workflow_info['wdl_workflow_name']}.max_backoff_time": "300",
@@ -147,13 +137,17 @@ class WorkflowConfigs:
             f"{self.workflow_info['wdl_workflow_name']}.file_ingest_batch_size": "500",
         }
 
-    def _set_anvil_defaults(self) -> None:
+    def _create_anvil_defaults(self) -> dict:
         """
         Set the default input values for the Anvil project in the workflow configuration.
         """
-        self._set_input_defaults()
-        self.workflow_config["inputs"][f"{self.workflow_info['wdl_workflow_name']}.billing_project"] = f"\"{ANVIL_TERRA_BILLING_PROJECT}\""  # type: ignore[index]  # noqa: E501
-        self.workflow_config["inputs"][f"{self.workflow_info['wdl_workflow_name']}.tdr_billing_profile"] = f"\"{ANVIL_TDR_BILLING_PROFILE}\""  # type: ignore[index]  # noqa: E501
+        input_defaults = self._create_input_defaults()
+        anvil_defaults = {
+            f"{self.workflow_info['wdl_workflow_name']}.billing_project": f"\"{ANVIL_TERRA_BILLING_PROJECT}\"",
+            f"{self.workflow_info['wdl_workflow_name']}.tdr_billing_profile": f"\"{ANVIL_TDR_BILLING_PROFILE}\""
+        }
+        full_defaults = {**input_defaults, **anvil_defaults}
+        return full_defaults
 
     def import_workflow(self, continue_if_exists: bool = False) -> int:
         """
@@ -166,16 +160,64 @@ class WorkflowConfigs:
             int: The status code of the import operation.
         """
         logging.info(f"Importing {self.workflow_name} into {self.terra_workspace_util}")
-        return self.terra_workspace_util.import_workflow(workflow_dict=self.workflow_config, continue_if_exists=continue_if_exists)
+        return self.terra_workspace_util.import_workflow(
+            workflow_dict=self.workflow_config,
+            continue_if_exists=continue_if_exists
+        )
 
-    def _set_up_input_defaults(self) -> None:
+    def _create_workflow_info_dict(self) -> dict:
+        """
+        Create a dictionary containing workflow information.
+
+        This method constructs a dictionary with the absolute paths to the WDL file and the README file,
+        the name of the WDL workflow, and the base name of the WDL file.
+
+        Returns:
+            dict: A dictionary containing workflow information.
+        """
+        wdl_path = self._create_wdl_absolute_path(self.yaml_info['primaryDescriptorPath'])
+        return {
+            'wdl_path': wdl_path,
+            'read_me': self._create_wdl_absolute_path(self.yaml_info['readMePath']),
+            'wdl_workflow_name': self._get_wdl_workflow_name(wdl_path),
+            'wdl_name': os.path.basename(self.yaml_info['primaryDescriptorPath']).rstrip('.wdl'),
+        }
+
+    def _create_workflow_inputs(self) -> dict:
+        """
+        Create a dictionary containing the default input values for the workflow configuration.
+
+        This method sets the default input values based on whether `set_input_defaults` and `is_anvil` flags are set.
+
+        Returns:
+            dict: A dictionary containing the default input values for the workflow configuration.
+        """
+        if self.set_input_defaults:
+            if self.is_anvil:
+                input_defaults = self._create_anvil_defaults()
+            else:
+                input_defaults = self._create_input_defaults()
+        else:
+            input_defaults = {}
+        return input_defaults
+
+    def _create_up_workflow_config(self) -> dict:
         """
         Set up the default input values for the workflow configuration.
 
         If `set_defaults` is True, it sets the default input values. If `is_anvil` is True, it sets the Anvil-specific defaults.
         """
-        if self.set_defaults:
-            if self.is_anvil:
-                self._set_anvil_defaults()
-            else:
-                self._set_input_defaults()
+        return {
+            "deleted": False,
+            "methodConfigVersion": 0,
+            "methodRepoMethod": {
+                "sourceRepo": "dockstore",
+                "methodVersion": "main",
+                "methodUri": f"dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%{self.workflow_name}/main",
+                "methodPath": f"github.com/broadinstitute/ops-terra-utils/{self.workflow_name}"
+            },
+            "name": self.workflow_name,
+            "namespace": self.billing_project,
+            "outputs": {},
+            "inputs": self._create_workflow_inputs()
+        }

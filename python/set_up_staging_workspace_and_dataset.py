@@ -394,7 +394,7 @@ class SetUpWorkflowConfig:
                     workflow_name=workflow_name,
                     billing_project=terra_billing_project,
                     terra_workspace_util=self.terra_workspace,
-                    set_defaults=True,
+                    set_input_defaults=True,
                     is_anvil=self.is_anvil
                 )
             )
