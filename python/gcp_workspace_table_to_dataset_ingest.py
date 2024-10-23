@@ -63,7 +63,7 @@ def get_args() -> argparse.Namespace:
         "--max_retries",
         required=False,
         default=ARG_DEFAULTS["max_retries"],
-        help=f"The maximum number of retries for a failed request. " +
+        help="The maximum number of retries for a failed request. " +
              f"Defaults to {ARG_DEFAULTS['max_retries']} if not provided"
     )
     parser.add_argument(
