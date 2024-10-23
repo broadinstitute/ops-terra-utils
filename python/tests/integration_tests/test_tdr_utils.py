@@ -171,7 +171,7 @@ class TestCreateUtils:
 
     def test_ingest_files(self) -> None:
         test_data = self.test_info['tests']['test_batch_ingest']['file_ingest']
-        cmd = self.tdr_client.file_ingest_to_dataset(dataset_id=test_data['function_input']['dataset_id'],
+        self.tdr_client.file_ingest_to_dataset(dataset_id=test_data['function_input']['dataset_id'],
                                                      profile_id=test_data['function_input']['profileId'],
                                                      file_list=test_data['function_input']['ingest_files'],
                                                      load_tag=test_data['function_input']['load_tag'])
@@ -218,7 +218,8 @@ class TestDeleteUtils:
 
         test_data = self.test_info['tests']['test_delete_snapshot']
         dataset_info = self.tdr_client.check_if_dataset_exists(
-            dataset_name=test_data['delete_snapshot']['function_input']['dataset_name'], billing_profile=test_data['delete_snapshot']['function_input']['profileId'])
+            dataset_name=test_data['delete_snapshot']['function_input']['dataset_name'],
+            billing_profile=test_data['delete_snapshot']['function_input']['profileId'])
         if dataset_info:
             dataset_id = dataset_info[0]['id']
             dataset_snapshots = self.tdr_client.get_dataset_snapshots(dataset_id=dataset_id)
@@ -234,7 +235,8 @@ class TestDeleteUtils:
     def test_delete_dataset(self) -> None:
         test_data = self.test_info['tests']['test_delete_dataset']
         dataset_info = self.tdr_client.check_if_dataset_exists(
-            dataset_name=test_data['function_input']['dataset_name'], billing_profile=test_data['function_input']['billing_profile'])
+            dataset_name=test_data['function_input']['dataset_name'],
+            billing_profile=test_data['function_input']['billing_profile'])
         if dataset_info:
             dataset_id = dataset_info[0]['id']
             self.tdr_client.delete_dataset(dataset_id=dataset_id)
