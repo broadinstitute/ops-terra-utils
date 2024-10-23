@@ -9,11 +9,11 @@ workflow CopyDataset {
 		Int? waiting_time_to_poll
 		Int? ingest_batch_size
 		String? update_strategy
-		String? docker_name
+		String? docker
 		Boolean filter_out_entity_already_in_dataset
 	}
 
-	String docker = select_first([docker_name, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
+	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
 
 	call RunCopyDataset {
@@ -25,7 +25,7 @@ workflow CopyDataset {
 			new_dataset_name=new_dataset_name,
 			waiting_time_to_poll=waiting_time_to_poll,
 			bulk_mode=bulk_mode,
-			docker_name=docker,
+			docker_name=docker_name,
 			filter_out_entity_already_in_dataset=filter_out_entity_already_in_dataset
 	}
 }
@@ -44,7 +44,7 @@ task RunCopyDataset {
 	}
 
 	command <<<
-		python /etc/terra_utils/copy_dataset.py \
+		python /etc/terra_utils/python/copy_dataset.py \
 		--new_billing_profile ~{new_billing_profile} \
 		--orig_dataset_id ~{orig_dataset_id} \
 		--new_dataset_name ~{new_dataset_name} \

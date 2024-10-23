@@ -4,17 +4,13 @@ import argparse
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.request_util import RunRequest
 from utils.token_util import Token
-from utils import GCP
+from utils import GCP, ARG_DEFAULTS
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
 CLOUD_TYPE = GCP
-MAX_RETRIES = 5
-MAX_BACKOFF_TIME = 5 * 60
-BATCH_SIZE_TO_LIST_FILES = 20000
-BATCH_SIZE_TO_DELETE_FILES = 100
 
 
 def get_args() -> argparse.Namespace:
@@ -23,15 +19,16 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--max_retries",
         required=False,
-        default=MAX_RETRIES,
-        help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided"
+        default=ARG_DEFAULTS['max_retries'],
+        help="The maximum number of retries for a failed request. " +
+             f"Defaults to {ARG_DEFAULTS['max_retries']}"
     )
     parser.add_argument(
         "--max_backoff_time",
         required=False,
-        default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if "
-             f"not provided"
+        default=ARG_DEFAULTS['max_backoff_time'],
+        help="The maximum backoff time for a failed request (in seconds). " +
+             f"Defaults to {ARG_DEFAULTS['max_backoff_time']}"
     )
     parser.add_argument(
         "--delete_orphaned_files",
@@ -42,16 +39,16 @@ def get_args() -> argparse.Namespace:
         "--batch_size_to_list_files",
         action="store",
         type=int,
-        default=BATCH_SIZE_TO_LIST_FILES,
-        help=f"The batch size to query files in the dataset. Defaults to {BATCH_SIZE_TO_LIST_FILES}"
+        default=ARG_DEFAULTS['batch_size_to_list_files'],
+        help=f"The batch size to query files in the dataset. Defaults to {ARG_DEFAULTS['batch_size_to_list_files']}"
     )
     parser.add_argument(
         "--batch_size_to_delete_files",
         action="store",
         type=int,
-        default=BATCH_SIZE_TO_DELETE_FILES,
+        default=ARG_DEFAULTS['batch_size_to_delete_files'],
         help=f"The batch size to submit all delete jobs together and wait until all have completed before moving to "
-             f"next batch. Defaults to {BATCH_SIZE_TO_LIST_FILES}"
+             f"next batch. Defaults to {ARG_DEFAULTS['batch_size_to_delete_files']}"
     )
 
     return parser.parse_args()

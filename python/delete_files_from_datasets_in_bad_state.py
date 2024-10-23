@@ -3,7 +3,7 @@ import requests
 import re
 from utils.request_util import RunRequest
 from utils.token_util import Token
-from utils import GCP
+from utils import GCP, ARG_DEFAULTS
 from argparse import ArgumentParser, Namespace
 
 from utils.tdr_utils.tdr_api_utils import TDR
@@ -17,7 +17,7 @@ logging.basicConfig(
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Delete files from datasets in bad state")
     parser.add_argument("-id", "--dataset_id", required=True)
-    parser.add_argument("-l", "--file_query_limit", default=20000, type=int)
+    parser.add_argument("-l", "--file_query_limit", default=ARG_DEFAULTS['batch_size_to_list_files'], type=int)
     return parser.parse_args()
 
 

@@ -5,7 +5,9 @@ import argparse
 from typing import Optional
 from datetime import datetime
 
-from utils import GCP
+from pandas.compat.numpy.function import ARGSORT_DEFAULTS
+
+from utils import GCP, ARG_DEFAULTS
 from utils.tdr_utils.tdr_api_utils import TDR, FILE_INVENTORY_DEFAULT_SCHEMA
 from utils.tdr_utils.tdr_ingest_utils import (
     ConvertTerraTableInfoForIngest,
@@ -24,20 +26,12 @@ logging.basicConfig(
 
 TOKEN_TYPE = GCP  # The cloud type for the token
 CLOUD_TYPE = GCP  # The cloud type for the TDR dataset and workspace
-MAX_RETRIES = 5  # The maximum number of retries for a failed request
 # The maximum backoff time for a failed request (in seconds)
-MAX_BACKOFF_TIME = 5 * 60
 # Anvil prod billing profile id
 ANVIL_TDR_BILLING_PROFILE = "e0e03e48-5b96-45ec-baa4-8cc1ebf74c61"
 DATASET_MONITORING = True  # Enable monitoring for dataset
-# The number of rows to ingest at a time when ingesting files
-FILE_INGEST_BATCH_SIZE = 500
-# How long to wait between polling for ingest status when ingesting files
-FILE_INGEST_WAITING_TIME_TO_POLL = 30
 # The number of rows to ingest at a time when ingesting metadata
 METADATA_INGEST_BATCH_SIZE = 1000
-# How long to wait between polling for ingest status when ingesting metadata
-METADATA_INGEST_WAITING_TIME_TO_POLL = 45
 TEST_INGEST = False  # Whether to test the ingest by just doing first batch
 FILE_INVENTORY_TABLE_NAME = "file_inventory"
 
@@ -77,21 +71,23 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--file_ingest_batch_size",
         required=False,
-        default=FILE_INGEST_BATCH_SIZE,
-        help=f"The number of rows to ingest at a time. Defaults to {FILE_INGEST_BATCH_SIZE} if not provided"
+        default=ARG_DEFAULTS["file_ingest_batch_size"],
+        help="The number of rows to ingest at a time. " +
+             f"Defaults to {ARG_DEFAULTS['file_ingest_batch_size']} if not provided"
     )
     parser.add_argument(
         "--max_backoff_time",
         required=False,
-        default=MAX_BACKOFF_TIME,
-        help=f"The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds if "
-             f"not provided"
+        default=ARG_DEFAULTS["max_backoff_time"],
+        help="The maximum backoff time for a failed request (in seconds). " +
+             f"Defaults to {ARG_DEFAULTS['max_backoff_time']} seconds if not provided"
     )
     parser.add_argument(
         "--max_retries",
         required=False,
-        default=MAX_RETRIES,
-        help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided."
+        default=ARG_DEFAULTS["max_retries"],
+        help="The maximum number of retries for a failed request. " +
+             f"Defaults to {ARG_DEFAULTS['max_retries']} if not provided."
     )
     parser.add_argument(
         "--dataset_self_hosted",
@@ -244,13 +240,12 @@ def run_filter_and_ingest(
     table_unique_id = table_info_dict["table_unique_id"]
     file_list_bool = table_info_dict["file_list"]
     schema_info = table_info_dict["schema"]
+    waiting_time_to_poll = ARGSORT_DEFAULTS["waiting_time_to_poll"]
 
     # Set waiting time to poll and batch size based on if files are being ingested
     if table_name != FILE_INVENTORY_TABLE_NAME:
-        waiting_time_to_poll = METADATA_INGEST_WAITING_TIME_TO_POLL
         ingest_batch_size = METADATA_INGEST_BATCH_SIZE
     else:
-        waiting_time_to_poll = FILE_INGEST_WAITING_TIME_TO_POLL
         ingest_batch_size = file_ingest_batch_size
 
     # Filter out all rows that already exist in the dataset and batch ingests to table

@@ -59,7 +59,7 @@ task RenameAndingestFiles {
     }
 
     command <<<
-        python /etc/terra_utils/rename_and_reingest_files.py \
+        python /etc/terra_utils/python/rename_and_reingest_files.py \
         --dataset_id  ~{dataset_id} \
         --original_file_basename_column  ~{original_file_basename_column} \
         --new_file_basename_column  ~{new_file_basename_column} \

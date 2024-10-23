@@ -12,12 +12,12 @@ workflow HardCloneTerraWorkspace {
 		Boolean rsync_workspace
 		Int? workers
 		String? extensions_to_ignore
-		String? docker_name
+		String? docker
 		Int? memory_gb
 		Int? batch_size
 	}
 
-	String docker = select_first([docker_name, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
+	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 	# Ignore HardCloneTerraWorkspace submisisons files so do not write to src as copying to dest
 	String rysnc_regex_exclude = ".*/HardCloneTerraWorkspace/.*"
 	Int memory = select_first([memory_gb, 8])
@@ -31,7 +31,7 @@ workflow HardCloneTerraWorkspace {
 			allow_already_created=allow_already_created,
 			workers=workers,
 			extensions_to_ignore=extensions_to_ignore,
-			docker_name=docker,
+			docker_name=docker_name,
 			memory_gb=memory,
 			batch_size=batch_size,
 			metadata_only=rsync_workspace
@@ -63,7 +63,7 @@ task HardCloneTerraWorkspaceTask {
 	}
 
 	command <<<
-		python /etc/terra_utils/hard_clone_workspace.py \
+		python /etc/terra_utils/python/hard_clone_workspace.py \
 		--source_billing_project ~{source_billing_project} \
 		--source_workspace_name ~{source_workspace_name} \
 		--dest_billing_project ~{dest_billing_project} \

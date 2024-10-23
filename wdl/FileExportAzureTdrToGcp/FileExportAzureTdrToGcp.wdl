@@ -31,7 +31,7 @@ task run_export{
     }
 
     command <<<
-        python /etc/terra_utils/azure_tdr_to_gcp_file_transfer.py \
+        python /etc/terra_utils/python/azure_tdr_to_gcp_file_transfer.py \
         --export_type ~{export_type} \
         --target_id ~{target_id} \
         --bucket_id ~{bucket_id} \

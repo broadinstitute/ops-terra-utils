@@ -84,6 +84,7 @@ class TerraGroups:
         )
         if continue_if_exists and response.status_code == 409:
             logging.info(f"Group {group_name} already exists. Continuing.")
+            return response.status_code
         else:
             logging.info(f"Created group {group_name}")
             return response.status_code
@@ -105,7 +106,7 @@ class TerraGroups:
         logging.info(f"Deleted group {group_name}")
         return res.status_code
 
-    def add_user_to_group(self, group: str, email: str, role: str) -> int:
+    def add_user_to_group(self, group: str, email: str, role: str, continue_if_exists: bool = False) -> int:
         """
         Add a user to a group.
 
@@ -113,14 +114,18 @@ class TerraGroups:
             group (str): The name of the group.
             email (str): The email of the user to add.
             role (str): The role of the user in the group.
+            continue_if_exists (bool, optional): Whether to continue if the user is already in the group.
+                Defaults to False.
         Returns:
             int: The response code
         """
         url = f"{SAM_LINK}/groups/v1/{group}/{role}/{email}"
         self._check_role(role)
+        accept_return_codes = [409] if continue_if_exists else []
         res = self.request_util.run_request(
             uri=url,
-            method=PUT
+            method=PUT,
+            accept_return_codes=accept_return_codes
         )
         logging.info(f"Added {email} to group {group} as {role}")
         return res.status_code
@@ -381,7 +386,8 @@ class TerraWorkspace:
         Returns:
             dict: The JSON response containing the updated ACL.
         """
-        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl?inviteUsersNotFound={str(invite_users_not_found).lower()}"  # noqa
+        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl?" + \
+              f"inviteUsersNotFound={str(invite_users_not_found).lower()}"
         payload = {
             "email": email,
             "accessLevel": access_level,
@@ -436,7 +442,8 @@ class TerraWorkspace:
         Returns:
             dict: The JSON response containing the updated ACL.
         """
-        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl?inviteUsersNotFound={str(invite_users_not_found).lower()}"  # noqa
+        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl?" + \
+            f"inviteUsersNotFound={str(invite_users_not_found).lower()}"
         logging.info(
             f"Updating users in workspace {self.billing_project}/{self.workspace_name}")
         response = self.request_util.run_request(
@@ -557,23 +564,27 @@ class TerraWorkspace:
         )
         return response.json()
 
-    def import_workflow(self, workflow_dict: dict) -> int:
+    def import_workflow(self, workflow_dict: dict, continue_if_exists: bool = False) -> int:
         """
         Import a workflow into the workspace.
 
         Args:
             workflow_dict (dict): The dictionary containing the workflow information.
+            continue_if_exists (bool, optional): Whether to continue if the workflow
+                already exists. Defaults to False.
 
         Returns:
-            dict: The response from the import request.
+            int: The response status code
         """
         uri = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/methodconfigs"
         workflow_json = json.dumps(workflow_dict)
+        accept_return_codes = [409] if continue_if_exists else []
         response = self.request_util.run_request(
             uri=uri,
             method=POST,
             data=workflow_json,
-            content_type="application/json"
+            content_type="application/json",
+            accept_return_codes=accept_return_codes
         )
         return response.status_code
 
@@ -589,3 +600,35 @@ class TerraWorkspace:
             method=DELETE
         )
         return response
+
+    def update_workspace_attributes(self, attributes: list[dict]) -> None:
+        """
+        Update the attributes for the workspace.
+
+        Args:
+            attributes (dict): The attributes to update.
+
+        Returns:
+            int: The response status code
+        """
+        self.request_util.run_request(
+            uri=f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/updateAttributes",
+            method=PATCH,
+            data=json.dumps(attributes),
+            content_type="application/json"
+        )
+
+    def leave_workspace(self, workspace_id: Optional[str] = None) -> None:
+        """
+        Leave a workspace. If workspace ID not supplied will look it up
+
+        Args:
+            workspace_id (Optional[str], optional): The workspace ID. Defaults to None.
+        """
+        if not workspace_id:
+            workspace_info = self.get_workspace_info()
+            workspace_id = workspace_info['workspace']['workspaceId']
+        self.request_util.run_request(
+            uri=f"{SAM_LINK}/resources/v2/workspace/{workspace_id}/leave",
+            method=DELETE
+        )
