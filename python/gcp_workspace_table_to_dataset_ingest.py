@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from utils import GCP, comma_separated_list
+from utils import GCP, comma_separated_list, ARG_DEFAULTS
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils.tdr_utils.tdr_api_utils import TDR, FilterOutSampleIdsAlreadyInDataset
 from utils.tdr_utils.tdr_ingest_utils import (
@@ -21,10 +21,6 @@ logging.basicConfig(
 # Columns to ignore when ingesting
 COLUMNS_TO_IGNORE = ["datarepo_row_id", "import:timestamp", "import:snapshot_id", "tdr:sample_id"]
 CLOUD_TYPE = GCP
-BATCH_SIZE = 700  # The number of rows to ingest at a time
-WAITING_TIME_TO_POLL = 120  # How long to wait between polling for ingest status
-MAX_RETRIES = 5  # The maximum number of retries for a failed request
-MAX_BACKOFF_TIME = 5 * 60  # The maximum backoff time for a failed request
 TEST_INGEST = False  # Whether to test the ingest by just doing first batch
 # Filter for out rows where it already exists within the dataset
 FILTER_EXISTING_IDS = False
@@ -46,7 +42,7 @@ def get_args() -> argparse.Namespace:
         "--update_strategy",
         required=False,
         choices=["REPLACE", "APPEND", "UPDATE"],
-        default="REPLACE",
+        default=ARG_DEFAULTS["update_strategy"],
         help="Defaults to REPLACE if not provided"
     )
     parser.add_argument(
@@ -66,14 +62,14 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--max_retries",
         required=False,
-        default=MAX_RETRIES,
-        help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided"
+        default=ARG_DEFAULTS["max_retries"],
+        help=f"The maximum number of retries for a failed request. Defaults to {ARG_DEFAULTS['max_retries']} if not provided"
     )
     parser.add_argument(
         "--max_backoff_time",
         required=False,
-        default=MAX_BACKOFF_TIME,
-        help=f"""The maximum backoff time for a failed request (in seconds). Defaults to {MAX_BACKOFF_TIME} seconds
+        default=ARG_DEFAULTS["max_backoff_time"],
+        help=f"""The maximum backoff time for a failed request (in seconds). Defaults to {ARG_DEFAULTS['max_backoff_time']} seconds
         if not provided"""
     )
     parser.add_argument(
@@ -84,8 +80,8 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--batch_size",
         required=False,
-        default=BATCH_SIZE,
-        help=f"""The number of rows to ingest at a time. Defaults to {BATCH_SIZE} if not provided"""
+        default=ARG_DEFAULTS["batch_size"],
+        help=f"""The number of rows to ingest at a time. Defaults to {ARG_DEFAULTS['batch_size']} if not provided"""
     )
 
     return parser.parse_args()
@@ -174,7 +170,7 @@ if __name__ == "__main__":
             bulk_mode=bulk_mode,
             cloud_type=CLOUD_TYPE,
             update_strategy=update_strategy,
-            waiting_time_to_poll=WAITING_TIME_TO_POLL,
+            waiting_time_to_poll=ARG_DEFAULTS['waiting_time_to_poll'],
             test_ingest=TEST_INGEST,
             load_tag=f"{billing_project}_{workspace_name}-{dataset_id}",
             file_list_bool=False

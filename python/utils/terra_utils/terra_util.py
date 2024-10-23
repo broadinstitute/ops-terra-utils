@@ -574,7 +574,7 @@ class TerraWorkspace:
                 already exists. Defaults to False.
 
         Returns:
-            dict: The response from the import request.
+            int: The response status code
         """
         uri = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/methodconfigs"
         workflow_json = json.dumps(workflow_dict)

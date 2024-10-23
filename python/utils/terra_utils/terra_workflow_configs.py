@@ -2,6 +2,7 @@ import os
 import yaml  # type: ignore[import]  # noqa: F401
 import re
 from .terra_util import TerraWorkspace
+from .. import ARG_DEFAULTS
 import logging
 
 DOCKER_IMAGE = "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"
@@ -126,15 +127,16 @@ class WorkflowConfigs:
         Set the default input values for the workflow configuration.
         """
         return {
-            f"{self.workflow_info['wdl_workflow_name']}.docker": f"\"{DOCKER_IMAGE}\"",
-            f"{self.workflow_info['wdl_workflow_name']}.max_retries": "5",
-            f"{self.workflow_info['wdl_workflow_name']}.max_backoff_time": "300",
-            f"{self.workflow_info['wdl_workflow_name']}.update_strategy": "\"REPLACE\"",
+            f"{self.workflow_info['wdl_workflow_name']}.docker": f"\"{ARG_DEFAULTS['docker_image']}\"",
+            f"{self.workflow_info['wdl_workflow_name']}.max_retries": f"{ARG_DEFAULTS['max_retries']}",
+            f"{self.workflow_info['wdl_workflow_name']}.max_backoff_time": f"{ARG_DEFAULTS['max_backoff_time']}",
+            f"{self.workflow_info['wdl_workflow_name']}.update_strategy": f"\"{ARG_DEFAULTS['update_strategy']}\"",
             f"{self.workflow_info['wdl_workflow_name']}.bulk_mode": "false",
-            f"{self.workflow_info['wdl_workflow_name']}.workers": "10",
-            f"{self.workflow_info['wdl_workflow_name']}.batch_size": "500",
-            f"{self.workflow_info['wdl_workflow_name']}.batch_size_to_list_files": "20000",
-            f"{self.workflow_info['wdl_workflow_name']}.file_ingest_batch_size": "500",
+            f"{self.workflow_info['wdl_workflow_name']}.workers": f"{ARG_DEFAULTS['multithread_workers']}",
+            f"{self.workflow_info['wdl_workflow_name']}.batch_size": f"{ARG_DEFAULTS['batch_size']}",
+            f"{self.workflow_info['wdl_workflow_name']}.batch_size_to_list_files": f"{ARG_DEFAULTS['batch_size_to_list_files']}",
+            f"{self.workflow_info['wdl_workflow_name']}.file_ingest_batch_size": f"{ARG_DEFAULTS['file_ingest_batch_size']}",
+            f"{self.workflow_info['wdl_workflow_name']}.waiting_time_to_poll": f"{ARG_DEFAULTS['waiting_time_to_poll']}",
         }
 
     def _create_anvil_defaults(self) -> dict:
