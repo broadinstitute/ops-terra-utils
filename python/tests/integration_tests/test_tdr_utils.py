@@ -51,7 +51,8 @@ class TestGetUtils:
     def test_check_if_dataset_exists(self) -> None:
         test_data = self.test_info['tests']['check_if_dataset_exists']
         dataset_exists = self.tdr_client.check_if_dataset_exists(
-            dataset_name=test_data['function_input']['dataset_name'], billing_profile=test_data['function_input']['billing_profile'])
+            dataset_name=test_data['function_input']['dataset_name'],
+            billing_profile=test_data['function_input']['billing_profile'])
         dataset_dose_not_exist = self.tdr_client.check_if_dataset_exists(
             dataset_name="fake_dataset", billing_profile='not_real_billing_profile')
         assert dataset_exists and not dataset_dose_not_exist
@@ -70,22 +71,25 @@ class TestGetUtils:
     def test_get_data_set_table_metrics(self) -> None:
         test_data = self.test_info['tests']['get_data_set_table_metrics']
         cmd = self.tdr_client.get_data_set_table_metrics(
-            dataset_id=test_data['function_input']['dataset_id'], target_table_name=test_data['function_input']['table_name'])
+            dataset_id=test_data['function_input']['dataset_id'],
+            target_table_name=test_data['function_input']['table_name'])
         assert len(cmd) == 10
 
     def test_get_data_set_sample_ids(self) -> None:
         test_data = self.test_info['tests']['get_data_set_sample_ids']
         cmd = self.tdr_client.get_data_set_sample_ids(
-            dataset_id=test_data['function_input']['dataset_id'], target_table_name=test_data['function_input']['table_name'], entity_id=test_data['function_input']['entity_id'])
+            dataset_id=test_data['function_input']['dataset_id'],
+            target_table_name=test_data['function_input']['table_name'],
+            entity_id=test_data['function_input']['entity_id'])
         assert len(cmd) == 10
 
     def test_get_data_set_file_uuids_from_metadata(self) -> None:
         test_data = self.test_info['tests']['get_data_set_file_uuids_from_metadata']
-        cmd = self.tdr_client.get_data_set_file_uuids_from_metadata(dataset_id=test_data['function_input'])
+        self.tdr_client.get_data_set_file_uuids_from_metadata(dataset_id=test_data['function_input'])
 
     def test_get_files_from_snapshot(self) -> None:
         test_data = self.test_info['tests']['get_files_from_snapshot']
-        cmd = self.tdr_client.get_files_from_snapshot(snapshot_id=test_data['function_input'])
+        self.tdr_client.get_files_from_snapshot(snapshot_id=test_data['function_input'])
 
     def test_InferTDRSchema(self) -> None:
         # input_metadata: list[dict], table_name
@@ -116,7 +120,7 @@ class TestCreateUtils:
             assert cmd == '0981274b-61e3-4efb-99f2-eaea57075612'
 
         def create_new_dataset() -> None:
-            cmd = self.tdr_client.get_or_create_dataset(
+            self.tdr_client.get_or_create_dataset(
                 dataset_name=test_data['new_dataset']['function_input']['dataset_name'],
                 billing_profile=test_data['new_dataset']['function_input']['billing_profile'],
                 schema=test_data['new_dataset']['function_input']['schema'],
@@ -129,16 +133,19 @@ class TestCreateUtils:
 
     def test_add_user_to_dataset(self) -> None:
         test_data = self.test_info['tests']['test_add_user_to_dataset']
-        cmd = self.tdr_client.add_user_to_dataset(
-            dataset_id=test_data['function_input']['dataset_id'], user=test_data['function_input']['user'], policy=test_data['function_input']['policy'])
+        self.tdr_client.add_user_to_dataset(
+            dataset_id=test_data['function_input']['dataset_id'],
+            user=test_data['function_input']['user'],
+            policy=test_data['function_input']['policy'])
 
     def test_update_dataset_schema(self) -> None:
         test_data = self.test_info['tests']['test_update_dataset_schema']
         dataset_info = self.tdr_client.check_if_dataset_exists(
-            dataset_name=test_data['function_input']['dataset_name'], billing_profile=test_data['function_input']['billing_profile'])
+            dataset_name=test_data['function_input']['dataset_name'],
+            billing_profile=test_data['function_input']['billing_profile'])
         dataset_id = dataset_info[0]['id'] if dataset_info else None
         if dataset_id:
-            cmd = self.tdr_client.update_dataset_schema(  # type: ignore[return]
+            self.tdr_client.update_dataset_schema(  # type: ignore[return]
                 dataset_id=dataset_id,
                 update_note=test_data['function_input']['update_note'],
                 tables_to_add=test_data['function_input']['tables_to_add']
@@ -147,7 +154,8 @@ class TestCreateUtils:
     def test_batch_ingest_to_dataset(self) -> None:
         test_data = self.test_info['tests']['test_batch_ingest']['metadata_ingest']
         dataset_info = self.tdr_client.check_if_dataset_exists(
-            dataset_name=test_data['function_input']['dataset_name'], billing_profile=test_data['function_input']['billing_profile'])
+            dataset_name=test_data['function_input']['dataset_name'],
+            billing_profile=test_data['function_input']['billing_profile'])
         dataset_id = dataset_info[0]['id'] if dataset_info else None
         if dataset_id:
             BatchIngest(
@@ -163,8 +171,10 @@ class TestCreateUtils:
 
     def test_ingest_files(self) -> None:
         test_data = self.test_info['tests']['test_batch_ingest']['file_ingest']
-        cmd = self.tdr_client.file_ingest_to_dataset(dataset_id=test_data['function_input']['dataset_id'], profile_id=test_data['function_input']
-                                                     ['profileId'], file_list=test_data['function_input']['ingest_files'], load_tag=test_data['function_input']['load_tag'])
+        cmd = self.tdr_client.file_ingest_to_dataset(dataset_id=test_data['function_input']['dataset_id'],
+                                                     profile_id=test_data['function_input']['profileId'],
+                                                     file_list=test_data['function_input']['ingest_files'],
+                                                     load_tag=test_data['function_input']['load_tag'])
 
 
 class TestDeleteUtils:
