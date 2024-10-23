@@ -30,9 +30,11 @@ def setup_test_terra_resources() -> Any:
     # Attempt to delete the test workspace before starting any tests
     try:
         terra_workspace.delete_workspace()
-        terra_groups.delete_group(group_name=INTEGRATION_TEST_GROUP_NAME)
     except requests.exceptions.HTTPError:
         pass
+
+    # Delete the existing group before starting any tests
+    terra_groups.delete_group(group_name=INTEGRATION_TEST_GROUP_NAME)
 
     # Create the test workspace
     terra_workspace.create_workspace(continue_if_exists=False)
