@@ -311,6 +311,7 @@ class UpdateWorkspaceAttributes:
             workspace_description += "\n\n# Imported WDLs Information\n"
             for workflow_config in self.workflow_config_list:
                 with open(workflow_config.workflow_info['read_me'], "r") as file:
+                    # Read wdl readme and convert headers to be smaller in workspace description
                     wdl_description = file.read().replace("# ", "### ")
                 # Add wdl readme to workspace description
                 workspace_description += f"\n\n## {workflow_config.workflow_name}\n{wdl_description}"
@@ -356,11 +357,8 @@ class ImportWorkflowsAndNotebooks:
         self.notebooks = notebooks
 
     def _import_workflow(self) -> None:
-        for workflow in self.workflow_config_list:  # type: ignore[union-attr]
-            self.terra_workspace.import_workflow(
-                workflow_dict=workflow.workflow_config,
-                continue_if_exists=self.continue_if_exists
-            )
+        for workflow_config in self.workflow_config_list:  # type: ignore[union-attr]
+            workflow_config.import_workflow(continue_if_exists=self.continue_if_exists)
 
     def _copy_in_notebooks(self) -> None:
         gcp_functions = GCPCloudFunctions()
@@ -377,6 +375,30 @@ class ImportWorkflowsAndNotebooks:
             self._import_workflow()
         if self.notebooks:
             self._copy_in_notebooks()
+
+
+class SetUpWorkflowConfig:
+    def __init__(self, terra_workspace: TerraWorkspace, workflow_names: str, billing_project: str, is_anvil: bool):
+        self.terra_workspace = terra_workspace
+        self.workflow_names = workflow_names
+        self.billing_project = billing_project
+        self.is_anvil = is_anvil
+
+    def run(self) -> list[WorkflowConfigs]:
+        # Validate wdls to import are valid
+        workflow_config_list = []
+        for workflow_name in self.workflow_names:
+            # Create and add workflow config to list
+            workflow_config_list.append(
+                WorkflowConfigs(
+                    workflow_name=workflow_name,
+                    billing_project=terra_billing_project,
+                    terra_workspace_util=self.terra_workspace,
+                    set_defaults=True,
+                    is_anvil=self.is_anvil
+                )
+            )
+        return workflow_config_list
 
 
 if __name__ == '__main__':
@@ -398,28 +420,6 @@ if __name__ == '__main__':
     notebooks_to_import = args.notebooks_to_import
     is_anvil = args.is_anvil
 
-    # Validate wdls to import are valid
-    workflow_config_list = []
-    for workflow_name in wdls_to_import:
-        # Set workflow config
-        workflow_config = WorkflowConfigs(
-            workflow_name=workflow_name,
-            billing_project=terra_billing_project
-        )
-        if is_anvil:
-            # Set anvil defaults
-            workflow_config.set_anvil_defaults()
-        else:
-            # Set input defaults
-            workflow_config.set_input_defaults()
-        workflow_config_list.append(workflow_config)
-
-    if notebooks_to_import:
-        for notebook in notebooks_to_import:
-            if not notebook.startswith("gs://") or not notebook.endswith(".ipynb"):
-                logging.error(f"Invalid notebook path {notebook}. Must start with gs:// and end with .ipynb")
-                exit(1)
-
     workspace_name = f'{dataset_name}_Staging'
     auth_group = f"AUTH_{dataset_name}"
 
@@ -433,6 +433,19 @@ if __name__ == '__main__':
         billing_project=terra_billing_project,
         workspace_name=workspace_name
     )
+
+    workflow_configs = SetUpWorkflowConfig(
+        terra_workspace=terra_workspace,
+        workflow_names=wdls_to_import,
+        billing_project=terra_billing_project,
+        is_anvil=is_anvil
+    ).run()
+
+    if notebooks_to_import:
+        for notebook in notebooks_to_import:
+            if not notebook.startswith("gs://") or not notebook.endswith(".ipynb"):
+                logging.error(f"Invalid notebook path {notebook}. Must start with gs:// and end with .ipynb")
+                exit(1)
 
     # Set up workspace and groups
     SetUpTerraWorkspace(
@@ -478,7 +491,7 @@ if __name__ == '__main__':
     ImportWorkflowsAndNotebooks(
         billing_project=terra_billing_project,
         terra_workspace=terra_workspace,
-        workflow_config_list=workflow_config_list,
+        workflow_config_list=workflow_configs,
         notebooks=notebooks_to_import,
         continue_if_exists=continue_if_exists
     ).run()
@@ -493,7 +506,7 @@ if __name__ == '__main__':
         phs_id=phs_id,
         dataset_name=dataset_name,
         data_ingest_sa=data_ingest_sa,
-        workflow_config_list=workflow_config_list
+        workflow_config_list=workflow_configs
     ).run()
 
     # Remove current user from workspace and dataset if not a resource owner

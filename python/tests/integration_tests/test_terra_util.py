@@ -137,8 +137,11 @@ def test_get_workspace_workflows() -> None:
 
 def test_import_workflow() -> None:
     workflow_name = "ExportDataFromSnapshotToBucket"
-    workflow = WorkflowConfigs(workflow_name=workflow_name, billing_project=INTEGRATION_TEST_TERRA_BILLING_PROJECT)
-    status_code = terra_workspace.import_workflow(workflow_dict=workflow.workflow_config)
+    status_code = WorkflowConfigs(
+        workflow_name=workflow_name,
+        billing_project=INTEGRATION_TEST_TERRA_BILLING_PROJECT,
+        terra_workspace_util=terra_workspace
+    ).import_workflow()
     assert status_code == 201
 
 
