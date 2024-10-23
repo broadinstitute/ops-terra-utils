@@ -172,9 +172,9 @@ class TestCreateUtils:
     def test_ingest_files(self) -> None:
         test_data = self.test_info['tests']['test_batch_ingest']['file_ingest']
         self.tdr_client.file_ingest_to_dataset(dataset_id=test_data['function_input']['dataset_id'],
-                                                     profile_id=test_data['function_input']['profileId'],
-                                                     file_list=test_data['function_input']['ingest_files'],
-                                                     load_tag=test_data['function_input']['load_tag'])
+                                                profile_id=test_data['function_input']['profileId'],
+                                                file_list=test_data['function_input']['ingest_files'],
+                                                load_tag=test_data['function_input']['load_tag'])
 
 
 class TestDeleteUtils:
