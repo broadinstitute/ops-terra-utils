@@ -13,7 +13,7 @@ class WorkflowConfigs:
 
     def list_workflows(self) -> list:
         workflow_list = ["AnvilGcpWorkspaceToDatasetCreationAndIngest",
-                         "CopyDatasetToNewBillingProfile",
+                         "CopyDataset",
                          "DeleteBadStateFilesFromDataset",
                          "ExportDataFromSnapshotToBucket",
                          "FileExportAzureTdrToGcp",
@@ -61,9 +61,9 @@ class WorkflowConfigs:
         workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/AnvilGcpWorkspaceToDatasetCreationAndIngestion"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
-    def CopyDatasetToNewBillingProfile(self, billing_project: str) -> dict:
+    def CopyDataset(self, billing_project: str) -> dict:
         workflow_config = self.base_dict.copy()
-        workflow_config["name"] = "CopyDatasetToNewBillingProfile"
+        workflow_config["name"] = "CopyDataset"
         workflow_config["namespace"] = billing_project
         workflow_config["outputs"] = {}
         workflow_config["inputs"] = {
@@ -77,8 +77,8 @@ class WorkflowConfigs:
             "docker_name": "String"
         }
 
-        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FCopyDatasetToNewBillingProfile/main"  # type: ignore[index]  # noqa: E501
-        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/CopyDatasetToNewBillingProfile"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodUri"] = "dockstore://github.com%2Fbroadinstitute%2Fops-terra-utils%2FCopyDataset/main"  # type: ignore[index]  # noqa: E501
+        workflow_config["methodRepoMethod"]["methodPath"] = "github.com/broadinstitute/ops-terra-utils/CopyDataset"  # type: ignore[index]  # noqa: E501
         return workflow_config
 
     def DeleteBadStateFilesFromDataset(self, billing_project: str) -> dict:

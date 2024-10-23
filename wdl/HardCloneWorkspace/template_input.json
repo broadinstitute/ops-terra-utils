@@ -3,5 +3,6 @@
     "HardCloneTerraWorkspace.source_workspace_name": "String",
     "HardCloneTerraWorkspace.dest_billing_project": "String",
     "HardCloneTerraWorkspace.dest_workspace_name": "String",
-    "HardCloneTerraWorkspace.allow_already_created": "Boolean"
+    "HardCloneTerraWorkspace.allow_already_created": "Boolean",
+    "HardCloneTerraWorkspace.rsync": "Boolean"
 }

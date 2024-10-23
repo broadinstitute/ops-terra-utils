@@ -8,6 +8,9 @@ Thank you for your interest in contributing to this repository! This document ou
 - **`wdl/`**: Contains all WDLs. New WDLs should be placed in this directory.
 - **`python/utils/`**: Houses reusable Python utility functions. If possible, reuse or contribute new functions here.
 
+## Template Python Script
+If you are creating a new python script from scratch you can use [templace_script.py](https://github.com/broadinstitute/ops-terra-utils/blob/main/python/template_script.py) as a starting point. This template includes the necessary imports and a basic structure for the script.
+
 ## Interacting with Terra and TDR
 If you are interacting with Terra or TDR at all in your script you will want to follow the pattern of importing Token and RunRequest from the utils like below.
 
@@ -24,7 +27,6 @@ tdr = TDR(request_util=request_util)
 terra = Terra(request_util=request_util)
 ```
 You should not be interacting with Terra or TDR directly in your script. Instead, you should use the `Terra` and `TDR` classes to interact with Terra and TDR respectively. If an API call is not available in the `Terra` or `TDR` classes, you can add it to the respective class.
-
 
 ## Workflow for Adding WDLs
 
@@ -154,3 +156,11 @@ Before merging any branches to main:
 3. Update WDL-specific README with any new information about the WDLs.
 4. Test Python code locally and if WDL changes are made, test the WDLs in a Terra Workspace.
 5. Get approval on the PR from a team member
+
+## New Workflow Checklist
+If you're adding a new workflow, use the following checklist as a guide for changes that are required:
+- [ ] A new WDL and associated Python script that's been tested (see [here](#testing-wdls-locally) for guidance on testing)
+- [ ] A README has been added with information regarding the new workflow and it's inputs/outputs. This should live next to the WDL file. (See [here](wdl/CopyDataset/README.md) as an example README)
+- [ ] The [.dockstore.yml](.dockstore.yml) has been updated to add your new workflow name and point it to the new WDL file and README
+- [ ] A `template_input.json` file (named exactly like this) has been created to be used for testing. This should also live next to the WDL file. (See [here](wdl/CopyDataset/template_input.json) as an example JSON)
+- [ ] The [Terra workflow configs](python/utils/terra_utils/terra_workflow_configs.py) file has been updated so that your new workflow can be imported via our scripts. First define the workflow as one that is available for import ([here](https://github.com/broadinstitute/ops-terra-utils/blob/main/python/utils/terra_utils/terra_workflow_configs.py#L14)) and then define the configuration parameters (see [CopyDataset](https://github.com/broadinstitute/ops-terra-utils/blob/main/python/utils/terra_utils/terra_workflow_configs.py#L64C9-L64C20) as an example).

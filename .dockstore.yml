@@ -1,11 +1,11 @@
 version: 1.2
 workflows:
-  - name: CopyDatasetToNewBillingProfile
+  - name: CopyDataset
     subclass: WDL
-    primaryDescriptorPath: /wdl/CopyDatasetToNewBillingProfile/CopyDatasetToNewBillingProfile.wdl
-    readMePath: /wdl/CopyDatasetToNewBillingProfile/README.md
+    primaryDescriptorPath: /wdl/CopyDataset/CopyDataset.wdl
+    readMePath: /wdl/CopyDataset/README.md
     testParameterFiles:
-      - /wdl/copyDatasetToNewBillingProfile.wdl
+      - /wdl/CopyDataset.wdl
 
   - name: AnvilGcpWorkspaceToDatasetCreationAndIngestion
     subclass: WDL
@@ -62,3 +62,10 @@ workflows:
     readMePath: /wdl/HardCloneWorkspace/README.md
     testParameterFiles:
       - /wdl/HardCloneWorkspace/HardCloneWorkspace.wdl
+
+  - name: FileExportAzureTdrToGcp
+    subclass: WDL
+    primaryDescriptorPath: /wdl/FileExportAzureTdrToGcp/FileExportAzureTdrToGcp.wdl
+    readMePath: /wdl/FileExportAzureTdrToGcp/README.md
+    testParameterFiles:
+      - /wdl/FileExportAzureTdrToGcp/FileExportAzureTdrToGcp.wdl

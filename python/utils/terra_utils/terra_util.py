@@ -45,7 +45,7 @@ class TerraGroups:
         if role not in self.GROUP_MEMBERSHIP_OPTIONS:
             raise ValueError(f"Role must be one of {self.GROUP_MEMBERSHIP_OPTIONS}")
 
-    def remove_user_from_group(self, group: str, email: str, role: str) -> None:
+    def remove_user_from_group(self, group: str, email: str, role: str) -> int:
         """
         Remove a user from a group.
 
@@ -53,22 +53,27 @@ class TerraGroups:
             group (str): The name of the group.
             email (str): The email of the user to remove.
             role (str): The role of the user in the group.
+        Returns:
+            int: The response code
         """
         url = f"{SAM_LINK}/groups/v1/{group}/{role}/{email}"
         self._check_role(role)
-        self.request_util.run_request(
+        res = self.request_util.run_request(
             uri=url,
             method=DELETE
         )
         logging.info(f"Removed {email} from group {group}")
+        return res.status_code
 
-    def create_group(self, group_name: str, continue_if_exists: bool = False) -> None:
+    def create_group(self, group_name: str, continue_if_exists: bool = False) -> int:
         """
         Create a new group.
 
         Args:
             group_name (str): The name of the group to create.
             continue_if_exists (bool, optional): Whether to continue if the group already exists. Defaults to False.
+        Returns:
+            int: The response code
         """
         url = f"{SAM_LINK}/groups/v1/{group_name}"
         accept_return_codes = [409] if continue_if_exists else []
@@ -81,22 +86,26 @@ class TerraGroups:
             logging.info(f"Group {group_name} already exists. Continuing.")
         else:
             logging.info(f"Created group {group_name}")
+            return response.status_code
 
-    def delete_group(self, group_name: str) -> None:
+    def delete_group(self, group_name: str) -> int:
         """
         Delete a group.
 
         Args:
             group_name (str): The name of the group to delete.
+        Returns:
+            int: The status code
         """
         url = f"{SAM_LINK}/groups/v1/{group_name}"
-        self.request_util.run_request(
+        res = self.request_util.run_request(
             uri=url,
             method=DELETE
         )
         logging.info(f"Deleted group {group_name}")
+        return res.status_code
 
-    def add_user_to_group(self, group: str, email: str, role: str) -> None:
+    def add_user_to_group(self, group: str, email: str, role: str) -> int:
         """
         Add a user to a group.
 
@@ -104,14 +113,17 @@ class TerraGroups:
             group (str): The name of the group.
             email (str): The email of the user to add.
             role (str): The role of the user in the group.
+        Returns:
+            int: The response code
         """
         url = f"{SAM_LINK}/groups/v1/{group}/{role}/{email}"
         self._check_role(role)
-        self.request_util.run_request(
+        res = self.request_util.run_request(
             uri=url,
             method=PUT
         )
         logging.info(f"Added {email} to group {group} as {role}")
+        return res.status_code
 
 
 class TerraWorkspace:
@@ -348,7 +360,12 @@ class TerraWorkspace:
         return response.json()
 
     def update_user_acl(
-            self, email: str, access_level: str, can_share: bool = False, can_compute: bool = False
+            self,
+            email: str,
+            access_level: str,
+            can_share: bool = False,
+            can_compute: bool = False,
+            invite_users_not_found: bool = False,
     ) -> dict:
         """
         Update the access control list (ACL) for a user in the workspace.
@@ -358,11 +375,13 @@ class TerraWorkspace:
             access_level (str): The access level to grant to the user.
             can_share (bool, optional): Whether the user can share the workspace. Defaults to False.
             can_compute (bool, optional): Whether the user can compute in the workspace. Defaults to False.
+            invite_users_not_found (bool, optional): Whether a user that's not found should still be invited to access
+                the workspace. Defaults to False
 
         Returns:
             dict: The JSON response containing the updated ACL.
         """
-        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl"
+        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl?inviteUsersNotFound={str(invite_users_not_found).lower()}"  # noqa
         payload = {
             "email": email,
             "accessLevel": access_level,
@@ -378,7 +397,7 @@ class TerraWorkspace:
             data="[" + json.dumps(payload) + "]"
         )
         request_json = response.json()
-        if request_json["usersNotFound"]:
+        if request_json["usersNotFound"] and not invite_users_not_found:
             # Will be a list of one user
             user_not_found = request_json["usersNotFound"][0]
             raise Exception(
@@ -386,33 +405,38 @@ class TerraWorkspace:
             )
         return request_json
 
-    def put_metadata_for_library_dataset(self, library_metadata: dict, validate: bool = False) -> None:
+    def put_metadata_for_library_dataset(self, library_metadata: dict, validate: bool = False) -> dict:
         """
         Update the metadata for a library dataset.
 
         Args:
             library_metadata (dict): The metadata to update.
             validate (bool, optional): Whether to validate the metadata. Defaults to False.
+        Returns:
+            dict: The JSON response containing the updated library attributes.
         """
         acl = f"{TERRA_LINK}/library/{self.billing_project}/{self.workspace_name}" + \
               f"/metadata?validate={str(validate).lower()}"
-        self.request_util.run_request(
+        res = self.request_util.run_request(
             uri=acl,
             method=PUT,
             data=json.dumps(library_metadata)
         )
+        return res.json()
 
-    def update_multiple_users_acl(self, acl_list: list[dict]) -> dict:
+    def update_multiple_users_acl(self, acl_list: list[dict], invite_users_not_found: bool = False) -> dict:
         """
         Update the access control list (ACL) for multiple users in the workspace.
 
         Args:
             acl_list (list[dict]): A list of dictionaries containing the ACL information for each user.
+            invite_users_not_found (bool, optional): Whether a user that's not found should still be invited to access
+                the workspace. Defaults to False
 
         Returns:
             dict: The JSON response containing the updated ACL.
         """
-        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl"
+        url = f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}/acl?inviteUsersNotFound={str(invite_users_not_found).lower()}"  # noqa
         logging.info(
             f"Updating users in workspace {self.billing_project}/{self.workspace_name}")
         response = self.request_util.run_request(
@@ -421,11 +445,21 @@ class TerraWorkspace:
             content_type="application/json",
             data=json.dumps(acl_list)
         )
-        return response.json()
+        request_json = response.json()
+        if request_json["usersNotFound"] and not invite_users_not_found:
+            # Will be a list of one user
+            users_not_found = [u["email"] for u in request_json["usersNotFound"]]
+            raise Exception(
+                f"The following users were not found and access was not updated: {users_not_found}"
+            )
+        return request_json
 
     def create_workspace(
-        self, auth_domain: list[dict] = [], attributes: dict = {},
-        continue_if_exists: bool = False, cloud_platform: str = GCP
+            self,
+            auth_domain: list[dict] = [],
+            attributes: dict = {},
+            continue_if_exists: bool = False,
+            cloud_platform: str = GCP
     ) -> Optional[dict]:
         """
         Create a new workspace in Terra.
@@ -523,7 +557,7 @@ class TerraWorkspace:
         )
         return response.json()
 
-    def import_workflow(self, workflow_dict: dict) -> dict:
+    def import_workflow(self, workflow_dict: dict) -> int:
         """
         Import a workflow into the workspace.
 
@@ -540,5 +574,18 @@ class TerraWorkspace:
             method=POST,
             data=workflow_json,
             content_type="application/json"
+        )
+        return response.status_code
+
+    def delete_workspace(self) -> int:
+        """
+        Delete a Terra workspace.
+
+        Returns:
+            int: The response status code
+        """
+        response = self.request_util.run_request(
+            uri=f"{TERRA_LINK}/workspaces/{self.billing_project}/{self.workspace_name}",
+            method=DELETE
         )
         return response

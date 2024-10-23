@@ -18,6 +18,8 @@ workflow HardCloneTerraWorkspace {
 	}
 
 	String docker = select_first([docker_name, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
+	# Ignore HardCloneTerraWorkspace submisisons files so do not write to src as copying to dest
+	String rysnc_regex_exclude = ".*/HardCloneTerraWorkspace/.*"
 	Int memory = select_first([memory_gb, 8])
 
 	call HardCloneTerraWorkspaceTask {
@@ -39,7 +41,8 @@ workflow HardCloneTerraWorkspace {
 		call gcp_utils.GcloudRsync {
 			input:
 				source=HardCloneTerraWorkspaceTask.src_bucket,
-				destination=HardCloneTerraWorkspaceTask.dest_bucket
+				destination=HardCloneTerraWorkspaceTask.dest_bucket,
+				exclude_regex=rysnc_regex_exclude
 		}
 	}
 }
