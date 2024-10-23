@@ -1,0 +1,47 @@
+name: Perform linting checks
+description: test description
+inputs:
+  job_id:
+    description: 'Name of job to create/update check for'
+    required: true
+  action:
+    description: 'Action to perform, choices are [CREATE, UPDATE]'
+    required: true
+  check_id:
+    description: 'ID of given check run, only used to update existing check'
+    required: false
+  status:
+    description: 'Status of workflow to update check api'
+    required: false
+outputs:
+  check_id:
+    description: "ID of check run"
+    value: ${{ steps.check-creation.outputs.checkId }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: create status check
+      id: check-creation
+      if: ${{ inputs.action == 'CREATE' }}
+      shell: bash
+      run: |
+        CHECK_ID=$(gh api --method POST -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        -f "name=${{ inputs.job_id }}" \
+        -f 'head_sha=${{ github.event.pull_request.head.sha }}' \
+        -f "status=in_progress" \
+        --jq '.id' \
+        /repos/${{ github.repository }}/check-runs )
+
+        echo "checkId=$CHECKID" >> $GITHUB_OUTPUT
+
+    - name: update status check
+      id: check-update
+      if: ${{ inputs.action == 'UPDATE' }}
+      shell: bash
+      run: |
+        gh api --method PATCH -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        -f "status=${{ inputs.status }}" \
+         /repos/${{ github.repository }}/check-runs/${{ inputs.check_id }}
