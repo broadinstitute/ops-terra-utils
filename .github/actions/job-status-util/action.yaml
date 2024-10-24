@@ -18,12 +18,15 @@ outputs:
     description: "ID of check run"
     value: ${{ steps.check-creation.outputs.checkId }}
 
+
 runs:
   using: 'composite'
   steps:
     - name: create status check
       id: check-creation
       if: ${{ inputs.action == 'CREATE' }}
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       shell: bash
       run: |
         CHECK_ID=$(gh api --method POST -H "Accept: application/vnd.github+json" \
