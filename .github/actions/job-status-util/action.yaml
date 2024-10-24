@@ -39,6 +39,8 @@ runs:
         /repos/${{ github.repository }}/check-runs )
 
         echo "checkId=$CHECKID" >> $GITHUB_OUTPUT
+        echo "check id is $CHECK_ID"
+
 
     - name: update status check
       id: check-update
