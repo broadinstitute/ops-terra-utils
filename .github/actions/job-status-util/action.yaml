@@ -7,7 +7,7 @@ inputs:
   action:
     description: 'Action to perform, choices are [CREATE, UPDATE]'
     required: true
-  check_id:
+  commit_check_id:
     description: 'ID of given check run, only used to update existing check'
     required: false
   status:

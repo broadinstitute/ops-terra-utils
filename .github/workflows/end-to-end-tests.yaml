@@ -28,11 +28,14 @@ jobs:
 
       - name: update status check
         if: always()
+        env:
+          CHECK_ID: ${{ steps.linting-check-creation.outputs.checkId }}
         uses: ./.github/actions/job-status-util
         with:
           job_id: 'E2E_linting_check'
           action: 'UPDATE'
-          check_id: ${{ steps.linting-check-creation.outputs.checkId }}
+          commit_check_id: $CHECK_ID
+          status: ${{ job.status }}
 
 
   E2E_wdl_validation:
