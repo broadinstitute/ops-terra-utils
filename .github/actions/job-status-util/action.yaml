@@ -27,7 +27,6 @@ runs:
       if: ${{ inputs.action == 'CREATE' }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
-        GITHUB_SHA: ${{ $GITHUB_SHA }}
       shell: bash
       # For prod change to -f 'head_sha=${{ github.event.pull_request.head.sha }}' \
       run: |
