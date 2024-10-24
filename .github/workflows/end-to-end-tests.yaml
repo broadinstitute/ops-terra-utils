@@ -17,7 +17,8 @@ jobs:
       - name: Checkout PR Branch
         uses: actions/checkout@v3
         with:
-          ref: refs/pull/${{ github.event.issue.number }}/head
+          ref: refs/pull/113/head
+          #ref: refs/pull/${{ github.event.issue.number }}/head
 
 
       - name: Perform linting checks
