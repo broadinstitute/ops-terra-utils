@@ -38,7 +38,7 @@ runs:
         --jq '.id' \
         /repos/${{ github.repository }}/check-runs )
 
-        echo "checkId=$CHECKID" >> $GITHUB_OUTPUT
+        echo "checkId=$(echo $CHECKID)" >> $GITHUB_OUTPUT
         echo "check id is $CHECK_ID"
 
 
