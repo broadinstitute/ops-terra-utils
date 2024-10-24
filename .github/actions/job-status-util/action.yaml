@@ -52,4 +52,4 @@ runs:
         gh api --method PATCH -H "Accept: application/vnd.github+json" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
         -f "status=${{ inputs.status }}" \
-         /repos/${{ github.repository }}/check-runs/${{ inputs.check_id }}
+         /repos/${{ github.repository }}/check-runs/${{ inputs.commit_check_id }}
