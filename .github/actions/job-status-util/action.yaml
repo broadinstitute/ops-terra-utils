@@ -33,7 +33,7 @@ runs:
         CHECK_ID=$(gh api --method POST -H "Accept: application/vnd.github+json" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
         -f "name=${{ inputs.job_id }}" \
-        -f 'head_sha=${{ github.head_ref }}.${{ github.sha }}' \
+        -f 'head_sha=${{ github.sha }}' \
         -f "status=in_progress" \
         --jq '.id' \
         /repos/${{ github.repository }}/check-runs )
