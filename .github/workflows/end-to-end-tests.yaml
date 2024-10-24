@@ -3,6 +3,10 @@ name: merge validations
 on:
   pull_request:
     branches: [ main ]
+    types: opened
+  issue_comment:
+    types: created
+  workflow_dispatch:
 
 jobs:
 
@@ -12,8 +16,24 @@ jobs:
       - name: clone branch of PR
         uses: actions/checkout@v3
 
+      - name: create status check
+        id: linting-check-creation
+        uses: ./.github/actions/job-status-util
+        with:
+          job_id: 'E2E_linting_check'
+          action: 'CREATE'
+
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
+
+      - name: update status check
+        if: always()
+        uses: ./.github/actions/job-status-util
+        with:
+          job_id: 'E2E_linting_check'
+          action: 'UPDATE'
+          check_id: ${{ steps.linting-check-creation.outputs.checkId }}
+
 
   E2E_wdl_validation:
     needs: E2E_linting_check
