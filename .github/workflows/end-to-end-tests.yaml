@@ -25,7 +25,7 @@ jobs:
 
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
-
+      - run: echo Check ID in workflow is ${{ steps.linting-check-creation.outputs.checkId }}
       - name: update status check
         if: always()
         env:
