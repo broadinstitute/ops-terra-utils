@@ -38,14 +38,14 @@ jobs:
 #          context: 'E2E_linting_check'
 #          job_url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 #          status: ${{ job.status }}
-      - name: set-commit-status
-        uses: myrotvorets/set-commit-status-action@master
+      - uses: LouisBrunner/checks-action@v2.0.0
         if: always()
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ job.status }}
-          context: ${{ github.job}}
-          sha: ${{ github.sha }}
+          check_id: ${{ github.job }}
+          conclusion: ${{ job.status }}
+
+
 
   E2E_wdl_validation:
     needs: E2E_linting_check
