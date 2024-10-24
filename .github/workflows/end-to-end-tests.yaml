@@ -25,16 +25,13 @@ jobs:
 
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
-      - run: echo Check ID in workflow is ${{ steps.linting-check-creation.outputs.checkId }}
       - name: update status check
         if: always()
-        env:
-          CHECK_ID: ${{ steps.linting-check-creation.outputs.checkId }}
         uses: ./.github/actions/job-status-util
         with:
           job_id: 'E2E_linting_check'
           action: 'UPDATE'
-          commit_check_id: $CHECK_ID
+          commit_check_id: ${{ steps.linting-check-creation.outputs.checkId }}
           status: ${{ job.status }}
 
 
