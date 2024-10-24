@@ -27,12 +27,14 @@ runs:
       if: ${{ inputs.action == 'CREATE' }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_SHA: ${{ $GITHUB_SHA }}
       shell: bash
+      # For prod change to -f 'head_sha=${{ github.event.pull_request.head.sha }}' \
       run: |
         CHECK_ID=$(gh api --method POST -H "Accept: application/vnd.github+json" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
         -f "name=${{ inputs.job_id }}" \
-        -f 'head_sha=${{ github.event.pull_request.head.sha }}' \
+        -f 'head_sha=${{ github.head_ref }}.${{ github.sha }}' \
         -f "status=in_progress" \
         --jq '.id' \
         /repos/${{ github.repository }}/check-runs )
@@ -42,6 +44,8 @@ runs:
     - name: update status check
       id: check-update
       if: ${{ inputs.action == 'UPDATE' }}
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       shell: bash
       run: |
         gh api --method PATCH -H "Accept: application/vnd.github+json" \
