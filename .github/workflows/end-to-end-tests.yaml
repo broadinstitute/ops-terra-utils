@@ -16,10 +16,8 @@ jobs:
 
       - name: Checkout PR Branch
         uses: actions/checkout@v3
-      - run: |
-          gh pr checkout 113
-        env:
-          GH_TOKEN: ${{ github.token }}
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
 
 
       - name: Perform linting checks
