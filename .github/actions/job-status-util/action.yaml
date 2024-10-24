@@ -14,7 +14,7 @@ inputs:
     description: 'Status of workflow to update check api'
     required: false
 outputs:
-  check_id:
+  checkId:
     description: "ID of check run"
     value: ${{ steps.check-creation.outputs.checkId }}
 
