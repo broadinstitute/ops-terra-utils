@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Github API Request
         id: request
-        uses: octokit/request-action@v2.0.0
+        uses: octokit/request-action@v2.0.2
         with:
           route: ${{ github.event.issue.pull_request.url }}
         env:
@@ -23,16 +23,16 @@ jobs:
       - name: Get PR informations
         id: pr_data
         run: |
-          echo "::set-output name=branch::${{ fromJson(steps.request.outputs.data).head.ref }}"
-          echo "::set-output name=repo_name::${{ fromJson(steps.request.outputs.data).base.repo.full_name }}"
-          echo "::set-output name=repo_clone_url::${{ fromJson(steps.request.outputs.data).base.repo.clone_url }}"
-          echo "::set-output name=repo_ssh_url::${{ fromJson(steps.request.outputs.data).base.repo.ssh_url }}"
+          echo "::set-output name=repo_name::${{ fromJson(steps.request.outputs.data).head.repo.full_name }}"
+          echo "::set-output name=repo_clone_url::${{ fromJson(steps.request.outputs.data).head.repo.clone_url }}"
+          echo "::set-output name=repo_ssh_url::${{ fromJson(steps.request.outputs.data).head.repo.ssh_url }}"
 
-      - name: clone branch of PR
+      - name: Checkout PR Branch
         uses: actions/checkout@v3
         with:
-          repository: ${{ fromJson(steps.request.outputs.data).head.repo.full_name }}
-          ref: ${{ steps.pr_data.outputs.branch }}
+          repository: ${{fromJson(steps.request.outputs.data).head.repo.full_name}}
+          ref: ${{fromJson(steps.request.outputs.data).head.ref}}
+
 
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
