@@ -18,22 +18,15 @@ jobs:
         with:
           ref: ${{ github.sha }}
 
-      - name: create status check
-        id: linting-check-creation
-        uses: ./.github/actions/job-status-util
-        with:
-          job_id: 'E2E_linting_check'
-          action: 'CREATE'
 
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
-      - name: update status check
+      - name: update commit status
         if: always()
         uses: ./.github/actions/job-status-util
         with:
-          job_id: 'E2E_linting_check'
-          action: 'UPDATE'
-          commit_check_id: ${{ steps.linting-check-creation.outputs.checkId }}
+          context: 'E2E_linting_check'
+          job_url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ github.job }}"
           status: ${{ job.status }}
 
 
