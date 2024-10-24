@@ -3,17 +3,49 @@ name: merge validations
 on:
   pull_request:
     branches: [ main ]
+    types: opened
+  issue_comment:
+    types: created
+  workflow_dispatch:
 
 jobs:
 
   E2E_linting_check:
     runs-on: ubuntu-latest
     steps:
-      - name: clone branch of PR
+      - name: set-commit-status
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+          context: ${{ github.job}}
+          sha: ${{ github.sha }}
+
+
+      - name: Checkout PR Branch
         uses: actions/checkout@v3
+        with:
+          ref: refs/pull/113/head
+          #ref: refs/pull/${{ github.event.issue.number }}/head
+
 
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
+#      - name: update commit status
+#        if: always()
+#        uses: ./.github/actions/job-status-util
+#        with:
+#          context: 'E2E_linting_check'
+#          job_url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+#          status: ${{ job.status }}
+      - uses: LouisBrunner/checks-action@v2.0.0
+        if: always()
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          check_id: ${{ github.job }}
+          conclusion: ${{ job.status }}
+
+
 
   E2E_wdl_validation:
     needs: E2E_linting_check
