@@ -13,6 +13,13 @@ jobs:
   E2E_linting_check:
     runs-on: ubuntu-latest
     steps:
+      - name: set-commit-status
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+          context: ${{ github.job}}
+
 
       - name: Checkout PR Branch
         uses: actions/checkout@v3
@@ -23,14 +30,20 @@ jobs:
 
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
-      - name: update commit status
+#      - name: update commit status
+#        if: always()
+#        uses: ./.github/actions/job-status-util
+#        with:
+#          context: 'E2E_linting_check'
+#          job_url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+#          status: ${{ job.status }}
+      - name: set-commit-status
+        uses: myrotvorets/set-commit-status-action@master
         if: always()
-        uses: ./.github/actions/job-status-util
         with:
-          context: 'E2E_linting_check'
-          job_url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
           status: ${{ job.status }}
-
+          context: ${{ github.job}}
 
   E2E_wdl_validation:
     needs: E2E_linting_check
