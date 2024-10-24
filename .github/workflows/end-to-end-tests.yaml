@@ -19,6 +19,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           status: pending
           context: ${{ github.job}}
+          sha: ${{ github.sha }}
 
 
       - name: Checkout PR Branch
@@ -44,6 +45,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           status: ${{ job.status }}
           context: ${{ github.job}}
+          sha: ${{ github.sha }}
 
   E2E_wdl_validation:
     needs: E2E_linting_check
