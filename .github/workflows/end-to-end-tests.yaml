@@ -13,25 +13,11 @@ jobs:
   E2E_linting_check:
     runs-on: ubuntu-latest
     steps:
-      - name: Github API Request
-        id: request
-        uses: octokit/request-action@v2.0.2
-        with:
-          route: ${{ github.event.issue.pull_request.url }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Get PR informations
-        id: pr_data
-        run: |
-          echo "::set-output name=repo_name::${{ fromJson(steps.request.outputs.data).head.repo.full_name }}"
-          echo "::set-output name=repo_clone_url::${{ fromJson(steps.request.outputs.data).head.repo.clone_url }}"
-          echo "::set-output name=repo_ssh_url::${{ fromJson(steps.request.outputs.data).head.repo.ssh_url }}"
 
       - name: Checkout PR Branch
         uses: actions/checkout@v3
-        with:
-          repository: ${{fromJson(steps.request.outputs.data).head.repo.full_name}}
-          ref: ${{fromJson(steps.request.outputs.data).head.ref}}
+      - run: |
+          gh pr checkout ${{ github.event.issue.number }}
 
 
       - name: Perform linting checks
