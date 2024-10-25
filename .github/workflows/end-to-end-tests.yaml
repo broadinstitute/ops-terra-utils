@@ -27,9 +27,7 @@ jobs:
     if: ${{ github.event.label.name == 'run-test-suite' }}
     steps:
       - name: Checkout PR Branch
-        run:
-          git fetch origin pull/js_update_gha_tests/head:PR
-          git checkout PR
+        uses: actions/checkout@v3
 
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
