@@ -10,9 +10,6 @@ jobs:
     steps:
       - name: Checkout PR Branch
         uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-
 
       - name: Login to GCP
         uses: google-github-actions/auth@v1

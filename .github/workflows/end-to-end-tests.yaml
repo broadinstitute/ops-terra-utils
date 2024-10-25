@@ -3,23 +3,44 @@ name: merge validations
 on:
   pull_request:
     branches: [ main ]
+    types: labeled
 
 jobs:
 
+  Remove_label:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.label.name == 'run-test-suite' }}
+    steps:
+      - name: Remove label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.removeLabel({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'run-test-suite'
+            })
+
   E2E_linting_check:
     runs-on: ubuntu-latest
+    if: ${{ github.event.label.name == 'run-test-suite' }}
     steps:
-      - name: clone branch of PR
+      - name: Checkout PR Branch
         uses: actions/checkout@v3
 
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
+
 
   E2E_wdl_validation:
     needs: E2E_linting_check
     uses: ./.github/workflows/validate_wdls.yaml
 
   E2E_integration_tests:
+    concurrency:
+      group: integration-tests
+      cancel-in-progress: false
     needs: E2E_linting_check
     uses: ./.github/workflows/integration-tests.yaml
     secrets: inherit
