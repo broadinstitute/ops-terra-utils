@@ -3,31 +3,33 @@ name: merge validations
 on:
   pull_request:
     branches: [ main ]
-    types: opened
-  issue_comment:
-    types: created
-  workflow_dispatch:
+    types: labeled
 
 jobs:
 
+  Remove_label:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.label.name == 'run-test-suite' }}
+    steps:
+      - name: Remove label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.removeLabel({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'run-test-suite'
+            })
+
   E2E_linting_check:
     runs-on: ubuntu-latest
+    if: ${{ github.event.label.name == 'run-test-suite' }}
     steps:
-      - name: set-commit-status
-        uses: myrotvorets/set-commit-status-action@master
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: pending
-          context: ${{ github.job}}
-          sha: ${{ github.sha }}
-
-
       - name: Checkout PR Branch
-        uses: actions/checkout@v3
-        with:
-          ref: refs/pull/113/head
-          #ref: refs/pull/${{ github.event.issue.number }}/head
-
+        run:
+          git fetch origin pull/js_update_gha_tests/head:PR
+          git checkout PR
 
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
@@ -38,12 +40,7 @@ jobs:
 #          context: 'E2E_linting_check'
 #          job_url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 #          status: ${{ job.status }}
-      - uses: LouisBrunner/checks-action@v2.0.0
-        if: always()
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          check_id: ${{ github.job }}
-          conclusion: ${{ job.status }}
+
 
 
 
