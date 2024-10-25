@@ -25,7 +25,7 @@ task DeleteFilesFromDataset {
     }
 
     command <<<
-        python /etc/terra_utils/delete_files_from_datasets_in_bad_state.py \
+        python /etc/terra_utils/python/delete_files_from_datasets_in_bad_state.py \
         --dataset_id  ~{dataset_id} \
         ~{"--file_query_limit " + file_query_limit} \
     >>>

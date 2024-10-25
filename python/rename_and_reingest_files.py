@@ -10,17 +10,14 @@ from utils.token_util import Token
 from utils.request_util import RunRequest
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils.gcp_utils import GCPCloudFunctions
-from utils import GCP
+from utils import GCP, ARG_DEFAULTS
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
 CLOUD_TYPE = GCP
-MAX_RETRIES = 5
-MAX_BACKOFF_TIME = 5 * 60
-WAITING_TIME_TO_POLL = 60
-FILES_TO_LIST_BATCH_SIZE = 20000
+# Different then usual because we want to merge the new files with the old ones
 UPDATE_STRATEGY = 'merge'
 
 
@@ -85,14 +82,16 @@ def get_args() -> Namespace:
     parser.add_argument(
         "--max_retries",
         required=False,
-        default=MAX_RETRIES,
-        help=f"The maximum number of retries for a failed request. Defaults to {MAX_RETRIES} if not provided"
+        default=ARG_DEFAULTS["max_retries"],
+        help="The maximum number of retries for a failed request. " +
+             f"Defaults to {ARG_DEFAULTS['max_retries']} if not provided"
     )
     parser.add_argument(
         "--max_backoff_time",
         required=False,
-        default=MAX_BACKOFF_TIME,
-        help="The maximum backoff time for a failed request (in seconds). Defaults to 300 seconds if not provided"
+        default=ARG_DEFAULTS["max_backoff_time"],
+        help="The maximum backoff time for a failed request (in seconds). " +
+             f"Defaults to {ARG_DEFAULTS['max_backoff_time']} seconds if not provided"
     )
     parser.add_argument(
         "--report_updates_only",
@@ -321,7 +320,7 @@ class BatchCopyAndIngest:
                 load_tag=f"{self.target_table_name}_re-ingest",
                 bulk_mode=False,
                 update_strategy=UPDATE_STRATEGY,
-                waiting_time_to_poll=WAITING_TIME_TO_POLL
+                waiting_time_to_poll=ARG_DEFAULTS['waiting_time_to_poll'],
             ).run()
 
             # Delete files from temp bucket
@@ -374,7 +373,7 @@ if __name__ == '__main__':
         dataset_id=dataset_id, table_name=dataset_table_name)
 
     # Get all dict of all files where key is uuid
-    files_info = tdr.create_file_dict(dataset_id=dataset_id, limit=FILES_TO_LIST_BATCH_SIZE)
+    files_info = tdr.create_file_dict(dataset_id=dataset_id, limit=ARG_DEFAULTS['batch_size_to_list_files'])
 
     # Get all metrics for table
     dataset_metrics = tdr.get_data_set_table_metrics(

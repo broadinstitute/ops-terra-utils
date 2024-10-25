@@ -7,15 +7,12 @@ from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_ingest_utils import FilterAndBatchIngest
 from utils.request_util import RunRequest
 from utils.token_util import Token
-from utils import GCP
+from utils import GCP, ARG_DEFAULTS
 
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
-
-DEFAULT_WAITING_TIME_POLL = 120
-DEFAULT_BATCH_SIZE = 500
 
 
 def get_args() -> Namespace:
@@ -27,8 +24,8 @@ def get_args() -> Namespace:
                         help="If used, will filter out existing ids in the dest dataset")
     parser.add_argument(
         "--ingest_batch_size",
-        help=f"Batch size for ingest. Default to {DEFAULT_BATCH_SIZE}",
-        default=DEFAULT_BATCH_SIZE, type=int
+        help=f"Batch size for ingest. Default to {ARG_DEFAULTS['batch_size']}",
+        default=ARG_DEFAULTS['batch_size'], type=int
     )
     parser.add_argument("--update_strategy", choices=["REPLACE", "APPEND", "UPDATE"], default="REPLACE")
     parser.add_argument(
@@ -37,8 +34,8 @@ def get_args() -> Namespace:
     )
     parser.add_argument(
         "--waiting_time_to_poll",
-        help=f"default to {DEFAULT_WAITING_TIME_POLL}",
-        default=DEFAULT_WAITING_TIME_POLL, type=int
+        help=f"default to {ARG_DEFAULTS['waiting_time_to_poll']}",
+        default=ARG_DEFAULTS['waiting_time_to_poll'], type=int
     )
     parser.add_argument(
         "--bulk_mode",
@@ -226,7 +223,7 @@ if __name__ == "__main__":
     additional_properties = create_additional_properties(orig_dataset_info)
     # Check if new dataset already created. If not then create it.
     logging.info(
-        f"Searching for and creating new dataset {new_dataset_name} in billing profile {billing_profile} if needed"
+        f"Creating new dataset {new_dataset_name} in billing profile {billing_profile} if needed"
     )
     dest_dataset_id = tdr.get_or_create_dataset(
         dataset_name=new_dataset_name,

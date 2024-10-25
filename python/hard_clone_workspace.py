@@ -3,7 +3,7 @@ import logging
 from typing import Any
 from argparse import Namespace, ArgumentParser
 
-from utils import GCP, comma_separated_list
+from utils import GCP, comma_separated_list, ARG_DEFAULTS
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils.request_util import RunRequest
 from utils.token_util import Token
@@ -14,7 +14,6 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-DEFAULT_WORKERS = 10
 DEST_BUCKET_FILE = "dest_workspace_bucket.txt"
 SOURCE_BUCKET_FILE = "source_workspace_bucket.txt"
 
@@ -27,8 +26,9 @@ def get_args() -> Namespace:
     parser.add_argument('--dest_workspace_name', "-dn", type=str, required=True)
     parser.add_argument('--allow_already_created', "-a", action="store_true",
                         help="Allow the destination workspace to already exist")
-    parser.add_argument('--workers', "-w", type=int, default=DEFAULT_WORKERS,
-                        help="Number of workers to use when copying files")
+    parser.add_argument('--workers', "-w", type=int, default=ARG_DEFAULTS['multithread_workers'],
+                        help="Number of workers to use when copying files. " +
+                             f"Defaults to {ARG_DEFAULTS['multithread_workers']}")
     parser.add_argument('--extensions_to_ignore', "-i", type=comma_separated_list,
                         help="comma separated list of file extensions to ignore when copying files")
     parser.add_argument('--batch_size', "-b", type=int,

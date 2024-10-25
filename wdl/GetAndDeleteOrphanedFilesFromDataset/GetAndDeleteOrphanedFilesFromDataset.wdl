@@ -38,7 +38,7 @@ task GetFilesNotInDataset {
     }
 
     command <<<
-        python /etc/terra_utils/get_and_delete_orphaned_files_from_dataset.py \
+        python /etc/terra_utils/python/get_and_delete_orphaned_files_from_dataset.py \
         --dataset_id  ~{dataset_id} \
         ~{"--max_retries " + max_retries} \
         ~{"--max_backoff_time " + max_backoff_time} \

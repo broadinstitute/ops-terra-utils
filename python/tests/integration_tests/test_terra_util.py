@@ -2,6 +2,7 @@ import pytest
 import requests
 import os
 import re
+from typing import Any
 
 from python.utils import GCP
 from python.utils.request_util import RunRequest
@@ -25,7 +26,7 @@ terra_groups = TerraGroups(request_util=request_util)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_test_terra_resources():
+def setup_test_terra_resources() -> Any:
     # Attempt to delete the test workspace before starting any tests
     try:
         terra_workspace.delete_workspace()
@@ -42,7 +43,7 @@ def setup_test_terra_resources():
     yield
 
 
-def test_get_workspace_acl():
+def test_get_workspace_acl() -> None:
     res = terra_workspace.get_workspace_acl()
     for _, perms in res["acl"].items():
         assert perms["accessLevel"] == "OWNER"
@@ -50,7 +51,7 @@ def test_get_workspace_acl():
         assert perms["canShare"] is True
 
 
-def test_get_workspace_info():
+def test_get_workspace_info() -> None:
     bucket = terra_workspace.get_workspace_bucket()
     res = terra_workspace.get_workspace_info()
     assert res["workspace"]["attributes"] == {}
@@ -64,7 +65,7 @@ def test_get_workspace_info():
     assert res["canCompute"] is True
 
 
-def test_update_user_acl():
+def test_update_user_acl() -> None:
     access_level = "READER"
     email = "test@broadinstitute.org"
     res = terra_workspace.update_user_acl(
@@ -78,7 +79,7 @@ def test_update_user_acl():
     assert res["usersUpdated"][0]["email"] == email
 
 
-def test_put_metadata_for_library_dataset():
+def test_put_metadata_for_library_dataset() -> None:
     bucket = terra_workspace.get_workspace_bucket()
     library_metadata = {"library:dulvn": 1}
     res = terra_workspace.put_metadata_for_library_dataset(library_metadata=library_metadata)
@@ -90,7 +91,7 @@ def test_put_metadata_for_library_dataset():
     assert res["namespace"] == INTEGRATION_TEST_TERRA_BILLING_PROJECT
 
 
-def test_update_multiple_users_acl():
+def test_update_multiple_users_acl() -> None:
     acl_list = [
         {
             "email": "test2@broadinstitute.org",
@@ -119,61 +120,64 @@ def test_update_multiple_users_acl():
             assert invite["canShare"] is True
 
 
-def test_create_workspace_attributes_ingest_dict():
+def test_create_workspace_attributes_ingest_dict() -> None:
     res = terra_workspace.create_workspace_attributes_ingest_dict()
     assert res == [{"attribute": "library:dulvn", "value": "1"}]
 
 
-def test_upload_metadata_to_workspace_table():
+def test_upload_metadata_to_workspace_table() -> None:
     current_dir = os.path.dirname(__file__)
     file_path = os.path.join(current_dir, "sample.tsv")
     res = terra_workspace.upload_metadata_to_workspace_table(entities_tsv=file_path)
     assert res == "sample"
 
 
-def test_get_workspace_workflows():
+def test_get_workspace_workflows() -> None:
     res = terra_workspace.get_workspace_workflows()
     assert res == []
 
 
-def test_import_workflow():
-    workflow = "ExportDataFromSnapshotToBucket"
-    workflow_config = getattr(WorkflowConfigs(), workflow)(billing_project=INTEGRATION_TEST_TERRA_BILLING_PROJECT)
-    status_code = terra_workspace.import_workflow(workflow_dict=workflow_config)
+def test_import_workflow() -> None:
+    workflow_name = "ExportDataFromSnapshotToOutputBucket"
+    status_code = WorkflowConfigs(
+        workflow_name=workflow_name,
+        billing_project=INTEGRATION_TEST_TERRA_BILLING_PROJECT,
+        terra_workspace_util=terra_workspace
+    ).import_workflow()
     assert status_code == 201
 
 
-def test_get_gcp_workspace_metrics():
+def test_get_gcp_workspace_metrics() -> None:
     res = terra_workspace.get_gcp_workspace_metrics(entity_type="sample")
     expected_res = [{"attributes": {"sample_alias": "ABC"}, "entityType": "sample", "name": "RP-123_ABC"}]
     assert res == expected_res
 
 
-def test_get_workspace_entity_info():
+def test_get_workspace_entity_info() -> None:
     res = terra_workspace.get_workspace_entity_info()
     expected_res = {"sample": {"attributeNames": ["sample_alias"], "count": 1, "idName": "sample_id"}}
     assert res == expected_res
 
 
-def test_create_group():
+def test_create_group() -> None:
     res = terra_groups.create_group(group_name=INTEGRATION_TEST_GROUP_NAME)
     assert res == 201
 
 
-def test_add_user_to_group():
+def test_add_user_to_group() -> None:
     res = terra_groups.add_user_to_group(
         group=INTEGRATION_TEST_GROUP_NAME, email="test@broadinstitute.org", role=MEMBER,
     )
     assert res == 204
 
 
-def test_remove_user_from_group():
+def test_remove_user_from_group() -> None:
     res = terra_groups.remove_user_from_group(
         group=INTEGRATION_TEST_GROUP_NAME, email="test@broadinstitute.org", role=MEMBER
     )
     assert res == 204
 
 
-def test__check_role():
+def test_check_role() -> None:
     with pytest.raises(ValueError, match=re.escape(f"Role must be one of {terra_groups.GROUP_MEMBERSHIP_OPTIONS}")):
         terra_groups._check_role(role="members")
