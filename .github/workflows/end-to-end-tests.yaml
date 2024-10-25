@@ -31,15 +31,6 @@ jobs:
 
       - name: Perform linting checks
         uses: ./.github/actions/linting-check
-#      - name: update commit status
-#        if: always()
-#        uses: ./.github/actions/job-status-util
-#        with:
-#          context: 'E2E_linting_check'
-#          job_url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-#          status: ${{ job.status }}
-
-
 
 
   E2E_wdl_validation:
@@ -47,6 +38,9 @@ jobs:
     uses: ./.github/workflows/validate_wdls.yaml
 
   E2E_integration_tests:
+    concurrency:
+      group: integration-tests
+      cancel-in-progress: false
     needs: E2E_linting_check
     uses: ./.github/workflows/integration-tests.yaml
     secrets: inherit
