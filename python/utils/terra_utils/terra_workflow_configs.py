@@ -15,9 +15,6 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 YAML_FILE_FULL_PATH = os.path.join(SCRIPT_DIR, DOCKSTORE_YAML)
 WDL_ROOT_DIR_FULL_PATH = os.path.join(SCRIPT_DIR, WDL_ROOT_DIR)
 
-ANVIL_TERRA_BILLING_PROJECT = "anvil-datastorage"
-ANVIL_TDR_BILLING_PROFILE = "e0e03e48-5b96-45ec-baa4-8cc1ebf74c61"
-
 
 class GetWorkflowNames:
     def __init__(self) -> None:
@@ -53,7 +50,7 @@ class WorkflowConfigs:
             billing_project: str,
             terra_workspace_util: TerraWorkspace,
             set_input_defaults: bool = False,
-            is_anvil: bool = False
+            extra_default_inputs: dict = {}
     ):
         """
         Initialize the WorkflowConfigs class.
@@ -63,7 +60,7 @@ class WorkflowConfigs:
             billing_project (str): The billing project to use for the workflow.
             terra_workspace_util (TerraWorkspace): The TerraWorkspace utility object.
             set_input_defaults (bool): Whether to set the default input values for the workflow configuration.
-            is_anvil (bool): Whether the workflow is for an Anvil project.
+            tdr_billing_profile (str): The TDR billing profile for workflow.
 
         Raises:
             ValueError: If the workflow name is not found in the YAML file.
@@ -71,8 +68,8 @@ class WorkflowConfigs:
         self.workflow_name = workflow_name
         self.terra_workspace_util = terra_workspace_util
         self.set_input_defaults = set_input_defaults
-        self.is_anvil = is_anvil
         self.billing_project = billing_project
+        self.extra_default_inputs = extra_default_inputs
 
         # Check if the workflow name is in the YAML file
         available_workflows = GetWorkflowNames().get_workflow_names()
@@ -127,7 +124,7 @@ class WorkflowConfigs:
         Set the default input values for the workflow configuration.
         """
         workflow = self.workflow_info['wdl_workflow_name']
-        return {
+        workflow_default_inputs = {
             f"{workflow}.docker": f"\"{ARG_DEFAULTS['docker_image']}\"",
             f"{workflow}.max_retries": f"{ARG_DEFAULTS['max_retries']}",
             f"{workflow}.max_backoff_time": f"{ARG_DEFAULTS['max_backoff_time']}",
@@ -138,20 +135,12 @@ class WorkflowConfigs:
             f"{workflow}.batch_size_to_list_files": f"{ARG_DEFAULTS['batch_size_to_list_files']}",
             f"{workflow}.file_ingest_batch_size": f"{ARG_DEFAULTS['file_ingest_batch_size']}",
             f"{workflow}.waiting_time_to_poll": f"{ARG_DEFAULTS['waiting_time_to_poll']}",
+            f"{workflow}.billing_project": f"\"{self.terra_workspace_util.billing_project}\"",
+            f"{workflow}.workspace_name": f"\"{self.terra_workspace_util.workspace_name}\""
         }
-
-    def _create_anvil_defaults(self) -> dict:
-        """
-        Set the default input values for the Anvil project in the workflow configuration.
-        """
-        workflow = self.workflow_info['wdl_workflow_name']
-        input_defaults = self._create_input_defaults()
-        anvil_defaults = {
-            f"{workflow}.billing_project": f"\"{ANVIL_TERRA_BILLING_PROJECT}\"",
-            f"{workflow}.tdr_billing_profile": f"\"{ANVIL_TDR_BILLING_PROFILE}\""
-        }
-        full_defaults = {**input_defaults, **anvil_defaults}
-        return full_defaults
+        for key, value in self.extra_default_inputs.items():
+            workflow_default_inputs[f"{workflow}.{key}"] = value
+        return workflow_default_inputs
 
     def import_workflow(self, continue_if_exists: bool = False) -> int:
         """
@@ -185,25 +174,8 @@ class WorkflowConfigs:
             'read_me': self._create_wdl_absolute_path(self.yaml_info['readMePath']),
             'wdl_workflow_name': self._get_wdl_workflow_name(wdl_path),
             'wdl_name': os.path.basename(self.yaml_info['primaryDescriptorPath']).rstrip('.wdl'),
+            'read_me_link': f'https://dockstore.org/workflows/github.com/broadinstitute/ops-terra-utils/{self.workflow_name}'
         }
-
-    def _create_workflow_inputs(self) -> dict:
-        """
-        Create a dictionary containing the default input values for the workflow configuration.
-
-        This method sets the default input values based on whether `set_input_defaults` and `is_anvil` flags are set.
-
-        Returns:
-            dict: A dictionary containing the default input values for the workflow configuration.
-        """
-        if self.set_input_defaults:
-            if self.is_anvil:
-                input_defaults = self._create_anvil_defaults()
-            else:
-                input_defaults = self._create_input_defaults()
-        else:
-            input_defaults = {}
-        return input_defaults
 
     def _create_up_workflow_config(self) -> dict:
         """
@@ -224,5 +196,5 @@ class WorkflowConfigs:
             "name": self.workflow_name,
             "namespace": self.billing_project,
             "outputs": {},
-            "inputs": self._create_workflow_inputs()
+            "inputs": self._create_input_defaults() if self.set_input_defaults else {},
         }
