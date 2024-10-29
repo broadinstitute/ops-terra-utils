@@ -48,11 +48,19 @@ class CopyPublicCloudReference:
 
         destination_bucket = self.client.bucket(destination_bucket_name)
 
+        print(f"Source bucket: {source_bucket}")
+        print(f"Source blob: {source_blob_name}")
+        print(f"Destination bucket: {destination_bucket_name}")
+        print(f"Destination blob: {destination_blob_name}")
+
+        # TODO comment this back in when ready to actually run/test
+        """
         source_bucket.copy_blob(
             source_blob,
             destination_bucket,
             destination_blob_name
         )
+        """
 
     def copy_files_to_public_bucket(self) -> None:
         try:
