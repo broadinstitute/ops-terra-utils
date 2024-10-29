@@ -29,7 +29,7 @@ class CopyPublicCloudReference:
 
     def _get_reference_file_output_path(self) -> str:
         suffix = self._get_file_extension_for_input_reference()
-        return os.path.join(self.output_bucket_root_dir, f"{self.reference_name}.{suffix}")
+        return os.path.join(self.output_bucket_root_dir, f"{self.reference_name}{suffix}")
 
     def _get_readme_file_output_path(self) -> str:
         return os.path.join(self.output_bucket_root_dir, "README.md")
