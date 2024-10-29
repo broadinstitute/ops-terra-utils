@@ -78,10 +78,10 @@ class CopyPublicCloudReference:
 
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Add a new public cloud reference")
-    parser.add_argument("-n", "--name", required=True, type=str, help="The name of the reference to add")
-    parser.add_argument("-i", "--input_cloud_location", required=True, type=str, help="The current cloud location")
-    parser.add_argument("-o", "--output_cloud_location", required=True, type=str, help="The new cloud location")
-    parser.add_argument("-r", "--read_me_path", required=True, type=str, help="The path to the README file")
+    parser.add_argument("--reference_name", required=True, type=str, help="The name of the reference to add")
+    parser.add_argument("--current_location", required=True, type=str, help="The current cloud location")
+    parser.add_argument("--new_location", required=True, type=str, help="The new cloud location")
+    parser.add_argument("--attachment", required=True, type=str, help="The path to the README file")
 
     return parser.parse_args()
 
@@ -89,8 +89,8 @@ def get_args() -> argparse.Namespace:
 if __name__ == '__main__':
     args = get_args()
     CopyPublicCloudReference(
-        reference_name=args.name,
-        current_cloud_path=args.input_cloud_location,
-        output_cloud_path=args.output_cloud_location,
-        read_me_path=args.read_me_path
+        reference_name=args.reference_name,
+        current_cloud_path=args.current_location,
+        output_cloud_path=args.new_location,
+        read_me_path=args.attachment
     ).copy_files_to_public_bucket()
