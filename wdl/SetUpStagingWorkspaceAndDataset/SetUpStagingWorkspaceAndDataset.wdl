@@ -37,7 +37,7 @@ workflow SetUpStagingWorkspaceAndDataset {
             wdls_to_import = wdls_to_import,
             notebooks_to_import = notebooks_to_import,
             is_anvil = is_anvil,
-            docker = docker
+            docker = docker_image
     }
 }
 
