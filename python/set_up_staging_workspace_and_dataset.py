@@ -313,13 +313,11 @@ class UpdateWorkspaceAttributes:
         with open(STAGING_WORKSPACE_DESCRIPTION_FILE_FULL_PATH, "r") as file:
             workspace_description = file.read()
         if self.workflow_config_list:
-            workspace_description += "\n\n# Imported WDLs Information\n"
+            workspace_description += "\n\n# Imported WDLs Read Mes\n"
             for workflow_config in self.workflow_config_list:
-                with open(workflow_config.workflow_info['read_me'], "r") as file:
-                    # Read wdl readme and convert headers to be smaller in workspace description
-                    wdl_description = file.read().replace("# ", "### ")
-                # Add wdl readme to workspace description
-                workspace_description += f"\n\n## {workflow_config.workflow_name}\n{wdl_description}"
+                # Get the read me link for the workflow added to workflow description
+                workspace_description += f"\n{workflow_config.workflow_name} - " + \
+                                         f"{workflow_config.workflow_info['read_me_link']}"
         return workspace_description
 
     def run(self) -> None:
@@ -383,11 +381,19 @@ class ImportWorkflowsAndNotebooks:
 
 
 class SetUpWorkflowConfig:
-    def __init__(self, terra_workspace: TerraWorkspace, workflow_names: str, billing_project: str, is_anvil: bool):
+    def __init__(
+            self,
+            terra_workspace: TerraWorkspace,
+            workflow_names: str,
+            billing_project: str,
+            tdr_billing_profile: str,
+            dataset_id: str):
         self.terra_workspace = terra_workspace
         self.workflow_names = workflow_names
         self.billing_project = billing_project
         self.is_anvil = is_anvil
+        self.tdr_billing_profile = tdr_billing_profile
+        self.dataset_id = dataset_id
 
     def run(self) -> list[WorkflowConfigs]:
         # Validate wdls to import are valid
@@ -400,7 +406,10 @@ class SetUpWorkflowConfig:
                     billing_project=terra_billing_project,
                     terra_workspace_util=self.terra_workspace,
                     set_input_defaults=True,
-                    is_anvil=self.is_anvil
+                    extra_default_inputs={
+                        "dataset_id": f'"{self.dataset_id}"',
+                        "tdr_billing_profile": f'"{self.tdr_billing_profile}"'
+                    }
                 )
             )
         return workflow_config_list
@@ -438,19 +447,6 @@ if __name__ == '__main__':
         billing_project=terra_billing_project,
         workspace_name=workspace_name
     )
-
-    workflow_configs = SetUpWorkflowConfig(
-        terra_workspace=terra_workspace,
-        workflow_names=wdls_to_import,
-        billing_project=terra_billing_project,
-        is_anvil=is_anvil
-    ).run()
-
-    if notebooks_to_import:
-        for notebook in notebooks_to_import:
-            if not notebook.startswith("gs://") or not notebook.endswith(".ipynb"):
-                logging.error(f"Invalid notebook path {notebook}. Must start with gs:// and end with .ipynb")
-                exit(1)
 
     # Set up workspace and groups
     SetUpTerraWorkspace(
@@ -491,6 +487,21 @@ if __name__ == '__main__':
         role=GROUP_MEMBER,
         continue_if_exists=continue_if_exists
     )
+
+    # Set up workflow configs
+    workflow_configs = SetUpWorkflowConfig(
+        terra_workspace=terra_workspace,
+        workflow_names=wdls_to_import,
+        billing_project=terra_billing_project,
+        tdr_billing_profile=tdr_billing_profile,
+        dataset_id=dataset_id
+    ).run()
+
+    if notebooks_to_import:
+        for notebook in notebooks_to_import:
+            if not notebook.startswith("gs://") or not notebook.endswith(".ipynb"):
+                logging.error(f"Invalid notebook path {notebook}. Must start with gs:// and end with .ipynb")
+                exit(1)
 
     # Import workflows and notebooks
     ImportWorkflowsAndNotebooks(
