@@ -61,7 +61,7 @@ task SetUpStagingEnvironments {
     }
 
     command <<<
-        python /etc/terra_utils/python/rename_and_reingest_files.py \
+        python /etc/terra_utils/python/set_up_staging_workspace_and_dataset.py \
             --dataset_name ~{dataset_name} \
             --tdr_billing_profile ~{tdr_billing_profile} \
             --terra_billing_project ~{terra_billing_project} \
