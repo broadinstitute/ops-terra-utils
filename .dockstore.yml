@@ -76,3 +76,10 @@ workflows:
     readMePath: /wdl/CreateWorkspaceFileManifest/README.md
     testParameterFiles:
       - /wdl/CreateWorkspaceFileManifest/FileExportAzureTdrToGcp.wdl
+
+  - name: SetUpStagingWorkspaceAndDataset
+    subclass: WDL
+    primaryDescriptorPath: /wdl/SetUpStagingWorkspaceAndDataset/SetUpStagingWorkspaceAndDataset.wdl
+    readMePath: wdl/SetUpStagingWorkspaceAndDataset/README.wdl
+    testParameterFiles:
+      - /wdl/SetUpStagingWorkspaceAndDataset/SetUpStagingWorkspaceAndDataset.wdl
