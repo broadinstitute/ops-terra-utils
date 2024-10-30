@@ -7,13 +7,6 @@ workflows:
     testParameterFiles:
       - /wdl/CopyDataset.wdl
 
-  - name: AnvilGcpWorkspaceToDatasetCreationAndIngestion
-    subclass: WDL
-    primaryDescriptorPath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
-    readMePath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/README.md
-    testParameterFiles:
-      - /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
-
   - name: TerraWorkspaceTableToTDRIngest
     subclass: WDL
     primaryDescriptorPath: /wdl/TerraWorkspaceTableIngest/TerraWorkspaceTableIngest.wdl

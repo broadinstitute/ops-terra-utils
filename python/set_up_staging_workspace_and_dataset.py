@@ -408,7 +408,9 @@ class SetUpWorkflowConfig:
                     set_input_defaults=True,
                     extra_default_inputs={
                         "dataset_id": f'"{self.dataset_id}"',
-                        "tdr_billing_profile": f'"{self.tdr_billing_profile}"'
+                        "tdr_billing_profile": f'"{self.tdr_billing_profile}"',
+                        "check_existing_ingested_files": "true",
+                        "filter_existing_ids": "true"
                     }
                 )
             )

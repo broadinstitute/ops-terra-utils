@@ -53,14 +53,10 @@ class SetUpTDRTables:
                 column_dict["action"] = "add"
                 columns_to_update.append(column_dict)
             else:
-                # Terrible way of checking, but file_inventory has file paths set as a string so we can see full path
-                # and the class to assume what a column should be see the google cloud path and assumes it's a file ref.
-                # Skipping check of this specific table for that reason
-                if table_name != "file_inventory":
-                    # Check if column exists but is not set up the same
-                    if column_dict != target_dataset_table_dict[column_dict["name"]]:
-                        column_dict["action"] = "modify"
-                        columns_to_update.append(column_dict)
+                # Check if column exists but is not set up the same
+                if column_dict != target_dataset_table_dict[column_dict["name"]]:
+                    column_dict["action"] = "modify"
+                    columns_to_update.append(column_dict)
         return columns_to_update
 
     @staticmethod
