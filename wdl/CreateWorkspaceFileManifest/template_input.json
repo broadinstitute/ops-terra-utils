@@ -1,0 +1,6 @@
+{
+    "CreateWorkspaceFileManifest.workspace_name": "String",
+    "CreateWorkspaceFileManifest.billing_project": "String",
+    "CreateWorkspaceFileManifest.extension_exclude_list": "String",
+    "CreateWorkspaceFileManifest.extension_include_list": "String"
+}

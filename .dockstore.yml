@@ -62,3 +62,10 @@ workflows:
     readMePath: /wdl/FileExportAzureTdrToGcp/README.md
     testParameterFiles:
       - /wdl/FileExportAzureTdrToGcp/FileExportAzureTdrToGcp.wdl
+
+  - name: CreateWorkspaceFileManifest
+    subclass: WDL
+    primaryDescriptorPath: /wdl/CreateWorkspaceFileManifest/CreateWorkspaceFileManifest.wdl
+    readMePath: /wdl/CreateWorkspaceFileManifest/README.md
+    testParameterFiles:
+      - /wdl/CreateWorkspaceFileManifest/FileExportAzureTdrToGcp.wdl
