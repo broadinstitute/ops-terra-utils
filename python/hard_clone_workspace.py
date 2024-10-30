@@ -36,6 +36,9 @@ def get_args() -> Namespace:
                              "all files will be copied at once")
     parser.add_argument('--metadata_only', "-m", action="store_true",
                         help="Only copy metadata, no actual file copy")
+    parser.add_argument('--do_not_update_acls', action="store_true",
+                        help="Do not update the destination workspace ACLs with the source workspace ACLs. " +
+                             "If you do not have owner access of the source workspace, you should use this flag.")
     return parser.parse_args()
 
 
@@ -193,6 +196,7 @@ if __name__ == '__main__':
     extensions_to_ignore = args.extensions_to_ignore
     batch_size = args.batch_size
     metadata_only = args.metadata_only
+    do_not_update_acls = args.do_not_update_acls
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -262,4 +266,5 @@ if __name__ == '__main__':
     make_bucket_files(src_bucket, dest_bucket)
 
     # Set the destination workspace ACLs
-    UpdateWorkspaceAcls(src_workspace=src_workspace, dest_workspace=dest_workspace).run()
+    if not do_not_update_acls:
+        UpdateWorkspaceAcls(src_workspace=src_workspace, dest_workspace=dest_workspace).run()
