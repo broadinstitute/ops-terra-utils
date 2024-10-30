@@ -398,20 +398,21 @@ class SetUpWorkflowConfig:
     def run(self) -> list[WorkflowConfigs]:
         # Validate wdls to import are valid
         workflow_config_list = []
-        for workflow_name in self.workflow_names:
-            # Create and add workflow config to list
-            workflow_config_list.append(
-                WorkflowConfigs(
-                    workflow_name=workflow_name,
-                    billing_project=terra_billing_project,
-                    terra_workspace_util=self.terra_workspace,
-                    set_input_defaults=True,
-                    extra_default_inputs={
-                        "dataset_id": f'"{self.dataset_id}"',
-                        "tdr_billing_profile": f'"{self.tdr_billing_profile}"'
-                    }
+        if self.workflow_names:
+            for workflow_name in self.workflow_names:
+                # Create and add workflow config to list
+                workflow_config_list.append(
+                    WorkflowConfigs(
+                        workflow_name=workflow_name,
+                        billing_project=terra_billing_project,
+                        terra_workspace_util=self.terra_workspace,
+                        set_input_defaults=True,
+                        extra_default_inputs={
+                            "dataset_id": f'"{self.dataset_id}"',
+                            "tdr_billing_profile": f'"{self.tdr_billing_profile}"'
+                        }
+                    )
                 )
-            )
         return workflow_config_list
 
 
