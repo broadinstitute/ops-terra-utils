@@ -1,12 +1,11 @@
 import logging
 import os
 from argparse import ArgumentParser, Namespace
-
 from typing import Optional
 
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest
-from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups
+from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER, ADMIN
 from utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
 from utils.request_util import RunRequest
 from utils.token_util import Token
@@ -17,8 +16,6 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-GROUP_MEMBER = "member"
-GROUP_ADMIN = "admin"
 OWNER = "OWNER"
 WRITER = "WRITER"
 READER = "READER"
@@ -34,7 +31,7 @@ WDL_READ_ME_PATH_FULL_PATH = os.path.join(SCRIPT_DIR, WDL_READ_ME_PATH)
 
 
 def get_args() -> Namespace:
-    parser = ArgumentParser(description="description of script")
+    parser = ArgumentParser(description="Set up a staging workspace and dataset")
     parser.add_argument("-d", "--dataset_name", required=True)
     parser.add_argument("-bp", "--tdr_billing_profile", required=True)
     parser.add_argument("-b", "--terra_billing_project", required=True)
@@ -49,15 +46,16 @@ def get_args() -> Namespace:
     parser.add_argument("-cu", "--current_user_email", required=True,
                         help="Used for removing current user from workspace")
     parser.add_argument("--dbgap_consent_code",
-                        help="dbGaP consent code for controlled access datasets. Optional")
+                        help="dbGaP consent code for controlled access datasets. Optional",
+                        required=False)
     parser.add_argument("--duos_identifier",
-                        help="DUOS identifier. Optional")
+                        help="DUOS identifier. Optional", required=False)
     parser.add_argument("--wdls_to_import", type=comma_separated_list,
                         help=f"wdls to import in comma seperated list. Options are \n"
-                             f"{GetWorkflowNames().get_workflow_names()}\n Optional")
+                             f"{GetWorkflowNames().get_workflow_names()}\n Optional", required=False)
     parser.add_argument("--notebooks_to_import", type=comma_separated_list,
-                        help="gcp paths to notebooks to import in comma seperated list. Optional")
-    parser.add_argument("--is_anvil", action='store_true',
+                        help="gcp paths to notebooks to import in comma seperated list. Optional", required=False)
+    parser.add_argument("--is_anvil", action="store_true",
                         help="Use if you want to import workflows for Anvil")
     return parser.parse_args()
 
@@ -86,10 +84,10 @@ class SetUpTerraWorkspace:
         self.terra_groups.create_group(group_name=self.auth_group, continue_if_exists=self.continue_if_exists)
         if self.resource_owners:
             for user in self.resource_owners:
-                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=GROUP_ADMIN)
+                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=ADMIN)
         if self.resource_members:
             for user in self.resource_members:
-                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=GROUP_MEMBER)
+                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=MEMBER)
 
     def _add_permissions_to_workspace(self) -> None:
         logging.info(f"Adding permissions to workspace {self.terra_workspace}")
@@ -484,7 +482,7 @@ if __name__ == '__main__':
     terra_groups.add_user_to_group(
         email=data_ingest_sa,
         group=auth_group,
-        role=GROUP_MEMBER,
+        role=MEMBER,
         continue_if_exists=continue_if_exists
     )
 
