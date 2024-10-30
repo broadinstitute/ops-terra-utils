@@ -206,12 +206,13 @@ class SetUpDataset:
         ).run()
 
     def _set_up_permissions(self, dataset_id: str) -> None:
-        for user in self.resource_owners:
-            self.tdr.add_user_to_dataset(
-                dataset_id=dataset_id,
-                user=user,
-                policy="steward"
-            )
+        if self.resource_owners:
+            for user in self.resource_owners:
+                self.tdr.add_user_to_dataset(
+                    dataset_id=dataset_id,
+                    user=user,
+                    policy="steward"
+                )
         self.tdr.add_user_to_dataset(
             dataset_id=dataset_id,
             user=f'{self.auth_group}@firecloud.org',
