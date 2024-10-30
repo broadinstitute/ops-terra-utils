@@ -174,7 +174,7 @@ class WorkflowConfigs:
             'read_me': self._create_wdl_absolute_path(self.yaml_info['readMePath']),
             'wdl_workflow_name': self._get_wdl_workflow_name(wdl_path),
             'wdl_name': os.path.basename(self.yaml_info['primaryDescriptorPath']).rstrip('.wdl'),
-            'read_me_link': f'https://dockstore.org/workflows/github.com/broadinstitute/ops-terra-utils/{self.workflow_name}'
+            'read_me_link': f'https://dockstore.org/workflows/github.com/broadinstitute/ops-terra-utils/{self.workflow_name}'  # noqa: E501
         }
 
     def _create_up_workflow_config(self) -> dict:
