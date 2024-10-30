@@ -57,7 +57,7 @@ task SetUpStagingEnvironments {
         String? wdls_to_import
         String? notebooks_to_import
         Boolean is_anvil
-        String? docker
+        String docker
     }
 
     command <<<
