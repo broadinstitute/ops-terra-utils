@@ -91,8 +91,9 @@ class SetUpTerraWorkspace:
 
     def _add_permissions_to_workspace(self) -> None:
         logging.info(f"Adding permissions to workspace {self.terra_workspace}")
-        for user in self.resource_owners:
-            self.terra_workspace.update_user_acl(email=user, access_level=OWNER)
+        if self.resource_owners:
+            for user in self.resource_owners:
+                self.terra_workspace.update_user_acl(email=user, access_level=OWNER)
         self.terra_workspace.update_user_acl(email=f'{self.auth_group}@firecloud.org', access_level=WRITER)
 
     def _set_up_workspace(self) -> None:
