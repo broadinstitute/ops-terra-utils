@@ -11,59 +11,7 @@ from ..request_util import GET, POST, DELETE
 from ..tdr_api_schema.create_dataset_schema import CreateDatasetSchema
 from ..tdr_api_schema.update_dataset_schema import UpdateSchema
 from .tdr_job_utils import MonitorTDRJob, SubmitAndMonitorMultipleJobs
-
-# Can be used when creating a new dataset
-FILE_INVENTORY_DEFAULT_SCHEMA = {
-    "tables": [
-        {
-            "name": "file_inventory",
-            "columns": [
-                {
-                    "name": "name",
-                    "datatype": "string",
-                    "array_of": False,
-                    "required": True
-                },
-                {
-                    "name": "path",
-                    "datatype": "string",
-                    "array_of": False,
-                    "required": True
-                },
-                {
-                    "name": "content_type",
-                    "datatype": "string",
-                    "array_of": False,
-                    "required": True
-                },
-                {
-                    "name": "file_extension",
-                    "datatype": "string",
-                    "array_of": False,
-                    "required": True
-                },
-                {
-                    "name": "size_in_bytes",
-                    "datatype": "integer",
-                    "array_of": False,
-                    "required": True
-                },
-                {
-                    "name": "md5_hash",
-                    "datatype": "string",
-                    "array_of": False,
-                    "required": True
-                },
-                {
-                    "name": "file_ref",
-                    "datatype": "fileref",
-                    "array_of": False,
-                    "required": True
-                }
-            ]
-        }
-    ]
-}
+from .. import ARG_DEFAULTS
 
 
 class TDR:
@@ -85,9 +33,40 @@ class TDR:
         """
         self.request_util = request_util
 
-    def get_data_set_files(self, dataset_id: str, limit: int = 1000) -> list[dict]:
+    def get_data_set_files(
+            self,
+            dataset_id: str,
+            limit: int = ARG_DEFAULTS['batch_size_to_list_files']  # type: ignore[assignment]
+    ) -> list[dict]:
         """
-        Get all files in a dataset.
+        Get all files in a dataset. Returns json like below
+
+            {
+        "fileId": "68ba8bfc-1d84-4ef3-99b8-cf1754d5rrrr",
+        "collectionId": "b20b6024-5943-4c23-82e7-9c24f545fuy7",
+        "path": "/path/set/in/ingest.csv",
+        "size": 1722,
+        "checksums": [
+            {
+                "checksum": "82f7e79v",
+                "type": "crc32c"
+            },
+            {
+                "checksum": "fff973507e30b74fa47a3d6830b84a90",
+                "type": "md5"
+            }
+        ],
+        "created": "2024-13-11T15:01:00.256Z",
+        "description": null,
+        "fileType": "file",
+        "fileDetail": {
+            "datasetId": "b20b6024-5943-4c23-82e7-9c24f5456444",
+            "mimeType": null,
+            "accessUrl": "gs://datarepo-bucket/path/to/actual/file.csv",
+            "loadTag": "RP_3333-RP_3333"
+        },
+        "directoryDetail": null
+    }
 
         Args:
             dataset_id (str): The ID of the dataset.
@@ -100,7 +79,11 @@ class TDR:
         logging.info(f"Getting all files in dataset {dataset_id}")
         return self._get_response_from_batched_endpoint(uri=uri, limit=limit)
 
-    def create_file_dict(self, dataset_id: str, limit: int = 20000) -> dict:
+    def create_file_dict(
+            self,
+            dataset_id: str,
+            limit: int = ARG_DEFAULTS['batch_size_to_list_files']  # type: ignore[assignment]
+    ) -> dict:
         """
         Create a dictionary of all files in a dataset where the key is the file UUID.
 
@@ -113,6 +96,27 @@ class TDR:
         """
         return {
             file_dict['fileId']: file_dict
+            for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
+        }
+
+    def create_file_uuid_dict_for_ingest(
+            self,
+            dataset_id: str,
+            limit: int = ARG_DEFAULTS['batch_size_to_list_files']  # type: ignore[assignment]
+    ) -> dict:
+        """
+        Create a dictionary of all files in a dataset where the key is the file 'path' and the value is the file UUID.
+        This assumes that the tdr 'path' is original path of the file in the cloud storage with gs:// stripped out
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            limit (int, optional): The maximum number of records to retrieve per batch. Defaults to 20000.
+
+        Returns:
+            dict: A dictionary where the key is the file UUID and the value is the file path.
+        """
+        return {
+            f'gs://{file_dict["path"]}': file_dict['fileId']
             for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
         }
 
@@ -457,10 +461,13 @@ class TDR:
         )
         return json.loads(response.text)
 
-    def file_ingest_to_dataset(self, dataset_id: str,
-                               profile_id: str,
-                               file_list: list[dict],
-                               load_tag: str = "file_ingest_load_tag") -> dict:
+    def file_ingest_to_dataset(
+            self,
+            dataset_id: str,
+            profile_id: str,
+            file_list: list[dict],
+            load_tag: str = "file_ingest_load_tag"
+    ) -> dict:
         """
         Load files into a TDR dataset.
 
@@ -491,7 +498,7 @@ class TDR:
         )
         job_id = response.json()['id']
         job_results = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30, return_json=True).run()
-        return job_results
+        return job_results  # type: ignore[return-value]
 
     def get_data_set_table_metrics(
             self, dataset_id: str, target_table_name: str, query_limit: int = 1000
@@ -836,7 +843,8 @@ class FilterOutSampleIdsAlreadyInDataset:
     def __init__(
             self,
             ingest_metrics: list[dict],
-            dataset_id: str, tdr: TDR,
+            dataset_id: str,
+            tdr: TDR,
             target_table_name: str,
             filter_entity_id: str
     ):

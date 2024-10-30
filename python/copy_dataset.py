@@ -282,7 +282,6 @@ if __name__ == "__main__":
             table_name=table_name,
             ingest_metadata=ingest_records,
             dataset_id=dest_dataset_id,
-            file_list_bool=False,
             ingest_waiting_time_poll=time_to_poll,
             ingest_batch_size=ingest_batch_size,
             bulk_mode=False,

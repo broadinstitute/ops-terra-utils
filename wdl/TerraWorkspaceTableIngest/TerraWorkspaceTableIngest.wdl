@@ -9,9 +9,10 @@ workflow GCPWorkspaceToDatasetIngest {
         String? update_strategy
         String? records_to_ingest
         Boolean bulk_mode
+        Boolean filter_existing_ids
+        Boolean check_existing_ingested_files
         Int? max_retries
         Int? max_backoff_time
-        Boolean filter_existing_ids
         Int? batch_size
         String? docker
     }
@@ -31,7 +32,8 @@ workflow GCPWorkspaceToDatasetIngest {
             max_backoff_time = max_backoff_time,
             docker_image = docker_image,
             filter_existing_ids = filter_existing_ids,
-            batch_size = batch_size
+            batch_size = batch_size,
+            check_existing_ingested_files = check_existing_ingested_files
     }
 }
 
@@ -48,6 +50,7 @@ task IngestWorkspaceDataToDataset {
         Int? max_backoff_time
         String docker_image
         Boolean filter_existing_ids
+        Boolean check_existing_ingested_files
         Int? batch_size
     }
 
@@ -63,7 +66,9 @@ task IngestWorkspaceDataToDataset {
         ~{"--max_backoff_time " + max_backoff_time} \
         ~{"--records_to_ingest " + records_to_ingest} \
         ~{if filter_existing_ids then "--filter_existing_ids" else ""} \
+        ~{if check_existing_ingested_files then "--check_existing_ingested_files" else ""} \
         ~{"--batch_size " + batch_size}
+
     >>>
 
     runtime {
