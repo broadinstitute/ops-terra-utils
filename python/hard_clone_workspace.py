@@ -267,4 +267,7 @@ if __name__ == '__main__':
 
     # Set the destination workspace ACLs
     if not do_not_update_acls:
+        logging.info(
+            "Updating destination workspace ACLs. If fails with 403 you probably do not " +
+            "have access to list source workspace ACLs. try running with --do_not_update_acls")
         UpdateWorkspaceAcls(src_workspace=src_workspace, dest_workspace=dest_workspace).run()
