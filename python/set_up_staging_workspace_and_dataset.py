@@ -414,7 +414,7 @@ class SetUpWorkflowConfig:
                         # When ingesting do not re-ingest records that already exist in the dataset
                         "filter_existing_ids": "true",
                         # When creating file inventory ignore submissions folder
-                        "strings_to_exclude": "\"submissions\""
+                        "strings_to_exclude": '"submissions"'
                     }
                 )
             )
