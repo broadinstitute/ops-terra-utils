@@ -345,13 +345,13 @@ class ImportWorkflowsAndNotebooks:
     def __init__(
             self,
             billing_project: str,
-            terra_workspace: TerraWorkspace,
+            workspace_bucket: str,
             continue_if_exists: bool,
             workflow_config_list: Optional[list[WorkflowConfigs]] = None,
             notebooks: Optional[list[str]] = None
     ):
         self.billing_project = billing_project
-        self.terra_workspace = terra_workspace
+        self.workspace_bucket = workspace_bucket
         self.continue_if_exists = continue_if_exists
         self.workflow_config_list = workflow_config_list
         self.notebooks = notebooks
@@ -362,12 +362,11 @@ class ImportWorkflowsAndNotebooks:
 
     def _copy_in_notebooks(self) -> None:
         gcp_functions = GCPCloudFunctions()
-        workspace_bucket = self.terra_workspace.get_workspace_bucket()
         for notebook in self.notebooks:  # type: ignore[union-attr]
             os.path.basename(notebook)
             gcp_functions.copy_cloud_file(
                 src_cloud_path=notebook,
-                full_destination_path=f'gs://{workspace_bucket}/notebooks/{os.path.basename(notebook)}'
+                full_destination_path=f'{self.workspace_bucket}/notebooks/{os.path.basename(notebook)}'
             )
 
     def run(self) -> None:
@@ -384,37 +383,39 @@ class SetUpWorkflowConfig:
             workflow_names: Optional[list[str]],
             billing_project: str,
             tdr_billing_profile: str,
-            dataset_id: str):
+            dataset_id: str,
+            workspace_bucket: str
+    ):
         self.terra_workspace = terra_workspace
         self.workflow_names = workflow_names
         self.billing_project = billing_project
         self.is_anvil = is_anvil
         self.tdr_billing_profile = tdr_billing_profile
         self.dataset_id = dataset_id
+        self.workspace_bucket = workspace_bucket
 
     def run(self) -> list[WorkflowConfigs]:
         # Validate wdls to import are valid
         workflow_config_list = []
         if self.workflow_names:
-            for workflow_name in self.workflow_names:
-                # Create and add workflow config to list
-                workflow_config_list.append(
-                    WorkflowConfigs(
-                        workflow_name=workflow_name,
-                        billing_project=terra_billing_project,
-                        terra_workspace_util=self.terra_workspace,
-                        set_input_defaults=True,
-                        extra_default_inputs={
-                            "dataset_id": f'"{self.dataset_id}"',
-                            "tdr_billing_profile": f'"{self.tdr_billing_profile}"',
-                            # When ingesting check if files already exist in dataset and update ingest cells with file UUID
-                            "check_existing_ingested_files": "true",
-                            # When ingesting do not re-ingest records that already exist in the dataset
-                            "filter_existing_ids": "true",
-                            # When creating file inventory ignore submissions folder
-                            "strings_to_exclude": '"submissions"'
-                        }
-                    )
+          for workflow_name in self.workflow_names:
+              # Create and add workflow config to list
+              workflow_config_list.append(
+                  WorkflowConfigs(
+                      workflow_name=workflow_name,
+                      billing_project=terra_billing_project,
+                      terra_workspace_util=self.terra_workspace,
+                      set_input_defaults=True,
+                      extra_default_inputs={
+                          "dataset_id": f'"{self.dataset_id}"',
+                          "tdr_billing_profile": f'"{self.tdr_billing_profile}"',
+                          # When ingesting check if files already exist in dataset and update ingest cells with file UUID
+                          "check_existing_ingested_files": "true",
+                          # When ingesting do not re-ingest records that already exist in the dataset
+                          "filter_existing_ids": "true",
+                          # When creating file inventory ignore submissions folder from terra workflows
+                          "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"'
+                      }
                 )
         return workflow_config_list
 
@@ -463,6 +464,7 @@ if __name__ == '__main__':
         resource_members=resource_members
     ).run()
     logging.info("Finished setting up Terra workspace")
+    workspace_bucket = f"gs://{terra_workspace.get_workspace_bucket()}"
 
     # Set up dataset
     dataset_info = SetUpDataset(
@@ -498,7 +500,8 @@ if __name__ == '__main__':
         workflow_names=wdls_to_import,
         billing_project=terra_billing_project,
         tdr_billing_profile=tdr_billing_profile,
-        dataset_id=dataset_id
+        dataset_id=dataset_id,
+        workspace_bucket=workspace_bucket
     ).run()
 
     if notebooks_to_import:
@@ -510,7 +513,7 @@ if __name__ == '__main__':
     # Import workflows and notebooks
     ImportWorkflowsAndNotebooks(
         billing_project=terra_billing_project,
-        terra_workspace=terra_workspace,
+        workspace_bucket=workspace_bucket,
         workflow_config_list=workflow_configs,
         notebooks=notebooks_to_import,
         continue_if_exists=continue_if_exists
