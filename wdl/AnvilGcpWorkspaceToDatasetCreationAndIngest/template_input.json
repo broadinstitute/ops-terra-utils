@@ -1,6 +1,0 @@
-{
-    "GCPWorkspaceToDatasetCreationAndIngest.billing_project": "String",
-    "GCPWorkspaceToDatasetCreationAndIngest.workspace_name": "String",
-	"GCPWorkspaceToDatasetCreationAndIngest.phs_id": "String",
-	"GCPWorkspaceToDatasetCreationAndIngest.bulk_mode": "Boolean"
-}

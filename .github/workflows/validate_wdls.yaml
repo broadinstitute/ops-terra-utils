@@ -10,11 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     name: Validate all wdl using womtool
     steps:
+      - name: check for util changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            wdls:
+              - wdl/**/*.wdl
+              - .dockstore.yml
+
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
       - uses: actions/checkout@v2
       - name: Run womtools
+        if: steps.changes.outputs.wdls == 'true'
         run: |
           ./scripts/validate_wdls.sh
