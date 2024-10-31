@@ -7,7 +7,7 @@ workflow SetUpStagingWorkspaceAndDataset {
         String terra_billing_project
         Boolean controlled_access
         String? phs_id
-        String? resource_owners
+        String resource_owners
         String? resource_members
         Boolean continue_if_exists
         String current_user_email
@@ -48,7 +48,7 @@ task SetUpStagingEnvironments {
         String terra_billing_project
         Boolean controlled_access
         String? phs_id
-        String? resource_owners
+        String resource_owners
         String? resource_members
         Boolean continue_if_exists
         String current_user_email
@@ -67,7 +67,7 @@ task SetUpStagingEnvironments {
             --terra_billing_project ~{terra_billing_project} \
             ~{if controlled_access then "--controlled_access" else ""} \
             ~{"--phs_id " + phs_id} \
-            ~{"--resource_owners " + resource_owners} \
+            --resource_owners ~{resource_owners} \
             ~{"--resource_members " + resource_members} \
             ~{if continue_if_exists then "--continue_if_exists" else ""} \
             --current_user_email ~{current_user_email} \

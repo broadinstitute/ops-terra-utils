@@ -38,7 +38,7 @@ def get_args() -> Namespace:
     parser.add_argument("--controlled_access", action="store_true")
     parser.add_argument("-p", "--phs_id", required=False)
     parser.add_argument("-ro", "--resource_owners", type=comma_separated_list,
-                        help="comma seperated list of resource owners", required=False)
+                        help="comma seperated list of resource owners", required=True)
     parser.add_argument("-rm", "--resource_members", type=comma_separated_list,
                         help="comma seperated list of resource members", required=False)
     parser.add_argument("-c", "--continue_if_exists", action="store_true",
@@ -69,7 +69,7 @@ class SetUpTerraWorkspace:
             continue_if_exists: bool,
             controlled_access: bool,
             resource_owners: list[str],
-            resource_members: list[str]
+            resource_members: Optional[list[str]]
     ):
         self.terra_workspace = terra_workspace
         self.terra_groups = terra_groups
@@ -82,18 +82,16 @@ class SetUpTerraWorkspace:
     def _set_up_access_group(self) -> None:
         logging.info(f"Creating group {self.auth_group}")
         self.terra_groups.create_group(group_name=self.auth_group, continue_if_exists=self.continue_if_exists)
-        if self.resource_owners:
-            for user in self.resource_owners:
-                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=ADMIN)
+        for user in self.resource_owners:
+            self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=ADMIN)
         if self.resource_members:
             for user in self.resource_members:
                 self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=MEMBER)
 
     def _add_permissions_to_workspace(self) -> None:
         logging.info(f"Adding permissions to workspace {self.terra_workspace}")
-        if self.resource_owners:
-            for user in self.resource_owners:
-                self.terra_workspace.update_user_acl(email=user, access_level=OWNER)
+        for user in self.resource_owners:
+            self.terra_workspace.update_user_acl(email=user, access_level=OWNER)
         self.terra_workspace.update_user_acl(email=f'{self.auth_group}@firecloud.org', access_level=WRITER)
 
     def _set_up_workspace(self) -> None:
@@ -206,13 +204,12 @@ class SetUpDataset:
         ).run()
 
     def _set_up_permissions(self, dataset_id: str) -> None:
-        if self.resource_owners:
-            for user in self.resource_owners:
-                self.tdr.add_user_to_dataset(
-                    dataset_id=dataset_id,
-                    user=user,
-                    policy="steward"
-                )
+        for user in self.resource_owners:
+            self.tdr.add_user_to_dataset(
+                dataset_id=dataset_id,
+                user=user,
+                policy="steward"
+            )
         self.tdr.add_user_to_dataset(
             dataset_id=dataset_id,
             user=f'{self.auth_group}@firecloud.org',
@@ -527,7 +524,7 @@ if __name__ == '__main__':
     ).run()
 
     # Remove current user from workspace and dataset if not a resource owner
-    if resource_owners and current_user_email not in resource_owners:
+    if current_user_email not in resource_owners:
         logging.info(f"Removing {current_user_email} owner access from workspace and dataset")
         RemoveAllIndividualAccess(
             terra_workspace=terra_workspace,
