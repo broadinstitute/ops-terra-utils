@@ -8,6 +8,13 @@ jobs:
   Run_Integration_Tests:
     runs-on: ubuntu-latest
     steps:
+      - name: check for util changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            utils:
+              - python/utils/**
       - name: Checkout PR Branch
         uses: actions/checkout@v3
 
@@ -27,6 +34,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
+        if: steps.changes.outputs.utils == 'true'
         run: |
           pip install pytest
           pytest python/tests/
