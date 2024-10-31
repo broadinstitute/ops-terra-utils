@@ -409,8 +409,12 @@ class SetUpWorkflowConfig:
                     extra_default_inputs={
                         "dataset_id": f'"{self.dataset_id}"',
                         "tdr_billing_profile": f'"{self.tdr_billing_profile}"',
+                        # When ingesting check if files already exist in dataset and update ingest cells with file UUID
                         "check_existing_ingested_files": "true",
-                        "filter_existing_ids": "true"
+                        # When ingesting do not re-ingest records that already exist in the dataset
+                        "filter_existing_ids": "true",
+                        # When creating file inventory ignore submissions folder
+                        "strings_to_exclude": "\"submissions\""
                     }
                 )
             )
