@@ -22,8 +22,6 @@ logging.basicConfig(
 COLUMNS_TO_IGNORE = ["datarepo_row_id", "import:timestamp", "import:snapshot_id", "tdr:sample_id"]
 CLOUD_TYPE = GCP
 TEST_INGEST = False  # Whether to test the ingest by just doing first batch
-# Filter for out rows where it already exists within the dataset
-FILTER_EXISTING_IDS = False
 
 
 def get_args() -> argparse.Namespace:
