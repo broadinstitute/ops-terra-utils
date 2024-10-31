@@ -1,12 +1,11 @@
 import logging
 import os
 from argparse import ArgumentParser, Namespace
-
 from typing import Optional
 
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest
-from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups
+from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER, ADMIN
 from utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
 from utils.request_util import RunRequest
 from utils.token_util import Token
@@ -17,8 +16,6 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-GROUP_MEMBER = "member"
-GROUP_ADMIN = "admin"
 OWNER = "OWNER"
 WRITER = "WRITER"
 READER = "READER"
@@ -34,31 +31,62 @@ WDL_READ_ME_PATH_FULL_PATH = os.path.join(SCRIPT_DIR, WDL_READ_ME_PATH)
 
 
 def get_args() -> Namespace:
-    parser = ArgumentParser(description="description of script")
+    parser = ArgumentParser(description="Set up a staging workspace and dataset")
     parser.add_argument("-d", "--dataset_name", required=True)
     parser.add_argument("-bp", "--tdr_billing_profile", required=True)
     parser.add_argument("-b", "--terra_billing_project", required=True)
     parser.add_argument("--controlled_access", action="store_true")
     parser.add_argument("-p", "--phs_id", required=False)
-    parser.add_argument("-ro", "--resource_owners", type=comma_separated_list,
-                        help="comma seperated list of resource owners", required=False)
-    parser.add_argument("-rm", "--resource_members", type=comma_separated_list,
-                        help="comma seperated list of resource members", required=False)
-    parser.add_argument("-c", "--continue_if_exists", action="store_true",
-                        help="Continue if workspace and/or dataset already exists")
-    parser.add_argument("-cu", "--current_user_email", required=True,
-                        help="Used for removing current user from workspace")
+    parser.add_argument(
+        "-ro", "--resource_owners",
+        type=comma_separated_list,
+        help="comma seperated list of resource owners",
+        required=True
+    )
+    parser.add_argument(
+        "-rm",
+        "--resource_members",
+        type=comma_separated_list,
+        help="comma separated list of resource members", required=False
+    )
+    parser.add_argument(
+        "-c",
+        "--continue_if_exists",
+        action="store_true",
+        help="Continue if workspace and/or dataset already exists"
+    )
+    parser.add_argument(
+        "-cu",
+        "--current_user_email",
+        required=True,
+        help="Used for removing current user from workspace"
+    )
     parser.add_argument("--dbgap_consent_code",
-                        help="dbGaP consent code for controlled access datasets. Optional")
-    parser.add_argument("--duos_identifier",
-                        help="DUOS identifier. Optional")
-    parser.add_argument("--wdls_to_import", type=comma_separated_list,
-                        help=f"wdls to import in comma seperated list. Options are \n"
-                             f"{GetWorkflowNames().get_workflow_names()}\n Optional")
-    parser.add_argument("--notebooks_to_import", type=comma_separated_list,
-                        help="gcp paths to notebooks to import in comma seperated list. Optional")
-    parser.add_argument("--is_anvil", action='store_true',
-                        help="Use if you want to import workflows for Anvil")
+                        help="dbGaP consent code for controlled access datasets. Optional",
+                        required=False)
+    parser.add_argument(
+        "--duos_identifier",
+        help="DUOS identifier. Optional",
+        required=False
+    )
+    parser.add_argument(
+        "--wdls_to_import",
+        type=comma_separated_list,
+        help=f"""WDLs to import in comma separated list. Options are {GetWorkflowNames().get_workflow_names()}\n,
+         Optional""",
+        required=False
+    )
+    parser.add_argument(
+        "--notebooks_to_import",
+        type=comma_separated_list,
+        help="gcp paths to notebooks to import in comma separated list. Optional",
+        required=False
+    )
+    parser.add_argument(
+        "--is_anvil",
+        action="store_true",
+        help="Use if you want to import workflows for Anvil"
+    )
     return parser.parse_args()
 
 
@@ -71,7 +99,7 @@ class SetUpTerraWorkspace:
             continue_if_exists: bool,
             controlled_access: bool,
             resource_owners: list[str],
-            resource_members: list[str]
+            resource_members: Optional[list[str]]
     ):
         self.terra_workspace = terra_workspace
         self.terra_groups = terra_groups
@@ -84,12 +112,11 @@ class SetUpTerraWorkspace:
     def _set_up_access_group(self) -> None:
         logging.info(f"Creating group {self.auth_group}")
         self.terra_groups.create_group(group_name=self.auth_group, continue_if_exists=self.continue_if_exists)
-        if self.resource_owners:
-            for user in self.resource_owners:
-                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=GROUP_ADMIN)
+        for user in self.resource_owners:
+            self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=ADMIN)
         if self.resource_members:
             for user in self.resource_members:
-                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=GROUP_MEMBER)
+                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=MEMBER)
 
     def _add_permissions_to_workspace(self) -> None:
         logging.info(f"Adding permissions to workspace {self.terra_workspace}")
@@ -383,7 +410,7 @@ class SetUpWorkflowConfig:
     def __init__(
             self,
             terra_workspace: TerraWorkspace,
-            workflow_names: str,
+            workflow_names: Optional[list[str]],
             billing_project: str,
             tdr_billing_profile: str,
             dataset_id: str,
@@ -400,26 +427,28 @@ class SetUpWorkflowConfig:
     def run(self) -> list[WorkflowConfigs]:
         # Validate wdls to import are valid
         workflow_config_list = []
-        for workflow_name in self.workflow_names:
-            # Create and add workflow config to list
-            workflow_config_list.append(
-                WorkflowConfigs(
-                    workflow_name=workflow_name,
-                    billing_project=terra_billing_project,
-                    terra_workspace_util=self.terra_workspace,
-                    set_input_defaults=True,
-                    extra_default_inputs={
-                        "dataset_id": f'"{self.dataset_id}"',
-                        "tdr_billing_profile": f'"{self.tdr_billing_profile}"',
-                        # When ingesting check if files already exist in dataset and update ingest cells with file UUID
-                        "check_existing_ingested_files": "true",
-                        # When ingesting do not re-ingest records that already exist in the dataset
-                        "filter_existing_ids": "true",
-                        # When creating file inventory ignore submissions folder from terra workflows
-                        "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"'
-                    }
+        if self.workflow_names:
+            for workflow_name in self.workflow_names:
+                # Create and add workflow config to list
+                workflow_config_list.append(
+                    WorkflowConfigs(
+                        workflow_name=workflow_name,
+                        billing_project=terra_billing_project,
+                        terra_workspace_util=self.terra_workspace,
+                        set_input_defaults=True,
+                        extra_default_inputs={
+                            "dataset_id": f'"{self.dataset_id}"',
+                            "tdr_billing_profile": f'"{self.tdr_billing_profile}"',
+                            # When ingesting check if files already exist in dataset and update ingest cells with file
+                            # UUID
+                            "check_existing_ingested_files": "true",
+                            # When ingesting do not re-ingest records that already exist in the dataset
+                            "filter_existing_ids": "true",
+                            # When creating file inventory ignore submissions folder from terra workflows
+                            "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"'
+                        }
+                    )
                 )
-            )
         return workflow_config_list
 
 
@@ -442,7 +471,7 @@ if __name__ == '__main__':
     notebooks_to_import = args.notebooks_to_import
     is_anvil = args.is_anvil
 
-    workspace_name = f'{dataset_name}_Staging'
+    workspace_name = f"{dataset_name}_Staging"
     auth_group = f"AUTH_{dataset_name}"
 
     # Set up Terra, TerraGroups, and TDR classes
@@ -493,7 +522,7 @@ if __name__ == '__main__':
     terra_groups.add_user_to_group(
         email=data_ingest_sa,
         group=auth_group,
-        role=GROUP_MEMBER,
+        role=MEMBER,
         continue_if_exists=continue_if_exists
     )
 

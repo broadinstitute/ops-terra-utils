@@ -4,12 +4,12 @@ This WDL lists all files located in the google bucket associated with a given te
 
 ## Inputs Table
 
-| Input Name | Description | Type | Required | Default |
-|------------------------------------------|------------------------------------------------------------------------------------------------------------------------|---------|----------|---------|
-| **billing_profile**| The billing profile associated with this workspace.| String  | Yes | N/A |
-| **workspace_name**| Workspace name.| String  | Yes | N/A |
-| **extension_exclude_list**| List of file extensions to be excluded from search when listing files from this bucket. Will ignore any files that match an extension in this list. | String  | No | N/A |
-| **extension_include_list**| List of file extensions to include when listing files from this bucket. Will ignore any files that do not match extensions in this list. | String  | No | N/A |
+| Input Name                 | Description                                                                                                                                                                                                    | Type   | Required  | Default   |
+|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|-----------|-----------|
+| **billing_profile**        | The billing profile associated with this workspace.                                                                                                                                                            | String | Yes       | N/A       |
+| **workspace_name**         | Workspace name.                                                                                                                                                                                                | String | Yes       | N/A       |
+| **extension_exclude_list** | List of file extensions to be excluded from search when listing files from this bucket. Will ignore any files that match an extension in this list. Do not include spaces in between values (i.e. ".tsv,.txt") | String | No        | N/A       |
+| **extension_include_list** | List of file extensions to include when listing files from this bucket. Will ignore any files that do not match extensions in this list. Do not include spaces in between values (i.e. ".tsv,.txt")            | String | No        | N/A       |
 
 ## Outputs Table
 

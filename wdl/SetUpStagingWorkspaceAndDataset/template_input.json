@@ -1,0 +1,10 @@
+{
+  "SetUpStagingWorkspaceAndDataset.continue_if_exists": "Boolean",
+  "SetUpStagingWorkspaceAndDataset.controlled_access": "Boolean",
+  "SetUpStagingWorkspaceAndDataset.current_user_email": "String",
+  "SetUpStagingWorkspaceAndDataset.dataset_name": "String",
+  "SetUpStagingWorkspaceAndDataset.is_anvil": "Boolean",
+  "SetUpStagingWorkspaceAndDataset.resource_owners": "String",
+  "SetUpStagingWorkspaceAndDataset.tdr_billing_profile": "String",
+  "SetUpStagingWorkspaceAndDataset.terra_billing_project": "String"
+}
