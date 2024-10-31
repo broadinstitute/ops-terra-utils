@@ -3,5 +3,6 @@
     "GCPWorkspaceToDatasetIngest.workspace_name": "String",
 	"GCPWorkspaceToDatasetIngest.dataset_id": "String",
 	"GCPWorkspaceToDatasetIngest.terra_tables": "String",
-	"GCPWorkspaceToDatasetIngest.bulk_mode": "Boolean"
+	"GCPWorkspaceToDatasetIngest.bulk_mode": "Boolean",
+	"GCPWorkspaceToDatasetIngest.filter_out_entity_already_in_dataset": "Boolean",
 }

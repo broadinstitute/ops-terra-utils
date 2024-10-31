@@ -10,6 +10,7 @@ workflow HardCloneTerraWorkspace {
 		String dest_workspace_name
 		Boolean allow_already_created
 		Boolean rsync_workspace
+		Boolean do_not_update_acls
 		Int? workers
 		String? extensions_to_ignore
 		String? docker
@@ -34,7 +35,8 @@ workflow HardCloneTerraWorkspace {
 			docker_name=docker_name,
 			memory_gb=memory,
 			batch_size=batch_size,
-			metadata_only=rsync_workspace
+			metadata_only=rsync_workspace,
+			do_not_update_acls=do_not_update_acls
 	}
 
 	if (rsync_workspace) {
@@ -59,6 +61,7 @@ task HardCloneTerraWorkspaceTask {
 		String docker_name
 		Int memory_gb
 		Boolean metadata_only
+		Boolean do_not_update_acls
 		Int? batch_size
 	}
 
@@ -72,7 +75,8 @@ task HardCloneTerraWorkspaceTask {
 		~{"--workers " + workers} \
 		~{"--extensions_to_ignore " + extensions_to_ignore} \
 		~{"--batch_size " + batch_size} \
-		~{if metadata_only then "--metadata_only" else ""}
+		~{if metadata_only then "--metadata_only" else ""} \
+		~{if do_not_update_acls then "--do_not_update_acls" else ""}
 	>>>
 
 	output {

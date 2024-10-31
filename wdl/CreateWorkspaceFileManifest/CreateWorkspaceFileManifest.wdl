@@ -6,6 +6,7 @@ workflow CreateWorkspaceFileManifest {
         String billing_project
         String? extension_exclude_list
         String? extension_include_list
+        String? strings_to_exclude
         String? docker
     }
 
@@ -18,6 +19,7 @@ workflow CreateWorkspaceFileManifest {
             billing_project=billing_project,
             extension_exclude_list=extension_exclude_list,
             extension_include_list=extension_include_list,
+            strings_to_exclude=strings_to_exclude,
             docker_image=docker_name
     }
 }
@@ -28,15 +30,17 @@ task CreateManifest {
         String billing_project
         String? extension_exclude_list
         String? extension_include_list
+        String? strings_to_exclude
         String docker_image
     }
 
     command <<<
-        python /etc/local_repo/python/create_workspace_file_manifest.py \
+        python /etc/terra_utils/python/create_workspace_file_manifest.py \
         --workspace_name  ~{workspace_name} \
         --billing_project  ~{billing_project} \
         ~{"--extension_exclude_list " + extension_exclude_list} \
-        ~{"--extension_include_list " + extension_include_list}
+        ~{"--extension_include_list " + extension_include_list} \
+        ~{"--strings_to_exclude " + strings_to_exclude}
     >>>
 
     runtime {

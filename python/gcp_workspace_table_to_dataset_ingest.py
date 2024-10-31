@@ -22,8 +22,6 @@ logging.basicConfig(
 COLUMNS_TO_IGNORE = ["datarepo_row_id", "import:timestamp", "import:snapshot_id", "tdr:sample_id"]
 CLOUD_TYPE = GCP
 TEST_INGEST = False  # Whether to test the ingest by just doing first batch
-# Filter for out rows where it already exists within the dataset
-FILTER_EXISTING_IDS = False
 
 
 def get_args() -> argparse.Namespace:
@@ -84,6 +82,14 @@ def get_args() -> argparse.Namespace:
         default=ARG_DEFAULTS["batch_size"],
         help=f"""The number of rows to ingest at a time. Defaults to {ARG_DEFAULTS['batch_size']} if not provided"""
     )
+    parser.add_argument(
+        "--check_existing_ingested_files",
+        action="store_true",
+        help="Whether to check if the files have already been ingested into TDR. This will only work if the 'path' " +
+        "used for ingest previously was original gs path with 'gs://' removed. Using option will download " +
+        "all files for dataset for every single table ingest. It does drastically speed up ingest if files " +
+        "have already been ingested."
+    )
 
     return parser.parse_args()
 
@@ -101,6 +107,7 @@ if __name__ == "__main__":
     max_backoff_time = args.max_backoff_time
     filter_existing_ids = args.filter_existing_ids
     batch_size = args.batch_size
+    check_if_files_already_ingested = args.check_existing_ingested_files
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -155,12 +162,17 @@ if __name__ == "__main__":
                 "table_name": target_table_name,
                 "primary_key": primary_key_column_name,
                 "ingest_metadata": filtered_metrics,
-                "file_list": False,
                 "datePartitionOptions": None
             }
 
         }
         SetUpTDRTables(tdr=tdr, dataset_id=dataset_id, table_info_dict=table_info_dict).run()
+
+        if check_if_files_already_ingested:
+            # Download and create a dictionary of file paths to UUIDs for ingest
+            file_uuids_dict = tdr.create_file_uuid_dict_for_ingest(dataset_id=dataset_id)
+        else:
+            file_uuids_dict = None
 
         BatchIngest(
             ingest_metadata=filtered_metrics,
@@ -174,5 +186,5 @@ if __name__ == "__main__":
             waiting_time_to_poll=ARG_DEFAULTS['waiting_time_to_poll'],
             test_ingest=TEST_INGEST,
             load_tag=f"{billing_project}_{workspace_name}-{dataset_id}",
-            file_list_bool=False
+            file_to_uuid_dict=file_uuids_dict
         ).run()
