@@ -132,6 +132,7 @@ class CreateIngestRecords:
         # Get all file ref columns in table
         file_ref_columns = [
             col['name'] for col in self.table_schema_info['columns'] if col['datatype'] == 'fileref']
+        # Download table metadata
         table_metadata = tdr.get_data_set_table_metrics(orig_dataset_id, table_dict['name'])
         new_ingest_records = []
         # Go through each row in table
@@ -139,8 +140,8 @@ class CreateIngestRecords:
             new_row_dict = {}
             # Go through each column in row
             for column in row_dict:
-                # Don't include empty columns
-                if row_dict[column]:
+                # Don't include empty columns and datarepo_row_id column
+                if row_dict[column] and column != 'datarepo_row_id':
                     # Check if column is a file ref column
                     if column in file_ref_columns:
                         file_uuid = row_dict[column]
