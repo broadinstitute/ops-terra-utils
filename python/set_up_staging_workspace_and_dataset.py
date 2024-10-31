@@ -37,26 +37,56 @@ def get_args() -> Namespace:
     parser.add_argument("-b", "--terra_billing_project", required=True)
     parser.add_argument("--controlled_access", action="store_true")
     parser.add_argument("-p", "--phs_id", required=False)
-    parser.add_argument("-ro", "--resource_owners", type=comma_separated_list,
-                        help="comma seperated list of resource owners", required=True)
-    parser.add_argument("-rm", "--resource_members", type=comma_separated_list,
-                        help="comma seperated list of resource members", required=False)
-    parser.add_argument("-c", "--continue_if_exists", action="store_true",
-                        help="Continue if workspace and/or dataset already exists")
-    parser.add_argument("-cu", "--current_user_email", required=True,
-                        help="Used for removing current user from workspace")
+    parser.add_argument(
+        "-ro", "--resource_owners",
+        type=comma_separated_list,
+        help="comma seperated list of resource owners",
+        required=True
+    )
+    parser.add_argument(
+        "-rm",
+        "--resource_members",
+        type=comma_separated_list,
+        help="comma separated list of resource members", required=False
+    )
+    parser.add_argument(
+        "-c",
+        "--continue_if_exists",
+        action="store_true",
+        help="Continue if workspace and/or dataset already exists"
+    )
+    parser.add_argument(
+        "-cu",
+        "--current_user_email",
+        required=True,
+        help="Used for removing current user from workspace"
+    )
     parser.add_argument("--dbgap_consent_code",
                         help="dbGaP consent code for controlled access datasets. Optional",
                         required=False)
-    parser.add_argument("--duos_identifier",
-                        help="DUOS identifier. Optional", required=False)
-    parser.add_argument("--wdls_to_import", type=comma_separated_list,
-                        help=f"wdls to import in comma seperated list. Options are \n"
-                             f"{GetWorkflowNames().get_workflow_names()}\n Optional", required=False)
-    parser.add_argument("--notebooks_to_import", type=comma_separated_list,
-                        help="gcp paths to notebooks to import in comma seperated list. Optional", required=False)
-    parser.add_argument("--is_anvil", action="store_true",
-                        help="Use if you want to import workflows for Anvil")
+    parser.add_argument(
+        "--duos_identifier",
+        help="DUOS identifier. Optional",
+        required=False
+    )
+    parser.add_argument(
+        "--wdls_to_import",
+        type=comma_separated_list,
+        help=f"""WDLs to import in comma separated list. Options are {GetWorkflowNames().get_workflow_names()}\n,
+         Optional""",
+        required=False
+    )
+    parser.add_argument(
+        "--notebooks_to_import",
+        type=comma_separated_list,
+        help="gcp paths to notebooks to import in comma separated list. Optional",
+        required=False
+    )
+    parser.add_argument(
+        "--is_anvil",
+        action="store_true",
+        help="Use if you want to import workflows for Anvil"
+    )
     return parser.parse_args()
 
 
