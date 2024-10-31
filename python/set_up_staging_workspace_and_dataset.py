@@ -381,7 +381,7 @@ class SetUpWorkflowConfig:
     def __init__(
             self,
             terra_workspace: TerraWorkspace,
-            workflow_names: str,
+            workflow_names: Optional[list[str]],
             billing_project: str,
             tdr_billing_profile: str,
             dataset_id: str):
@@ -432,7 +432,7 @@ if __name__ == '__main__':
     notebooks_to_import = args.notebooks_to_import
     is_anvil = args.is_anvil
 
-    workspace_name = f'{dataset_name}_Staging'
+    workspace_name = f"{dataset_name}_Staging"
     auth_group = f"AUTH_{dataset_name}"
 
     # Set up Terra, TerraGroups, and TDR classes
