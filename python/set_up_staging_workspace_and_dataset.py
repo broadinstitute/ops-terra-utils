@@ -398,24 +398,25 @@ class SetUpWorkflowConfig:
         # Validate wdls to import are valid
         workflow_config_list = []
         if self.workflow_names:
-          for workflow_name in self.workflow_names:
-              # Create and add workflow config to list
-              workflow_config_list.append(
-                  WorkflowConfigs(
-                      workflow_name=workflow_name,
-                      billing_project=terra_billing_project,
-                      terra_workspace_util=self.terra_workspace,
-                      set_input_defaults=True,
-                      extra_default_inputs={
-                          "dataset_id": f'"{self.dataset_id}"',
-                          "tdr_billing_profile": f'"{self.tdr_billing_profile}"',
-                          # When ingesting check if files already exist in dataset and update ingest cells with file UUID
-                          "check_existing_ingested_files": "true",
-                          # When ingesting do not re-ingest records that already exist in the dataset
-                          "filter_existing_ids": "true",
-                          # When creating file inventory ignore submissions folder from terra workflows
-                          "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"'
-                      }
+            for workflow_name in self.workflow_names:
+                # Create and add workflow config to list
+                workflow_config_list.append(
+                    WorkflowConfigs(
+                        workflow_name=workflow_name,
+                        billing_project=terra_billing_project,
+                        terra_workspace_util=self.terra_workspace,
+                        set_input_defaults=True,
+                        extra_default_inputs={
+                            "dataset_id": f'"{self.dataset_id}"',
+                            "tdr_billing_profile": f'"{self.tdr_billing_profile}"',
+                            # When ingesting check if files already exist in dataset and update ingest cells with file UUID
+                            "check_existing_ingested_files": "true",
+                            # When ingesting do not re-ingest records that already exist in the dataset
+                            "filter_existing_ids": "true",
+                            # When creating file inventory ignore submissions folder from terra workflows
+                            "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"'
+                        }
+                    )
                 )
         return workflow_config_list
 
