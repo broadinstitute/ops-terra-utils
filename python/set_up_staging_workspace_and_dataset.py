@@ -527,7 +527,7 @@ if __name__ == '__main__':
     ).run()
 
     # Remove current user from workspace and dataset if not a resource owner
-    if current_user_email not in resource_owners:
+    if resource_owners and current_user_email not in resource_owners:
         logging.info(f"Removing {current_user_email} owner access from workspace and dataset")
         RemoveAllIndividualAccess(
             terra_workspace=terra_workspace,
