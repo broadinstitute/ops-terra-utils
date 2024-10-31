@@ -207,4 +207,4 @@ if __name__ == "__main__":
                 write_to_transfer_manifest(copy_info)
                 logging.error(f"Failed to download {file_name}")
     else:
-        logging.info(f"File previously uploaded to bucket, moving to next file")
+        logging.info("File already uploaded to target bucket, moving to next file")
