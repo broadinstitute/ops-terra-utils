@@ -1,6 +1,7 @@
 import httplib2
 import pytz
 import logging
+import requests
 from typing import Optional, Union
 from datetime import datetime, timedelta
 
@@ -8,7 +9,7 @@ from . import GCP, AZURE  # import from __init__.py
 
 
 class Token:
-    def __init__(self, cloud: Optional[str] = None, token_file: Optional[str] = None) -> None:
+    def __init__(self, cloud: Optional[str] = None, token_file: Optional[str] = None, use_sa_token: Optional[bool] = False) -> None:
         self.cloud = cloud
         self.expiry: Optional[datetime] = None
         self.token_string: Optional[str] = ""
@@ -61,10 +62,20 @@ class Token:
             self.expiry = datetime.fromtimestamp(self.az_token.expires_on)
         return self.token_string
 
+    def _get_sa_token(self):
+        if not self.token_string or not self.expiry or self.expiry < datetime.now(pytz.UTC) + timedelta(minutes=5):
+            SCOPES = ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email']
+            url = f"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes={','.join(SCOPES)}"
+            token_response = requests.get(url, headers={'Metadata-Flavor': 'Google'})
+            self.token_string = token_response.json()['access_token']
+        return token_response.json()['access_token']
+
     def get_token(self) -> Union[str, None]:
         # If token file provided then always return contents
         if self.token_file:
             return self.token_string
+        elif self.use_sa_token:
+            return self._get_sa_token()
         elif self.cloud == GCP:
             return self._get_gcp_token()
         else:
