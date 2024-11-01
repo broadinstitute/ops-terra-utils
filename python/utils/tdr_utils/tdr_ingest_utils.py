@@ -3,6 +3,7 @@ import logging
 import sys
 import pytz
 from datetime import datetime
+import math
 from typing import Optional, Any
 from dateutil import parser
 
@@ -124,7 +125,7 @@ class BatchIngest:
         """
         logging.info(
             f"Batching {len(self.ingest_metadata)} total rows into batches of {self.batch_size} for ingest")
-        total_batches = len(self.ingest_metadata) // self.batch_size + 1
+        total_batches = math.ceil(len(self.ingest_metadata) / self.batch_size)
         for i in range(0, len(self.ingest_metadata), self.batch_size):
             batch_number = i // self.batch_size + 1
             logging.info(f"Starting ingest batch {batch_number} of {total_batches} into table {self.target_table_name}")
