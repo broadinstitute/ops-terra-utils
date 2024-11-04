@@ -1,15 +1,14 @@
-import csv 
+import csv
 from google.cloud import storage
-import hashlib
 import base64
 import binascii
-from ast import literal_eval
 from argparse import ArgumentParser, Namespace
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.request_util import RunRequest
 from utils.token_util import Token
 
 def get_args() -> Namespace:
+
     parser = ArgumentParser(
         description="""validation of TDR file export to GCP bucket""")
 
@@ -21,9 +20,6 @@ def get_args() -> Namespace:
                         default="~/dataset_export_validation.csv",
                         help="Output file for validation results")
     return parser.parse_args()
-
-
-
 
 if __name__ == "__main__":
     args = get_args()
