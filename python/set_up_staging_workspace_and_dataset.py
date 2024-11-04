@@ -82,11 +82,6 @@ def get_args() -> Namespace:
         help="gcp paths to notebooks to import in comma separated list. Optional",
         required=False
     )
-    parser.add_argument(
-        "--is_anvil",
-        action="store_true",
-        help="Use if you want to import workflows for Anvil"
-    )
     return parser.parse_args()
 
 
@@ -419,7 +414,6 @@ class SetUpWorkflowConfig:
         self.terra_workspace = terra_workspace
         self.workflow_names = workflow_names
         self.billing_project = billing_project
-        self.is_anvil = is_anvil
         self.tdr_billing_profile = tdr_billing_profile
         self.dataset_id = dataset_id
         self.workspace_bucket = workspace_bucket
@@ -469,7 +463,6 @@ if __name__ == '__main__':
     duos_identifier = args.duos_identifier
     wdls_to_import = args.wdls_to_import
     notebooks_to_import = args.notebooks_to_import
-    is_anvil = args.is_anvil
 
     workspace_name = f"{dataset_name}_Staging"
     auth_group = f"AUTH_{dataset_name}"
