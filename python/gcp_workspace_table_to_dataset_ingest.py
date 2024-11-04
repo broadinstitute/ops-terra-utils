@@ -128,7 +128,7 @@ if __name__ == "__main__":
         target_table_name = terra_table_name
 
         # Get sample metrics from Terra
-        sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name)
+        sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name, remove_dicts=True)
         primary_key_column_name = entity_metrics[terra_table_name]["idName"]
         logging.info(f"Got {len(sample_metrics)} samples")
 

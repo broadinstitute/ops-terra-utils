@@ -259,25 +259,68 @@ class TerraWorkspace:
         raise ValueError(
             f"No WDS URL found for {self.billing_project}/{self.workspace_name} - {self.workspace_id}")
 
-    def get_gcp_workspace_metrics(self, entity_type: str) -> list[dict]:
+    def get_gcp_workspace_metrics(self, entity_type: str, remove_dicts: bool = False) -> list[dict]:
         """
         Get metrics for a specific entity type in the workspace.
 
         Args:
             entity_type (str): The type of entity to get metrics for.
+            remove_dicts (bool, optional): Whether to remove dictionaries from the workspace metrics. Defaults to False.
 
         Returns:
             list[dict]: A list of dictionaries containing entity metrics.
         """
         results = []
-        logging.info(
-            f"Getting {entity_type} metadata for {self.billing_project}/{self.workspace_name}")
-        full_entity_generator = self._yield_all_entity_metrics(
-            entity=entity_type
-        )
-        for page in full_entity_generator:
+        logging.info(f"Getting {entity_type} metadata for {self.billing_project}/{self.workspace_name}")
+
+        for page in self._yield_all_entity_metrics(entity=entity_type):
             results.extend(page["results"])
+
+        # If remove_dicts is True, remove dictionaries from the workspace metrics
+        if remove_dicts:
+            for row in results:
+                row['attributes'] = self._remove_dict_from_attributes(row['attributes'])
         return results
+
+    def _remove_dict_from_attributes(self, attributes: dict) -> dict:
+        """
+        Remove dictionaries from the attributes.
+
+        Args:
+            attributes (dict): The attributes to remove dictionaries from.
+
+        Returns:
+            dict: The updated attributes with no dictionaries.
+        """
+        for key, value in attributes.items():
+            attributes[key] = self._remove_dict_from_cell(value)
+        return attributes
+
+    def _remove_dict_from_cell(self, cell_value: Any) -> Any:
+        """
+        Remove a dictionary from a cell.
+
+        Args:
+            cell_value (Any): The dictionary to remove.
+
+        Returns:
+            Any: The updated cell with no dictionaries.
+        """
+        if isinstance(cell_value, dict):
+            entity_name = cell_value.get("entityName")
+            # If the cell value is a dictionary, check if it has an entityName key
+            if entity_name:
+                # If the cell value is a dictionary with an entityName key, return the entityName
+                return entity_name
+            entity_list = cell_value.get("items")
+            if entity_list:
+                # If the cell value is a list of dictionaries, recursively call this function on each dictionary
+                return [
+                    self._remove_dict_from_cell(entity) for entity in entity_list
+                ]
+            logging.warning(f"Cell is a dict but no entityName or items found: {cell_value}")
+            return cell_value
+        return cell_value
 
     def _get_sas_token_json(self, sas_expiration_in_secs: int) -> dict:
         """
