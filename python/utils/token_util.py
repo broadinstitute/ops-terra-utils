@@ -65,8 +65,9 @@ class Token:
 
     def _get_sa_token(self):
         if not self.token_string or not self.expiry or self.expiry < datetime.now(pytz.UTC) + timedelta(minutes=5):
-            SCOPES = ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email']
-            url = f"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes={','.join(SCOPES)}"
+            SCOPES = ['https://www.googleapis.com/auth/userinfo.profile', 
+                      'https://www.googleapis.com/auth/userinfo.email']
+            url = f"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes={','.join(SCOPES)}" # noqa: E501
             token_response = requests.get(url, headers={'Metadata-Flavor': 'Google'})
             self.token_string = token_response.json()['access_token']
         return token_response.json()['access_token']
