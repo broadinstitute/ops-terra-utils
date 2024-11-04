@@ -7,6 +7,7 @@ from utils.tdr_utils.tdr_api_utils import TDR
 from utils.request_util import RunRequest
 from utils.token_util import Token
 
+
 def get_args() -> Namespace:
 
     parser = ArgumentParser(
@@ -20,6 +21,7 @@ def get_args() -> Namespace:
                         default="~/dataset_export_validation.csv",
                         help="Output file for validation results")
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     args = get_args()
@@ -36,7 +38,7 @@ if __name__ == "__main__":
         blob_converted_md5 = binascii.hexlify(base64.urlsafe_b64decode(target_blob.md5_hash)).decode()
         tdr_md5 = next(checksum['checksum'] for checksum in row['checksums'] if checksum['type'] == 'md5')
         sizes_match = target_blob.size == int(row['size'])
-        
+
         check_dict = {
             "file": row['path'],
             "file_exists_in_gcp": target_blob.exists(),
