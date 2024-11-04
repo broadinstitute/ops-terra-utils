@@ -2,6 +2,7 @@ import httplib2
 import pytz
 import logging
 import requests
+import os
 from typing import Optional, Union
 from datetime import datetime, timedelta
 
@@ -9,7 +10,7 @@ from . import GCP, AZURE  # import from __init__.py
 
 
 class Token:
-    def __init__(self, cloud: Optional[str] = None, token_file: Optional[str] = None, use_sa_token: Optional[bool] = False) -> None:
+    def __init__(self, cloud: Optional[str] = None, token_file: Optional[str] = None) -> None:
         self.cloud = cloud
         self.expiry: Optional[datetime] = None
         self.token_string: Optional[str] = ""
@@ -74,9 +75,11 @@ class Token:
         # If token file provided then always return contents
         if self.token_file:
             return self.token_string
-        elif self.use_sa_token:
-            return self._get_sa_token()
         elif self.cloud == GCP:
-            return self._get_gcp_token()
+            # detect if this is running as a cloud run job
+            if os.getenv("CLOUD_RUN_JOB"):
+                return self._get_sa_token()
+            else:
+                return self._get_gcp_token()
         else:
             return self._get_az_token()

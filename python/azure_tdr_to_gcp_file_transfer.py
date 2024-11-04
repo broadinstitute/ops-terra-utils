@@ -160,7 +160,7 @@ def write_to_transfer_manifest(file_dict: dict) -> None:
 
 if __name__ == "__main__":
     args = get_args()
-    token = Token(cloud='gcp', use_sa_token=True)
+    token = Token(cloud='gcp')
     request_util = RunRequest(token=token)
     tdr_client = TDR(request_util=request_util)
     gcp_storage_client = storage.Client()
