@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 import logging
 from typing import Any
@@ -49,20 +50,15 @@ class CreateEntityTsv:
         self.dest_bucket = dest_bucket
 
     def _update_cell_value(self, cell_value: Any) -> Any:
-        if isinstance(cell_value, str):
-            return cell_value.replace(self.src_bucket, self.dest_bucket)
-        # If the cell value is a list, recursively call this function on each element of the list
         if isinstance(cell_value, list):
-            return [
-                self._update_cell_value(value)
-                for value in cell_value
-            ]
-        if isinstance(cell_value, dict):
-            # If cell is dict where it links to participant just upload the participant name
-            # and not the whole dict
-            entity_type = cell_value.get("entityType")
-            if entity_type == 'participant':
-                return cell_value['entityName']
+            return '["' + '","'.join(
+                [
+                    self._update_cell_value(entity)
+                    for entity in cell_value
+                ]
+            ) + '"]'
+        elif isinstance(cell_value, str):
+            return cell_value.replace(self.src_bucket, self.dest_bucket)
         return cell_value
 
     def _update_row_info(self, row_dict: dict, row_id_header: str) -> dict:
@@ -81,7 +77,7 @@ class CreateEntityTsv:
         for table_name in entity_info:
             headers = entity_info[table_name]["attributeNames"]
             row_id_header = f'entity:{entity_info[table_name]["idName"]}'
-            table_metadata = self.source_workspace.get_gcp_workspace_metrics(entity_type=table_name)
+            table_metadata = self.source_workspace.get_gcp_workspace_metrics(entity_type=table_name, remove_dicts=True)
             updated_table_metadata = [
                 self._update_row_info(row_dict=row, row_id_header=row_id_header)
                 for row in table_metadata
