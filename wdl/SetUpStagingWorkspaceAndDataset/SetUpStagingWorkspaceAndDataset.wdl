@@ -15,7 +15,6 @@ workflow SetUpStagingWorkspaceAndDataset {
         String? duos_identifier
         String? wdls_to_import
         String? notebooks_to_import
-        Boolean is_anvil
         String? docker
     }
 
@@ -36,7 +35,6 @@ workflow SetUpStagingWorkspaceAndDataset {
             duos_identifier = duos_identifier,
             wdls_to_import = wdls_to_import,
             notebooks_to_import = notebooks_to_import,
-            is_anvil = is_anvil,
             docker = docker_image
     }
 }
@@ -56,7 +54,6 @@ task SetUpStagingEnvironments {
         String? duos_identifier
         String? wdls_to_import
         String? notebooks_to_import
-        Boolean is_anvil
         String docker
     }
 
@@ -74,8 +71,7 @@ task SetUpStagingEnvironments {
             ~{"--dbgap_consent_code " + dbgap_consent_code} \
             ~{"--duos_identifier " + duos_identifier} \
             ~{"--wdls_to_import " + wdls_to_import} \
-            ~{"--notebooks_to_import " + notebooks_to_import} \
-            ~{if is_anvil then "--is_anvil" else ""}
+            ~{"--notebooks_to_import " + notebooks_to_import}
     >>>
 
     runtime {
