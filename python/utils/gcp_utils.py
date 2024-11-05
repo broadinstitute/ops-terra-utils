@@ -428,3 +428,17 @@ class GCPCloudFunctions:
             collect_output=False,
             jobs_complete_for_logging=jobs_complete_for_logging
         )
+
+    def get_blob_details(self, cloud_path: str) -> Any:
+        """
+        Get a GCS blob object.
+
+        Args:
+            cloud_path (str): The GCS path of the file.
+
+        Returns:
+            Any: The GCS blob object.
+        """
+        file_path_components = self.process_cloud_path(cloud_path=cloud_path)
+        bucket_obj = self.client.bucket(bucket_name=file_path_components['bucket'])
+        return bucket_obj.get_blob(file_path_components['blob_url'])
