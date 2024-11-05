@@ -9,9 +9,21 @@ from pathlib import Path
 class CopyPublicCloudReference:
     BROAD_PUBLIC_REFERENCES_SYNC_BUCKET = "gs://broad-references/"
 
-    def __init__(self, reference_name: str, current_cloud_path: str, output_cloud_path: str, read_me_path: str):
+    def __init__(
+            self,
+            reference_name: str,
+            chrom_sizes_file_location: str,
+            annotation_file_location: str,
+            star_tar_file_location: str,
+            bwa_mem_tar_file_location: str,
+            output_cloud_path: str,
+            read_me_path: str
+    ):
         self.reference_name = reference_name
-        self.current_cloud_path = current_cloud_path
+        self.chrom_sizes_file_location = chrom_sizes_file_location
+        self.annotation_file_location = annotation_file_location
+        self.star_tar_file_location = star_tar_file_location
+        self.bwa_mem_tar_file_location = bwa_mem_tar_file_location
         self.output_cloud_path = output_cloud_path
         self.read_me_path = read_me_path
         # The default SA credentials are set in the cloud run job under "Security" -> "Service Account": https://console.cloud.google.com/run/jobs/edit/us-central1/add-public-cloud-reference?project=operations-portal-427515&authuser=0
@@ -19,16 +31,17 @@ class CopyPublicCloudReference:
 
         self.output_bucket_root_dir = self._get_output_bucket_location()
 
-    def _get_file_extension_for_input_reference(self) -> str:
-        return Path(self.current_cloud_path).suffix
+    @staticmethod
+    def _get_file_extension(file_path: str) -> str:
+        return Path(file_path).suffix
 
     def _get_output_bucket_location(self) -> str:
         parsed_url = urlparse(self.output_cloud_path)
         output_subdir = parsed_url.path.lstrip("/")
         return os.path.join(self.BROAD_PUBLIC_REFERENCES_SYNC_BUCKET, output_subdir)
 
-    def _get_reference_file_output_path(self) -> str:
-        suffix = self._get_file_extension_for_input_reference()
+    def _get_file_output_path(self, source_file: str) -> str:
+        suffix = self._get_file_extension(file_path=source_file)
         return os.path.join(self.output_bucket_root_dir, f"{self.reference_name}{suffix}")
 
     def _get_readme_file_output_path(self) -> str:
@@ -48,10 +61,8 @@ class CopyPublicCloudReference:
 
         destination_bucket = self.client.bucket(destination_bucket_name)
 
-        print(f"Source bucket: {source_bucket}")
-        print(f"Source blob: {source_blob_name}")
-        print(f"Destination bucket: {destination_bucket_name}")
-        print(f"Destination blob: {destination_blob_name}")
+        print(
+            f"COPYING FROM source bucket: {source_bucket}, source file: {source_blob} TO: {destination_bucket}, destionation file: {destination_blob_name}")
 
         # TODO comment this back in when ready to actually run/test
         """
@@ -63,11 +74,19 @@ class CopyPublicCloudReference:
         """
 
     def copy_files_to_public_bucket(self) -> None:
+        gcs_files_to_copy = [
+            self.chrom_sizes_file_location,
+            self.annotation_file_location,
+            self.star_tar_file_location,
+            self.bwa_mem_tar_file_location,
+        ]
+
         try:
-            logging.info("Copying reference file to public cloud reference bucket")
-            self._copy_source_file_to_destination(
-                source_path=self.current_cloud_path, destination_path=self._get_reference_file_output_path()
-            )
+            logging.info("Copying references files to source location to Broad bucket")
+            for source_file in gcs_files_to_copy:
+                self._copy_source_file_to_destination(
+                    source_path=source_file, destination_path=self._get_file_output_path(source_file=source_file)
+                )
             logging.info("Copying README to public cloud reference bucket")
             self._copy_source_file_to_destination(
                 source_path=self.read_me_path, destination_path=self._get_readme_file_output_path()
@@ -79,7 +98,24 @@ class CopyPublicCloudReference:
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Add a new public cloud reference")
     parser.add_argument("--reference_name", required=True, type=str, help="The name of the reference to add")
-    parser.add_argument("--current_location", required=True, type=str, help="The current cloud location")
+    parser.add_argument(
+        "--chrom_sizes_file_location",
+        required=True,
+        type=str,
+        help="The current cloud location for the chromosome sizes file"
+    )
+    parser.add_argument(
+        "--annotation_file_location", required=True, type=str,
+        help="The current cloud location for the annotations file"
+    )
+    parser.add_argument(
+        "--star_tar_file_location", required=True, type=str,
+        help="The current cloud location for the star tarball file"
+    )
+    parser.add_argument(
+        "--bwa_mem_tar_file_location", required=True, type=str,
+        help="The current cloud location for the bwa-mem tarball file"
+    )
     parser.add_argument("--new_location", required=True, type=str, help="The new cloud location")
     parser.add_argument("--attachment", required=True, type=str, help="The path to the README file")
 
@@ -90,7 +126,10 @@ if __name__ == '__main__':
     args = get_args()
     CopyPublicCloudReference(
         reference_name=args.reference_name,
-        current_cloud_path=args.current_location,
+        chrom_sizes_file_location=args.chrom_sizes_file_location,
+        annotation_file_location=args.annotation_file_location,
+        star_tar_file_location=args.star_tar_file_location,
+        bwa_mem_tar_file_location=args.bwa_mem_tar_file_location,
         output_cloud_path=args.new_location,
         read_me_path=args.attachment
     ).copy_files_to_public_bucket()
