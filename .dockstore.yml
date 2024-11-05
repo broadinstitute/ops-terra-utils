@@ -7,13 +7,6 @@ workflows:
     testParameterFiles:
       - /wdl/CopyDataset.wdl
 
-  - name: AnvilGcpWorkspaceToDatasetCreationAndIngestion
-    subclass: WDL
-    primaryDescriptorPath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
-    readMePath: /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest/README.md
-    testParameterFiles:
-      - /wdl/AnvilGcpWorkspaceToDatasetCreationAndIngest.wdl
-
   - name: TerraWorkspaceTableToTDRIngest
     subclass: WDL
     primaryDescriptorPath: /wdl/TerraWorkspaceTableIngest/TerraWorkspaceTableIngest.wdl
@@ -69,3 +62,17 @@ workflows:
     readMePath: /wdl/FileExportAzureTdrToGcp/README.md
     testParameterFiles:
       - /wdl/FileExportAzureTdrToGcp/FileExportAzureTdrToGcp.wdl
+
+  - name: CreateWorkspaceFileManifest
+    subclass: WDL
+    primaryDescriptorPath: /wdl/CreateWorkspaceFileManifest/CreateWorkspaceFileManifest.wdl
+    readMePath: /wdl/CreateWorkspaceFileManifest/README.md
+    testParameterFiles:
+      - /wdl/CreateWorkspaceFileManifest/FileExportAzureTdrToGcp.wdl
+
+  - name: SetUpStagingWorkspaceAndDataset
+    subclass: WDL
+    primaryDescriptorPath: /wdl/SetUpStagingWorkspaceAndDataset/SetUpStagingWorkspaceAndDataset.wdl
+    readMePath: /wdl/SetUpStagingWorkspaceAndDataset/README.md
+    testParameterFiles:
+      - /wdl/SetUpStagingWorkspaceAndDataset/SetUpStagingWorkspaceAndDataset.wdl

@@ -3,6 +3,7 @@ import logging
 import sys
 import pytz
 from datetime import datetime
+import math
 from typing import Optional, Any
 from dateutil import parser
 
@@ -33,11 +34,9 @@ class BatchIngest:
             sas_expire_in_secs: int = 3600,
             test_ingest: bool = False,
             load_tag: Optional[str] = None,
-            dest_file_path_flat: bool = False,
             file_to_uuid_dict: Optional[dict] = None,
             schema_info: Optional[dict] = None,
-            skip_reformat: bool = False,
-            file_list_bool: bool = False
+            skip_reformat: bool = False
     ):
         """
         Initialize the BatchIngest class.
@@ -48,7 +47,6 @@ class BatchIngest:
             target_table_name (str): The name of the target table.
             dataset_id (str): The ID of the dataset.
             batch_size (int): The size of each batch for ingestion.
-            file_list_bool (bool): Flag indicating if the input is a list of file paths.
             bulk_mode (bool): Flag indicating if bulk mode should be used.
             cloud_type (str): The type of cloud (GCP or AZURE).
             terra_workspace (Optional[TerraWorkspace], optional): An instance of the TerraWorkspace class. Used for Azure
@@ -61,8 +59,6 @@ class BatchIngest:
                 ingested for testing. Defaults to False.
             load_tag (Optional[str], optional): A tag to identify the load. Used so future ingests
                 can pick up where left off. Defaults to None.
-            dest_file_path_flat (bool, optional): Flag indicating if the destination file
-                path should be flattened. Defaults to False.
             file_to_uuid_dict (Optional[dict], optional): A dictionary mapping file paths to UUIDs. If used
                 will make ingest much quicker since no ingest or look up of file needed. Defaults to None.
             schema_info (Optional[dict], optional): Schema information for the tables. Validates ingest data matches up
@@ -84,8 +80,6 @@ class BatchIngest:
         # Used if you want to run first batch and then exit after success
         self.test_ingest = test_ingest
         self.load_tag = load_tag
-        self.file_list_bool = file_list_bool
-        self.dest_file_path_flat = dest_file_path_flat
         self.file_to_uuid_dict = file_to_uuid_dict
         # Used if you want to provide schema info for tables to make sure values match.
         # Should be dict with key being column name and value being dict with datatype
@@ -112,8 +106,6 @@ class BatchIngest:
                 cloud_type=self.cloud_type,
                 storage_container=cloud_container,
                 sas_token_string=sas_token,
-                file_list=self.file_list_bool,
-                dest_file_path_flat=self.dest_file_path_flat,
                 file_to_uuid_dict=self.file_to_uuid_dict,
                 schema_info=self.schema_info
             ).run()
@@ -121,8 +113,6 @@ class BatchIngest:
             return ReformatMetricsForIngest(
                 ingest_metadata=metrics_batch,
                 cloud_type=self.cloud_type,
-                file_list=self.file_list_bool,
-                dest_file_path_flat=self.dest_file_path_flat,
                 file_to_uuid_dict=self.file_to_uuid_dict,
                 schema_info=self.schema_info
             ).run()
@@ -135,7 +125,7 @@ class BatchIngest:
         """
         logging.info(
             f"Batching {len(self.ingest_metadata)} total rows into batches of {self.batch_size} for ingest")
-        total_batches = len(self.ingest_metadata) // self.batch_size + 1
+        total_batches = math.ceil(len(self.ingest_metadata) / self.batch_size)
         for i in range(0, len(self.ingest_metadata), self.batch_size):
             batch_number = i // self.batch_size + 1
             logging.info(f"Starting ingest batch {batch_number} of {total_batches} into table {self.target_table_name}")
@@ -244,7 +234,7 @@ class StartAndMonitorIngest:
 class ReformatMetricsForIngest:
     """
     Reformat metrics for ingest.
-    If file_list is True, then it is a list of file paths and formats differently. Assumes input JSON for that will be
+    Assumes input JSON for that will be
     like below or similar for Azure:
     {
         "file_name": blob.name,
@@ -262,8 +252,6 @@ class ReformatMetricsForIngest:
             cloud_type: str,
             storage_container: Optional[str] = None,
             sas_token_string: Optional[str] = None,
-            file_list: bool = False,
-            dest_file_path_flat: bool = False,
             file_to_uuid_dict: Optional[dict] = None,
             schema_info: Optional[dict] = None
     ):
@@ -275,20 +263,15 @@ class ReformatMetricsForIngest:
             cloud_type (str): The type of cloud (GCP or AZURE).
             storage_container (Optional[str], optional): The storage container name. For Azure only. Defaults to None.
             sas_token_string (Optional[str], optional): The SAS token string for Azure. Defaults to None.
-            file_list (bool, optional): Flag indicating if the input is a list of file paths. Defaults to False.
-            dest_file_path_flat (bool, optional): Flag indicating if the destination file path should
-                be flattened. Defaults to False.
             file_to_uuid_dict (Optional[dict], optional): A dictionary mapping file paths to UUIDs. Speeds up ingest
                 dramatically as it can skip uploading files or looking up file UUIDs in TDR. Defaults to None.
             schema_info (Optional[dict], optional): Schema information for the tables. Defaults to None.
         """
-        self.file_list = file_list
         self.ingest_metadata = ingest_metadata
         self.cloud_type = cloud_type
         self.sas_token_string = sas_token_string
         self.file_prefix = {GCP: "gs://", AZURE: "https://"}[cloud_type]
         self.workspace_storage_container = storage_container
-        self.dest_file_path_flat = dest_file_path_flat
         self.file_to_uuid_dict = file_to_uuid_dict
         self.schema_info = schema_info
 
@@ -327,10 +310,7 @@ class ReformatMetricsForIngest:
                     f"container {self.workspace_storage_container}. SAS token will not work"
                 )
             relative_path = "/".join(split_path[4:])
-        if self.dest_file_path_flat:
-            return "/" + relative_path.replace("/", "_").replace("#", "").replace("?", "")
-        else:
-            return f"/{relative_path}"
+        return f"/{relative_path}"
 
     def _check_and_format_file_path(self, column_value: str) -> tuple[Any, bool]:
         """
@@ -435,30 +415,27 @@ class ReformatMetricsForIngest:
         """
         reformatted_dict = {}
         row_valid = True
-        if self.file_list:
-            self._add_file_ref(row_dict)
-            reformatted_dict = row_dict
-        else:
-            for key, value in row_dict.items():
-                if value or value == 0:
-                    if self.schema_info:
-                        value, valid = self._validate_and_update_column_for_schema(key, value)
+        for key, value in row_dict.items():
+            if value or value == 0:
+                if self.schema_info:
+                    value, valid = self._validate_and_update_column_for_schema(key, value)
+                    if not valid:
+                        row_valid = False
+                if isinstance(value, list):
+                    updated_value_list = []
+                    for item in value:
+                        update_value, valid = self._check_and_format_file_path(item)
                         if not valid:
                             row_valid = False
-                    if isinstance(value, list):
-                        updated_value_list = []
-                        for item in value:
-                            update_value, valid = self._check_and_format_file_path(item)
-                            if not valid:
-                                row_valid = False
-                            updated_value_list.append(update_value)
-                        reformatted_dict[key] = updated_value_list
-                    else:
-                        update_value, valid = self._check_and_format_file_path(value)
-                        reformatted_dict[key] = update_value
-                        if not valid:
-                            row_valid = False
-        reformatted_dict["last_modified_date"] = datetime.now(tz=pytz.UTC).strftime("%Y-%m-%dT%H:%M:%S")
+                        updated_value_list.append(update_value)
+                    reformatted_dict[key] = updated_value_list
+                else:
+                    update_value, valid = self._check_and_format_file_path(value)
+                    reformatted_dict[key] = update_value
+                    if not valid:
+                        row_valid = False
+        reformatted_dict["last_modified_date"] = datetime.now(
+            tz=pytz.UTC).strftime("%Y-%m-%dT%H:%M:%S")  # type: ignore[assignment]
         if row_valid:
             return reformatted_dict
         else:
@@ -543,7 +520,6 @@ class FilterAndBatchIngest:
             table_name: str,
             ingest_metadata: list[dict],
             dataset_id: str,
-            file_list_bool: bool,
             ingest_waiting_time_poll: int,
             ingest_batch_size: int,
             bulk_mode: bool,
@@ -551,7 +527,6 @@ class FilterAndBatchIngest:
             update_strategy: str,
             load_tag: str,
             test_ingest: bool = False,
-            dest_file_path_flat: bool = False,
             file_to_uuid_dict: Optional[dict] = None,
             sas_expire_in_secs: int = 3600,
             schema_info: Optional[dict] = None,
@@ -568,7 +543,6 @@ class FilterAndBatchIngest:
             table_name (str): The name of the table to ingest data into.
             ingest_metadata (list[dict]): The metadata to ingest.
             dataset_id (str): The ID of the dataset.
-            file_list_bool (bool): Whether the ingest metadata is a list of files.
             ingest_waiting_time_poll (int): The waiting time to poll for ingest status.
             ingest_batch_size (int): The batch size for ingest.
             bulk_mode (bool): Whether to use bulk mode for ingest.
@@ -576,7 +550,6 @@ class FilterAndBatchIngest:
             update_strategy (str): The update strategy to use.
             load_tag (str): The load tag for the ingest. Used to make future ingests of same files go faster.
             test_ingest (bool, optional): Whether to run a test ingest. Defaults to False.
-            dest_file_path_flat (bool, optional): Whether to flatten the destination file path. Defaults to False.
             file_to_uuid_dict (Optional[dict], optional): A dictionary mapping files to UUIDs.
                 If supplied makes ingest run faster due to just linking to already ingested file UUID. Defaults to None.
             sas_expire_in_secs (int, optional): The expiration time for SAS tokens in seconds.
@@ -593,7 +566,6 @@ class FilterAndBatchIngest:
         self.table_name = table_name
         self.ingest_metadata = ingest_metadata
         self.dataset_id = dataset_id
-        self.file_list_bool = file_list_bool
         self.ingest_waiting_time_poll = ingest_waiting_time_poll
         self.ingest_batch_size = ingest_batch_size
         self.bulk_mode = bulk_mode
@@ -601,7 +573,6 @@ class FilterAndBatchIngest:
         self.update_strategy = update_strategy
         self.load_tag = load_tag
         self.test_ingest = test_ingest
-        self.dest_file_path_flat = dest_file_path_flat
         self.sas_expire_in_secs = sas_expire_in_secs
         self.terra_workspace = terra_workspace
         self.file_to_uuid_dict = file_to_uuid_dict
@@ -642,8 +613,6 @@ class FilterAndBatchIngest:
                 waiting_time_to_poll=self.ingest_waiting_time_poll,
                 test_ingest=self.test_ingest,
                 load_tag=self.load_tag,
-                file_list_bool=self.file_list_bool,
-                dest_file_path_flat=self.dest_file_path_flat,
                 file_to_uuid_dict=self.file_to_uuid_dict,
                 schema_info=self.schema_info,
                 skip_reformat=self.skip_reformat

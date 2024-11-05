@@ -36,6 +36,9 @@ def get_args() -> Namespace:
                              "all files will be copied at once")
     parser.add_argument('--metadata_only', "-m", action="store_true",
                         help="Only copy metadata, no actual file copy")
+    parser.add_argument('--do_not_update_acls', action="store_true",
+                        help="Do not update the destination workspace ACLs with the source workspace ACLs. " +
+                             "If you do not have owner access of the source workspace, you should use this flag.")
     return parser.parse_args()
 
 
@@ -46,20 +49,15 @@ class CreateEntityTsv:
         self.dest_bucket = dest_bucket
 
     def _update_cell_value(self, cell_value: Any) -> Any:
-        if isinstance(cell_value, str):
-            return cell_value.replace(self.src_bucket, self.dest_bucket)
-        # If the cell value is a list, recursively call this function on each element of the list
         if isinstance(cell_value, list):
-            return [
-                self._update_cell_value(value)
-                for value in cell_value
-            ]
-        if isinstance(cell_value, dict):
-            # If cell is dict where it links to participant just upload the participant name
-            # and not the whole dict
-            entity_type = cell_value.get("entityType")
-            if entity_type == 'participant':
-                return cell_value['entityName']
+            return '["' + '","'.join(
+                [
+                    self._update_cell_value(entity)
+                    for entity in cell_value
+                ]
+            ) + '"]'
+        elif isinstance(cell_value, str):
+            return cell_value.replace(self.src_bucket, self.dest_bucket)
         return cell_value
 
     def _update_row_info(self, row_dict: dict, row_id_header: str) -> dict:
@@ -78,7 +76,7 @@ class CreateEntityTsv:
         for table_name in entity_info:
             headers = entity_info[table_name]["attributeNames"]
             row_id_header = f'entity:{entity_info[table_name]["idName"]}'
-            table_metadata = self.source_workspace.get_gcp_workspace_metrics(entity_type=table_name)
+            table_metadata = self.source_workspace.get_gcp_workspace_metrics(entity_type=table_name, remove_dicts=True)
             updated_table_metadata = [
                 self._update_row_info(row_dict=row, row_id_header=row_id_header)
                 for row in table_metadata
@@ -193,6 +191,7 @@ if __name__ == '__main__':
     extensions_to_ignore = args.extensions_to_ignore
     batch_size = args.batch_size
     metadata_only = args.metadata_only
+    do_not_update_acls = args.do_not_update_acls
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -262,4 +261,8 @@ if __name__ == '__main__':
     make_bucket_files(src_bucket, dest_bucket)
 
     # Set the destination workspace ACLs
-    UpdateWorkspaceAcls(src_workspace=src_workspace, dest_workspace=dest_workspace).run()
+    if not do_not_update_acls:
+        logging.info(
+            "Updating destination workspace ACLs. If fails with 403 you probably do not " +
+            "have access to list source workspace ACLs. try running with --do_not_update_acls")
+        UpdateWorkspaceAcls(src_workspace=src_workspace, dest_workspace=dest_workspace).run()

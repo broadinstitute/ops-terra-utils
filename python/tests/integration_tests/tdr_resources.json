@@ -251,7 +251,6 @@
 					"dataset_name": "tmp_ops_integration_test_dataset_to_delete",
 					"billing_profile":"ce149ca7-608b-4d5d-9612-2a43a7378885",
 					"batch_size": 5,
-					"file_list_bool": false,
 					"bulk_mode": false,
 					"cloud_type": "gcp"
 				}

@@ -164,7 +164,6 @@ class TestCreateUtils:
                 target_table_name=test_data['function_input']['target_table_name'],
                 dataset_id=dataset_id,
                 batch_size=test_data['function_input']['batch_size'],
-                file_list_bool=test_data['function_input']['file_list_bool'],
                 bulk_mode=test_data['function_input']['bulk_mode'],
                 cloud_type=test_data['function_input']['cloud_type']
             ).run()

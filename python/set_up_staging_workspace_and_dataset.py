@@ -1,12 +1,11 @@
 import logging
 import os
 from argparse import ArgumentParser, Namespace
-
 from typing import Optional
 
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest
-from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups
+from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER, ADMIN
 from utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
 from utils.request_util import RunRequest
 from utils.token_util import Token
@@ -17,8 +16,6 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-GROUP_MEMBER = "member"
-GROUP_ADMIN = "admin"
 OWNER = "OWNER"
 WRITER = "WRITER"
 READER = "READER"
@@ -34,31 +31,57 @@ WDL_READ_ME_PATH_FULL_PATH = os.path.join(SCRIPT_DIR, WDL_READ_ME_PATH)
 
 
 def get_args() -> Namespace:
-    parser = ArgumentParser(description="description of script")
+    parser = ArgumentParser(description="Set up a staging workspace and dataset")
     parser.add_argument("-d", "--dataset_name", required=True)
     parser.add_argument("-bp", "--tdr_billing_profile", required=True)
     parser.add_argument("-b", "--terra_billing_project", required=True)
     parser.add_argument("--controlled_access", action="store_true")
     parser.add_argument("-p", "--phs_id", required=False)
-    parser.add_argument("-ro", "--resource_owners", type=comma_separated_list,
-                        help="comma seperated list of resource owners", required=False)
-    parser.add_argument("-rm", "--resource_members", type=comma_separated_list,
-                        help="comma seperated list of resource members", required=False)
-    parser.add_argument("-c", "--continue_if_exists", action="store_true",
-                        help="Continue if workspace and/or dataset already exists")
-    parser.add_argument("-cu", "--current_user_email", required=True,
-                        help="Used for removing current user from workspace")
+    parser.add_argument(
+        "-ro", "--resource_owners",
+        type=comma_separated_list,
+        help="comma seperated list of resource owners",
+        required=True
+    )
+    parser.add_argument(
+        "-rm",
+        "--resource_members",
+        type=comma_separated_list,
+        help="comma separated list of resource members", required=False
+    )
+    parser.add_argument(
+        "-c",
+        "--continue_if_exists",
+        action="store_true",
+        help="Continue if workspace and/or dataset already exists"
+    )
+    parser.add_argument(
+        "-cu",
+        "--current_user_email",
+        required=True,
+        help="Used for removing current user from workspace"
+    )
     parser.add_argument("--dbgap_consent_code",
-                        help="dbGaP consent code for controlled access datasets. Optional")
-    parser.add_argument("--duos_identifier",
-                        help="DUOS identifier. Optional")
-    parser.add_argument("--wdls_to_import", type=comma_separated_list,
-                        help=f"wdls to import in comma seperated list. Options are \n"
-                             f"{GetWorkflowNames().get_workflow_names()}\n Optional")
-    parser.add_argument("--notebooks_to_import", type=comma_separated_list,
-                        help="gcp paths to notebooks to import in comma seperated list. Optional")
-    parser.add_argument("--is_anvil", action='store_true',
-                        help="Use if you want to import workflows for Anvil")
+                        help="dbGaP consent code for controlled access datasets. Optional",
+                        required=False)
+    parser.add_argument(
+        "--duos_identifier",
+        help="DUOS identifier. Optional",
+        required=False
+    )
+    parser.add_argument(
+        "--wdls_to_import",
+        type=comma_separated_list,
+        help=f"""WDLs to import in comma separated list. Options are {GetWorkflowNames().get_workflow_names()}\n,
+         Optional""",
+        required=False
+    )
+    parser.add_argument(
+        "--notebooks_to_import",
+        type=comma_separated_list,
+        help="gcp paths to notebooks to import in comma separated list. Optional",
+        required=False
+    )
     return parser.parse_args()
 
 
@@ -71,7 +94,7 @@ class SetUpTerraWorkspace:
             continue_if_exists: bool,
             controlled_access: bool,
             resource_owners: list[str],
-            resource_members: list[str]
+            resource_members: Optional[list[str]]
     ):
         self.terra_workspace = terra_workspace
         self.terra_groups = terra_groups
@@ -84,12 +107,11 @@ class SetUpTerraWorkspace:
     def _set_up_access_group(self) -> None:
         logging.info(f"Creating group {self.auth_group}")
         self.terra_groups.create_group(group_name=self.auth_group, continue_if_exists=self.continue_if_exists)
-        if self.resource_owners:
-            for user in self.resource_owners:
-                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=GROUP_ADMIN)
+        for user in self.resource_owners:
+            self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=ADMIN)
         if self.resource_members:
             for user in self.resource_members:
-                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=GROUP_MEMBER)
+                self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=MEMBER)
 
     def _add_permissions_to_workspace(self) -> None:
         logging.info(f"Adding permissions to workspace {self.terra_workspace}")
@@ -313,13 +335,11 @@ class UpdateWorkspaceAttributes:
         with open(STAGING_WORKSPACE_DESCRIPTION_FILE_FULL_PATH, "r") as file:
             workspace_description = file.read()
         if self.workflow_config_list:
-            workspace_description += "\n\n# Imported WDLs Information\n"
+            workspace_description += "\n\n# Imported WDLs Read Mes\n"
             for workflow_config in self.workflow_config_list:
-                with open(workflow_config.workflow_info['read_me'], "r") as file:
-                    # Read wdl readme and convert headers to be smaller in workspace description
-                    wdl_description = file.read().replace("# ", "### ")
-                # Add wdl readme to workspace description
-                workspace_description += f"\n\n## {workflow_config.workflow_name}\n{wdl_description}"
+                # Get the read me link for the workflow added to workflow description
+                workspace_description += f"\n{workflow_config.workflow_name} - " + \
+                                         f"{workflow_config.workflow_info['read_me_link']}"
         return workspace_description
 
     def run(self) -> None:
@@ -350,13 +370,13 @@ class ImportWorkflowsAndNotebooks:
     def __init__(
             self,
             billing_project: str,
-            terra_workspace: TerraWorkspace,
+            workspace_bucket: str,
             continue_if_exists: bool,
             workflow_config_list: Optional[list[WorkflowConfigs]] = None,
             notebooks: Optional[list[str]] = None
     ):
         self.billing_project = billing_project
-        self.terra_workspace = terra_workspace
+        self.workspace_bucket = workspace_bucket
         self.continue_if_exists = continue_if_exists
         self.workflow_config_list = workflow_config_list
         self.notebooks = notebooks
@@ -367,12 +387,11 @@ class ImportWorkflowsAndNotebooks:
 
     def _copy_in_notebooks(self) -> None:
         gcp_functions = GCPCloudFunctions()
-        workspace_bucket = self.terra_workspace.get_workspace_bucket()
         for notebook in self.notebooks:  # type: ignore[union-attr]
             os.path.basename(notebook)
             gcp_functions.copy_cloud_file(
                 src_cloud_path=notebook,
-                full_destination_path=f'gs://{workspace_bucket}/notebooks/{os.path.basename(notebook)}'
+                full_destination_path=f'{self.workspace_bucket}/notebooks/{os.path.basename(notebook)}'
             )
 
     def run(self) -> None:
@@ -383,26 +402,47 @@ class ImportWorkflowsAndNotebooks:
 
 
 class SetUpWorkflowConfig:
-    def __init__(self, terra_workspace: TerraWorkspace, workflow_names: str, billing_project: str, is_anvil: bool):
+    def __init__(
+            self,
+            terra_workspace: TerraWorkspace,
+            workflow_names: Optional[list[str]],
+            billing_project: str,
+            tdr_billing_profile: str,
+            dataset_id: str,
+            workspace_bucket: str
+    ):
         self.terra_workspace = terra_workspace
         self.workflow_names = workflow_names
         self.billing_project = billing_project
-        self.is_anvil = is_anvil
+        self.tdr_billing_profile = tdr_billing_profile
+        self.dataset_id = dataset_id
+        self.workspace_bucket = workspace_bucket
 
     def run(self) -> list[WorkflowConfigs]:
         # Validate wdls to import are valid
         workflow_config_list = []
-        for workflow_name in self.workflow_names:
-            # Create and add workflow config to list
-            workflow_config_list.append(
-                WorkflowConfigs(
-                    workflow_name=workflow_name,
-                    billing_project=terra_billing_project,
-                    terra_workspace_util=self.terra_workspace,
-                    set_input_defaults=True,
-                    is_anvil=self.is_anvil
+        if self.workflow_names:
+            for workflow_name in self.workflow_names:
+                # Create and add workflow config to list
+                workflow_config_list.append(
+                    WorkflowConfigs(
+                        workflow_name=workflow_name,
+                        billing_project=terra_billing_project,
+                        terra_workspace_util=self.terra_workspace,
+                        set_input_defaults=True,
+                        extra_default_inputs={
+                            "dataset_id": f'"{self.dataset_id}"',
+                            "tdr_billing_profile": f'"{self.tdr_billing_profile}"',
+                            # When ingesting check if files already exist in dataset and update ingest cells with file
+                            # UUID
+                            "check_existing_ingested_files": "true",
+                            # When ingesting do not re-ingest records that already exist in the dataset
+                            "filter_existing_ids": "true",
+                            # When creating file inventory ignore submissions folder from terra workflows
+                            "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"'
+                        }
+                    )
                 )
-            )
         return workflow_config_list
 
 
@@ -423,9 +463,8 @@ if __name__ == '__main__':
     duos_identifier = args.duos_identifier
     wdls_to_import = args.wdls_to_import
     notebooks_to_import = args.notebooks_to_import
-    is_anvil = args.is_anvil
 
-    workspace_name = f'{dataset_name}_Staging'
+    workspace_name = f"{dataset_name}_Staging"
     auth_group = f"AUTH_{dataset_name}"
 
     # Set up Terra, TerraGroups, and TDR classes
@@ -439,19 +478,6 @@ if __name__ == '__main__':
         workspace_name=workspace_name
     )
 
-    workflow_configs = SetUpWorkflowConfig(
-        terra_workspace=terra_workspace,
-        workflow_names=wdls_to_import,
-        billing_project=terra_billing_project,
-        is_anvil=is_anvil
-    ).run()
-
-    if notebooks_to_import:
-        for notebook in notebooks_to_import:
-            if not notebook.startswith("gs://") or not notebook.endswith(".ipynb"):
-                logging.error(f"Invalid notebook path {notebook}. Must start with gs:// and end with .ipynb")
-                exit(1)
-
     # Set up workspace and groups
     SetUpTerraWorkspace(
         terra_workspace=terra_workspace,
@@ -463,6 +489,7 @@ if __name__ == '__main__':
         resource_members=resource_members
     ).run()
     logging.info("Finished setting up Terra workspace")
+    workspace_bucket = f"gs://{terra_workspace.get_workspace_bucket()}"
 
     # Set up dataset
     dataset_info = SetUpDataset(
@@ -488,14 +515,30 @@ if __name__ == '__main__':
     terra_groups.add_user_to_group(
         email=data_ingest_sa,
         group=auth_group,
-        role=GROUP_MEMBER,
+        role=MEMBER,
         continue_if_exists=continue_if_exists
     )
+
+    # Set up workflow configs
+    workflow_configs = SetUpWorkflowConfig(
+        terra_workspace=terra_workspace,
+        workflow_names=wdls_to_import,
+        billing_project=terra_billing_project,
+        tdr_billing_profile=tdr_billing_profile,
+        dataset_id=dataset_id,
+        workspace_bucket=workspace_bucket
+    ).run()
+
+    if notebooks_to_import:
+        for notebook in notebooks_to_import:
+            if not notebook.startswith("gs://") or not notebook.endswith(".ipynb"):
+                logging.error(f"Invalid notebook path {notebook}. Must start with gs:// and end with .ipynb")
+                exit(1)
 
     # Import workflows and notebooks
     ImportWorkflowsAndNotebooks(
         billing_project=terra_billing_project,
-        terra_workspace=terra_workspace,
+        workspace_bucket=workspace_bucket,
         workflow_config_list=workflow_configs,
         notebooks=notebooks_to_import,
         continue_if_exists=continue_if_exists
