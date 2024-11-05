@@ -1,5 +1,3 @@
-import csv
-from google.cloud import storage
 import base64
 import binascii
 from argparse import ArgumentParser, Namespace
@@ -8,7 +6,8 @@ from utils.request_util import RunRequest
 from utils.token_util import Token
 from utils.gcp_utils import GCPCloudFunctions
 from utils.csv_util import Csv
-from utils import GCP, ARG_DEFAULTS
+from utils import GCP
+
 
 def get_args() -> Namespace:
 
@@ -52,8 +51,3 @@ if __name__ == "__main__":
 
     writer = Csv(file_path=args.output_file)
     writer.create_tsv_from_list_of_dicts(list_of_dicts=checks)
-    #with open(args.output_file, 'w', newline='') as checks_file:
-    #    writer = csv.DictWriter(checks_file, fieldnames=checks[0].keys())
-    #    writer.writeheader()
-    #    for check in checks:
-    #        writer.writerow(check)
