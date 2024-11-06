@@ -439,7 +439,9 @@ class SetUpWorkflowConfig:
                             # When ingesting do not re-ingest records that already exist in the dataset
                             "filter_existing_ids": "true",
                             # When creating file inventory ignore submissions folder from terra workflows
-                            "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"'
+                            "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"',
+                            # When creating any table make all fields nullable
+                            "all_fields_non_required": "false"
                         }
                     )
                 )

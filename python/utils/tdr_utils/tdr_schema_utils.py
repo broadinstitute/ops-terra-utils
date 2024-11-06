@@ -30,7 +30,7 @@ class InferTDRSchema:
             self,
             input_metadata: list[dict],
             table_name: str,
-            all_non_required: bool = False,
+            all_fields_non_required: bool = False,
             primary_key: Optional[str] = None
     ):
         """
@@ -39,13 +39,13 @@ class InferTDRSchema:
         Args:
             input_metadata (list[dict]): The input metadata to infer the schema from.
             table_name (str): The name of the table for which the schema is being inferred.
-            all_non_required (bool): A boolean indicating whether all columns should be set to non-required
+            all_fields_non_required (bool): A boolean indicating whether all columns should be set to non-required
                 besides for primary key.
             primary_key (str): The name of the primary key column. Used to determine column should be required
         """
         self.input_metadata = input_metadata
         self.table_name = table_name
-        self.all_non_required = all_non_required
+        self.all_fields_non_required = all_fields_non_required
         self.primary_key = primary_key
 
     @staticmethod
@@ -181,7 +181,7 @@ class InferTDRSchema:
                 header_requirements.append({"name": header, "required": False, "data_type": "string"})
             # if some rows are none or all non required is set to true AND header
             # is not primary key, we set the column to non-required
-            elif some_none or (self.all_non_required and header != self.primary_key):
+            elif some_none or (self.all_fields_non_required and header != self.primary_key):
                 header_requirements.append({"name": header, "required": False})
             else:
                 header_requirements.append({"name": header, "required": True})

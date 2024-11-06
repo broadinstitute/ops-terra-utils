@@ -16,7 +16,7 @@ class SetUpTDRTables:
         table_info_dict (dict): A dictionary containing table information.
     """
 
-    def __init__(self, tdr: TDR, dataset_id: str, table_info_dict: dict, all_non_required: bool = False):
+    def __init__(self, tdr: TDR, dataset_id: str, table_info_dict: dict, all_fields_non_required: bool = False):
         """
         Initialize the SetUpTDRTables class.
 
@@ -24,12 +24,12 @@ class SetUpTDRTables:
             tdr (TDR): An instance of the TDR class.
             dataset_id (str): The ID of the dataset.
             table_info_dict (dict): A dictionary containing table information.
-            all_non_required (bool): A boolean indicating whether all columns are non-required.
+            all_fields_non_required (bool): A boolean indicating whether all columns are non-required.
         """
         self.tdr = tdr
         self.dataset_id = dataset_id
         self.table_info_dict = table_info_dict
-        self.all_non_required = all_non_required
+        self.all_fields_non_required = all_fields_non_required
 
     @staticmethod
     def _compare_table(reference_dataset_table: dict, target_dataset_table: list[dict], table_name: str) -> list[dict]:
@@ -103,7 +103,7 @@ class SetUpTDRTables:
             expected_tdr_schema_dict = InferTDRSchema(
                 input_metadata=ingest_table_dict["ingest_metadata"],
                 table_name=ingest_table_name,
-                all_non_required=self.all_non_required,
+                all_fields_non_required=self.all_fields_non_required,
                 primary_key=primary_key
             ).infer_schema()
 

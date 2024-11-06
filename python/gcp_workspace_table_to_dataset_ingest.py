@@ -91,7 +91,7 @@ def get_args() -> argparse.Namespace:
         "have already been ingested."
     )
     parser.add_argument(
-        "--all_non_required",
+        "--all_fields_non_required",
         action="store_true",
         help="If used, all columns in the table will be set as non-required besides the primary key"
     )
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     filter_existing_ids = args.filter_existing_ids
     batch_size = args.batch_size
     check_if_files_already_ingested = args.check_existing_ingested_files
-    all_non_required = args.all_non_required
+    all_fields_non_required = args.all_fields_non_required
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -163,7 +163,7 @@ if __name__ == "__main__":
             tdr=tdr,
             dataset_id=dataset_id,
             table_info_dict=table_info_dict,
-            all_non_required=all_non_required
+            all_fields_non_required=all_fields_non_required
         ).run()
 
         if filter_existing_ids:
