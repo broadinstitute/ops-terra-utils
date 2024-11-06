@@ -16,7 +16,7 @@ class SetUpTDRTables:
         table_info_dict (dict): A dictionary containing table information.
     """
 
-    def __init__(self, tdr: TDR, dataset_id: str, table_info_dict: dict):
+    def __init__(self, tdr: TDR, dataset_id: str, table_info_dict: dict, all_non_required: bool = False):
         """
         Initialize the SetUpTDRTables class.
 
@@ -24,10 +24,12 @@ class SetUpTDRTables:
             tdr (TDR): An instance of the TDR class.
             dataset_id (str): The ID of the dataset.
             table_info_dict (dict): A dictionary containing table information.
+            all_non_required (bool): A boolean indicating whether all columns are non-required.
         """
         self.tdr = tdr
         self.dataset_id = dataset_id
         self.table_info_dict = table_info_dict
+        self.all_non_required = all_non_required
 
     @staticmethod
     def _compare_table(reference_dataset_table: dict, target_dataset_table: list[dict], table_name: str) -> list[dict]:
@@ -95,14 +97,18 @@ class SetUpTDRTables:
         valid = True
         # Loop through all expected tables to see if exist and match schema. If not then create one.
         for ingest_table_name, ingest_table_dict in self.table_info_dict.items():
+            primary_key = ingest_table_dict.get("primary_key")
+
             # Get TDR schema info for tables to ingest
             expected_tdr_schema_dict = InferTDRSchema(
                 input_metadata=ingest_table_dict["ingest_metadata"],
-                table_name=ingest_table_name
+                table_name=ingest_table_name,
+                all_non_required=self.all_non_required,
+                primary_key=primary_key
             ).infer_schema()
 
             # If unique id then add to table json
-            if ingest_table_dict.get("primary_key"):
+            if primary_key:
                 expected_tdr_schema_dict["primaryKey"] = [ingest_table_dict["primary_key"]]
 
             # add table to ones to create if it does not exist
