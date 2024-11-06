@@ -17,6 +17,19 @@
                 }
             ]
         },
+        "get_blob_details": {
+            "resources": [
+                {
+                    "path": "get_blob_details/example_blob.txt",
+                    "data": "kw5z3qci2nwrvw9rtgeu7puawfcqak"
+                }
+            ],
+            "test_data": {
+                "function_input": {
+                    "blob_path": "gs://ops_dev_bucket/list_bucket_test/ex_file_1.txt"
+                }
+            }
+        },
         "copy_file": {
             "resources": [
                 {
