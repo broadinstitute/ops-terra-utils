@@ -26,7 +26,7 @@ class CopyPublicCloudReference:
         self.bwa_mem_tar_file_location = bwa_mem_tar_file_location
         self.output_cloud_path = output_cloud_path
         self.read_me_path = read_me_path
-        # The default SA credentials are set in the cloud run job under "Security" -> "Service Account": https://console.cloud.google.com/run/jobs/edit/us-central1/add-public-cloud-reference?project=operations-portal-427515&authuser=0
+        # The default SA credentials are set in the cloud run job under "Security" -> "Service Account": https://console.cloud.google.com/run/jobs/edit/us-central1/add-public-cloud-reference?project=operations-portal-427515&authuser=0  # noqa: E501
         self.client = storage.Client()
 
         self.output_bucket_root_dir = self._get_output_bucket_location()
