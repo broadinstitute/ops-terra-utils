@@ -31,21 +31,17 @@ class CopyPublicCloudReference:
 
         self.output_bucket_root_dir = self._get_output_bucket_location()
 
-    @staticmethod
-    def _get_file_name(file_path: str) -> str:
-        return Path(file_path).name
-
     def _get_output_bucket_location(self) -> str:
         parsed_url = urlparse(self.output_cloud_path)
         output_subdir = parsed_url.path.lstrip("/")
         return os.path.join(self.BROAD_PUBLIC_REFERENCES_SYNC_BUCKET, output_subdir)
 
     def _get_file_output_path(self, source_file: str) -> str:
-        file_name = self._get_file_name(file_path=source_file)
-        return os.path.join(self.output_bucket_root_dir, f"{self.reference_name}.{file_name}")
+        file_name = Path(source_file).name
+        return os.path.join(self.output_bucket_root_dir, file_name)
 
     def _get_readme_file_output_path(self) -> str:
-        return os.path.join(self.output_bucket_root_dir, "README.md")
+        return os.path.join(self.output_bucket_root_dir, "README.txt")
 
     def _copy_source_file_to_destination(self, source_path: str, destination_path: str) -> None:
         src_parsed = urlparse(source_path)
@@ -61,17 +57,11 @@ class CopyPublicCloudReference:
 
         destination_bucket = self.client.bucket(destination_bucket_name)
 
-        print(
-            f"COPYING FROM source bucket: {source_bucket}, source file: {source_blob} TO: {destination_bucket}, destionation file: {destination_blob_name}")
-
-        # TODO comment this back in when ready to actually run/test
-        """
         source_bucket.copy_blob(
             source_blob,
             destination_bucket,
             destination_blob_name
         )
-        """
 
     def copy_files_to_public_bucket(self) -> None:
         gcs_files_to_copy = [
@@ -82,15 +72,19 @@ class CopyPublicCloudReference:
         ]
 
         try:
-            logging.info("Copying references files to source location to Broad bucket")
+            # Copy all reference files to destination bucket
+            logging.info("Copying references files from source location to Broad bucket")
             for source_file in gcs_files_to_copy:
-                self._copy_source_file_to_destination(
-                    source_path=source_file, destination_path=self._get_file_output_path(source_file=source_file)
-                )
+                destination_path = self._get_file_output_path(source_file=source_file)
+                self._copy_source_file_to_destination(source_path=source_file, destination_path=destination_path)
+                logging.info(f"Successfully copied '{source_file}' to '{destination_path}'\n")
+
+            # Copy README
             logging.info("Copying README to public cloud reference bucket")
-            self._copy_source_file_to_destination(
-                source_path=self.read_me_path, destination_path=self._get_readme_file_output_path()
-            )
+            read_me_destination = self._get_readme_file_output_path()
+            self._copy_source_file_to_destination(source_path=self.read_me_path, destination_path=read_me_destination)
+            logging.info(f"Successfully copied README file to '{read_me_destination}'")
+
         except Exception as e:
             logging.error(f"Encountered an error while attempting to copy source files to destination file paths: {e}")
 
