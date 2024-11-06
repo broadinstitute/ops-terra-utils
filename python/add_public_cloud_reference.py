@@ -32,8 +32,8 @@ class CopyPublicCloudReference:
         self.output_bucket_root_dir = self._get_output_bucket_location()
 
     @staticmethod
-    def _get_file_extension(file_path: str) -> str:
-        return Path(file_path).suffix
+    def _get_file_name(file_path: str) -> str:
+        return Path(file_path).name
 
     def _get_output_bucket_location(self) -> str:
         parsed_url = urlparse(self.output_cloud_path)
@@ -41,8 +41,8 @@ class CopyPublicCloudReference:
         return os.path.join(self.BROAD_PUBLIC_REFERENCES_SYNC_BUCKET, output_subdir)
 
     def _get_file_output_path(self, source_file: str) -> str:
-        suffix = self._get_file_extension(file_path=source_file)
-        return os.path.join(self.output_bucket_root_dir, f"{self.reference_name}{suffix}")
+        file_name = self._get_file_name(file_path=source_file)
+        return os.path.join(self.output_bucket_root_dir, f"{self.reference_name}.{file_name}")
 
     def _get_readme_file_output_path(self) -> str:
         return os.path.join(self.output_bucket_root_dir, "README.md")
