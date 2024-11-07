@@ -26,7 +26,6 @@ def tdr_client() -> Any:
     return TDR(request_util=requestclient)
 
 
-
 def ensure_tmp_dataset_deleted(tdr_client, tdr_test_resource_json) -> None:
     tdr = tdr_client
     test_info = tdr_test_resource_json
