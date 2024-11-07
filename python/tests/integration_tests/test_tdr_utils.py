@@ -25,6 +25,7 @@ def tdr_client() -> Any:
     requestclient = RunRequest(token)
     return TDR(request_util=requestclient)
 
+
 @pytest.fixture(scope="session", autouse=True)
 def ensure_tmp_dataset_deleted(tdr_client, tdr_test_resource_json) -> None:
     tdr = tdr_client
@@ -36,6 +37,7 @@ def ensure_tmp_dataset_deleted(tdr_client, tdr_test_resource_json) -> None:
         print(f"dataset info found: {dataset_info}")
         dataset_id = dataset_info[0]['id']
         tdr.delete_dataset(dataset_id=dataset_id)
+
 
 class TestGetUtils:
 
