@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+
 import numpy as np
 import pandas as pd
 from datetime import date, datetime
@@ -31,6 +32,7 @@ class InferTDRSchema:
             input_metadata: list[dict],
             table_name: str,
             all_fields_non_required: bool = False,
+            allow_disparate_data_types_in_column: bool = False,
             primary_key: Optional[str] = None
     ):
         """
@@ -47,9 +49,9 @@ class InferTDRSchema:
         self.table_name = table_name
         self.all_fields_non_required = all_fields_non_required
         self.primary_key = primary_key
+        self.allow_disparate_data_types_in_column = allow_disparate_data_types_in_column
 
-    @staticmethod
-    def _check_type_consistency(key_value_type_mappings: dict) -> None:
+    def _check_type_consistency(self, key_value_type_mappings: dict) -> list[dict]:
         """
         Check if all values for each header are of the same type.
 
@@ -62,15 +64,41 @@ class InferTDRSchema:
         """
         matching = []
 
+        disparate_header_info = []
+
         for header, values_for_header in key_value_type_mappings.items():
             # find one value that's non-none to get the type to check against
-            type_to_match_against = type(
-                [v for v in values_for_header if v][0])
-
+            # specifically check if not "None" since we can have all zeroes, for example
+            type_to_match_against = type([v for v in values_for_header if v is not None][0])
             # check if all the values in the list that are non-none match the type of the first entry
             all_values_matching = all(  # noqa: E721
-                type(v) == type_to_match_against for v in values_for_header if v is not None)
-            matching.append({header: all_values_matching})
+                type(v) == type_to_match_against for v in values_for_header if v is not None
+            )
+            # If ALL rows for the header are none, force the type to be a string
+            if all_values_matching and not any(values_for_header):
+                matching.append({header: all_values_matching})
+                disparate_header_info.append(
+                    {
+                        "header": header,
+                        "force_to_string": True,
+                    }
+                )
+            if not all_values_matching and self.allow_disparate_data_types_in_column:
+                matching.append({header: True})
+                disparate_header_info.append(
+                    {
+                        "header": header,
+                        "force_to_string": True,
+                    }
+                )
+            else:
+                matching.append({header: all_values_matching})  # type ignore[dict-item]
+                disparate_header_info.append(
+                    {
+                        "header": header,
+                        "force_to_string": False,
+                    }
+                )
 
         # Returns true if all headers are determined to be "matching"
         problematic_headers = [
@@ -81,7 +109,12 @@ class InferTDRSchema:
 
         if problematic_headers:
             raise Exception(
-                f"Not all values for the following headers are of the same type: {problematic_headers}")
+                f"Not all values for the following headers are of the same type: {problematic_headers}. To force all"
+                f" values in rows of a given column to be forced to the same type and bypass this error, re-run with "
+                f"the 'force_disparate_rows_to_string' option set to true"
+            )
+
+        return disparate_header_info
 
     def _python_type_to_tdr_type_conversion(self, value_for_header: Any) -> str:
         """
@@ -122,14 +155,13 @@ class InferTDRSchema:
                     gcp_match = re.search(pattern=gcp_fileref_regex, string=v)
                     if az_match or gcp_match:
                         return self.PYTHON_TDR_DATA_TYPE_MAPPING["fileref"]
-
-            non_none_entry_in_list = [a for a in value_for_header if a][0]
+            non_none_entry_in_list = [a for a in value_for_header if a is not None][0]
             return self.PYTHON_TDR_DATA_TYPE_MAPPING[type(non_none_entry_in_list)]
 
         # if none of the above special cases apply, just pass the type of the value to determine the TDR type
         return self.PYTHON_TDR_DATA_TYPE_MAPPING[type(value_for_header)]
 
-    def _format_column_metadata(self, key_value_type_mappings: dict) -> list[dict]:
+    def _format_column_metadata(self, key_value_type_mappings: dict, disparate_header_info: list[dict]) -> list[dict]:
         """
         Generate the metadata for each column's header name, data type, and whether it's an array of values.
 
@@ -143,12 +175,16 @@ class InferTDRSchema:
         columns = []
 
         for header, values_for_header in key_value_type_mappings.items():
+            force_to_string = [h["force_to_string"] for h in disparate_header_info if h["header"] == header][0]
+
             # if the ANY of the values for a given header is a list, we assume that column contains arrays of values
-            array_of = True if any(isinstance(v, list)
-                                   for v in values_for_header) else False
-            # find either the first item that's non-None, or the first non-empty list
-            data_type = self._python_type_to_tdr_type_conversion(
-                [a for a in values_for_header if a][0])
+            array_of = True if any(isinstance(v, list) for v in values_for_header) else False
+
+            if force_to_string:
+                data_type = self.PYTHON_TDR_DATA_TYPE_MAPPING[str]
+            else:
+                # find either the first item that's non-None, or the first non-empty list
+                data_type = self._python_type_to_tdr_type_conversion([a for a in values_for_header if a is not None][0])
 
             column_metadata = {
                 "name": header,
@@ -239,9 +275,11 @@ class InferTDRSchema:
         key_value_type_mappings = self._reformat_metadata(cleaned_metadata)
 
         # check to see if all values corresponding to a header are of the same type
-        self._check_type_consistency(key_value_type_mappings)
+        disparate_header_info = self._check_type_consistency(key_value_type_mappings)
 
-        columns = self._format_column_metadata(key_value_type_mappings)
+        columns = self._format_column_metadata(
+            key_value_type_mappings=key_value_type_mappings, disparate_header_info=disparate_header_info
+        )
 
         # combine the information about required headers with the data types that were collected
         for header_metadata in column_metadata:

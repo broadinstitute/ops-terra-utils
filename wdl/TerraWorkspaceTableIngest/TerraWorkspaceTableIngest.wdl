@@ -16,6 +16,7 @@ workflow GCPWorkspaceToDatasetIngest {
         Int? max_backoff_time
         Int? batch_size
         String? docker
+        Boolean force_disparate_rows_to_string
     }
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -35,7 +36,8 @@ workflow GCPWorkspaceToDatasetIngest {
             filter_existing_ids = filter_existing_ids,
             batch_size = batch_size,
             check_existing_ingested_files = check_existing_ingested_files,
-            all_fields_non_required = all_fields_non_required
+            all_fields_non_required = all_fields_non_required,
+            force_disparate_rows_to_string = force_disparate_rows_to_string
     }
 }
 
@@ -55,6 +57,7 @@ task IngestWorkspaceDataToDataset {
         Boolean check_existing_ingested_files
         Boolean all_fields_non_required
         Int? batch_size
+        Boolean force_disparate_rows_to_string
     }
 
     command <<<
@@ -71,7 +74,8 @@ task IngestWorkspaceDataToDataset {
         ~{if filter_existing_ids then "--filter_existing_ids" else ""} \
         ~{if check_existing_ingested_files then "--check_existing_ingested_files" else ""} \
         ~{"--batch_size " + batch_size} \
-        ~{if all_fields_non_required then "--all_fields_non_required" else ""}
+        ~{if all_fields_non_required then "--all_fields_non_required" else ""} \
+        ~{if force_disparate_rows_to_string then "--force_disparate_rows_to_string" else ""} \
 
     >>>
 

@@ -441,7 +441,8 @@ class SetUpWorkflowConfig:
                             # When creating file inventory ignore submissions folder from terra workflows
                             "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"',
                             # When creating any table make all fields nullable
-                            "all_fields_non_required": "false"
+                            "all_fields_non_required": "false",
+                            "force_disparate_rows_to_string": "true",
                         }
                     )
                 )

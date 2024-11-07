@@ -10,7 +10,7 @@ PUT = "PUT"
 
 
 class RunRequest:
-    def __init__(self, token: Any, max_retries: int = 5, max_backoff_time: int = 5 * 60):
+    def __init__(self, token: Any, max_retries: int = 0, max_backoff_time: int = 0):
         """
         Initialize the RunRequest class.
 
