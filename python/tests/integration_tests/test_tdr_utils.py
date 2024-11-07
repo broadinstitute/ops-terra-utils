@@ -26,7 +26,7 @@ def tdr_client() -> Any:
     return TDR(request_util=requestclient)
 
 
-@pytest.fixture(scope="session", autouse=True)
+
 def ensure_tmp_dataset_deleted(tdr_client, tdr_test_resource_json) -> None:
     tdr = tdr_client
     test_info = tdr_test_resource_json
@@ -45,6 +45,7 @@ class TestGetUtils:
     def _get_tdr_client(self, tdr_client: Any, tdr_test_resource_json: Any) -> None:
         self.tdr_client = tdr_client
         self.test_info = tdr_test_resource_json
+        ensure_tmp_dataset_deleted(tdr_client=self.tdr_client, tdr_test_resource_json=self.test_info)
 
     def test_get_data_set_files(self) -> None:
         test_data = self.test_info['tests']['get_data_set_files']
