@@ -26,25 +26,12 @@ def tdr_client() -> Any:
     return TDR(request_util=requestclient)
 
 
-def ensure_tmp_dataset_deleted(tdr_client, tdr_test_resource_json) -> None:
-    tdr = tdr_client
-    test_info = tdr_test_resource_json
-    dataset_name = "tmp_ops_integration_test_dataset_to_delete"
-    profile_id = test_info['tests']['test_delete_dataset']['function_input']['billing_profile']
-    dataset_info = tdr.check_if_dataset_exists(dataset_name=dataset_name, billing_profile=profile_id)
-    if dataset_info:
-        print(f"dataset info found: {dataset_info}")
-        dataset_id = dataset_info[0]['id']
-        tdr.delete_dataset(dataset_id=dataset_id)
-
-
 class TestGetUtils:
 
     @pytest.fixture(autouse=True)
     def _get_tdr_client(self, tdr_client: Any, tdr_test_resource_json: Any) -> None:
         self.tdr_client = tdr_client
         self.test_info = tdr_test_resource_json
-        ensure_tmp_dataset_deleted(tdr_client=self.tdr_client, tdr_test_resource_json=self.test_info)
 
     def test_get_data_set_files(self) -> None:
         test_data = self.test_info['tests']['get_data_set_files']
