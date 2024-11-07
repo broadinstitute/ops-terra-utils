@@ -80,6 +80,7 @@ def get_args() -> argparse.Namespace:
         "--batch_size",
         required=False,
         default=ARG_DEFAULTS["batch_size"],
+        type=int,
         help=f"""The number of rows to ingest at a time. Defaults to {ARG_DEFAULTS['batch_size']} if not provided"""
     )
     parser.add_argument(
