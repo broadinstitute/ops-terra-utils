@@ -11,6 +11,7 @@ workflow GCPWorkspaceToDatasetIngest {
         Boolean bulk_mode
         Boolean filter_existing_ids
         Boolean check_existing_ingested_files
+        Boolean all_fields_non_required
         Int? max_retries
         Int? max_backoff_time
         Int? batch_size
@@ -33,7 +34,8 @@ workflow GCPWorkspaceToDatasetIngest {
             docker_image = docker_image,
             filter_existing_ids = filter_existing_ids,
             batch_size = batch_size,
-            check_existing_ingested_files = check_existing_ingested_files
+            check_existing_ingested_files = check_existing_ingested_files,
+            all_fields_non_required = all_fields_non_required
     }
 }
 
@@ -51,6 +53,7 @@ task IngestWorkspaceDataToDataset {
         String docker_image
         Boolean filter_existing_ids
         Boolean check_existing_ingested_files
+        Boolean all_fields_non_required
         Int? batch_size
     }
 
@@ -67,7 +70,8 @@ task IngestWorkspaceDataToDataset {
         ~{"--records_to_ingest " + records_to_ingest} \
         ~{if filter_existing_ids then "--filter_existing_ids" else ""} \
         ~{if check_existing_ingested_files then "--check_existing_ingested_files" else ""} \
-        ~{"--batch_size " + batch_size}
+        ~{"--batch_size " + batch_size} \
+        ~{if all_fields_non_required then "--all_fields_non_required" else ""}
 
     >>>
 

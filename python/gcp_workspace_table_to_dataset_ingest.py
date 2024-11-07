@@ -90,6 +90,11 @@ def get_args() -> argparse.Namespace:
         "all files for dataset for every single table ingest. It does drastically speed up ingest if files " +
         "have already been ingested."
     )
+    parser.add_argument(
+        "--all_fields_non_required",
+        action="store_true",
+        help="If used, all columns in the table will be set as non-required besides the primary key"
+    )
 
     return parser.parse_args()
 
@@ -108,6 +113,7 @@ if __name__ == "__main__":
     filter_existing_ids = args.filter_existing_ids
     batch_size = args.batch_size
     check_if_files_already_ingested = args.check_existing_ingested_files
+    all_fields_non_required = args.all_fields_non_required
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -145,6 +151,21 @@ if __name__ == "__main__":
                 metric for metric in updated_metrics if metric[primary_key_column_name] in records_to_ingest
             ]
 
+        table_info_dict = {
+            target_table_name: {
+                "table_name": target_table_name,
+                "primary_key": primary_key_column_name,
+                "ingest_metadata": updated_metrics,
+                "datePartitionOptions": None
+            }
+        }
+        SetUpTDRTables(
+            tdr=tdr,
+            dataset_id=dataset_id,
+            table_info_dict=table_info_dict,
+            all_fields_non_required=all_fields_non_required
+        ).run()
+
         if filter_existing_ids:
             # Filter out sample ids that are already in the dataset
             filtered_metrics = FilterOutSampleIdsAlreadyInDataset(
@@ -156,17 +177,6 @@ if __name__ == "__main__":
             ).run()
         else:
             filtered_metrics = updated_metrics
-
-        table_info_dict = {
-            target_table_name: {
-                "table_name": target_table_name,
-                "primary_key": primary_key_column_name,
-                "ingest_metadata": filtered_metrics,
-                "datePartitionOptions": None
-            }
-
-        }
-        SetUpTDRTables(tdr=tdr, dataset_id=dataset_id, table_info_dict=table_info_dict).run()
 
         if check_if_files_already_ingested:
             # Download and create a dictionary of file paths to UUIDs for ingest

@@ -313,7 +313,7 @@ class TerraWorkspace:
                 # If the cell value is a dictionary with an entityName key, return the entityName
                 return entity_name
             entity_list = cell_value.get("items")
-            if entity_list:
+            if entity_list or entity_list == []:
                 # If the cell value is a list of dictionaries, recursively call this function on each dictionary
                 return [
                     self._remove_dict_from_cell(entity) for entity in entity_list
