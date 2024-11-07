@@ -38,3 +38,8 @@ jobs:
         run: |
           pip install pytest
           pytest python/tests/
+      
+      - name: test resource _cleanup
+        if: always()
+        run: | 
+          python python/tests/utils/clean_up_test_resources.py
