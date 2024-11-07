@@ -59,7 +59,7 @@ class BatchIngest:
                 ingested for testing. Defaults to False.
             load_tag (Optional[str], optional): A tag to identify the load. Used so future ingests
                 can pick up where left off. Defaults to None.
-            file_to_uuid_dict (Optional[dict], optional): A dictionary mapping file paths to UUIDs. If used
+            file_to_uuid_dict (Optional[dict], optional): A dictionary mapping source file paths to UUIDs. If used
                 will make ingest much quicker since no ingest or look up of file needed. Defaults to None.
             schema_info (Optional[dict], optional): Schema information for the tables. Validates ingest data matches up
                 with schema info. Defaults to None.
@@ -72,7 +72,7 @@ class BatchIngest:
         self.cloud_type = cloud_type
         # terra_workspace only used if ingesting Azure data where you need to create sas tokens from workspace
         self.terra_workspace = terra_workspace
-        self.batch_size = batch_size
+        self.batch_size = int(batch_size)
         self.update_strategy = update_strategy
         self.bulk_mode = bulk_mode
         self.waiting_time_to_poll = waiting_time_to_poll
@@ -331,20 +331,19 @@ class ReformatMetricsForIngest:
                     uuid = self.file_to_uuid_dict.get(column_value)
                     if uuid:
                         column_value = uuid
+                        return column_value, valid
                     else:
                         logging.warning(
-                            f"File {column_value} not found in file_to_uuid_dict, which should include all files "
-                            f"in dataset."
+                            f"File {column_value} not found in file_to_uuid_dict, will attempt "
+                            "to ingest as regular file and not use UUID"
                         )
-                        column_value = None  # type: ignore[assignment]
-                        valid = False
-                else:
-                    source_path = f"{column_value}{self.sas_token_string}" if self.cloud_type == AZURE else column_value
-                    source_dest_mapping = {
-                        "sourcePath": source_path,
-                        "targetPath": self._format_relative_tdr_path(column_value)
-                    }
-                    return source_dest_mapping, valid
+                # If not found in file_to_uuid_dict or file_to_uuid_dict not provided then will ingest as regular file
+                source_path = f"{column_value}{self.sas_token_string}" if self.cloud_type == AZURE else column_value
+                source_dest_mapping = {
+                    "sourcePath": source_path,
+                    "targetPath": self._format_relative_tdr_path(column_value)
+                }
+                return source_dest_mapping, valid
         return column_value, valid
 
     def _validate_and_update_column_for_schema(self, column_name: str, column_value: Any) -> tuple[str, bool]:
@@ -550,7 +549,7 @@ class FilterAndBatchIngest:
             update_strategy (str): The update strategy to use.
             load_tag (str): The load tag for the ingest. Used to make future ingests of same files go faster.
             test_ingest (bool, optional): Whether to run a test ingest. Defaults to False.
-            file_to_uuid_dict (Optional[dict], optional): A dictionary mapping files to UUIDs.
+            file_to_uuid_dict (Optional[dict], optional): A dictionary mapping source files to UUIDs.
                 If supplied makes ingest run faster due to just linking to already ingested file UUID. Defaults to None.
             sas_expire_in_secs (int, optional): The expiration time for SAS tokens in seconds.
                 Azure only. Defaults to 3600.
