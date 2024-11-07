@@ -9,7 +9,7 @@ ARG_DEFAULTS = {
     "batch_size_to_list_files": 20000,
     "batch_size_to_delete_files": 200,
     "file_ingest_batch_size": 500,
-    "waiting_time_to_poll": 120,
+    "waiting_time_to_poll": 90,
     "docker_image": "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"
 }
 

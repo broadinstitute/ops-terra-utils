@@ -123,12 +123,19 @@ if __name__ == "__main__":
     )
     tdr = TDR(request_util=request_util)
 
+    dataset_info = tdr.get_dataset_info(dataset_id=dataset_id)
+    # Get permissions for workspace ingest
     GetPermissionsForWorkspaceIngest(
         terra_workspace=terra_workspace,
-        dataset_info=tdr.get_dataset_info(dataset_id=dataset_id),
+        dataset_info=dataset_info,
         added_to_auth_domain=True,
     ).run()
+    # Get entity metrics for workspace
     entity_metrics = terra_workspace.get_workspace_entity_info()
+    # Check if dataset is selfHosted. If it isn't then getting UUIDs for files will not work
+    if not dataset_info["selfHosted"] and check_if_files_already_ingested:
+        logging.warning("Dataset is not selfHosted. Cannot check if files have already been ingested and use UUIDs")
+        check_if_files_already_ingested = False
 
     for terra_table_name in terra_tables:
         target_table_name = terra_table_name
@@ -180,7 +187,8 @@ if __name__ == "__main__":
 
         if check_if_files_already_ingested:
             # Download and create a dictionary of file paths to UUIDs for ingest
-            file_uuids_dict = tdr.create_file_uuid_dict_for_ingest(dataset_id=dataset_id)
+            file_uuids_dict = tdr.create_file_uuid_dict_for_ingest_for_experimental_self_hosted_dataset(
+                dataset_id=dataset_id)
         else:
             file_uuids_dict = None
 
