@@ -99,7 +99,7 @@ class TDR:
             for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
         }
 
-    def create_file_uuid_dict_for_ingest(
+    def create_file_uuid_dict_for_ingest_for_experimental_self_hosted_dataset(
             self,
             dataset_id: str,
             limit: int = ARG_DEFAULTS['batch_size_to_list_files']  # type: ignore[assignment]
@@ -107,6 +107,8 @@ class TDR:
         """
         Create a dictionary of all files in a dataset where the key is the file 'path' and the value is the file UUID.
         This assumes that the tdr 'path' is original path of the file in the cloud storage with gs:// stripped out
+
+        This will ONLY work if dataset was created with experimentalSelfHosted = True
 
         Args:
             dataset_id (str): The ID of the dataset.
@@ -116,7 +118,7 @@ class TDR:
             dict: A dictionary where the key is the file UUID and the value is the file path.
         """
         return {
-            f'gs://{file_dict["path"]}': file_dict['fileId']
+            file_dict['fileDetail']['accessUrl']: file_dict['fileId']
             for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
         }
 
