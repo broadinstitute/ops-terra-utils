@@ -1,8 +1,7 @@
 import argparse
 import os
 import logging
-from urllib.parse import urlparse
-from pathlib import Path
+from typing import Optional
 
 from utils.gcp_utils import GCPCloudFunctions
 
@@ -12,58 +11,74 @@ class CopyPublicCloudReference:
 
     def __init__(
             self,
-            reference_name: str,
-            chrom_sizes_file_location: str,
-            annotation_file_location: str,
-            star_tar_file_location: str,
-            bwa_mem_tar_file_location: str,
-            output_cloud_path: str,
-            read_me_path: str
-    ):
-        self.reference_name = reference_name
-        self.chrom_sizes_file_location = chrom_sizes_file_location
-        self.annotation_file_location = annotation_file_location
-        self.star_tar_file_location = star_tar_file_location
-        self.bwa_mem_tar_file_location = bwa_mem_tar_file_location
-        self.output_cloud_path = output_cloud_path
-        self.read_me_path = read_me_path
+            chrom_sizes_file_location: Optional[str],
+            chrom_sizes_file_destination: Optional[str],
+            annotation_file_location: Optional[str],
+            annotations_file_destination: Optional[str],
+            star_tar_file_location: Optional[str],
+            star_tar_file_destination: Optional[str],
+            bwa_mem_tar_file_location: Optional[str],
+            bwa_mem_tar_file_destination: Optional[str],
+            star_readme: Optional[str],
+            bwa_mem_readme: Optional[str],
 
-        self.output_bucket_root_dir = self._get_output_bucket_location()
+    ):
+        self.chrom_sizes_file_location = chrom_sizes_file_location
+        self.chrom_sizes_file_destination = chrom_sizes_file_destination
+        self.annotation_file_location = annotation_file_location
+        self.annotations_file_destination = annotations_file_destination
+        self.star_tar_file_location = star_tar_file_location
+        self.star_tar_file_destination = star_tar_file_destination
+        self.bwa_mem_tar_file_location = bwa_mem_tar_file_location
+        self.bwa_mem_tar_file_destination = bwa_mem_tar_file_destination
+        self.star_readme = star_readme
+        self.bwa_mem_readme = bwa_mem_readme
+
         self.gcp = GCPCloudFunctions()
 
-    def _get_output_bucket_location(self) -> str:
-        parsed_url = urlparse(self.output_cloud_path)
-        output_subdir = parsed_url.path.lstrip("/")
-        return os.path.join(self.BROAD_PUBLIC_REFERENCES_SYNC_BUCKET, output_subdir)
-
-    def _get_file_output_path(self, source_file: str) -> str:
-        file_name = Path(source_file).name
-        return os.path.join(self.output_bucket_root_dir, file_name)
-
-    def _get_readme_file_output_path(self) -> str:
-        return os.path.join(self.output_bucket_root_dir, "README.txt")
-
     def copy_files_to_public_bucket(self) -> None:
-        gcs_files_to_copy = [
-            self.chrom_sizes_file_location,
-            self.annotation_file_location,
-            self.star_tar_file_location,
-            self.bwa_mem_tar_file_location,
+        gcs_file_mapping = [
+            {
+                "source": self.chrom_sizes_file_location,
+                "destination": self.chrom_sizes_file_destination,
+            },
+            {
+                "source:": self.annotation_file_location,
+                "destination": self.annotations_file_destination,
+            },
+            {
+                "source": self.star_tar_file_location,
+                "destination": self.star_tar_file_destination,
+            },
+            {"source": self.bwa_mem_tar_file_location,
+                "destination": self.bwa_mem_tar_file_destination,
+             },
+            {
+                "source": self.star_readme,
+                "destination": os.path.join(
+                    self.star_tar_file_destination, "README.txt"
+                ) if self.star_tar_file_destination else ""
+            },
+            {
+                "source": self.bwa_mem_readme,
+                "destination": os.path.join(
+                    self.bwa_mem_tar_file_destination, "README.txt"
+                ) if self.bwa_mem_tar_file_destination else ""
+            }
         ]
 
         try:
-            # Copy all reference files to destination bucket
+            # Copy all source files to destination bucket
             logging.info("Copying references files from source location to Broad bucket")
-            for source_file in gcs_files_to_copy:
-                destination_path = self._get_file_output_path(source_file=source_file)
-                self.gcp.copy_cloud_file(src_cloud_path=source_file, full_destination_path=destination_path)
-                logging.info(f"Successfully copied '{source_file}' to '{destination_path}'\n")
-
-            # Copy README
-            logging.info("Copying README to public cloud reference bucket")
-            read_me_destination = self._get_readme_file_output_path()
-            self.gcp.copy_cloud_file(src_cloud_path=self.read_me_path, full_destination_path=read_me_destination)
-            logging.info(f"Successfully copied README file to '{read_me_destination}'")
+            for file_mapping in gcs_file_mapping:
+                source = file_mapping.get("source")
+                destination = file_mapping.get("destination")
+                if source:
+                    self.gcp.copy_cloud_file(
+                        src_cloud_path=source, full_destination_path=destination
+                    )
+                    logging.info(
+                        f"Successfully copied '{source}' to the following subdirectory/filepath: '{destination}'\n")
 
         except Exception as e:
             logging.error(f"Encountered an error while attempting to copy source files to destination file paths: {e}")
@@ -71,27 +86,66 @@ class CopyPublicCloudReference:
 
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Add a new public cloud reference")
-    parser.add_argument("--reference_name", required=True, type=str, help="The name of the reference to add")
     parser.add_argument(
         "--chrom_sizes_file_location",
-        required=True,
+        required=False,
         type=str,
         help="The current cloud location for the chromosome sizes file"
     )
     parser.add_argument(
-        "--annotation_file_location", required=True, type=str,
+        "--chrom_sizes_file_destination",
+        required=False,
+        type=str,
+        help="The cloud destination for the chromosome sizes file"
+    )
+    parser.add_argument(
+        "--annotation_file_location",
+        required=False,
+        type=str,
         help="The current cloud location for the annotations file"
     )
     parser.add_argument(
-        "--star_tar_file_location", required=True, type=str,
+        "--annotations_file_destination",
+        required=False,
+        type=str,
+        help="The cloud destination for the annotations file"
+    )
+    parser.add_argument(
+        "--star_tar_file_location",
+        required=False,
+        type=str,
         help="The current cloud location for the star tarball file"
     )
     parser.add_argument(
-        "--bwa_mem_tar_file_location", required=True, type=str,
+        "--star_tar_file_destination",
+        required=False,
+        type=str,
+        help="The cloud destination for the star tarball file"
+    )
+    parser.add_argument(
+        "--bwa_mem_tar_file_location",
+        required=False,
+        type=str,
         help="The current cloud location for the bwa-mem tarball file"
     )
-    parser.add_argument("--new_location", required=True, type=str, help="The new cloud location")
-    parser.add_argument("--attachment", required=True, type=str, help="The path to the README file")
+    parser.add_argument(
+        "--bwa_mem_tar_file_destination",
+        required=False,
+        type=str,
+        help="The cloud destination for the bwa-mem tarball file"
+    )
+    parser.add_argument(
+        "--star_readme",
+        required=False,
+        type=str,
+        help="The path to the star tar file README file"
+    )
+    parser.add_argument(
+        "--bwa_mem_readme",
+        required=False,
+        type=str,
+        help="The path to the bra-mem tar file README file"
+    )
 
     return parser.parse_args()
 
@@ -99,11 +153,14 @@ def get_args() -> argparse.Namespace:
 if __name__ == '__main__':
     args = get_args()
     CopyPublicCloudReference(
-        reference_name=args.reference_name,
         chrom_sizes_file_location=args.chrom_sizes_file_location,
+        chrom_sizes_file_destination=args.chrom_sizes_file_destination,
         annotation_file_location=args.annotation_file_location,
+        annotations_file_destination=args.annotations_file_destination,
         star_tar_file_location=args.star_tar_file_location,
+        star_tar_file_destination=args.star_tar_file_destination,
         bwa_mem_tar_file_location=args.bwa_mem_tar_file_location,
-        output_cloud_path=args.new_location,
-        read_me_path=args.attachment
+        bwa_mem_tar_file_destination=args.bwa_mem_tar_file_destination,
+        star_readme=args.star_readme,
+        bwa_mem_readme=args.bwa_mem_readme,
     ).copy_files_to_public_bucket()
