@@ -1,7 +1,6 @@
 import argparse
 import os
 import logging
-from pathlib import Path
 from typing import Optional
 
 from utils.gcp_utils import GCPCloudFunctions
@@ -56,11 +55,15 @@ class CopyPublicCloudReference:
              },
             {
                 "source": self.star_readme,
-                "destination": os.path.join(self.star_tar_file_destination, "README.txt") if self.star_tar_file_destination else ""
+                "destination": os.path.join(
+                    self.star_tar_file_destination, "README.txt"
+                ) if self.star_tar_file_destination else ""
             },
             {
                 "source": self.bwa_mem_readme,
-                "destination": os.path.join(self.bwa_mem_tar_file_destination, "README.txt") if self.bwa_mem_tar_file_destination else ""
+                "destination": os.path.join(
+                    self.bwa_mem_tar_file_destination, "README.txt"
+                ) if self.bwa_mem_tar_file_destination else ""
             }
         ]
 
@@ -71,10 +74,11 @@ class CopyPublicCloudReference:
                 source = file_mapping.get("source")
                 destination = file_mapping.get("destination")
                 if source:
-                    #self.gcp.copy_cloud_file(
-                    #    src_cloud_path=source, full_destination_path=destination
-                    #)
-                    print(f"Successfully copied '{source}' to the following subdirectory/filepath: '{destination}'\n")
+                    self.gcp.copy_cloud_file(
+                        src_cloud_path=source, full_destination_path=destination
+                    )
+                    logging.info(
+                        f"Successfully copied '{source}' to the following subdirectory/filepath: '{destination}'\n")
 
         except Exception as e:
             logging.error(f"Encountered an error while attempting to copy source files to destination file paths: {e}")
