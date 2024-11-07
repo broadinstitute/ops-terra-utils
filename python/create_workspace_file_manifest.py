@@ -1,3 +1,5 @@
+import json
+
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils.gcp_utils import GCPCloudFunctions
 from utils.request_util import RunRequest
@@ -75,6 +77,5 @@ if __name__ == '__main__':
         file_extensions_to_ignore=extension_exclude_list,
         file_extensions_to_include=extension_include_list
     )
-    logging.info(f"Found {len(workspace_files)} files in bucket")
     write_entities_tsv(workspace_files)
     metadata_upload = workspace.upload_metadata_to_workspace_table(entities_tsv=ENTITY_FILE_PATH)

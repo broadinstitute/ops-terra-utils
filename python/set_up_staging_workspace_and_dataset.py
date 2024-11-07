@@ -73,7 +73,7 @@ def get_args() -> Namespace:
         "--wdls_to_import",
         type=comma_separated_list,
         help=f"""WDLs to import in comma separated list. Options are {GetWorkflowNames().get_workflow_names()}\n,
-         Optional""",
+         Optional. If include workflow not available it will be ignored""",
         required=False
     )
     parser.add_argument(
@@ -465,6 +465,12 @@ if __name__ == '__main__':
     duos_identifier = args.duos_identifier
     wdls_to_import = args.wdls_to_import
     notebooks_to_import = args.notebooks_to_import
+
+    # Validate wdls to import are valid and exclude any that are not
+    wdls_to_import = [
+        wdl for wdl in wdls_to_import
+        if wdl in GetWorkflowNames().get_workflow_names()
+    ]
 
     workspace_name = f"{dataset_name}_Staging"
     auth_group = f"AUTH_{dataset_name}"
