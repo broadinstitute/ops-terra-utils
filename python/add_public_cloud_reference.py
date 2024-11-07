@@ -7,7 +7,7 @@ from utils.gcp_utils import GCPCloudFunctions
 
 
 class CopyPublicCloudReference:
-    BROAD_PUBLIC_REFERENCES_SYNC_BUCKET = "gs://broad-references/"
+    BROAD_PUBLIC_REFERENCES_SYNC_BUCKET = "broad-references"
 
     def __init__(
             self,
@@ -36,6 +36,11 @@ class CopyPublicCloudReference:
 
         self.gcp = GCPCloudFunctions()
 
+    def _replace_public_bucket_location_with_broad_bucket(self, destination_path: str) -> str:
+        return destination_path.replace(
+            "gcp-public-data--broad-references", self.BROAD_PUBLIC_REFERENCES_SYNC_BUCKET
+        )
+
     def copy_files_to_public_bucket(self) -> None:
         gcs_file_mapping = [
             {
@@ -61,9 +66,8 @@ class CopyPublicCloudReference:
             },
             {
                 "source": self.bwa_mem_readme,
-                "destination": os.path.join(
-                    self.bwa_mem_tar_file_destination, "README.txt"
-                ) if self.bwa_mem_tar_file_destination else ""
+                "destination": os.path.join(self.bwa_mem_tar_file_destination, "README.txt"
+                                            ) if self.bwa_mem_tar_file_destination else ""
             }
         ]
 
@@ -71,9 +75,13 @@ class CopyPublicCloudReference:
             # Copy all source files to destination bucket
             logging.info("Copying references files from source location to Broad bucket")
             for file_mapping in gcs_file_mapping:
+
                 source = file_mapping.get("source")
-                destination = file_mapping.get("destination")
+
                 if source:
+                    destination = self._replace_public_bucket_location_with_broad_bucket(
+                        destination_path=file_mapping["destination"]
+                    )
                     self.gcp.copy_cloud_file(
                         src_cloud_path=source, full_destination_path=destination
                     )
