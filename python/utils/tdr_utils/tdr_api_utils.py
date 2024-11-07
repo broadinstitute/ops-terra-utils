@@ -352,23 +352,26 @@ class TDR:
         """
         matching_datasets = []
         for dataset in self._yield_existing_datasets(filter=dataset_name):
-            if billing_profile:
-                if dataset["defaultProfileId"] == billing_profile:
-                    logging.info(f"Dataset {dataset['name']} already exists under billing profile {billing_profile}")
-                    dataset_id = dataset["id"]
-                    logging.info(f"Dataset ID: {dataset_id}")
-                    matching_datasets.append(dataset)
+            # Search uses wildcard so could grab more datasets where dataset_name is substring
+            if dataset_name == dataset["name"]:
+                if billing_profile:
+                    if dataset["defaultProfileId"] == billing_profile:
+                        logging.info(
+                            f"Dataset {dataset['name']} already exists under billing profile {billing_profile}")
+                        dataset_id = dataset["id"]
+                        logging.info(f"Dataset ID: {dataset_id}")
+                        matching_datasets.append(dataset)
+                    else:
+                        logging.warning(
+                            f"Dataset {dataset['name']} exists but is under {dataset['defaultProfileId']} " +
+                            f"and not under billing profile {billing_profile}"
+                        )
+                        # Datasets names need to be unique regardless of billing profile, so raise an error if
+                        # a dataset with the same name is found but is not under the requested billing profile
+                        raise ValueError(
+                            f"Dataset {dataset_name} already exists but is not under billing profile {billing_profile}")
                 else:
-                    logging.warning(
-                        f"Dataset {dataset['name']} exists but is under {dataset['defaultProfileId']} " +
-                        f"and not under billing profile {billing_profile}"
-                    )
-                    # Datasets names need to be unique regardless of billing profile, so raise an error if
-                    # a dataset with the same name is found but is not under the requested billing profile
-                    raise ValueError(
-                        f"Dataset {dataset_name} already exists but is not under billing profile {billing_profile}")
-            else:
-                matching_datasets.append(dataset)
+                    matching_datasets.append(dataset)
         return matching_datasets
 
     def get_dataset_info(self, dataset_id: str, info_to_include: Optional[list[str]] = None) -> dict:
