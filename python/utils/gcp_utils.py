@@ -76,6 +76,7 @@ class GCPCloudFunctions:
     @staticmethod
     def _validate_include_blob(
             blob: Any,
+            bucket_name: str,
             file_extensions_to_ignore: list[str] = [],
             file_strings_to_ignore: list[str] = [],
             file_extensions_to_include: list[str] = [],
@@ -94,17 +95,18 @@ class GCPCloudFunctions:
         Returns:
             bool: True if the blob should be included, False otherwise.
         """
-        if file_extensions_to_ignore and blob.name.endswith(tuple(file_extensions_to_ignore)):
+        file_path = f"gs://{bucket_name}/{blob.name}"
+        if file_extensions_to_ignore and file_path.endswith(tuple(file_extensions_to_ignore)):
             if verbose:
-                logging.info(f"Skipping {blob.name} as it has an extension to ignore")
+                logging.info(f"Skipping {file_path} as it has an extension to ignore")
             return False
-        if file_extensions_to_include and not blob.name.endswith(tuple(file_extensions_to_include)):
+        if file_extensions_to_include and not file_path.endswith(tuple(file_extensions_to_include)):
             if verbose:
-                logging.info(f"Skipping {blob.name} as it does not have an extension to include")
+                logging.info(f"Skipping {file_path} as it does not have an extension to include")
             return False
-        if file_strings_to_ignore and any(file_string in blob.name for file_string in file_strings_to_ignore):
+        if file_strings_to_ignore and any(file_string in file_path for file_string in file_strings_to_ignore):
             if verbose:
-                logging.info(f"Skipping {blob.name} as it has a string to ignore")
+                logging.info(f"Skipping {file_path} as it has a string to ignore")
             return False
         return True
 
@@ -136,9 +138,12 @@ class GCPCloudFunctions:
             )
             for blob in blobs
             if self._validate_include_blob(
-                blob=blob, file_extensions_to_ignore=file_extensions_to_ignore,
-                file_strings_to_ignore=file_strings_to_ignore, file_extensions_to_include=file_extensions_to_include
-            )
+                blob=blob,
+                file_extensions_to_ignore=file_extensions_to_ignore,
+                file_strings_to_ignore=file_strings_to_ignore,
+                file_extensions_to_include=file_extensions_to_include,
+                bucket_name=bucket_name
+            ) and not blob.name.endswith("/")
         ]
         logging.info(f"Found {len(file_list)} files in bucket")
         return file_list
