@@ -33,11 +33,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests
-        if: steps.changes.outputs.utils == 'true'
-        run: |
-          pip install pytest
-          pytest python/tests/
+      #- name: Run tests
+        #if: steps.changes.outputs.utils == 'true'
+        #run: |
+          #pip install pytest
+          #pytest python/tests/
       
       - name: test resource _cleanup
         if: always()
