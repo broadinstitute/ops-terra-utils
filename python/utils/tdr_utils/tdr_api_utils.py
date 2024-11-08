@@ -842,6 +842,21 @@ class TDR:
             method=GET
         )
         return response.json()
+    
+    def unlock_dataset(self, dataset_id: str, lock_id: str) -> None:
+        uri = f"{self.TDR_LINK}/snapshots?datasetIds={dataset_id}"
+        body = {
+            "lockName": lock_id,
+            "forceUnlock": False
+        }
+        response = self.request_util.run_request(
+            uri=uri,
+            method=POST,
+            data=body
+        )
+        return response.json()
+
+
 
 
 class FilterOutSampleIdsAlreadyInDataset:
