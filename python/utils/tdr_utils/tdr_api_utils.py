@@ -852,7 +852,8 @@ class TDR:
         response = self.request_util.run_request(
             uri=uri,
             method=PUT,
-            data=body
+            data=body,
+            content_type="application/json"
         )
         return response.json()
 
