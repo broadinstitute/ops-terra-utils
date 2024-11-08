@@ -845,10 +845,7 @@ class TDR:
 
     def unlock_dataset(self, dataset_id: str, lock_id: str) -> None:
         uri = f"{self.TDR_LINK}/datasets/{dataset_id}/unlock"
-        body = {
-            "lockName": lock_id,
-            "forceUnlock": False
-        }
+        body = json.dumps({"lockName": lock_id,"forceUnlock": False})
         response = self.request_util.run_request(
             uri=uri,
             method=PUT,
