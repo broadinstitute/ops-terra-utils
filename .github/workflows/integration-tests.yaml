@@ -42,4 +42,4 @@ jobs:
       - name: test resource _cleanup
         if: always()
         run: | 
-          python -m python.tests.utils.clean_up_test_resources.py
+          python -m python.tests.utils.clean_up_test_resources
