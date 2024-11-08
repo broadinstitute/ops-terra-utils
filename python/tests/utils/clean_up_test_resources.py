@@ -18,6 +18,7 @@ def tdr_resource_cleanup() -> None:
         else:
             lock_id = dataset_info[0]['resourceLocks']['exclusive']
             tdr_client.unlock_dataset(dataset_id=dataset_id, lock_id=lock_id)
+            tdr_client.delete_dataset(dataset_id=dataset_id)
 
 
 if __name__ == "__main__":
