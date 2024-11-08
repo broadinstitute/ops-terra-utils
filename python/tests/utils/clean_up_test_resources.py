@@ -13,6 +13,7 @@ def tdr_resource_cleanup() -> None:
     if dataset_info:
         print(f"dataset info found: {dataset_info}")
         dataset_id = dataset_info[0]['id']
+        tdr_client.add_user_to_dataset(dataset_id=dataset_id, user='jscira@broadinstitute.org', policy='steward')
         if dataset_info[0]['resourceLocks']['exclusive']:
             lock_id = dataset_info[0]['resourceLocks']['exclusive']
             tdr_client.unlock_dataset(dataset_id=dataset_id, lock_id=lock_id)
