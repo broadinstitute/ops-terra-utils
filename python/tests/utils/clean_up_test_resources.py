@@ -13,12 +13,11 @@ def tdr_resource_cleanup() -> None:
     if dataset_info:
         print(f"dataset info found: {dataset_info}")
         dataset_id = dataset_info[0]['id']
-        if not dataset_info[0].get('resourceLocks'):
-            tdr_client.delete_dataset(dataset_id=dataset_id)
-        else:
+        if dataset_info[0]['resourceLocks']['exclusive']:
             lock_id = dataset_info[0]['resourceLocks']['exclusive']
             tdr_client.unlock_dataset(dataset_id=dataset_id, lock_id=lock_id)
-            tdr_client.delete_dataset(dataset_id=dataset_id)
+
+        tdr_client.delete_dataset(dataset_id=dataset_id)
 
 
 if __name__ == "__main__":
