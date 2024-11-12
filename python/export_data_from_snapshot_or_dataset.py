@@ -116,5 +116,5 @@ if __name__ == '__main__':
     ).get_source_and_destination_paths()
 
     GCPCloudFunctions().multithread_copy_of_files_with_validation(
-        files_to_move=mapping, workers=ARG_DEFAULTS['multithread_workers'], max_retries=max_retries
+        files_to_copy=mapping, workers=ARG_DEFAULTS['multithread_workers'], max_retries=max_retries
     )
