@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+from re import match
 
 import numpy as np
 import pandas as pd
@@ -67,13 +68,26 @@ class InferTDRSchema:
         disparate_header_info = []
 
         for header, values_for_header in key_value_type_mappings.items():
-            # find one value that's non-none to get the type to check against
-            # specifically check if not "None" since we can have all zeroes, for example
-            type_to_match_against = type([v for v in values_for_header if v is not None][0])
-            # check if all the values in the list that are non-none match the type of the first entry
-            all_values_matching = all(  # noqa: E721
-                type(v) == type_to_match_against for v in values_for_header if v is not None
-            )
+            # check if some values are lists while others are not (consider this a "mismatch" if so)
+            if any(isinstance(item, list) for item in values_for_header) and not all(isinstance(item, list) for item in values_for_header):
+                all_values_matching = False
+            elif all(isinstance(item, list) for item in values_for_header):
+                # if the row contains only lists of items, check that all items in each list are of the same type
+                matching_type = type(values_for_header[0][0]) if values_for_header and values_for_header[0] else None
+                if matching_type:
+                    all_values_matching = all(
+                        all(type(item) == matching_type for item in sublist) for sublist in values_for_header if sublist
+                    )
+                else:
+                    # if all "sub-lists" are empty, assume that all types are matching (all empty lists are handled below)
+                    all_values_matching = True
+            else:
+                # find one value that's non-none to get the type to check against
+                # specifically check if not "None" since we can have all zeroes, for example
+                type_to_match_against = type([v for v in values_for_header if v is not None][0])
+                # check if all the values in the list that are non-none match the type of the first entry
+                all_values_matching = all(type(v) == type_to_match_against for v in values_for_header if v is not None)
+
             # If ALL rows for the header are none, force the type to be a string
             if all_values_matching and not any(values_for_header):
                 matching.append({header: all_values_matching})
