@@ -212,8 +212,13 @@ class InferTDRSchema:
         for header in dataframe_headers:
             all_none = na_replaced[header].isna().all()
             some_none = na_replaced[header].isna().any()
+            contains_array = na_replaced[header].apply(lambda x: isinstance(x, (np.ndarray, list))).any()
+
+            # if the column contains any arrays, set it as optional since arrays cannot be required in tdr
+            if contains_array:
+                header_requirements.append({"name": header, "required": False})
             # if all rows are none for a given column, we set the default type to "string" type in TDR
-            if all_none:
+            elif all_none:
                 header_requirements.append({"name": header, "required": False, "data_type": "string"})
             # if some rows are none or all non required is set to true AND header
             # is not primary key, we set the column to non-required
@@ -223,6 +228,8 @@ class InferTDRSchema:
                 header_requirements.append({"name": header, "required": True})
 
         return header_requirements
+# TODO update logging
+# TODO update default force_disparate to true
 
     @staticmethod
     def _reformat_metadata(cleaned_metadata: list[dict]) -> dict:
