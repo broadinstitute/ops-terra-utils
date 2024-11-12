@@ -84,6 +84,10 @@ class InferTDRSchema:
                     }
                 )
             if not all_values_matching and self.allow_disparate_data_types_in_column:
+                logging.info(
+                    f"Not all data types matched for header '{header}' but forcing them to strings as "
+                    f"'allow_disparate_data_types_in_column' setting is set to true"
+                )
                 matching.append({header: True})
                 disparate_header_info.append(
                     {
@@ -181,6 +185,7 @@ class InferTDRSchema:
             array_of = True if any(isinstance(v, list) for v in values_for_header) else False
 
             if force_to_string:
+                logging.info(f"Header '{header}' was forced to string to to mismatched datatypes in column")
                 data_type = self.PYTHON_TDR_DATA_TYPE_MAPPING[str]
             else:
                 # find either the first item that's non-None, or the first non-empty list
@@ -228,8 +233,6 @@ class InferTDRSchema:
                 header_requirements.append({"name": header, "required": True})
 
         return header_requirements
-# TODO update logging
-# TODO update default force_disparate to true
 
     @staticmethod
     def _reformat_metadata(cleaned_metadata: list[dict]) -> dict:

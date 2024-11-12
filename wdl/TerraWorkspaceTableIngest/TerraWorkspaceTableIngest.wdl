@@ -16,7 +16,7 @@ workflow GCPWorkspaceToDatasetIngest {
         Int? max_backoff_time
         Int? batch_size
         String? docker
-        Boolean force_disparate_rows_to_string
+        Boolean force_disparate_rows_to_string = true
     }
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
