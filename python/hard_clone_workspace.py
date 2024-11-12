@@ -136,7 +136,7 @@ class CopyFilesToDestWorkspace:
                 f"Copying batch {i + 1}/{len(file_batches)} with {len(batch)} files to "
                 f"destination bucket {self.dest_bucket}")
             self.gcp_cloud_functions.multithread_copy_of_files_with_validation(
-                files_to_move=batch,
+                files_to_copy=batch,
                 workers=self.workers,
                 max_retries=5
             )

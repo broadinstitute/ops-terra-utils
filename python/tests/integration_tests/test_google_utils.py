@@ -177,7 +177,7 @@ def test_multithread_copy_of_files_with_validation() -> None:
     validation = test_data['validation']
 
     GCPCloudFunctions().multithread_copy_of_files_with_validation(
-        files_to_move=test_data['function_input'], workers=2, max_retries=1)
+        files_to_copy=test_data['function_input'], workers=2, max_retries=1)
     check_cloud_paths(validation)
     for item in validation:
         assert item["check_passed"], "Files were not in expected end state"

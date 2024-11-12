@@ -1,0 +1,7 @@
+{
+    "CopyGcpToGcp.destination_path": "String",
+    "CopyGcpToGcp.source_bucket": "String",
+    "CopyGcpToGcp.source_fofn": "String",
+    "CopyGcpToGcp.preserve_structure": "Boolean",
+    "CopyGcpToGcp.docker": "String"
+}
