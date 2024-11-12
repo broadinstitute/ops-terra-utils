@@ -2,8 +2,14 @@ import argparse
 import os
 import logging
 from typing import Optional
+from pathlib import Path
 
 from utils.gcp_utils import GCPCloudFunctions
+
+
+logging.basicConfig(
+    format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
+)
 
 
 class CopyPublicCloudReference:
@@ -48,26 +54,24 @@ class CopyPublicCloudReference:
                 "destination": self.chrom_sizes_file_destination,
             },
             {
-                "source:": self.annotation_file_location,
+                "source": self.annotation_file_location,
                 "destination": self.annotations_file_destination,
             },
             {
                 "source": self.star_tar_file_location,
                 "destination": self.star_tar_file_destination,
             },
-            {"source": self.bwa_mem_tar_file_location,
+            {
+                "source": self.bwa_mem_tar_file_location,
                 "destination": self.bwa_mem_tar_file_destination,
-             },
+            },
             {
                 "source": self.star_readme,
-                "destination": os.path.join(
-                    self.star_tar_file_destination, "README.txt"
-                ) if self.star_tar_file_destination else ""
+                "destination": self.star_tar_file_destination,
             },
             {
                 "source": self.bwa_mem_readme,
-                "destination": os.path.join(self.bwa_mem_tar_file_destination, "README.txt"
-                                            ) if self.bwa_mem_tar_file_destination else ""
+                "destination": self.bwa_mem_tar_file_destination,
             }
         ]
 
@@ -75,18 +79,20 @@ class CopyPublicCloudReference:
             # Copy all source files to destination bucket
             logging.info("Copying references files from source location to Broad bucket")
             for file_mapping in gcs_file_mapping:
-
                 source = file_mapping.get("source")
-
                 if source:
-                    destination = self._replace_public_bucket_location_with_broad_bucket(
-                        destination_path=file_mapping["destination"]
+                    dest_file_name = Path(file_mapping["source"]).name
+                    destination = os.path.join(
+                        self._replace_public_bucket_location_with_broad_bucket(
+                            destination_path=file_mapping["destination"]
+                        ),
+                        dest_file_name
                     )
                     self.gcp.copy_cloud_file(
                         src_cloud_path=source, full_destination_path=destination
                     )
                     logging.info(
-                        f"Successfully copied '{source}' to the following subdirectory/filepath: '{destination}'\n")
+                        f"Successfully copied '{source}' to the following filepath: '{destination}'\n")
 
         except Exception as e:
             logging.error(f"Encountered an error while attempting to copy source files to destination file paths: {e}")
