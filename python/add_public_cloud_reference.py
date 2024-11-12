@@ -32,8 +32,6 @@ class CopyPublicCloudReference:
         self.chrom_sizes_file_location = chrom_sizes_file_location
         self.chrom_sizes_file_destination = chrom_sizes_file_destination
         self.annotation_file_location = annotation_file_location
-
-        print(f'ANNOTATIONS FILE: {self.annotation_file_location}')
         self.annotations_file_destination = annotations_file_destination
         self.star_tar_file_location = star_tar_file_location
         self.star_tar_file_destination = star_tar_file_destination
@@ -90,9 +88,9 @@ class CopyPublicCloudReference:
                         ),
                         dest_file_name
                     )
-                    #self.gcp.copy_cloud_file(
-                    #    src_cloud_path=source, full_destination_path=destination
-                    #)
+                    self.gcp.copy_cloud_file(
+                        src_cloud_path=source, full_destination_path=destination
+                    )
                     logging.info(
                         f"Successfully copied '{source}' to the following filepath: '{destination}'\n")
 
