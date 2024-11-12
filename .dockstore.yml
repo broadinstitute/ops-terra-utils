@@ -76,3 +76,10 @@ workflows:
     readMePath: /wdl/SetUpStagingWorkspaceAndDataset/README.md
     testParameterFiles:
       - /wdl/SetUpStagingWorkspaceAndDataset/SetUpStagingWorkspaceAndDataset.wdl
+
+  - name: CopyGcpToGcp
+    subclass: WDL
+    primaryDescriptorPath: /wdl/CopyGcpToGcp/CopyGcpToGcp.wdl
+    readMePath: /wdl/CopyGcpToGcp/README.md
+    testParameterFiles:
+      - /wdl/CopyGcpToGcp/CopyGcpToGcp.wdl
