@@ -1,8 +1,6 @@
 import logging
 import re
 import time
-from re import match
-
 import numpy as np
 import pandas as pd
 from datetime import date, datetime

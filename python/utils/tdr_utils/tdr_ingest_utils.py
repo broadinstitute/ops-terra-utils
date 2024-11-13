@@ -1,8 +1,6 @@
 import json
 import logging
 import sys
-from importlib.metadata import unique_everseen
-
 import pytz
 from datetime import datetime
 import math
@@ -91,9 +89,9 @@ class BatchIngest:
 
     @staticmethod
     def _reformat_for_type_consistency(ingest_metadata) -> list[dict]:
-        """Takes ingest metadata and finds headers where values are a mix of strings and arrays. If there is mix of
-        these types of values, it converts the string to a one-item list.The updated metadata is then returned to be
-        used for everything downstream"""
+        """Takes ingest metadata and finds headers where values are a mix of lists and non-lists. If there is mix of
+        these types of values, it converts the non-array to a one-item list. The updated metadata is then returned to
+        be used for everything downstream"""
         unique_headers = sorted({key for item in ingest_metadata for key in item.keys()})
 
         headers_containing_mismatch = []
@@ -170,7 +168,6 @@ class BatchIngest:
                 load_tag = self.load_tag
             else:
                 load_tag = f"{self.dataset_id}.{self.target_table_name}"
-
             # Start actual ingest
             if reformatted_batch:
                 StartAndMonitorIngest(

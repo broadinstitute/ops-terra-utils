@@ -75,7 +75,7 @@ task IngestWorkspaceDataToDataset {
         ~{if check_existing_ingested_files then "--check_existing_ingested_files" else ""} \
         ~{"--batch_size " + batch_size} \
         ~{if all_fields_non_required then "--all_fields_non_required" else ""} \
-        ~{if force_disparate_rows_to_string then "--force_disparate_rows_to_string" else ""} \
+        ~{if force_disparate_rows_to_string then "--force_disparate_rows_to_string" else ""}
 
     >>>
 
