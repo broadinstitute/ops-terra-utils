@@ -630,6 +630,81 @@ class TDR:
         logging.info(f"Got {len(all_metadata_file_uuids)} file uuids from {tables} total table(s)")
         return all_metadata_file_uuids
 
+    def soft_delete_entries(
+            self,
+            dataset_id: str,
+            table_name: str,
+            datarepo_row_ids: list[str],
+            check_intervals: int = 15
+    ) -> None:
+        """
+        Soft delete specific records from a table.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            table_name (str): The name of the target table.
+            datarepo_row_ids (list[str]): A list of row IDs to be deleted.
+            check_intervals (int, optional): The interval in seconds to wait between status checks. Defaults to 15.
+
+        Returns:
+            None
+        """
+        if not datarepo_row_ids:
+            logging.info(f"No records found to soft delete in table {table_name}")
+            return
+        logging.info(f"Soft deleting {len(datarepo_row_ids)} records from table {table_name}")
+        uri = f"{self.TDR_LINK}/datasets/{dataset_id}/deletes"
+        payload = {
+            "deleteType": "soft",
+            "specType": "jsonArray",
+            "tables": [
+                {
+                    "tableName": table_name,
+                    "jsonArraySpec": {
+                        "rowIds": datarepo_row_ids
+                    }
+                }
+            ]
+        }
+        response = self.request_util.run_request(
+            method=POST,
+            uri=uri,
+            data=json.dumps(payload),
+            content_type="application/json"
+        )
+        job_id = response.json()["id"]
+        MonitorTDRJob(tdr=self, job_id=job_id, check_interval=check_intervals, return_json=False).run()
+
+    def soft_delete_all_table_entries(
+            self,
+            dataset_id: str,
+            table_name: str,
+            query_limit: int = 1000,
+            check_intervals: int = 15
+    ) -> None:
+        """
+        Soft deletes all records in a table.
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+            table_name (str): The name of the target table.
+            query_limit (int, optional): The maximum number of records to retrieve per batch. Defaults to 1000.
+            check_intervals (int, optional): The interval in seconds to wait between status checks. Defaults to 15.
+
+        Returns:
+            None
+        """
+        data_set_metrics = self.get_data_set_table_metrics(
+            dataset_id=dataset_id, target_table_name=table_name, query_limit=query_limit
+        )
+        row_ids = [metric["datarepo_row_id"] for metric in data_set_metrics]
+        self.soft_delete_entries(
+            dataset_id=dataset_id,
+            table_name=table_name,
+            datarepo_row_ids=row_ids,
+            check_intervals=check_intervals
+        )
+
     def get_or_create_dataset(
             self,
             dataset_name: str,
