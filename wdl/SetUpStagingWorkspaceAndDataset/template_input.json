@@ -1,5 +1,6 @@
 {
   "SetUpStagingWorkspaceAndDataset.continue_if_exists": "Boolean",
+  "SetUpStagingWorkspaceAndDataset.delete_existing_dataset": "Boolean",
   "SetUpStagingWorkspaceAndDataset.controlled_access": "Boolean",
   "SetUpStagingWorkspaceAndDataset.current_user_email": "String",
   "SetUpStagingWorkspaceAndDataset.dataset_name": "String",
