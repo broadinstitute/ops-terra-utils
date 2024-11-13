@@ -252,10 +252,6 @@ class SetUpDataset:
         )
 
     def run(self) -> dict:
-        #existing_datasets = self.tdr.check_if_dataset_exists(
-        #    dataset_name=self.dataset_name,
-        #    billing_profile=self.tdr_billing_profile
-        #)
         dataset_id = self.tdr.get_or_create_dataset(
             dataset_name=dataset_name,
             billing_profile=self.tdr_billing_profile,
@@ -266,10 +262,7 @@ class SetUpDataset:
             delete_existing=self.delete_existing_dataset,
             continue_if_exists=self.continue_if_exists
         )
-        #if not existing_datasets:
         self._add_row_to_table(dataset_id)
-        #else:
-        #   logging.info(f"Because dataset already exists skipping adding row to {self.REFERENCE_TABLE}")
         self._set_up_permissions(dataset_id)
         return self.tdr.get_dataset_info(dataset_id)
 
