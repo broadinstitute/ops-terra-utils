@@ -327,10 +327,12 @@ class TDR:
         offset = 0
         if filter:
             filter_str = f"&filter={filter}"
+            log_message = f"Searching for datasets with filter {filter} in batches of {batch_size}"
         else:
             filter_str = ""
+            log_message = f"Searching for all datasets in batches of {batch_size}"
+        logging.info(log_message)
         while True:
-            logging.info(f"Searching for datasets with filter {filter_str} in batches of {batch_size}")
             uri = f"{self.TDR_LINK}/datasets?offset={offset}&limit={batch_size}&sort=created_date&direction={direction}{filter_str}"  # noqa: E501
             response = self.request_util.run_request(uri=uri, method=GET)
             datasets = response.json()["items"]
@@ -635,6 +637,8 @@ class TDR:
             schema: dict,
             description: str,
             cloud_platform: str,
+            delete_existing: bool = False,
+            continue_if_exists: bool = False,
             additional_properties_dict: Optional[dict] = None
     ) -> str:
         """
@@ -648,6 +652,10 @@ class TDR:
             cloud_platform (str): The cloud platform for the dataset.
             additional_properties_dict (Optional[dict], optional): Additional properties
                 for the dataset. Defaults to None.
+            delete_existing (bool, optional): Whether to delete the existing dataset if found.
+                Defaults to False.
+            continue_if_exists (bool, optional): Whether to continue if the dataset already exists.
+                Defaults to False.
 
         Returns:
             str: The ID of the dataset.
@@ -657,13 +665,18 @@ class TDR:
         """
         existing_data_sets = self.check_if_dataset_exists(dataset_name, billing_profile)
         if existing_data_sets:
-            if len(existing_data_sets) > 1:
+            if not continue_if_exists:
                 raise ValueError(
-                    f"Multiple datasets found with name {dataset_name} under billing_profile: "
-                    f"{json.dumps(existing_data_sets, indent=4)}"
+                    f"Run with continue_if_exists=True to use the existing dataset {dataset_name}"
                 )
-
-            dataset_id = existing_data_sets[0]["id"]
+            # If delete_existing is True, delete the existing dataset and set existing_data_sets to an empty list
+            if delete_existing:
+                logging.info(f"Deleting existing dataset {dataset_name}")
+                self.delete_dataset(existing_data_sets[0]["id"])
+                existing_data_sets = []
+            # If not delete_existing and continue_if_exists then grab existing datasets id
+            else:
+                dataset_id = existing_data_sets[0]["id"]
         if not existing_data_sets:
             logging.info("Did not find existing dataset")
             # Create dataset
