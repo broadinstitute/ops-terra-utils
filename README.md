@@ -16,6 +16,9 @@ Welcome to this repository! This repo contains Python scripts and WDLs designed 
 
 For more detailed information, please refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 
+### Who to Contact
+- For questions, assistance, suggestions, or special requests, feel free to connect with the team on the Slack channel #ops-terra-utils.
+
 ## Quick Start Guide
 If you're new to repository or any of these features, follow the guide here to get started writing and testing your first workflow.
 
