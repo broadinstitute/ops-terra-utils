@@ -82,6 +82,11 @@ def get_args() -> Namespace:
         help="gcp paths to notebooks to import in comma separated list. Optional",
         required=False
     )
+    parser.add_argument(
+        "--delete_existing_dataset",
+        action="store_true",
+        help="If dataset already exists, delete it before creating a new one",
+    )
     return parser.parse_args()
 
 
@@ -173,6 +178,9 @@ class SetUpDataset:
                         "array_of": False,
                         "required": True
                     }
+                ],
+                "primaryKey": [
+                    "key"
                 ]
             }
         ]
@@ -189,6 +197,7 @@ class SetUpDataset:
             auth_group: str,
             controlled_access: bool,
             terra_billing_project: str,
+            delete_existing_dataset: bool,
             phs_id: Optional[str] = None
     ):
         self.tdr = tdr
@@ -200,6 +209,7 @@ class SetUpDataset:
         self.tdr_billing_profile = tdr_billing_profile
         self.resource_owners = resource_owners
         self.auth_group = auth_group
+        self.delete_existing_dataset = delete_existing_dataset
         self.controlled_access = controlled_access
 
     def _create_dataset_properties(self) -> dict:
@@ -242,27 +252,17 @@ class SetUpDataset:
         )
 
     def run(self) -> dict:
-        existing_datasets = self.tdr.check_if_dataset_exists(
-            dataset_name=self.dataset_name,
-            billing_profile=self.tdr_billing_profile
-        )
-        if existing_datasets:
-            logging.info(f"Dataset {self.dataset_name} already exists")
-            if not self.continue_if_exists:
-                logging.error("Exiting because dataset already exists. Use --continue_if_exists to continue")
-                exit(1)
         dataset_id = self.tdr.get_or_create_dataset(
             dataset_name=dataset_name,
             billing_profile=self.tdr_billing_profile,
             schema=self.SCHEMA,
             description="",
             cloud_platform=GCP,
-            additional_properties_dict=self._create_dataset_properties()
+            additional_properties_dict=self._create_dataset_properties(),
+            delete_existing=self.delete_existing_dataset,
+            continue_if_exists=self.continue_if_exists
         )
-        if not existing_datasets:
-            self._add_row_to_table(dataset_id)
-        else:
-            logging.info(f"Because dataset already exists skipping adding row to {self.REFERENCE_TABLE}")
+        self._add_row_to_table(dataset_id)
         self._set_up_permissions(dataset_id)
         return self.tdr.get_dataset_info(dataset_id)
 
@@ -465,12 +465,14 @@ if __name__ == '__main__':
     duos_identifier = args.duos_identifier
     wdls_to_import = args.wdls_to_import
     notebooks_to_import = args.notebooks_to_import
+    delete_existing_dataset = args.delete_existing_dataset
 
     # Validate wdls to import are valid and exclude any that are not
-    wdls_to_import = [
-        wdl for wdl in wdls_to_import
-        if wdl in GetWorkflowNames().get_workflow_names()
-    ]
+    if wdls_to_import:
+        wdls_to_import = [
+            wdl for wdl in wdls_to_import
+            if wdl in GetWorkflowNames().get_workflow_names()
+        ]
 
     workspace_name = f"{dataset_name}_Staging"
     auth_group = f"AUTH_{dataset_name}"
@@ -510,7 +512,8 @@ if __name__ == '__main__':
         workspace_name=workspace_name,
         resource_owners=resource_owners,
         auth_group=auth_group,
-        controlled_access=controlled_access
+        controlled_access=controlled_access,
+        delete_existing_dataset=delete_existing_dataset
     ).run()
 
     data_ingest_sa = dataset_info["ingestServiceAccount"]
