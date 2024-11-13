@@ -90,7 +90,7 @@ class InferTDRSchema:
                 # specifically check if not "None" since we can have all zeroes, for example
                 type_to_match_against = type([v for v in values_for_header if v is not None][0])
                 # check if all the values in the list that are non-none match the type of the first entry
-                all_values_matching = all(type(v) == type_to_match_against for v in values_for_header if v is not None)
+                all_values_matching = all(isinstance(v, type_to_match_against) for v in values_for_header if v is not None)
 
             # If ALL rows for the header are none, force the type to be a string
             if all_values_matching and not any(values_for_header):

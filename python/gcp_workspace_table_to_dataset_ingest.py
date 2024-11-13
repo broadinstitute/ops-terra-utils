@@ -159,7 +159,6 @@ if __name__ == "__main__":
             columns_to_ignore=COLUMNS_TO_IGNORE
         ).run()
 
-
         # Use only specific sample ids if provided
         if records_to_ingest:
             updated_metrics = [

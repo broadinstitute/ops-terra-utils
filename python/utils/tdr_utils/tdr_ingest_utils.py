@@ -115,7 +115,6 @@ class BatchIngest:
 
         return updated_metadata
 
-
     def _reformat_metadata(self, metrics_batch: list[dict]) -> list[dict]:
         """
         Reformat the metadata for ingestion based on the cloud type.
