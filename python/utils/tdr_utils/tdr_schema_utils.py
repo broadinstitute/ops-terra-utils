@@ -68,16 +68,22 @@ class InferTDRSchema:
         disparate_header_info = []
 
         for header, values_for_header in key_value_type_mappings.items():
-            # check if some values are lists while others are not (consider this a "mismatch" if so)
-            if any(isinstance(item, list) for item in values_for_header) and not all(isinstance(item, list) for item in values_for_header):
+            # check if some values are lists while others are not (consider this a "mismatch" if so) while ignoring
+            # "None" entries
+            if (any(isinstance(item, list) for item in values_for_header if item is not None) and
+                    not all(isinstance(item, list) for item in values_for_header if item is not None)):
                 all_values_matching = False
-            elif all(isinstance(item, list) for item in values_for_header):
-                # if the row contains only lists of items, check that all items in each list are of the same type
-                matching_type = type(values_for_header[0][0]) if values_for_header and values_for_header[0] else None
-                if matching_type:
+            # if the row contains ONLY lists of items, check that all items in each list are of the same type (while
+            # ignoring "None" entries)
+            elif all(isinstance(item, list) for item in values_for_header if item is not None):
+                # first get all substrings that have some values
+                non_empty_substrings = [v for v in values_for_header if v]
+                if non_empty_substrings:
+                    # get one "type" from the list of values
+                    first_match_type = type([v[0] for v in non_empty_substrings][0])
                     all_values_matching = all(
-                        all(type(item) == matching_type for item in sublist) for sublist in values_for_header if sublist
-                    )
+                        all(isinstance(item, first_match_type) for item in sublist) for sublist in non_empty_substrings
+                        )
                 else:
                     # if all "sub-lists" are empty, assume that all types are matching (all empty lists are handled below)
                     all_values_matching = True
@@ -315,4 +321,5 @@ class InferTDRSchema:
             "name": self.table_name,
             "columns": column_metadata,
         }
+
         return tdr_tables_json

@@ -458,6 +458,8 @@ class TDR:
         logging.info(
             "If recently added TDR SA to source bucket/dataset/workspace and you receive a 400/403 error, " +
             "it can sometimes take up to 12/24 hours for permissions to propagate. Try rerunning the script later.")
+        #print(f'payload: {data}')
+
         response = self.request_util.run_request(
             uri=uri,
             method=POST,
