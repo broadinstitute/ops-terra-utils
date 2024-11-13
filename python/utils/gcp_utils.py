@@ -76,6 +76,7 @@ class GCPCloudFunctions:
     @staticmethod
     def _validate_include_blob(
             blob: Any,
+            bucket_name: str,
             file_extensions_to_ignore: list[str] = [],
             file_strings_to_ignore: list[str] = [],
             file_extensions_to_include: list[str] = [],
@@ -94,17 +95,18 @@ class GCPCloudFunctions:
         Returns:
             bool: True if the blob should be included, False otherwise.
         """
-        if file_extensions_to_ignore and blob.name.endswith(tuple(file_extensions_to_ignore)):
+        file_path = f"gs://{bucket_name}/{blob.name}"
+        if file_extensions_to_ignore and file_path.endswith(tuple(file_extensions_to_ignore)):
             if verbose:
-                logging.info(f"Skipping {blob.name} as it has an extension to ignore")
+                logging.info(f"Skipping {file_path} as it has an extension to ignore")
             return False
-        if file_extensions_to_include and not blob.name.endswith(tuple(file_extensions_to_include)):
+        if file_extensions_to_include and not file_path.endswith(tuple(file_extensions_to_include)):
             if verbose:
-                logging.info(f"Skipping {blob.name} as it does not have an extension to include")
+                logging.info(f"Skipping {file_path} as it does not have an extension to include")
             return False
-        if file_strings_to_ignore and any(file_string in blob.name for file_string in file_strings_to_ignore):
+        if file_strings_to_ignore and any(file_string in file_path for file_string in file_strings_to_ignore):
             if verbose:
-                logging.info(f"Skipping {blob.name} as it has a string to ignore")
+                logging.info(f"Skipping {file_path} as it has a string to ignore")
             return False
         return True
 
@@ -117,7 +119,7 @@ class GCPCloudFunctions:
         List contents of a GCS bucket and return a list of dictionaries with file information.
 
         Args:
-            bucket_name (str): The name of the GCS bucket.
+            bucket_name (str): The name of the GCS bucket. If includes gs://, it will be removed.
             file_extensions_to_ignore (list[str], optional): List of file extensions to ignore. Defaults to [].
             file_strings_to_ignore (list[str], optional): List of file name substrings to ignore. Defaults to [].
             file_extensions_to_include (list[str], optional): List of file extensions to include. Defaults to [].
@@ -126,6 +128,9 @@ class GCPCloudFunctions:
         Returns:
             list[dict]: A list of dictionaries containing file information.
         """
+        # If the bucket name starts with gs://, remove it
+        if bucket_name.startswith("gs://"):
+            bucket_name = bucket_name.split("/")[2].strip()
         logging.info(f"Running list_blobs on gs://{bucket_name}/")
         blobs = self.client.list_blobs(bucket_name)
         logging.info("Finished running. Processing files now")
@@ -136,9 +141,12 @@ class GCPCloudFunctions:
             )
             for blob in blobs
             if self._validate_include_blob(
-                blob=blob, file_extensions_to_ignore=file_extensions_to_ignore,
-                file_strings_to_ignore=file_strings_to_ignore, file_extensions_to_include=file_extensions_to_include
-            )
+                blob=blob,
+                file_extensions_to_ignore=file_extensions_to_ignore,
+                file_strings_to_ignore=file_strings_to_ignore,
+                file_extensions_to_include=file_extensions_to_include,
+                bucket_name=bucket_name
+            ) and not blob.name.endswith("/")
         ]
         logging.info(f"Found {len(file_list)} files in bucket")
         return file_list
@@ -347,18 +355,18 @@ class GCPCloudFunctions:
         return []
 
     def multithread_copy_of_files_with_validation(
-            self, files_to_move: list[dict], workers: int, max_retries: int
+            self, files_to_copy: list[dict], workers: int, max_retries: int
     ) -> None:
         """
         Copy multiple files in parallel with validation.
 
         Args:
-            files_to_move (list[dict]): List of dictionaries containing source and destination file paths.
+            files_to_copy (list[dict]): List of dictionaries containing source and destination file paths.
             workers (int): Number of worker threads.
             max_retries (int): Maximum number of retries.
         """
         updated_files_to_move = self.loop_and_log_validation_files_multithreaded(
-            files_to_move,
+            files_to_copy,
             log_difference=False,
             workers=workers,
             max_retries=max_retries
@@ -372,7 +380,7 @@ class GCPCloudFunctions:
         logging.info(f"Validating all {len(updated_files_to_move)} new files are identical to original")
         # Validate that all files were copied successfully
         files_not_moved_successfully = self.loop_and_log_validation_files_multithreaded(
-            files_to_move,
+            files_to_copy,
             workers=workers,
             log_difference=True,
             max_retries=max_retries
@@ -428,3 +436,35 @@ class GCPCloudFunctions:
             collect_output=False,
             jobs_complete_for_logging=jobs_complete_for_logging
         )
+
+    def get_blob_details(self, cloud_path: str) -> Any:
+        """
+        Get a GCS blob object.
+
+        Args:
+            cloud_path (str): The GCS path of the file.
+
+        Returns:
+            Any: The GCS blob object.
+        """
+        file_path_components = self.process_cloud_path(cloud_path=cloud_path)
+        bucket_obj = self.client.bucket(bucket_name=file_path_components['bucket'])
+        return bucket_obj.get_blob(file_path_components['blob_url'])
+
+    def read_file(self, cloud_path: str, encoding: str = 'utf-8') -> str:
+        """
+        Read the content of a file from GCS.
+
+        Args:
+            cloud_path (str): The GCS path of the file to read.
+
+        Returns:
+            bytes: The content of the file as bytes.
+        """
+        file_path_components = self.process_cloud_path(cloud_path)
+        blob = self.client.bucket(file_path_components['bucket']).blob(file_path_components['blob_url'])
+        # Download the file content as bytes
+        content_bytes = blob.download_as_bytes()
+        # Convert bytes to string
+        content_str = content_bytes.decode(encoding)
+        return content_str

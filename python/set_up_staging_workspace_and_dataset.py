@@ -73,7 +73,7 @@ def get_args() -> Namespace:
         "--wdls_to_import",
         type=comma_separated_list,
         help=f"""WDLs to import in comma separated list. Options are {GetWorkflowNames().get_workflow_names()}\n,
-         Optional""",
+         Optional. If include workflow not available it will be ignored""",
         required=False
     )
     parser.add_argument(
@@ -81,11 +81,6 @@ def get_args() -> Namespace:
         type=comma_separated_list,
         help="gcp paths to notebooks to import in comma separated list. Optional",
         required=False
-    )
-    parser.add_argument(
-        "--is_anvil",
-        action="store_true",
-        help="Use if you want to import workflows for Anvil"
     )
     return parser.parse_args()
 
@@ -419,7 +414,6 @@ class SetUpWorkflowConfig:
         self.terra_workspace = terra_workspace
         self.workflow_names = workflow_names
         self.billing_project = billing_project
-        self.is_anvil = is_anvil
         self.tdr_billing_profile = tdr_billing_profile
         self.dataset_id = dataset_id
         self.workspace_bucket = workspace_bucket
@@ -445,7 +439,9 @@ class SetUpWorkflowConfig:
                             # When ingesting do not re-ingest records that already exist in the dataset
                             "filter_existing_ids": "true",
                             # When creating file inventory ignore submissions folder from terra workflows
-                            "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"'
+                            "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"',
+                            # When creating any table make all fields nullable
+                            "all_fields_non_required": "false"
                         }
                     )
                 )
@@ -469,7 +465,12 @@ if __name__ == '__main__':
     duos_identifier = args.duos_identifier
     wdls_to_import = args.wdls_to_import
     notebooks_to_import = args.notebooks_to_import
-    is_anvil = args.is_anvil
+
+    # Validate wdls to import are valid and exclude any that are not
+    wdls_to_import = [
+        wdl for wdl in wdls_to_import
+        if wdl in GetWorkflowNames().get_workflow_names()
+    ]
 
     workspace_name = f"{dataset_name}_Staging"
     auth_group = f"AUTH_{dataset_name}"

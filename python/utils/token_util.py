@@ -1,6 +1,8 @@
 import httplib2
 import pytz
 import logging
+import requests
+import os
 from typing import Optional, Union
 from datetime import datetime, timedelta
 
@@ -61,11 +63,24 @@ class Token:
             self.expiry = datetime.fromtimestamp(self.az_token.expires_on)
         return self.token_string
 
+    def _get_sa_token(self):
+        if not self.token_string or not self.expiry or self.expiry < datetime.now(pytz.UTC) + timedelta(minutes=5):
+            SCOPES = ['https://www.googleapis.com/auth/userinfo.profile',
+                      'https://www.googleapis.com/auth/userinfo.email']
+            url = f"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes={','.join(SCOPES)}"  # noqa: E501
+            token_response = requests.get(url, headers={'Metadata-Flavor': 'Google'})
+            self.token_string = token_response.json()['access_token']
+        return token_response.json()['access_token']
+
     def get_token(self) -> Union[str, None]:
         # If token file provided then always return contents
         if self.token_file:
             return self.token_string
         elif self.cloud == GCP:
-            return self._get_gcp_token()
+            # detect if this is running as a cloud run job
+            if os.getenv("CLOUD_RUN_JOB"):
+                return self._get_sa_token()
+            else:
+                return self._get_gcp_token()
         else:
             return self._get_az_token()

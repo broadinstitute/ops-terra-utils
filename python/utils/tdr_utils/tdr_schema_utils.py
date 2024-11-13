@@ -4,7 +4,7 @@ import time
 import numpy as np
 import pandas as pd
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Optional
 
 
 class InferTDRSchema:
@@ -26,16 +26,27 @@ class InferTDRSchema:
         time: "time",
     }
 
-    def __init__(self, input_metadata: list[dict], table_name: str):
+    def __init__(
+            self,
+            input_metadata: list[dict],
+            table_name: str,
+            all_fields_non_required: bool = False,
+            primary_key: Optional[str] = None
+    ):
         """
         Initialize the InferTDRSchema class.
 
         Args:
             input_metadata (list[dict]): The input metadata to infer the schema from.
             table_name (str): The name of the table for which the schema is being inferred.
+            all_fields_non_required (bool): A boolean indicating whether all columns should be set to non-required
+                besides for primary key.
+            primary_key (str): The name of the primary key column. Used to determine column should be required
         """
         self.input_metadata = input_metadata
         self.table_name = table_name
+        self.all_fields_non_required = all_fields_non_required
+        self.primary_key = primary_key
 
     @staticmethod
     def _check_type_consistency(key_value_type_mappings: dict) -> None:
@@ -148,8 +159,7 @@ class InferTDRSchema:
 
         return columns
 
-    @staticmethod
-    def _gather_required_and_non_required_headers(metadata_df: Any, dataframe_headers: list[str]) -> list[dict]:
+    def _gather_required_and_non_required_headers(self, metadata_df: Any, dataframe_headers: list[str]) -> list[dict]:
         """
         Determine whether each header is required or not.
 
@@ -169,7 +179,9 @@ class InferTDRSchema:
             # if all rows are none for a given column, we set the default type to "string" type in TDR
             if all_none:
                 header_requirements.append({"name": header, "required": False, "data_type": "string"})
-            elif some_none:
+            # if some rows are none or all non required is set to true AND header
+            # is not primary key, we set the column to non-required
+            elif some_none or (self.all_fields_non_required and header != self.primary_key):
                 header_requirements.append({"name": header, "required": False})
             else:
                 header_requirements.append({"name": header, "required": True})

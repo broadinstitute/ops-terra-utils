@@ -80,6 +80,7 @@ def get_args() -> argparse.Namespace:
         "--batch_size",
         required=False,
         default=ARG_DEFAULTS["batch_size"],
+        type=int,
         help=f"""The number of rows to ingest at a time. Defaults to {ARG_DEFAULTS['batch_size']} if not provided"""
     )
     parser.add_argument(
@@ -89,6 +90,11 @@ def get_args() -> argparse.Namespace:
         "used for ingest previously was original gs path with 'gs://' removed. Using option will download " +
         "all files for dataset for every single table ingest. It does drastically speed up ingest if files " +
         "have already been ingested."
+    )
+    parser.add_argument(
+        "--all_fields_non_required",
+        action="store_true",
+        help="If used, all columns in the table will be set as non-required besides the primary key"
     )
 
     return parser.parse_args()
@@ -108,6 +114,7 @@ if __name__ == "__main__":
     filter_existing_ids = args.filter_existing_ids
     batch_size = args.batch_size
     check_if_files_already_ingested = args.check_existing_ingested_files
+    all_fields_non_required = args.all_fields_non_required
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -117,18 +124,25 @@ if __name__ == "__main__":
     )
     tdr = TDR(request_util=request_util)
 
+    dataset_info = tdr.get_dataset_info(dataset_id=dataset_id)
+    # Get permissions for workspace ingest
     GetPermissionsForWorkspaceIngest(
         terra_workspace=terra_workspace,
-        dataset_info=tdr.get_dataset_info(dataset_id=dataset_id),
+        dataset_info=dataset_info,
         added_to_auth_domain=True,
     ).run()
+    # Get entity metrics for workspace
     entity_metrics = terra_workspace.get_workspace_entity_info()
+    # Check if dataset is selfHosted. If it isn't then getting UUIDs for files will not work
+    if not dataset_info["selfHosted"] and check_if_files_already_ingested:
+        logging.warning("Dataset is not selfHosted. Cannot check if files have already been ingested and use UUIDs")
+        check_if_files_already_ingested = False
 
     for terra_table_name in terra_tables:
         target_table_name = terra_table_name
 
         # Get sample metrics from Terra
-        sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name)
+        sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name, remove_dicts=True)
         primary_key_column_name = entity_metrics[terra_table_name]["idName"]
         logging.info(f"Got {len(sample_metrics)} samples")
 
@@ -145,6 +159,21 @@ if __name__ == "__main__":
                 metric for metric in updated_metrics if metric[primary_key_column_name] in records_to_ingest
             ]
 
+        table_info_dict = {
+            target_table_name: {
+                "table_name": target_table_name,
+                "primary_key": primary_key_column_name,
+                "ingest_metadata": updated_metrics,
+                "datePartitionOptions": None
+            }
+        }
+        SetUpTDRTables(
+            tdr=tdr,
+            dataset_id=dataset_id,
+            table_info_dict=table_info_dict,
+            all_fields_non_required=all_fields_non_required
+        ).run()
+
         if filter_existing_ids:
             # Filter out sample ids that are already in the dataset
             filtered_metrics = FilterOutSampleIdsAlreadyInDataset(
@@ -157,20 +186,10 @@ if __name__ == "__main__":
         else:
             filtered_metrics = updated_metrics
 
-        table_info_dict = {
-            target_table_name: {
-                "table_name": target_table_name,
-                "primary_key": primary_key_column_name,
-                "ingest_metadata": filtered_metrics,
-                "datePartitionOptions": None
-            }
-
-        }
-        SetUpTDRTables(tdr=tdr, dataset_id=dataset_id, table_info_dict=table_info_dict).run()
-
         if check_if_files_already_ingested:
             # Download and create a dictionary of file paths to UUIDs for ingest
-            file_uuids_dict = tdr.create_file_uuid_dict_for_ingest(dataset_id=dataset_id)
+            file_uuids_dict = tdr.create_file_uuid_dict_for_ingest_for_experimental_self_hosted_dataset(
+                dataset_id=dataset_id)
         else:
             file_uuids_dict = None
 

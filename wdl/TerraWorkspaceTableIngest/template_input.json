@@ -5,4 +5,5 @@
 	"GCPWorkspaceToDatasetIngest.terra_tables": "String",
 	"GCPWorkspaceToDatasetIngest.bulk_mode": "Boolean",
 	"GCPWorkspaceToDatasetIngest.filter_out_entity_already_in_dataset": "Boolean",
+	"GCPWorkspaceToDatasetIngest.all_fields_non_required": "Boolean"
 }

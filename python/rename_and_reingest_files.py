@@ -302,7 +302,7 @@ class BatchCopyAndIngest:
             # Copy files to temp bucket
             gcp_functions.multithread_copy_of_files_with_validation(
                 # Create dict with new names for copy of files to temp bucket
-                files_to_move=files_to_copy,
+                files_to_copy=files_to_copy,
                 workers=self.workers,
                 max_retries=5
             )

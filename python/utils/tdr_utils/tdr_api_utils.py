@@ -99,7 +99,7 @@ class TDR:
             for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
         }
 
-    def create_file_uuid_dict_for_ingest(
+    def create_file_uuid_dict_for_ingest_for_experimental_self_hosted_dataset(
             self,
             dataset_id: str,
             limit: int = ARG_DEFAULTS['batch_size_to_list_files']  # type: ignore[assignment]
@@ -107,6 +107,8 @@ class TDR:
         """
         Create a dictionary of all files in a dataset where the key is the file 'path' and the value is the file UUID.
         This assumes that the tdr 'path' is original path of the file in the cloud storage with gs:// stripped out
+
+        This will ONLY work if dataset was created with experimentalSelfHosted = True
 
         Args:
             dataset_id (str): The ID of the dataset.
@@ -116,7 +118,7 @@ class TDR:
             dict: A dictionary where the key is the file UUID and the value is the file path.
         """
         return {
-            f'gs://{file_dict["path"]}': file_dict['fileId']
+            file_dict['fileDetail']['accessUrl']: file_dict['fileId']
             for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
         }
 
@@ -352,23 +354,26 @@ class TDR:
         """
         matching_datasets = []
         for dataset in self._yield_existing_datasets(filter=dataset_name):
-            if billing_profile:
-                if dataset["defaultProfileId"] == billing_profile:
-                    logging.info(f"Dataset {dataset['name']} already exists under billing profile {billing_profile}")
-                    dataset_id = dataset["id"]
-                    logging.info(f"Dataset ID: {dataset_id}")
-                    matching_datasets.append(dataset)
+            # Search uses wildcard so could grab more datasets where dataset_name is substring
+            if dataset_name == dataset["name"]:
+                if billing_profile:
+                    if dataset["defaultProfileId"] == billing_profile:
+                        logging.info(
+                            f"Dataset {dataset['name']} already exists under billing profile {billing_profile}")
+                        dataset_id = dataset["id"]
+                        logging.info(f"Dataset ID: {dataset_id}")
+                        matching_datasets.append(dataset)
+                    else:
+                        logging.warning(
+                            f"Dataset {dataset['name']} exists but is under {dataset['defaultProfileId']} " +
+                            f"and not under billing profile {billing_profile}"
+                        )
+                        # Datasets names need to be unique regardless of billing profile, so raise an error if
+                        # a dataset with the same name is found but is not under the requested billing profile
+                        raise ValueError(
+                            f"Dataset {dataset_name} already exists but is not under billing profile {billing_profile}")
                 else:
-                    logging.warning(
-                        f"Dataset {dataset['name']} exists but is under {dataset['defaultProfileId']} " +
-                        f"and not under billing profile {billing_profile}"
-                    )
-                    # Datasets names need to be unique regardless of billing profile, so raise an error if
-                    # a dataset with the same name is found but is not under the requested billing profile
-                    raise ValueError(
-                        f"Dataset {dataset_name} already exists but is not under billing profile {billing_profile}")
-            else:
-                matching_datasets.append(dataset)
+                    matching_datasets.append(dataset)
         return matching_datasets
 
     def get_dataset_info(self, dataset_id: str, info_to_include: Optional[list[str]] = None) -> dict:

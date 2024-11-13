@@ -84,6 +84,12 @@ def test_list_bucket_contents() -> None:
     assert len(result) == gcp_blob_count, f"Expected {gcp_blob_count} files, got {len(result)}"
 
 
+def test_get_blob_details() -> None:
+    test_data = gcp_test_resource_json()['tests']['get_blob_details']['test_data']
+    result = GCPCloudFunctions().get_blob_details(cloud_path=test_data['function_input']['blob_path'])
+    assert result.path == "/b/ops_dev_bucket/o/list_bucket_test%2Fex_file_1.txt"
+
+
 def test_copy_cloud_file() -> None:
     test_data = gcp_test_resource_json()['tests']['copy_file']['test_data']
     validations = test_data['validation']
@@ -171,7 +177,7 @@ def test_multithread_copy_of_files_with_validation() -> None:
     validation = test_data['validation']
 
     GCPCloudFunctions().multithread_copy_of_files_with_validation(
-        files_to_move=test_data['function_input'], workers=2, max_retries=1)
+        files_to_copy=test_data['function_input'], workers=2, max_retries=1)
     check_cloud_paths(validation)
     for item in validation:
         assert item["check_passed"], "Files were not in expected end state"
