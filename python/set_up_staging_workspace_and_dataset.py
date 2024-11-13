@@ -234,7 +234,7 @@ class SetUpDataset:
             load_tag=f"{dataset_name}_initial_load",
             bulk_mode=False,
             update_strategy="replace",
-            waiting_time_to_poll=30,
+            waiting_time_to_poll=15,
             tdr=self.tdr,
         ).run()
 
