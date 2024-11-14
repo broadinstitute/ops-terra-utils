@@ -1,6 +1,5 @@
 import argparse
 import logging
-from requests.exceptions import HTTPError
 
 from utils import GCP, comma_separated_list, ARG_DEFAULTS
 from utils.terra_utils.terra_util import TerraWorkspace
