@@ -152,17 +152,6 @@ if __name__ == "__main__":
         logging.warning("Dataset is not selfHosted. Cannot check if files have already been ingested and use UUIDs")
         check_if_files_already_ingested = False
 
-    if trunc_and_reload:
-        logging.info(
-            "Requested trunc and reload, all Terra tables marked for ingestion will be soft-deleted if they exist in "
-            "the target TDR dataset"
-        )
-        for terra_table in terra_tables:
-            try:
-                tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=terra_table)
-            except HTTPError:
-                logging.warning(f"Table with name '{terra_table}' does not exist in TDR dataset. Skipping soft-delete")
-
     for terra_table_name in terra_tables:
         target_table_name = terra_table_name
 
@@ -207,6 +196,13 @@ if __name__ == "__main__":
             all_fields_non_required=all_fields_non_required,
             force_disparate_rows_to_string=force_disparate_rows_to_string,
         ).run()
+
+        if trunc_and_reload:
+            logging.info(
+                "Requested trunc and reload - all tables in the target TDR dataset that correspond to Terra ingest "
+                "tables will be soft-deleted if they contain any adata"
+            )
+            tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=terra_table_name)
 
         if filter_existing_ids:
             # Filter out sample ids that are already in the dataset
