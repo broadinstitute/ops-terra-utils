@@ -45,10 +45,6 @@ if __name__ == '__main__':
                 onprem_src_path=local_output_file,
                 cloud_dest_path=f"{gcp_file_path}.md5"
             )
-            gcp_utils.copy_cloud_file(
-                src_cloud_path=f"{gcp_file_path}.md5",
-                full_destination_path=f"{gcp_file_path}.md5.md5"
-            )
 
         if local_output_file == TEMP_LOCAL_FILE:
             logging.info(f"Removing {TEMP_LOCAL_FILE}")
