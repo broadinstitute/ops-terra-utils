@@ -34,7 +34,7 @@ task ReUploadGcpObject {
     command <<<
         python /etc/terra_utils/python/reupload_gcp_file_with_md5.py \
         --gcp_file_path ~{gcp_file_path} \
-        ~{if requester_pays_project then "--requester_pays_project " + requester_pays_project else ""}
+        ~{"--requester_pays_project " + requester_pays_project}
     >>>
 
     runtime {
