@@ -96,6 +96,11 @@ def get_args() -> argparse.Namespace:
         action="store_true",
         help="If used, all columns in the table will be set as non-required besides the primary key"
     )
+    parser.add_argument(
+        "--force_disparate_rows_to_string",
+        action="store_true",
+        help="If used, all rows in a column containing disparate data types will be forced to a string"
+    )
 
     return parser.parse_args()
 
@@ -115,6 +120,7 @@ if __name__ == "__main__":
     batch_size = args.batch_size
     check_if_files_already_ingested = args.check_existing_ingested_files
     all_fields_non_required = args.all_fields_non_required
+    force_disparate_rows_to_string = args.force_disparate_rows_to_string
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -171,7 +177,8 @@ if __name__ == "__main__":
             tdr=tdr,
             dataset_id=dataset_id,
             table_info_dict=table_info_dict,
-            all_fields_non_required=all_fields_non_required
+            all_fields_non_required=all_fields_non_required,
+            force_disparate_rows_to_string=force_disparate_rows_to_string,
         ).run()
 
         if filter_existing_ids:

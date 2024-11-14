@@ -16,7 +16,14 @@ class SetUpTDRTables:
         table_info_dict (dict): A dictionary containing table information.
     """
 
-    def __init__(self, tdr: TDR, dataset_id: str, table_info_dict: dict, all_fields_non_required: bool = False):
+    def __init__(
+            self,
+            tdr: TDR,
+            dataset_id: str,
+            table_info_dict: dict,
+            all_fields_non_required: bool = False,
+            force_disparate_rows_to_string: bool = False,
+    ):
         """
         Initialize the SetUpTDRTables class.
 
@@ -30,6 +37,7 @@ class SetUpTDRTables:
         self.dataset_id = dataset_id
         self.table_info_dict = table_info_dict
         self.all_fields_non_required = all_fields_non_required
+        self.force_disparate_rows_to_string = force_disparate_rows_to_string
 
     @staticmethod
     def _compare_table(reference_dataset_table: dict, target_dataset_table: list[dict], table_name: str) -> list[dict]:
@@ -104,7 +112,8 @@ class SetUpTDRTables:
                 input_metadata=ingest_table_dict["ingest_metadata"],
                 table_name=ingest_table_name,
                 all_fields_non_required=self.all_fields_non_required,
-                primary_key=primary_key
+                primary_key=primary_key,
+                allow_disparate_data_types_in_column=self.force_disparate_rows_to_string,
             ).infer_schema()
 
             # If unique id then add to table json
