@@ -1,5 +1,6 @@
 import argparse
 import logging
+from requests.exceptions import HTTPError
 
 from utils import GCP, comma_separated_list, ARG_DEFAULTS
 from utils.terra_utils.terra_util import TerraWorkspace
@@ -101,6 +102,12 @@ def get_args() -> argparse.Namespace:
         action="store_true",
         help="If used, all rows in a column containing disparate data types will be forced to a string"
     )
+    parser.add_argument(
+        "--trunc_and_reload",
+        action="store_true",
+        help="If used, will attempt to soft-delete all TDR tables in the target dataset that correspond to the Terra "
+             "tables that were marked for ingest",
+    )
 
     return parser.parse_args()
 
@@ -121,6 +128,7 @@ if __name__ == "__main__":
     check_if_files_already_ingested = args.check_existing_ingested_files
     all_fields_non_required = args.all_fields_non_required
     force_disparate_rows_to_string = args.force_disparate_rows_to_string
+    trunc_and_reload = args.trunc_and_reload
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -144,12 +152,31 @@ if __name__ == "__main__":
         logging.warning("Dataset is not selfHosted. Cannot check if files have already been ingested and use UUIDs")
         check_if_files_already_ingested = False
 
+    if trunc_and_reload:
+        logging.info(
+            "Requested trunc and reload, all Terra tables marked for ingestion will be soft-deleted if they exist in "
+            "the target TDR dataset"
+        )
+        for terra_table in terra_tables:
+            try:
+                tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=terra_table)
+            except HTTPError as e:
+                logging.warning(f"Table with name '{terra_table}' does not exist in TDR dataset. Skipping soft-delete")
+
     for terra_table_name in terra_tables:
         target_table_name = terra_table_name
 
         # Get sample metrics from Terra
         sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name, remove_dicts=True)
-        primary_key_column_name = entity_metrics[terra_table_name]["idName"]
+        try:
+            primary_key_column_name = entity_metrics[terra_table_name]["idName"]
+        except KeyError:
+            logging.warning(
+                f"Provided Terra table name '{terra_table_name}' does not exist in Terra metadata. Skipping ingest of "
+                f"this table."
+            )
+            continue
+
         logging.info(f"Got {len(sample_metrics)} samples")
 
         # Convert sample dict into list of usable dicts for ingestion
