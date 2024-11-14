@@ -1,0 +1,4 @@
+{
+    "GetGcpFileMd5.gcp_file_path": "String",
+    "GetGcpFileMd5.create_cloud_md5_file": "Boolean"
+}
