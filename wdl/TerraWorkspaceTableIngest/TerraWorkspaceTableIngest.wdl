@@ -40,7 +40,6 @@ workflow GCPWorkspaceToDatasetIngest {
             all_fields_non_required = all_fields_non_required,
             force_disparate_rows_to_string = force_disparate_rows_to_string,
             trunc_and_reload = trunc_and_reload
-
     }
 }
 
