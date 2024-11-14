@@ -1,5 +1,8 @@
 import os
 import logging
+import io
+import hashlib
+from humanfriendly import format_size, parse_size
 from mimetypes import guess_type
 from typing import Optional, Any
 
@@ -27,7 +30,7 @@ class GCPCloudFunctions:
         self.client = storage.Client(credentials=credentials, project=project)
 
     @staticmethod
-    def process_cloud_path(cloud_path: str) -> dict:
+    def _process_cloud_path(cloud_path: str) -> dict:
         """
         Process a GCS cloud path into its components.
 
@@ -46,6 +49,19 @@ class GCPCloudFunctions:
             "blob_url": blob_name
         }
         return path_components
+
+    def load_blob_from_full_path(self, full_path: str) -> Any:
+        """
+        Load a GCS blob object from a full GCS path.
+
+        Args:
+            full_path (str): The full GCS path.
+
+        Returns:
+            Any: The GCS blob object.
+        """
+        file_path_components = self._process_cloud_path(full_path)
+        return self.client.bucket(file_path_components["bucket"]).blob(file_path_components["blob_url"])
 
     @staticmethod
     def _create_bucket_contents_dict(bucket_name: str, blob: Any, file_name_only: bool) -> dict:
@@ -160,16 +176,9 @@ class GCPCloudFunctions:
             full_destination_path (str): The destination GCS path.
             verbose (bool, optional): Whether to log progress. Defaults to False.
         """
-        source_file_path_components = self.process_cloud_path(src_cloud_path)
-        destination_file_path_components = self.process_cloud_path(full_destination_path)
-
         try:
-            src_bucket = source_file_path_components["bucket"]
-            src_blob_url = source_file_path_components["blob_url"]
-            dest_bucket = destination_file_path_components["bucket"]
-            dest_blob_url = destination_file_path_components["blob_url"]
-            src_blob = self.client.bucket(src_bucket).blob(src_blob_url)
-            dest_blob = self.client.bucket(dest_bucket).blob(dest_blob_url)
+            src_blob = self.load_blob_from_full_path(src_cloud_path)
+            dest_blob = self.load_blob_from_full_path(full_destination_path)
 
             # Use rewrite so no timeouts
             rewrite_token = False
@@ -194,8 +203,7 @@ class GCPCloudFunctions:
         Args:
             full_cloud_path (str): The GCS path of the file to delete.
         """
-        file_path_components = self.process_cloud_path(full_cloud_path)
-        blob = self.client.bucket(file_path_components["bucket"]).blob(file_path_components["blob_url"])
+        blob = self.load_blob_from_full_path(full_cloud_path)
         blob.delete()
 
     def move_cloud_file(self, src_cloud_path: str, full_destination_path: str) -> None:
@@ -219,13 +227,8 @@ class GCPCloudFunctions:
         Returns:
             int: The size of the file in bytes.
         """
-        source_file_path_components = self.process_cloud_path(target_path)
-        target = self.client.bucket(
-            source_file_path_components["bucket"]
-        ).get_blob(source_file_path_components["blob_url"])
-
-        size = target.size
-        return size
+        blob = self.load_blob_from_full_path(target_path)
+        return blob.size
 
     def validate_files_are_same(self, src_cloud_path: str, dest_cloud_path: str) -> bool:
         """
@@ -238,13 +241,8 @@ class GCPCloudFunctions:
         Returns:
             bool: True if the files are identical, False otherwise.
         """
-        src_file_path_components = self.process_cloud_path(src_cloud_path)
-        dest_file_path_components = self.process_cloud_path(dest_cloud_path)
-
-        src_blob = self.client.bucket(src_file_path_components["bucket"]).get_blob(src_file_path_components["blob_url"])
-        dest_blob = self.client.bucket(
-            dest_file_path_components["bucket"]
-        ).get_blob(dest_file_path_components["blob_url"])
+        src_blob = self.load_blob_from_full_path(src_cloud_path)
+        dest_blob = self.load_blob_from_full_path(dest_cloud_path)
 
         # If either blob is None, return False
         if not src_blob or not dest_blob:
@@ -437,34 +435,65 @@ class GCPCloudFunctions:
             jobs_complete_for_logging=jobs_complete_for_logging
         )
 
-    def get_blob_details(self, cloud_path: str) -> Any:
-        """
-        Get a GCS blob object.
-
-        Args:
-            cloud_path (str): The GCS path of the file.
-
-        Returns:
-            Any: The GCS blob object.
-        """
-        file_path_components = self.process_cloud_path(cloud_path=cloud_path)
-        bucket_obj = self.client.bucket(bucket_name=file_path_components['bucket'])
-        return bucket_obj.get_blob(file_path_components['blob_url'])
-
     def read_file(self, cloud_path: str, encoding: str = 'utf-8') -> str:
         """
         Read the content of a file from GCS.
 
         Args:
             cloud_path (str): The GCS path of the file to read.
+            encoding (str, optional): The encoding to use. Defaults to 'utf-8'.
 
         Returns:
             bytes: The content of the file as bytes.
         """
-        file_path_components = self.process_cloud_path(cloud_path)
-        blob = self.client.bucket(file_path_components['bucket']).blob(file_path_components['blob_url'])
+        blob = self.load_blob_from_full_path(cloud_path)
         # Download the file content as bytes
         content_bytes = blob.download_as_bytes()
         # Convert bytes to string
         content_str = content_bytes.decode(encoding)
         return content_str
+
+    def get_object_md5(
+            self,
+            file_path: str,
+            # https://jbrojbrojbro.medium.com/finding-the-optimal-download-size-with-gcs-259dc7f26ad2
+            chunk_size: int = parse_size("256 KB"),
+            logging_bytes: int = parse_size("1 GB")
+    ) -> str:
+        src_blob = self.load_blob_from_full_path(file_path)
+
+        # Create an MD5 hash object
+        md5_hash = hashlib.md5()
+
+        # Reload the blob to get the latest size
+        src_blob.reload()
+        logging.info(f"Streaming {file_path} which is {format_size(src_blob.size)}")
+        # Use a BytesIO stream to collect data in chunks and upload it
+        buffer = io.BytesIO()
+        total_bytes_streamed = 0
+        # Keep track of the last logged size for data logging
+        last_logged = 0
+
+        with src_blob.open("rb") as source_stream:
+            while True:
+                chunk = source_stream.read(chunk_size)
+                if not chunk:
+                    break
+                md5_hash.update(chunk)
+                buffer.write(chunk)
+                total_bytes_streamed += len(chunk)
+                # Log progress every 1 gb if verbose used
+                if total_bytes_streamed - last_logged >= logging_bytes:
+                    logging.info(f"Streamed {format_size(total_bytes_streamed)} / {format_size(src_blob.size)} so far")
+                    last_logged = total_bytes_streamed
+
+        # Finalize the MD5 checksum
+        md5_checksum = md5_hash.hexdigest()
+        logging.info(f"MD5 Checksum for {file_path}: {md5_checksum}")
+        return md5_checksum
+
+    def copy_onprem_to_cloud(self, onprem_src_path: str, cloud_dest_path: str) -> None:
+        if not os.path.isfile(onprem_src_path):
+            raise Exception(f"{onprem_src_path} does not exist or user does not have permission to it")
+        dest_blob = self.load_blob_from_full_path(cloud_dest_path)
+        dest_blob.upload_from_filename(onprem_src_path)

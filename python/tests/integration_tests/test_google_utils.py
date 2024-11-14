@@ -86,7 +86,7 @@ def test_list_bucket_contents() -> None:
 
 def test_get_blob_details() -> None:
     test_data = gcp_test_resource_json()['tests']['get_blob_details']['test_data']
-    result = GCPCloudFunctions().get_blob_details(cloud_path=test_data['function_input']['blob_path'])
+    result = GCPCloudFunctions().load_blob_from_full_path(full_path=test_data['function_input']['blob_path'])
     assert result.path == "/b/ops_dev_bucket/o/list_bucket_test%2Fex_file_1.txt"
 
 
