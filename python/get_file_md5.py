@@ -1,6 +1,4 @@
 from argparse import ArgumentParser, Namespace
-from tabnanny import verbose
-
 from utils.gcp_utils import GCPCloudFunctions
 import os
 import logging
