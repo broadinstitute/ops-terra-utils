@@ -12,7 +12,7 @@ TEMP_LOCAL_FILE = "tmp.md5"
 
 
 def get_args() -> Namespace:
-    parser = ArgumentParser(description="Get a GCP files md5 and update objects metadata with it")
+    parser = ArgumentParser(description="Get a GCP files md5")
     parser.add_argument("--gcp_file_path", "-f", required=True)
     parser.add_argument(
         "--create_cloud_md5_file", "-c", action="store_true",
