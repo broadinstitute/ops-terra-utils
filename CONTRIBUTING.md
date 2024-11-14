@@ -28,6 +28,11 @@ terra = Terra(request_util=request_util)
 ```
 You should not be interacting with Terra or TDR directly in your script. Instead, you should use the `Terra` and `TDR` classes to interact with Terra and TDR respectively. If an API call is not available in the `Terra` or `TDR` classes, you can add it to the respective class.
 
+## Integration Tests
+Integration tests are located in the `python/tests/integration_tests/`. These tests are run for all utils on all initial merges OR when commenting `/run_tests` after initial PR. To run locally you can do `pytest python/tests/` from the root of the repo.
+
+If you are adding to utils you should add integration tests for your new functionality.
+
 ## Workflow for Adding WDLs
 
 1. **Create a WDL**: Add your new WDL to the `wdl/` directory.
