@@ -88,7 +88,7 @@ class BatchIngest:
         self.skip_reformat = skip_reformat
 
     @staticmethod
-    def _reformat_for_type_consistency(ingest_metadata) -> list[dict]:
+    def _reformat_for_type_consistency(ingest_metadata: list[dict]) -> list[dict]:
         """Takes ingest metadata and finds headers where values are a mix of lists and non-lists. If there is mix of
         these types of values, it converts the non-array to a one-item list. The updated metadata is then returned to
         be used for everything downstream"""
@@ -100,6 +100,9 @@ class BatchIngest:
             # Find headers where some values are lists and some are not (while filtering out None values)
             if any(isinstance(value, list) for value in all_values_for_header if value is not None) and not all(
                     isinstance(value, list) for value in all_values_for_header if value is not None):
+                logging.info(
+                    f"Header {header} contains lists and non-list items. Will convert the non-list items into a list"
+                )
                 headers_containing_mismatch.append(header)
 
         updated_metadata = []
