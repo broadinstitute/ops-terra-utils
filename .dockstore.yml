@@ -86,7 +86,7 @@ workflows:
 
   - name: GetGcpFileMd5
     subclass: WDL
-    primaryDescriptorPath: /wdl/CopyGcpToGcp/GetGcpFileMd5.wdl
+    primaryDescriptorPath: /wdl/GetGcpFileMd5/GetGcpFileMd5.wdl
     readMePath: /wdl/GetGcpFileMd5/README.md
     testParameterFiles:
       - /wdl/GetGcpFileMd5/GetGcpFileMd5.wdl
