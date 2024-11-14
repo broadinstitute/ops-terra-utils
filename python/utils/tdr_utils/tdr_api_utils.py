@@ -7,7 +7,7 @@ from typing import Any, Optional, Union
 from urllib.parse import unquote
 from pydantic import ValidationError
 
-from ..request_util import GET, POST, DELETE, PUT
+from ..request_util import GET, POST, DELETE
 from ..tdr_api_schema.create_dataset_schema import CreateDatasetSchema
 from ..tdr_api_schema.update_dataset_schema import UpdateSchema
 from .tdr_job_utils import MonitorTDRJob, SubmitAndMonitorMultipleJobs
@@ -840,17 +840,6 @@ class TDR:
         response = self.request_util.run_request(
             uri=uri,
             method=GET
-        )
-        return response.json()
-
-    def unlock_dataset(self, dataset_id: str, lock_id: str) -> None:
-        uri = f"{self.TDR_LINK}/datasets/{dataset_id}/unlock"
-        body = json.dumps({"lockName": lock_id, "forceUnlock": False})
-        response = self.request_util.run_request(
-            uri=uri,
-            method=PUT,
-            data=body,
-            content_type="application/json"
         )
         return response.json()
 
