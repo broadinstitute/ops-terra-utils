@@ -76,12 +76,28 @@ def setup_test_gcs_resources() -> Any:
 
 def test_list_bucket_contents() -> None:
     resources = gcp_test_resource_json()['tests']
+    expected_files = []
     gcp_blob_count = 0
     for key, value in resources.items():
-        gcp_blob_count += len(value['resources'])
+        for item in value['resources']:
+            expected_files.append(item['path'])
+            gcp_blob_count += 1
 
     result = GCPCloudFunctions().list_bucket_contents(bucket_name=gcp_test_resource_json()["bucket"])
-    assert len(result) == gcp_blob_count, f"Expected {gcp_blob_count} files, got {len(result)}"
+    found_files = [
+        # Remove bucket. gs://bucket_name/path/to/file -> path/to/file
+        '/'.join(item['path'].split('/')[3:])
+        for item in result
+    ]
+    if len(found_files) > gcp_blob_count:
+        extra_files = set(found_files) - set(expected_files)
+        message = f"Found more files than expected. Found extra files: {extra_files}"
+    elif gcp_blob_count > len(found_files):
+        missing_files = set(expected_files) - set(found_files)
+        message = f"Found fewer files than expected. Missing files: {missing_files}"
+    else:
+        message = ""
+    assert len(found_files) == gcp_blob_count, f"Expected {gcp_blob_count} files, got {len(found_files)}. {message}"
 
 
 def test_get_blob_details() -> None:
