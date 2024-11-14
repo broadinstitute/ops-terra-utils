@@ -26,7 +26,6 @@ task ReUploadGcpObject {
         String gcp_file_path
         String? requester_pays_project
         Int? disk_size
-        String? md5_format
         Int? memory_gb
         String docker_image
     }
