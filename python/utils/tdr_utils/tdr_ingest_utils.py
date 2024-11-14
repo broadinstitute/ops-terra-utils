@@ -65,7 +65,7 @@ class BatchIngest:
                 with schema info. Defaults to None.
             skip_reformat (bool, optional): Flag indicating if reformatting should be skipped. Defaults to False.
         """
-        self.ingest_metadata = ingest_metadata
+        self.ingest_metadata = self._reformat_for_type_consistency(ingest_metadata)
         self.tdr = tdr
         self.target_table_name = target_table_name
         self.dataset_id = dataset_id
@@ -86,6 +86,37 @@ class BatchIngest:
         self.schema_info = schema_info
         # Use if input is already formatted correctly for ingest
         self.skip_reformat = skip_reformat
+
+    @staticmethod
+    def _reformat_for_type_consistency(ingest_metadata: list[dict]) -> list[dict]:
+        """Takes ingest metadata and finds headers where values are a mix of lists and non-lists. If there is mix of
+        these types of values, it converts the non-array to a one-item list. The updated metadata is then returned to
+        be used for everything downstream"""
+        unique_headers = sorted({key for item in ingest_metadata for key in item.keys()})
+
+        headers_containing_mismatch = []
+        for header in unique_headers:
+            all_values_for_header = [r.get(header) for r in ingest_metadata]
+            # Find headers where some values are lists and some are not (while filtering out None values)
+            if any(isinstance(value, list) for value in all_values_for_header if value is not None) and not all(
+                    isinstance(value, list) for value in all_values_for_header if value is not None):
+                logging.info(
+                    f"Header {header} contains lists and non-list items. Will convert the non-list items into a list"
+                )
+                headers_containing_mismatch.append(header)
+
+        updated_metadata = []
+        for record in ingest_metadata:
+            new_record = {}
+            for header, value in record.items():
+                if header in headers_containing_mismatch:
+                    updated_value = [value] if not isinstance(value, list) else value
+                else:
+                    updated_value = value
+                new_record[header] = updated_value
+            updated_metadata.append(new_record)
+
+        return updated_metadata
 
     def _reformat_metadata(self, metrics_batch: list[dict]) -> list[dict]:
         """

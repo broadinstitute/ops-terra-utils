@@ -10,6 +10,7 @@ workflow SetUpStagingWorkspaceAndDataset {
         String resource_owners
         String? resource_members
         Boolean continue_if_exists
+        Boolean delete_existing_dataset
         String current_user_email
         String? dbgap_consent_code
         String? duos_identifier
@@ -35,6 +36,7 @@ workflow SetUpStagingWorkspaceAndDataset {
             duos_identifier = duos_identifier,
             wdls_to_import = wdls_to_import,
             notebooks_to_import = notebooks_to_import,
+            delete_existing_dataset = delete_existing_dataset,
             docker = docker_image
     }
 }
@@ -49,6 +51,7 @@ task SetUpStagingEnvironments {
         String resource_owners
         String? resource_members
         Boolean continue_if_exists
+        Boolean delete_existing_dataset
         String current_user_email
         String? dbgap_consent_code
         String? duos_identifier
@@ -71,7 +74,8 @@ task SetUpStagingEnvironments {
             ~{"--dbgap_consent_code " + dbgap_consent_code} \
             ~{"--duos_identifier " + duos_identifier} \
             ~{"--wdls_to_import " + wdls_to_import} \
-            ~{"--notebooks_to_import " + notebooks_to_import}
+            ~{"--notebooks_to_import " + notebooks_to_import} \
+            ~{if delete_existing_dataset then "--delete_existing_dataset" else ""}
     >>>
 
     runtime {
