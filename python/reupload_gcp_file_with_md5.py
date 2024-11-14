@@ -1,7 +1,5 @@
 from argparse import ArgumentParser, Namespace
-
 from typing import Optional
-
 from utils.gcp_utils import GCPCloudFunctions
 import logging
 import subprocess
@@ -12,7 +10,7 @@ logging.basicConfig(
 
 
 def get_args() -> Namespace:
-    parser = ArgumentParser(description="Reupload file that so that it has a md5 hash in metadata")
+    parser = ArgumentParser(description="Re-upload file that so that it has a md5 hash in metadata")
     parser.add_argument(
         "--gcp_file_path",
         "-f",
@@ -27,7 +25,7 @@ def get_args() -> Namespace:
     return parser.parse_args()
 
 
-class CopyToTemp:
+class ReUploadFile:
     def __init__(self, file_path: str, temp_file_path: str, requester_pays_project: Optional[str] = None):
         self.file_path = file_path
         self.temp_file_path = temp_file_path
@@ -69,7 +67,7 @@ if __name__ == '__main__':
     tmp_file_path = f"{gcp_file_path}.tmp"
     requester_pays_project = args.requester_pays_project
 
-    CopyToTemp(
+    ReUploadFile(
         file_path=gcp_file_path,
         temp_file_path=tmp_file_path,
         requester_pays_project=requester_pays_project
