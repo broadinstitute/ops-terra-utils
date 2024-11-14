@@ -61,7 +61,9 @@ class GCPCloudFunctions:
             Any: The GCS blob object.
         """
         file_path_components = self._process_cloud_path(full_path)
-        return self.client.bucket(file_path_components["bucket"]).blob(file_path_components["blob_url"])
+        blob = self.client.bucket(file_path_components["bucket"]).blob(file_path_components["blob_url"])
+        blob.reload()
+        return blob
 
     @staticmethod
     def _create_bucket_contents_dict(bucket_name: str, blob: Any, file_name_only: bool) -> dict:
@@ -465,8 +467,6 @@ class GCPCloudFunctions:
         # Create an MD5 hash object
         md5_hash = hashlib.md5()
 
-        # Reload the blob to get the latest size
-        src_blob.reload()
         logging.info(f"Streaming {file_path} which is {format_size(src_blob.size)}")
         # Use a BytesIO stream to collect data in chunks and upload it
         buffer = io.BytesIO()
