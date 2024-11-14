@@ -160,7 +160,7 @@ if __name__ == "__main__":
         for terra_table in terra_tables:
             try:
                 tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=terra_table)
-            except HTTPError as e:
+            except HTTPError:
                 logging.warning(f"Table with name '{terra_table}' does not exist in TDR dataset. Skipping soft-delete")
 
     for terra_table_name in terra_tables:
