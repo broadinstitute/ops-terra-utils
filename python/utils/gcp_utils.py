@@ -62,7 +62,9 @@ class GCPCloudFunctions:
         """
         file_path_components = self._process_cloud_path(full_path)
         blob = self.client.bucket(file_path_components["bucket"]).blob(file_path_components["blob_url"])
-        blob.reload()
+        # If blob exists in GCS reload it so metadata is there
+        if blob.exists():
+            blob.reload()
         return blob
 
     @staticmethod
