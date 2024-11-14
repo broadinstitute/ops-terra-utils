@@ -101,6 +101,12 @@ def get_args() -> argparse.Namespace:
         action="store_true",
         help="If used, all rows in a column containing disparate data types will be forced to a string"
     )
+    parser.add_argument(
+        "--trunc_and_reload",
+        action="store_true",
+        help="If used, will attempt to soft-delete all TDR tables in the target dataset that correspond to the Terra "
+             "tables that were marked for ingest",
+    )
 
     return parser.parse_args()
 
@@ -121,6 +127,7 @@ if __name__ == "__main__":
     check_if_files_already_ingested = args.check_existing_ingested_files
     all_fields_non_required = args.all_fields_non_required
     force_disparate_rows_to_string = args.force_disparate_rows_to_string
+    trunc_and_reload = args.trunc_and_reload
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -149,7 +156,15 @@ if __name__ == "__main__":
 
         # Get sample metrics from Terra
         sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name, remove_dicts=True)
-        primary_key_column_name = entity_metrics[terra_table_name]["idName"]
+        try:
+            primary_key_column_name = entity_metrics[terra_table_name]["idName"]
+        except KeyError:
+            logging.warning(
+                f"Provided Terra table name '{terra_table_name}' does not exist in Terra metadata. Skipping ingest of "
+                f"this table."
+            )
+            continue
+
         logging.info(f"Got {len(sample_metrics)} samples")
 
         # Convert sample dict into list of usable dicts for ingestion
@@ -180,6 +195,13 @@ if __name__ == "__main__":
             all_fields_non_required=all_fields_non_required,
             force_disparate_rows_to_string=force_disparate_rows_to_string,
         ).run()
+
+        if trunc_and_reload:
+            logging.info(
+                "Requested trunc and reload - all tables in the target TDR dataset that correspond to Terra ingest "
+                "tables will be soft-deleted if they contain any adata"
+            )
+            tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=terra_table_name)
 
         if filter_existing_ids:
             # Filter out sample ids that are already in the dataset
