@@ -12,6 +12,7 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
+
 def get_args() -> Namespace:
     parser = ArgumentParser(
         description="""Copy files from Azure terra workspace to GCP bucket""")
@@ -38,7 +39,6 @@ class AzureToGoogleFileTransfer():
         self.temp_dir = temp_dir
         self.sas_token = None
 
-
     def format_upload_path(self, blob_path):
         bucket_str = self.export_bucket
         if not bucket_str.startswith('gs://'):
@@ -47,10 +47,8 @@ class AzureToGoogleFileTransfer():
             bucket_str = f"{bucket_str}/"
         return f"{bucket_str}{blob_path}"
 
-
     def blob_exists(self, upload_path):
         return GCPCloudFunctions().get_blob_details(upload_path)
-
 
     def delete_file_after_transfer(self, file_path):
         try:
@@ -63,35 +61,41 @@ class AzureToGoogleFileTransfer():
         token_util = SasTokenUtil(token=self.sas_token)
         tmp_dir = Path(self.temp_dir)
         for blob in self.blob_list:
-            if token_util.seconds_until_token_expires() < 600: 
+            if token_util.seconds_until_token_expires() < 600:
                 self.sas_token = self.workspace_client.retrieve_sas_token(2400)
             upload_path = self.format_upload_path(blob['relative_path'])
             if not self.blob_exists(upload_path):
                 dl_path = tmp_dir.joinpath(blob['file_name'])
-                blob_client = AzureBlobDetails(account_url=self.az_accnt_url, sas_token=self.sas_token, container_name=self.az_container)
+                blob_client = AzureBlobDetails(account_url=self.az_accnt_url,
+                                               sas_token=self.sas_token,
+                                               container_name=self.az_container)
                 blob_client.download_blob(blob_name=blob['relative_path'], dl_path=dl_path)
                 self.gcp_client.upload_blob(destination_path=upload_path, source_file=dl_path)
                 self.delete_file_after_transfer(dl_path)
 
         tmp_dir.rmdir()
 
+
 if __name__ == "__main__":
     args = get_args()
     token = Token(cloud='gcp')
     request_util = RunRequest(token)
 
-    workspace_client = TerraWorkspace(workspace_name=args.workspace_name, billing_project=args.billing_project, request_util=request_util)
+    workspace_client = TerraWorkspace(workspace_name=args.workspace_name,
+                                      billing_project=args.billing_project,
+                                      request_util=request_util)
     workspace_client.set_azure_terra_variables()
     gcp_client = GCPCloudFunctions()
     sas_token = workspace_client.retrieve_sas_token(600)
     az_storage_container_id = workspace_client.account_url.strip('.blob.core.windows.net').strip('https://')
-    az_blob_client = AzureBlobDetails(account_url=workspace_client.account_url, sas_token=sas_token, container_name=workspace_client.storage_container)
+    az_blob_client = AzureBlobDetails(account_url=workspace_client.account_url,
+                                      sas_token=sas_token,
+                                      container_name=workspace_client.storage_container)
     az_blobs = az_blob_client.get_blob_details()
     AzureToGoogleFileTransfer(blob_list=az_blobs,
                               gcp_bucket=args.gcp_bucket,
                               gcp_client=gcp_client,
                               az_accnt_url=workspace_client.account_url,
-                              az_container=workspace_client.storage_container, 
-                              workspace_client=workspace_client, 
+                              az_container=workspace_client.storage_container,
+                              workspace_client=workspace_client,
                               temp_dir=args.tmp_path).run()
-    
