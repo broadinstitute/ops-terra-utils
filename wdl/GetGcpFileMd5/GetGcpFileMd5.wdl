@@ -39,7 +39,7 @@ task GetFileMd5 {
         --gcp_file_path ~{gcp_file_path} \
         --output_file object_md5.txt \
         ~{if create_cloud_md5_file then "--create_cloud_md5_file" else ""} \
-        ~{if md5_format then "--md5_format " + md5_format else ""}
+        ~{"--md5_format " + md5_format}
     >>>
 
     runtime {
