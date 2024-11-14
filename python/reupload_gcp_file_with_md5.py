@@ -41,7 +41,7 @@ class CopyToTemp:
         if self.requester_pays_project:
             cmd_list.append(f"--billing-project={self.requester_pays_project}")
         subprocess.run(cmd_list)
-        logging.info(f"Copy completed")
+        logging.info("Copy completed")
 
     def _validate_files_same_size(self) -> None:
         original_file_size = self.gcp_util.get_filesize(self.file_path)
