@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Union
 from urllib.parse import unquote
 
+
 class AzureBlobDetails:
     def __init__(self, account_url: str, sas_token: str, container_name: str):
         from azure.storage.blob import BlobServiceClient
@@ -64,13 +65,12 @@ class SasTokenUtil:
         self.token = token
         self.expiry_datetime = self._set_token_expiry()
 
-    
     def _set_token_expiry(self):
         sas_expiry_time_pattern = re.compile(r"se.+?(?=\&sp)")
         expiry_time_str = sas_expiry_time_pattern.search(self.token)
         time_str = unquote(expiry_time_str.group()).replace("se=", "").replace("&sr=c", "")  # type: ignore[union-attr]
         return datetime.fromisoformat(time_str)
-    
+
     def seconds_until_token_expires(self) -> Union[timedelta, None]:
         current_time = datetime.now(timezone.utc)
         time_delta = self.expiry_datetime - current_time
