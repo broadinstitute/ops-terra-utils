@@ -1,7 +1,11 @@
 import os
 import logging
 import base64
-
+import re
+from pathlib import Path
+from datetime import datetime, timezone, timedelta
+from typing import Union
+from urllib.parse import unquote
 
 class AzureBlobDetails:
     def __init__(self, account_url: str, sas_token: str, container_name: str):
@@ -33,10 +37,12 @@ class AzureBlobDetails:
                         'utf-8') if props.content_settings.content_md5 else ""
                     full_path = blob_client.url.replace(
                         f'?{self.sas_token}', '')
+                    rel_path = full_path.replace(f"{self.account_url}/{self.container_name}/", '')
                     details.append(
                         {
                             'file_name': blob.name,
                             'file_path': full_path,
+                            'relative_path': rel_path,
                             'content_type': props.content_settings.content_type,
                             'file_extension': os.path.splitext(blob.name)[1],
                             'size_in_bytes': props.size,
@@ -44,3 +50,28 @@ class AzureBlobDetails:
                         }
                     )
         return details
+
+    def download_blob(self, blob_name: str, dl_path: Path):
+        blob_client = self.blob_service_client.get_blob_client(blob=blob_name, container=self.container_name)
+        dl_path.parent.mkdir(parents=True, exist_ok=True)
+        with dl_path.open(mode='wb') as file:
+            blob_data = blob_client.download_blob()
+            file.write(blob_data.readall())
+
+
+class SasTokenUtil:
+    def __init__(self, token: str):
+        self.token = token
+        self.expiry_datetime = self._set_token_expiry()
+
+    
+    def _set_token_expiry(self):
+        sas_expiry_time_pattern = re.compile(r"se.+?(?=\&sp)")
+        expiry_time_str = sas_expiry_time_pattern.search(self.token)
+        time_str = unquote(expiry_time_str.group()).replace("se=", "").replace("&sr=c", "")  # type: ignore[union-attr]
+        return datetime.fromisoformat(time_str)
+    
+    def seconds_until_token_expires(self) -> Union[timedelta, None]:
+        current_time = datetime.now(timezone.utc)
+        time_delta = self.expiry_datetime - current_time
+        return time_delta.seconds

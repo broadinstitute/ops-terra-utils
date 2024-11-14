@@ -447,3 +447,16 @@ class GCPCloudFunctions:
         file_path_components = self.process_cloud_path(cloud_path=cloud_path)
         bucket_obj = self.client.bucket(bucket_name=file_path_components['bucket'])
         return bucket_obj.get_blob(file_path_components['blob_url'])
+
+    def upload_blob(self, destination_path: str, source_file: str) -> None:
+        """
+        Upload a file to GCS.
+
+        Args:
+            destination_path (str): The destination GCS path.
+            source_file (str): The source file path.
+        """
+        file_path_components = self.process_cloud_path(destination_path)
+        bucket_obj = self.client.bucket(bucket_name=file_path_components['bucket'])
+        blob = bucket_obj.blob(file_path_components['blob_url'])
+        blob.upload_from_filename(source_file)
