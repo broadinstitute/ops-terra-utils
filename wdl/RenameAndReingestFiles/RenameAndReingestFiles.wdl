@@ -69,7 +69,7 @@ task RenameAndingestFiles {
         ~{"--max_retries " + max_retries} \
         ~{"--max_backoff_time " + max_backoff_time} \
         ~{"--billing_project " + billing_project} \
-        ~{"--workspace_name " + workspace_name} \
+        ~{"--workspace_name \"" + workspace_name + "\""} \
         ~{"--temp_bucket " + temp_bucket} \
         ~{"--workers " + workers} \
         ~{if report_updates_only then "--report_updates_only" else ""}
