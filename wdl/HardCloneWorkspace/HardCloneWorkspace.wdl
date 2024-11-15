@@ -74,7 +74,7 @@ task HardCloneTerraWorkspaceTask {
 		~{if allow_already_created then "--allow_already_created" else ""} \
 		~{"--workers " + workers} \
 		~{"--extensions_to_ignore " + extensions_to_ignore} \
-		~{"--batch_size \"" + batch_size + "\""} \
+		~{"--batch_size " + batch_size} \
 		~{if metadata_only then "--metadata_only" else ""} \
 		~{if do_not_update_acls then "--do_not_update_acls" else ""}
 	>>>
