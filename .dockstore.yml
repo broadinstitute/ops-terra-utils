@@ -90,3 +90,10 @@ workflows:
     readMePath: /wdl/GetGcpFileMd5/README.md
     testParameterFiles:
       - /wdl/GetGcpFileMd5/GetGcpFileMd5.wdl
+
+  - name: ReUploadGcpObjectWithMd5
+    subclass: WDL
+    primaryDescriptorPath: /wdl/ReUploadGcpObjectWithMd5/ReUploadGcpObjectWithMd5.wdl
+    readMePath: /wdl/ReUploadGcpObjectWithMd5/README.md
+    testParameterFiles:
+      - /wdl/ReUploadGcpObjectWithMd5/ReUploadGcpObjectWithMd5.wdl

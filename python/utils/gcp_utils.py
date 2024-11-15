@@ -2,6 +2,7 @@ import os
 import logging
 import io
 import hashlib
+import base64
 from humanfriendly import format_size, parse_size
 from mimetypes import guess_type
 from typing import Optional, Any
@@ -19,14 +20,16 @@ class GCPCloudFunctions:
     Does NOT use Token class for authentication.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, project: Optional[str] = None) -> None:
         """
         Initialize the GCPCloudFunctions class.
         Authenticates using the default credentials and sets up the storage client.
         """
         from google.cloud import storage
         from google.auth import default
-        credentials, project = default()
+        credentials, default_project = default()
+        if not project:
+            project = default_project
         self.client = storage.Client(credentials=credentials, project=project)
 
     @staticmethod
@@ -472,25 +475,43 @@ class GCPCloudFunctions:
         blob.upload_from_filename(source_file)
 
     def get_object_md5(
-            self,
-            file_path: str,
-            # https://jbrojbrojbro.medium.com/finding-the-optimal-download-size-with-gcs-259dc7f26ad2
-            chunk_size: int = parse_size("256 KB"),
-            logging_bytes: int = parse_size("1 GB")
+        self,
+        file_path: str,
+        # https://jbrojbrojbro.medium.com/finding-the-optimal-download-size-with-gcs-259dc7f26ad2
+        chunk_size: int = parse_size("256 KB"),
+        logging_bytes: int = parse_size("1 GB"),
+        returned_md5_format: str = "hex"
     ) -> str:
-        src_blob = self.load_blob_from_full_path(file_path)
+        """
+        Calculate the MD5 checksum of a file in GCS.
+
+        Args:
+            file_path (str): The GCS path of the file.
+            chunk_size (int, optional): The size of each chunk to read. Defaults to 256 KB.
+            logging_bytes (int, optional): The number of bytes to read before logging progress. Defaults to 1 GB.
+            returned_md5_format (str, optional): The format of the MD5 checksum to return. Defaults to "hex".
+                Options are "hex" or "base64". hex = md5sum returns and base63 = gsutil stores.
+
+        Returns:
+            str: The MD5 checksum of the file.
+        """
+        if returned_md5_format not in ["hex", "base64"]:
+            raise ValueError("returned_md5_format must be 'hex' or 'base64'")
+
+        blob = self.load_blob_from_full_path(file_path)
 
         # Create an MD5 hash object
         md5_hash = hashlib.md5()
 
-        logging.info(f"Streaming {file_path} which is {format_size(src_blob.size)}")
+        blob_size_str = format_size(blob.size)
+        logging.info(f"Streaming {file_path} which is {blob_size_str}")
         # Use a BytesIO stream to collect data in chunks and upload it
         buffer = io.BytesIO()
         total_bytes_streamed = 0
         # Keep track of the last logged size for data logging
         last_logged = 0
 
-        with src_blob.open("rb") as source_stream:
+        with blob.open("rb") as source_stream:
             while True:
                 chunk = source_stream.read(chunk_size)
                 if not chunk:
@@ -500,15 +521,28 @@ class GCPCloudFunctions:
                 total_bytes_streamed += len(chunk)
                 # Log progress every 1 gb if verbose used
                 if total_bytes_streamed - last_logged >= logging_bytes:
-                    logging.info(f"Streamed {format_size(total_bytes_streamed)} / {format_size(src_blob.size)} so far")
+                    logging.info(f"Streamed {format_size(total_bytes_streamed)} / {blob_size_str} so far")
                     last_logged = total_bytes_streamed
 
-        # Finalize the MD5 checksum
-        md5_checksum = md5_hash.hexdigest()
-        logging.info(f"MD5 Checksum for {file_path}: {md5_checksum}")
-        return md5_checksum
+        if returned_md5_format == "hex":
+            md5 = md5_hash.hexdigest()
+            logging.info(f"MD5 (hex) for {file_path}: {md5}")
+        elif returned_md5_format == "base64":
+            md5 = base64.b64encode(md5_hash.digest()).decode("utf-8")
+            logging.info(f"MD5 (base64) for {file_path}: {md5}")
+        return md5
 
     def copy_onprem_to_cloud(self, onprem_src_path: str, cloud_dest_path: str) -> None:
+        """
+        Copy a file from an on-premises location to GCS.
+
+        Args:
+            onprem_src_path (str): The source path of the file on-premises.
+            cloud_dest_path (str): The destination GCS path.
+
+        Raises:
+            Exception: If the source file does not exist or the user does not have permission to access it.
+        """
         if not os.path.isfile(onprem_src_path):
             raise Exception(f"{onprem_src_path} does not exist or user does not have permission to it")
         dest_blob = self.load_blob_from_full_path(cloud_dest_path)

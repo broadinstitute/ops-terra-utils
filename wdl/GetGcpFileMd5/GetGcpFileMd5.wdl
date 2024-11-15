@@ -4,6 +4,7 @@ workflow GetGcpFileMd5 {
     input {
         String gcp_file_path
         Boolean create_cloud_md5_file
+        String? md5_format
         String? docker
         Int? memory_gb
     }
@@ -15,6 +16,7 @@ workflow GetGcpFileMd5 {
             gcp_file_path = gcp_file_path,
             create_cloud_md5_file = create_cloud_md5_file,
             docker_image = docker_image,
+            md5_format = md5_format,
             memory_gb = memory_gb
     }
 
@@ -28,6 +30,7 @@ task GetFileMd5 {
         String gcp_file_path
         Boolean create_cloud_md5_file
         String docker_image
+        String? md5_format
         Int? memory_gb
     }
 
@@ -35,7 +38,8 @@ task GetFileMd5 {
         python /etc/terra_utils/python/get_file_md5.py \
         --gcp_file_path ~{gcp_file_path} \
         --output_file object_md5.txt \
-        ~{if create_cloud_md5_file then "--create_cloud_md5_file" else ""}
+        ~{if create_cloud_md5_file then "--create_cloud_md5_file" else ""} \
+        ~{"--md5_format " + md5_format}
     >>>
 
     runtime {
