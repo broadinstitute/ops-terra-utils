@@ -1,4 +1,4 @@
-version 1.2
+version 1.0
 
 workflow ReUploadGcpObjectWithMd5 {
     input {
@@ -11,7 +11,7 @@ workflow ReUploadGcpObjectWithMd5 {
 
     parameter_meta {
         gcp_file_path: {
-          help: "Path to file to re-upload"
+          help: "Path to file to re-upload. test"
         }
         requester_pays_project: {
           help: "If bucket set to requester pays then set a project to use"
