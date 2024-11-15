@@ -9,6 +9,25 @@ workflow ReUploadGcpObjectWithMd5 {
         String? docker
     }
 
+    parameter_meta {
+        gcp_file_path: {
+          help: "Path to file to re-upload"
+        }
+        requester_pays_project: {
+          help: "If bucket set to requester pays then set a project to use"
+        }
+        memory_gb: {
+          help: "how much memory to use"
+        }
+        disk_size: {
+          help: "how much gb to use"
+        }
+        docker: {
+          help: "do not use unless you know what you are doing",
+          suggestions: ["could", "be ", "option"]
+        }
+  }
+
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
     call ReUploadGcpObject {
