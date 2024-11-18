@@ -1,38 +1,833 @@
 {
 	"tests": {
-		"get_data_set_files": {"function_input":"0981274b-61e3-4efb-99f2-eaea57075612"},
-		"create_file_dict": {"function_input":"0981274b-61e3-4efb-99f2-eaea57075612"},
-		"get_snapshot_info": {"function_input":"f65019f3-075e-4a7b-b46f-5f2975787356"},
-		"check_if_dataset_exists": {
-			"function_input":{
-				"dataset_name": "ops_integration_test_dataset",
-				"billing_profile":"ce149ca7-608b-4d5d-9612-2a43a7378885"
+		"get_files_endpoint": {
+			"function_input":"ex_dataset_id",
+			"mock_response":{
+				"page_one":{
+				"method": "GET",
+				"url":"https://data.terra.bio/api/repository/v1/datasets/ex_dataset_id/files",
+				"params":{
+					"offset":0,
+					"limit":20000
+						 },
+				"response": [
+					{
+					  "fileId": "some_file_guid_1",
+					  "collectionId": "string",
+					  "path": "string",
+					  "size": 0,
+					  "checksums": [
+						{
+						  "checksum": "string",
+						  "type": "string"
+						}
+					  ],
+					  "created": "string",
+					  "description": "string",
+					  "fileType": "file",
+					  "fileDetail": {
+						"datasetId": "string",
+						"mimeType": "string",
+						"accessUrl": "string",
+						"loadTag": "string"
+					  },
+					  "directoryDetail": {
+						"enumerated": true,
+						"contents": [
+						  "string"
+						]
+					  }
+					}, 
+					{
+					  "fileId": "some_file_guid_2",
+					  "collectionId": "string",
+					  "path": "string",
+					  "size": 0,
+					  "checksums": [
+						{
+						  "checksum": "string",
+						  "type": "string"
+						}
+					  ],
+					  "created": "string",
+					  "description": "string",
+					  "fileType": "file",
+					  "fileDetail": {
+						"datasetId": "string",
+						"mimeType": "string",
+						"accessUrl": "string",
+						"loadTag": "string"
+					  },
+					  "directoryDetail": {
+						"enumerated": true,
+						"contents": [
+						  "string"
+						]
+					  }
+					}, 
+					{
+					  "fileId": "some_file_guid_3",
+					  "collectionId": "string",
+					  "path": "string",
+					  "size": 0,
+					  "checksums": [
+						{
+						  "checksum": "string",
+						  "type": "string"
+						}
+					  ],
+					  "created": "string",
+					  "description": "string",
+					  "fileType": "file",
+					  "fileDetail": {
+						"datasetId": "string",
+						"mimeType": "string",
+						"accessUrl": "string",
+						"loadTag": "string"
+					  },
+					  "directoryDetail": {
+						"enumerated": true,
+						"contents": [
+						  "string"
+						]
+					  }
+					}
+				  ],
+				"status": 200},
+				"page_two":{
+				"method": "GET",
+				"url":"https://data.terra.bio/api/repository/v1/datasets/ex_dataset_id/files",
+				"params":{
+					"offset":20000,
+					"limit":20000
+						 },
+				"response": [],
+				"status": 200
 				}
+				
+			}
+		},
+		"get_snapshot_endpoint": {
+			"function_input":"snapshot_id",
+			"mock_response": {
+			"method": "GET",
+			"url":"https://data.terra.bio/api/repository/v1/snapshots/snapshot_id",
+			"params":{},
+			"response":{
+				"id": "snapshot id",
+				"name": "snapshot name",
+				"description": "snapshot",
+				"createdDate": "string",
+				"consentCode": "string",
+				"source": [
+				{
+					"dataset": {
+					"id": "dataset_id",
+					"name": "string",
+					"description": "string",
+					"defaultProfileId": "profile_id",
+					"createdDate": "string",
+					"storage": [
+						{
+						"region": "string",
+						"cloudResource": "string",
+						"cloudPlatform": "gcp"
+						}
+					],
+					"secureMonitoringEnabled": false,
+					"cloudPlatform": "gcp",
+					"dataProject": "string",
+					"storageAccount": "string",
+					"phsId": "phs123456",
+					"selfHosted": false,
+					"predictableFileIds": false,
+					"resourceLocks": {
+						"exclusive": "string",
+						"shared": [
+						"string"
+						]
+					}
+					},
+					"datasetProperties": {},
+					"asset": "string"
+				}
+				],
+				"tables": [
+				{
+					"name": "string",
+					"columns": [
+					{
+						"name": "string",
+						"datatype": "string",
+						"array_of": false,
+						"required": true
+					}
+					],
+					"primaryKey": [
+					"string"
+					],
+					"partitionMode": "none",
+					"datePartitionOptions": {
+					"column": "string"
+					},
+					"intPartitionOptions": {
+					"column": "string",
+					"min": 0,
+					"max": 0,
+					"interval": 0
+					},
+					"rowCount": 0
+				}
+				],
+				"relationships": [
+				{
+					"name": "string",
+					"from": {
+					"table": "string",
+					"column": "string"
+					},
+					"to": {
+					"table": "string",
+					"column": "string"
+					}
+				}
+				],
+				"profileId": "billing_profile_id",
+				"dataProject": "string",
+				"accessInformation": {
+				"bigQuery": {
+					"datasetName": "string",
+					"datasetId": "string",
+					"projectId": "string",
+					"link": "string",
+					"tables": [
+					{
+						"name": "string",
+						"id": "string",
+						"qualifiedName": "string",
+						"link": "string",
+						"sampleQuery": "string"
+					}
+					]
+				},
+				"parquet": {
+					"datasetName": "string",
+					"datasetId": "string",
+					"storageAccountId": "string",
+					"url": "string",
+					"sasToken": "string",
+					"tables": [
+					{
+						"name": "string",
+						"url": "string",
+						"sasToken": "string"
+					}
+					]
+				}
+				},
+				"creationInformation": {
+				"datasetName": "string",
+				"mode": "byAsset",
+				"assetSpec": {
+					"assetName": "string",
+					"rootValues": [
+					"string"
+					]
+				},
+				"querySpec": {
+					"assetName": "string",
+					"query": "string"
+				},
+				"rowIdSpec": {
+					"tables": [
+					{
+						"tableName": "string",
+						"columns": [
+						"string"
+						],
+						"rowIds": [
+						"row_id"
+						]
+					}
+					]
+				},
+				"requestIdSpec": {
+					"snapshotRequestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+				}
+				},
+				"cloudPlatform": "gcp",
+				"properties": {},
+				"duosFirecloudGroup": {
+				"id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+				"duosId": "DUOS-123456",
+				"firecloudGroupName": "DUOS-123456-users",
+				"firecloudGroupEmail": "DUOS-123456-users@dev.test.firecloud.org",
+				"createdBy": "jade-k8-sa@broad-jade-dev.iam.gserviceaccount.com",
+				"created": "string",
+				"lastSynced": "string"
+				},
+				"globalFileIds": false,
+				"compactIdPrefix": "drs.42",
+				"tags": [
+				"a-resource-tag"
+				]
+			}, 
+    "status": 200
+}
+
+
+		},
+		"list_datasets_endpoint": {
+			"function_input":{
+				"dataset_name": "ex_dataset_name",
+				"billing_profile":"ex_dataset_billing_profile_guid"
+				},
+				"mock_response": {
+					"page_one":{
+						"method": "GET",
+						"url":"https://data.terra.bio/api/repository/v1/datasets",
+						"params":{
+							"offset":0,
+							"limit":100,
+							"sort":"created_date",
+							"direction": "asc",
+							"filter": "ex_dataset_name"
+						},
+						"response":{
+							"total": 50,
+							"filteredTotal": 2,
+							"items": [
+							{
+								"id": "ex_dataset_name_guid",
+								"name": "ex_dataset_name",
+								"description": "string",
+								"defaultProfileId": "ex_dataset_billing_profile_guid",
+								"createdDate": "string",
+								"storage": [
+								{
+									"region": "string",
+									"cloudResource": "string",
+									"cloudPlatform": "gcp"
+								}
+								],
+								"secureMonitoringEnabled": false,
+								"cloudPlatform": "gcp",
+								"dataProject": "string",
+								"storageAccount": "string",
+								"phsId": "phs123456",
+								"selfHosted": false,
+								"predictableFileIds": false,
+								"tags": [
+								"a-resource-tag"
+								],
+								"resourceLocks": {
+								"exclusive": "string",
+								"shared": [
+									"string"
+								]
+								}
+							},
+							{
+								"id": "dataset_guid",
+								"name": "ex_dataset_name not_matching",
+								"description": "string",
+								"defaultProfileId": "non-matching profile-id",
+								"createdDate": "string",
+								"storage": [
+								{
+									"region": "string",
+									"cloudResource": "string",
+									"cloudPlatform": "gcp"
+								}
+								],
+								"secureMonitoringEnabled": false,
+								"cloudPlatform": "gcp",
+								"dataProject": "string",
+								"storageAccount": "string",
+								"phsId": "phs123456",
+								"selfHosted": false,
+								"predictableFileIds": false,
+								"tags": [
+								"a-resource-tag"
+								],
+								"resourceLocks": {
+								"exclusive": "string",
+								"shared": [
+									"string"
+								]
+								}
+							}
+							],
+							"roleMap": {
+							"additionalProp1": [
+								"string"
+							],
+							"additionalProp2": [
+								"string"
+							],
+							"additionalProp3": [
+								"string"
+							]
+							}
+						}, 
+						"status": 200
+
+					},
+					"page_two":{
+						"method": "GET",
+						"url":"https://data.terra.bio/api/repository/v1/datasets",
+						"status": 200,
+						"params":{
+							"offset":100,
+							"limit":200,
+							"sort":"created_date",
+							"direction": "asc",
+							"filter": "ex_dataset_name"
+						},
+						"response":{
+							"total": 50,
+							"filteredTotal": 2,
+							"items": []
+						}
+					}
+				}
+
 			},
-		"get_dataset_info": {"function_input":"0981274b-61e3-4efb-99f2-eaea57075612"},
-		"get_table_schema_info": {
-			"function_input":{
-				"dataset_id": "0981274b-61e3-4efb-99f2-eaea57075612",
-				"table_name": "samples"
+		"get_dataset_endpoint": {
+			"function_input": {
+				"dataset_id":"ex_dataset_id",
+				"table_name": "example table"
+			},
+			"mock_response": {
+				"method": "GET",
+				"url":"https://data.terra.bio/api/repository/v1/datasets/ex_dataset_id",
+				"params":{
+				},
+				"response":{
+					"id": "ex_dataset_id",
+					"name": "ex dataset name",
+					"description": "string",
+					"defaultProfileId": "ex_billing_profile_id",
+					"dataProject": "string",
+					"schema": {
+					"tables": [
+						{
+						"name": "example table",
+						"columns": [
+							{
+							"name": "string",
+							"datatype": "string",
+							"array_of": false,
+							"required": true
+							}
+						],
+						"primaryKey": [
+							"string"
+						],
+						"partitionMode": "none",
+						"datePartitionOptions": {
+							"column": "string"
+						},
+						"intPartitionOptions": {
+							"column": "string",
+							"min": 0,
+							"max": 0,
+							"interval": 0
+						},
+						"rowCount": 0
+						}
+					],
+					"relationships": [
+						{
+						"name": "string",
+						"from": {
+							"table": "string",
+							"column": "string"
+						},
+						"to": {
+							"table": "string",
+							"column": "string"
+						}
+						}
+					],
+					"assets": [
+						{
+						"name": "string",
+						"tables": [
+							{
+							"name": "string",
+							"columns": [
+								"string"
+							]
+							}
+						],
+						"rootTable": "string",
+						"rootColumn": "string",
+						"follow": [
+							"string"
+						]
+						}
+					]
+					},
+					"createdDate": "string",
+					"storage": [
+					{
+						"region": "string",
+						"cloudResource": "string",
+						"cloudPlatform": "gcp"
+					}
+					],
+					"secureMonitoringEnabled": false,
+					"phsId": "phs123456",
+					"accessInformation": {
+					"bigQuery": {
+						"datasetName": "string",
+						"datasetId": "string",
+						"projectId": "string",
+						"link": "string",
+						"tables": [
+						{
+							"name": "string",
+							"id": "string",
+							"qualifiedName": "string",
+							"link": "string",
+							"sampleQuery": "string"
+						}
+						]
+					},
+					"parquet": {
+						"datasetName": "string",
+						"datasetId": "string",
+						"storageAccountId": "string",
+						"url": "string",
+						"sasToken": "string",
+						"tables": [
+						{
+							"name": "string",
+							"url": "string",
+							"sasToken": "string"
+						}
+						]
+					}
+					},
+					"cloudPlatform": "gcp",
+					"selfHosted": false,
+					"properties": {},
+					"ingestServiceAccount": "string",
+					"predictableFileIds": false,
+					"tags": [
+					"a-resource-tag"
+					],
+					"resourceLocks": {
+					"exclusive": "string",
+					"shared": [
+						"string"
+					]
+					}
+				}, 
+				"status": 200
 			}
 		},
-		"get_data_set_table_metrics": {
+		"get_dataset_table": {
 			"function_input":{
-				"dataset_id": "0981274b-61e3-4efb-99f2-eaea57075612",
-				"table_name": "samples"
-			}
-		},
-		"get_data_set_sample_ids": {
-			"function_input":{
-				"dataset_id": "0981274b-61e3-4efb-99f2-eaea57075612",
-				"table_name": "samples",
+				"dataset_id": "dataset_guid",
+				"table_name": "table_name",
 				"entity_id": "sample_id"
+			},
+			"mock_response": {
+				"page_one":{
+					"method": "POST",
+					"url":"https://data.terra.bio/api/repository/v1/datasets/dataset_guid/data/table_name",
+					"params":{
+						"offset": 0,
+						"limit": 1000,
+						"sort": "datarepo_row_id"
+					},
+					"response":{
+						"result": [
+						{
+							"reference_genome_build": "genome_build_name",
+							"sequencing_platform": "platform_name",
+							"alignment_method": "some_method_name",
+							"tissue_source": "tissue_source",
+							"sample_id": "71-9875723",
+							"sequencing_assay": "assay_name",
+							"individual_id": "49-8494787",
+							"data_processing_pipeline": "pipeline_name.34.7",
+							"cram": "/arbitrary/path.txt",
+							"analyte_type": "type_1",
+							"library_prep_kit_method": "prep-method-name",
+							"sequencing_strategy": "strategy_name",
+							"datarepo_row_id": "08688298-ccb2-40af-b45d-76d8f3eeb918"
+						},
+						{
+							"reference_genome_build": "genome_build_name",
+							"sequencing_platform": "platform_name",
+							"alignment_method": "some_method_name",
+							"tissue_source": "tissue_source",
+							"sample_id": "57-9012408",
+							"sequencing_assay": "assay_name",
+							"individual_id": "09-2790740",
+							"data_processing_pipeline": "pipeline_name.34.7",
+							"cram": "/arbitrary/path.txt",
+							"analyte_type": "type_1",
+							"library_prep_kit_method": "prep-method-name",
+							"sequencing_strategy": "strategy_name",
+							"datarepo_row_id": "26e2930f-7f78-4766-8128-8be82ed77e5c"
+						},
+						{
+							"reference_genome_build": "genome_build_name",
+							"sequencing_platform": "platform_name",
+							"alignment_method": "some_method_name",
+							"tissue_source": "tissue_source",
+							"sample_id": "75-4214702",
+							"sequencing_assay": "assay_name",
+							"individual_id": "93-7471455",
+							"data_processing_pipeline": "pipeline_name.34.7",
+							"cram": "/arbitrary/path.txt",
+							"analyte_type": "type_1",
+							"library_prep_kit_method": "prep-method-name",
+							"sequencing_strategy": "strategy_name",
+							"datarepo_row_id": "278b4ae3-c611-4da4-86a4-37623976ef0f"
+						},
+						{
+							"reference_genome_build": "genome_build_name",
+							"sequencing_platform": "platform_name",
+							"alignment_method": "some_method_name",
+							"tissue_source": "tissue_source",
+							"sample_id": "59-8343580",
+							"sequencing_assay": "assay_name",
+							"individual_id": "32-1557254",
+							"data_processing_pipeline": "pipeline_name.34.7",
+							"cram": "/arbitrary/path.txt",
+							"analyte_type": "type_2",
+							"library_prep_kit_method": "prep-method-name",
+							"sequencing_strategy": "strategy_name",
+							"datarepo_row_id": "38c8546d-5eb2-44f5-95ab-224a63156de5"
+						},
+						{
+							"reference_genome_build": "genome_build_name",
+							"sequencing_platform": "platform_name",
+							"alignment_method": "some_method_name",
+							"tissue_source": "tissue_source",
+							"sample_id": "82-3399061",
+							"sequencing_assay": "assay_name",
+							"individual_id": "20-7681218",
+							"data_processing_pipeline": "pipeline_name.34.7",
+							"cram": "/arbitrary/path.txt",
+							"analyte_type": "type_2",
+							"library_prep_kit_method": "prep-method-name",
+							"sequencing_strategy": "strategy_name",
+							"datarepo_row_id": "a12731e6-2bb6-4007-aad0-ed6450428d6f"
+						},
+						{
+							"reference_genome_build": "genome_build_name",
+							"sequencing_platform": "platform_name",
+							"alignment_method": "some_method_name",
+							"tissue_source": "tissue_source",
+							"sample_id": "45-8321706",
+							"sequencing_assay": "assay_name",
+							"individual_id": "88-5342245",
+							"data_processing_pipeline": "pipeline_name.34.7",
+							"cram": "/arbitrary/path.txt",
+							"analyte_type": "type_2",
+							"library_prep_kit_method": "prep-method-name",
+							"sequencing_strategy": "strategy_name",
+							"datarepo_row_id": "a41351d8-94dd-4a60-b7e1-df92a510f706"
+						},
+						{
+							"reference_genome_build": "genome_build_name",
+							"sequencing_platform": "platform_name",
+							"alignment_method": "some_method_name",
+							"tissue_source": "tissue_source",
+							"sample_id": "46-6829363",
+							"sequencing_assay": "assay_name",
+							"individual_id": "35-3632939",
+							"data_processing_pipeline": "pipeline_name.34.7",
+							"cram": "/arbitrary/path.txt",
+							"analyte_type": "type_1",
+							"library_prep_kit_method": "prep-method-name",
+							"sequencing_strategy": "strategy_name",
+							"datarepo_row_id": "aa42d31c-61ca-42a4-bfd2-01b7988e6859"
+						},
+						{
+							"reference_genome_build": "genome_build_name",
+							"sequencing_platform": "platform_name",
+							"alignment_method": "some_method_name",
+							"tissue_source": "tissue_source",
+							"sample_id": "00-9617471",
+							"sequencing_assay": "assay_name",
+							"individual_id": "96-7145436",
+							"data_processing_pipeline": "pipeline_name.34.7",
+							"cram": "/arbitrary/path.txt",
+							"analyte_type": "type_2",
+							"library_prep_kit_method": "prep-method-name",
+							"sequencing_strategy": "strategy_name",
+							"datarepo_row_id": "aa630a54-c09c-46de-8184-3515bd8d92c1"
+						},
+						{
+							"reference_genome_build": "genome_build_name",
+							"sequencing_platform": "platform_name",
+							"alignment_method": "some_method_name",
+							"tissue_source": "tissue_source",
+							"sample_id": "99-5805339",
+							"sequencing_assay": "assay_name",
+							"individual_id": "49-5055481",
+							"data_processing_pipeline": "pipeline_name.34.7",
+							"cram": "/arbitrary/path.txt",
+							"analyte_type": "type_2",
+							"library_prep_kit_method": "prep-method-name",
+							"sequencing_strategy": "strategy_name",
+							"datarepo_row_id": "bc837b57-1e8f-456c-ad77-103a79417707"
+						},
+						{
+							"reference_genome_build": "genome_build_name",
+							"sequencing_platform": "platform_name",
+							"alignment_method": "some_method_name",
+							"tissue_source": "tissue_source",
+							"sample_id": "80-5089887",
+							"sequencing_assay": "assay_name",
+							"individual_id": "83-5489676",
+							"data_processing_pipeline": "pipeline_name.34.7",
+							"cram": "/arbitrary/path.txt",
+							"analyte_type": "type_1",
+							"library_prep_kit_method": "prep-method-name",
+							"sequencing_strategy": "strategy_name",
+							"datarepo_row_id": "d631d636-529d-4ef3-87e5-94a42a4882f6"
+						}
+						],
+						"totalRowCount": 10,
+						"filteredRowCount": 10
+					}, 
+					"status": 200
+				},
+				"page_two":{
+					"method": "POST",
+					"url":"https://data.terra.bio/api/repository/v1/datasets/dataset_guid/data/table_name",
+					"params":{
+						"offset": 1000,
+						"limit": 1000,
+						"sort": "datarepo_row_id"
+					},
+					"response":{
+						"result": [],
+						"totalRowCount": 10,
+						"filteredRowCount": 0
+					}, 
+					"status": 200
+				}
+    		}
+		},
+
+		"get_snapshot_files": {
+			"function_input":"snapshot_guid",
+			"mock_response": {
+				"page_one":{
+					"method": "GET",
+					"url":"https://data.terra.bio/api/repository/v1/snapshots/snapshot_guid/files",
+					"params":{
+						"offset":0,
+						"limit":1000
+					},
+					"response":[
+						{
+						"fileId": "file_guid_1",
+						"collectionId": "string",
+						"path": "path/to/file_guid_1",
+						"size": 0,
+						"checksums": [
+							{
+							"checksum": "string",
+							"type": "string"
+							}
+						],
+						"created": "string",
+						"description": "string",
+						"fileType": "file",
+						"fileDetail": {
+							"datasetId": "string",
+							"mimeType": "string",
+							"accessUrl": "string",
+							"loadTag": "string"
+						},
+						"directoryDetail": {
+							"enumerated": true,
+							"contents": [
+							"string"
+							]
+						}
+						},
+						{
+							"fileId": "file_guid_2",
+							"collectionId": "string",
+							"path": "path/to/file_guid_2",
+							"size": 0,
+							"checksums": [
+							{
+								"checksum": "string",
+								"type": "string"
+							}
+							],
+							"created": "string",
+							"description": "string",
+							"fileType": "file",
+							"fileDetail": {
+							"datasetId": "string",
+							"mimeType": "string",
+							"accessUrl": "string",
+							"loadTag": "string"
+							},
+							"directoryDetail": {
+							"enumerated": true,
+							"contents": [
+								"string"
+							]
+							}
+						},
+						{
+							"fileId": "file_guid_3",
+							"collectionId": "string",
+							"path": "path/to/file_guid_3",
+							"size": 0,
+							"checksums": [
+							{
+								"checksum": "string",
+								"type": "string"
+							}
+							],
+							"created": "string",
+							"description": "string",
+							"fileType": "file",
+							"fileDetail": {
+							"datasetId": "string",
+							"mimeType": "string",
+							"accessUrl": "string",
+							"loadTag": "string"
+							},
+							"directoryDetail": {
+							"enumerated": true,
+							"contents": [
+								"string"
+							]
+							}
+						}
+					], 
+					"status": 200
+
+				},
+				"page_two":{
+					"method": "GET",
+					"url":"https://data.terra.bio/api/repository/v1/snapshots/snapshot_guid/files",
+					"params":{
+						"offset":1000,
+						"limit":1000
+					},
+					"response":[], 
+					"status": 200
+				}
 			}
+
 		},
-		"get_data_set_file_uuids_from_metadata": {
-			"function_input":"0981274b-61e3-4efb-99f2-eaea57075612"
-		},
-		"get_files_from_snapshot": {"function_input":"f65019f3-075e-4a7b-b46f-5f2975787356"},
 		"InferTDRSchema": {
 			"function_input":{
 				"input_metadata": [
@@ -84,15 +879,81 @@
 				"table_name": "samples"
 			}
 		},
-
-		"test_get_or_create_dataset": {
-			"existing_dataset": {
-				"function_input":{
-					"dataset_name": "ops_integration_test_dataset",
-					"billing_profile":"ce149ca7-608b-4d5d-9612-2a43a7378885",
+		"create_dataset_endpoint": {
+			"function_input": {
+				"dataset_name":"ex_dataset_id",
+				"billing_profile":"ex_dataset_billing_profile_guid",
+				"cloud_platform": "gcp",
+				"table_name": "example table",
+				"description": "",
+				"schema":{
+					"tables":[{
+						"name":"example table",
+						"columns":[
+							{
+								"name":"sample_id",
+								"datatype": "string"
+							},
+							{
+								"name":"individual_id",
+								"datatype": "string"
+							},
+							{
+								"name":"cram",
+								"datatype": "string"
+							},
+							{
+								"name":"alignment_method",
+								"datatype": "string"
+							},
+							{
+								"name":"analyte_type",
+								"datatype": "string"
+							},
+							{
+								"name":"data_processing_pipeline",
+								"datatype": "string"
+							},
+							{
+								"name":"library_prep_kit_method",
+								"datatype": "string"
+							},
+							{
+								"name":"reference_genome_build",
+								"datatype": "string"
+							},
+							{
+								"name":"sequencing_assay",
+								"datatype": "string"
+							},
+							{
+								"name":"sequencing_platform",
+								"datatype": "string"
+							},
+							{
+								"name":"sequencing_strategy",
+								"datatype": "string"
+							},
+							{
+								"name":"tissue_source",
+								"datatype": "string"
+							}
+						]
+					}]
+				}
+			}, 
+			"mock_response": {
+				"method": "POST",
+				"url":"https://data.terra.bio/api/repository/v1/datasets",
+				"params":{
+					"name": "ex_dataset_id",
+					"description": "",
+					"defaultProfileId": "ex_dataset_billing_profile_guid",
+					"region": "us-central1",
+					"cloudPlatform": "gcp",
 					"schema":{
 						"tables":[{
-							"name":"samples",
+							"name":"example table",
 							"columns":[
 								{
 									"name":"sample_id",
@@ -144,73 +1005,176 @@
 								}
 							]
 						}]
-					},
-					"description": "",
-					"cloud_platform": "gcp"
+					}
+				},
+				"response":{
+					"id": "job_guid",
+					"description": "string",
+					"job_status": "running",
+					"status_code": 0,
+					"submitted": "string",
+					"completed": "string",
+					"class_name": "string",
+					"target_iam_resource": {
+					"type": "string",
+					"id": "string",
+					"action": "string"
+					}
+				}, 
+				"status": 200
+			}
+		},
+		"get_job_status": {
+			"mock_response": {
+				"method": "GET",
+				"url":"https://data.terra.bio/api/repository/v1/jobs/job_guid",
+				"params":{},
+				"response":{
+					"id": "job_guid",
+					"description": "string",
+					"job_status": "succeeded",
+					"status_code": 200,
+					"submitted": "string",
+					"completed": "string",
+					"class_name": "string",
+					"target_iam_resource": {
+					"type": "string",
+					"id": "string",
+					"action": "string"
+					}
 				}
-			},
-			"new_dataset": {
-				"function_input":{
-					"dataset_name": "tmp_ops_integration_test_dataset_to_delete",
-					"billing_profile":"ce149ca7-608b-4d5d-9612-2a43a7378885",
-					"schema":{
-						"tables":[{
-							"name":"samples",
-							"columns":[
-								{
-									"name":"sample_id",
-									"datatype": "string"
-								},
-								{
-									"name":"individual_id",
-									"datatype": "string"
-								},
-								{
-									"name":"cram",
-									"datatype": "string"
-								},
-								{
-									"name":"alignment_method",
-									"datatype": "string"
-								},
-								{
-									"name":"analyte_type",
-									"datatype": "string"
-								},
-								{
-									"name":"data_processing_pipeline",
-									"datatype": "string"
-								},
-								{
-									"name":"library_prep_kit_method",
-									"datatype": "string"
-								},
-								{
-									"name":"reference_genome_build",
-									"datatype": "string"
-								},
-								{
-									"name":"sequencing_assay",
-									"datatype": "string"
-								},
-								{
-									"name":"sequencing_platform",
-									"datatype": "string"
-								},
-								{
-									"name":"sequencing_strategy",
-									"datatype": "string"
-								},
-								{
-									"name":"tissue_source",
-									"datatype": "string"
-								}
+				, 
+				"status": 200
+			}
+		},
+		"create_dataset_job_results": {
+			"mock_response": {
+				"method": "GET",
+				"url":"https://data.terra.bio/api/repository/v1/jobs/job_guid/result",
+				"params":{},
+				"response":{
+					"id": "ex_dataset_id",
+					"name": "ex dataset name",
+					"description": "string",
+					"defaultProfileId": "ex_billing_profile_id",
+					"dataProject": "string",
+					"schema": {
+					"tables": [
+						{
+						"name": "example table",
+						"columns": [
+							{
+							"name": "string",
+							"datatype": "string",
+							"array_of": false,
+							"required": true
+							}
+						],
+						"primaryKey": [
+							"string"
+						],
+						"partitionMode": "none",
+						"datePartitionOptions": {
+							"column": "string"
+						},
+						"intPartitionOptions": {
+							"column": "string",
+							"min": 0,
+							"max": 0,
+							"interval": 0
+						},
+						"rowCount": 0
+						}
+					],
+					"relationships": [
+						{
+						"name": "string",
+						"from": {
+							"table": "string",
+							"column": "string"
+						},
+						"to": {
+							"table": "string",
+							"column": "string"
+						}
+						}
+					],
+					"assets": [
+						{
+						"name": "string",
+						"tables": [
+							{
+							"name": "string",
+							"columns": [
+								"string"
 							]
-						}]
+							}
+						],
+						"rootTable": "string",
+						"rootColumn": "string",
+						"follow": [
+							"string"
+						]
+						}
+					]
 					},
-					"description": "",
-					"cloud_platform": "gcp"
-				}
+					"createdDate": "string",
+					"storage": [
+					{
+						"region": "string",
+						"cloudResource": "string",
+						"cloudPlatform": "gcp"
+					}
+					],
+					"secureMonitoringEnabled": false,
+					"phsId": "phs123456",
+					"accessInformation": {
+					"bigQuery": {
+						"datasetName": "string",
+						"datasetId": "string",
+						"projectId": "string",
+						"link": "string",
+						"tables": [
+						{
+							"name": "string",
+							"id": "string",
+							"qualifiedName": "string",
+							"link": "string",
+							"sampleQuery": "string"
+						}
+						]
+					},
+					"parquet": {
+						"datasetName": "string",
+						"datasetId": "string",
+						"storageAccountId": "string",
+						"url": "string",
+						"sasToken": "string",
+						"tables": [
+						{
+							"name": "string",
+							"url": "string",
+							"sasToken": "string"
+						}
+						]
+					}
+					},
+					"cloudPlatform": "gcp",
+					"selfHosted": false,
+					"properties": {},
+					"ingestServiceAccount": "string",
+					"predictableFileIds": false,
+					"tags": [
+					"a-resource-tag"
+					],
+					"resourceLocks": {
+					"exclusive": "string",
+					"shared": [
+						"string"
+					]
+					}
+				}, 
+				"status": 200
 			}
 		},
 		"test_add_user_to_dataset": {

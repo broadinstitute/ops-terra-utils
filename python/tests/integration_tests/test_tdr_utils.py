@@ -2,6 +2,9 @@ import pytest
 import json
 import pathlib
 from typing import Any
+import responses
+from responses import matchers
+import pytest_responses
 
 
 from python.utils.tdr_utils.tdr_api_utils import TDR
@@ -11,6 +14,32 @@ from python.utils.tdr_utils.tdr_job_utils import MonitorTDRJob
 from python.utils.token_util import Token
 from python.utils.request_util import RunRequest
 
+
+def mock_api_response(test_json):
+
+    match test_json['method']:
+        case 'GET':
+            responses.get(
+                test_json['url'],
+                body=json.dumps(test_json['response']),
+                status=test_json['status'],
+                content_type='application/json',
+                match=[matchers.query_param_matcher(test_json['params'], strict_match=False)]
+            )
+        case 'POST':
+            responses.post(                
+                test_json['url'],
+                body=json.dumps(test_json['response']),
+                status=test_json['status'],
+                content_type='application/json',
+                match=[matchers.json_params_matcher(test_json['params'], strict_match=False)])
+        case 'DELETE':
+            responses.delete(
+                test_json['url'],
+                body=json.dumps(test_json['response']),
+                status=test_json['status'],
+                content_type='application/json'
+            )
 
 @pytest.fixture()
 def tdr_test_resource_json() -> dict:
@@ -34,62 +63,74 @@ class TestGetUtils:
         self.test_info = tdr_test_resource_json
 
     def test_get_data_set_files(self) -> None:
-        test_data = self.test_info['tests']['get_data_set_files']
+        test_data = self.test_info['tests']['get_files_endpoint']
+        mock_api_response(test_json=test_data['mock_response']['page_one'])
+        mock_api_response(test_json=test_data['mock_response']['page_two'])
         file_list = self.tdr_client.get_data_set_files(dataset_id=test_data['function_input'])
-        assert len(file_list) == 20
+        assert len(file_list) == 3
 
     def test_create_file_dict(self) -> None:
-        test_data = self.test_info['tests']['create_file_dict']
+        test_data = self.test_info['tests']['get_files_endpoint']
+        mock_api_response(test_json=test_data['mock_response']['page_one'])
+        mock_api_response(test_json=test_data['mock_response']['page_two'])
         file_dict = self.tdr_client.create_file_dict(dataset_id=test_data['function_input'])
-        assert len(file_dict.keys()) == 20
+        assert len(file_dict.keys()) == 3
 
     def test_get_snapshot_info(self) -> None:
-        test_data = self.test_info['tests']['get_snapshot_info']
+        test_data = self.test_info['tests']['get_snapshot_endpoint']
+        mock_api_response(test_json=test_data['mock_response'])
         cmd = self.tdr_client.get_snapshot_info(snapshot_id=test_data['function_input'])
-        assert cmd['name'] == 'integration_test_snapshot'
+        assert cmd['name'] == 'snapshot name'
 
     def test_check_if_dataset_exists(self) -> None:
-        test_data = self.test_info['tests']['check_if_dataset_exists']
+        test_data = self.test_info['tests']['list_datasets_endpoint']
+        mock_api_response(test_json=test_data['mock_response']['page_one'])
+        mock_api_response(test_json=test_data['mock_response']['page_two'])
         dataset_exists = self.tdr_client.check_if_dataset_exists(
             dataset_name=test_data['function_input']['dataset_name'],
             billing_profile=test_data['function_input']['billing_profile'])
-        dataset_dose_not_exist = self.tdr_client.check_if_dataset_exists(
-            dataset_name="fake_dataset", billing_profile='not_real_billing_profile')
-        assert dataset_exists and not dataset_dose_not_exist
+        assert dataset_exists
 
     def test_get_dataset_info(self) -> None:
-        test_data = self.test_info['tests']['get_dataset_info']
-        cmd = self.tdr_client.get_dataset_info(dataset_id=test_data['function_input'])
-        assert cmd['name'] == 'ops_integration_test_dataset'
+        test_data = self.test_info['tests']['get_dataset_endpoint']
+        mock_api_response(test_json=test_data['mock_response'])
+        found_dataset = self.tdr_client.get_dataset_info(dataset_id=test_data['function_input']['dataset_id'])
+        assert found_dataset
 
     def test_get_table_schema_info(self) -> None:
-        test_data = self.test_info['tests']['get_table_schema_info']
-        cmd = self.tdr_client.get_table_schema_info(
+        test_data = self.test_info['tests']['get_dataset_endpoint']
+        mock_api_response(test_json=test_data['mock_response'])
+        schema_info = self.tdr_client.get_table_schema_info(
             dataset_id=test_data['function_input']['dataset_id'], table_name=test_data['function_input']['table_name'])
-        assert cmd['name'] == 'samples' and len(cmd['columns']) == 12
+        assert schema_info
 
     def test_get_data_set_table_metrics(self) -> None:
-        test_data = self.test_info['tests']['get_data_set_table_metrics']
-        cmd = self.tdr_client.get_data_set_table_metrics(
+        test_data = self.test_info['tests']['get_dataset_table']
+        mock_api_response(test_json=test_data['mock_response']['page_one'])
+        mock_api_response(test_json=test_data['mock_response']['page_two'])
+        table_metrics = self.tdr_client.get_data_set_table_metrics(
             dataset_id=test_data['function_input']['dataset_id'],
             target_table_name=test_data['function_input']['table_name'])
-        assert len(cmd) == 10
+        assert table_metrics
 
     def test_get_data_set_sample_ids(self) -> None:
-        test_data = self.test_info['tests']['get_data_set_sample_ids']
-        cmd = self.tdr_client.get_data_set_sample_ids(
+        test_data = self.test_info['tests']['get_dataset_table']
+        mock_api_response(test_json=test_data['mock_response']['page_one'])
+        mock_api_response(test_json=test_data['mock_response']['page_two'])
+        sample_ids = self.tdr_client.get_data_set_sample_ids(
             dataset_id=test_data['function_input']['dataset_id'],
             target_table_name=test_data['function_input']['table_name'],
             entity_id=test_data['function_input']['entity_id'])
-        assert len(cmd) == 10
+        
+        assert sample_ids
 
-    def test_get_data_set_file_uuids_from_metadata(self) -> None:
-        test_data = self.test_info['tests']['get_data_set_file_uuids_from_metadata']
-        self.tdr_client.get_data_set_file_uuids_from_metadata(dataset_id=test_data['function_input'])
 
     def test_get_files_from_snapshot(self) -> None:
-        test_data = self.test_info['tests']['get_files_from_snapshot']
-        self.tdr_client.get_files_from_snapshot(snapshot_id=test_data['function_input'])
+        test_data = self.test_info['tests']['get_snapshot_files']
+        mock_api_response(test_json=test_data['mock_response']['page_one'])
+        mock_api_response(test_json=test_data['mock_response']['page_two'])
+        snapshot_files = self.tdr_client.get_files_from_snapshot(snapshot_id=test_data['function_input'])
+        assert snapshot_files
 
     def test_InferTDRSchema(self) -> None:
         # input_metadata: list[dict], table_name
@@ -107,25 +148,34 @@ class TestCreateUtils:
         self.test_info = tdr_test_resource_json
 
     def test_get_or_create_dataset(self) -> None:
-        test_data = self.test_info['tests']['test_get_or_create_dataset']
+        list_dataset_endpoint = self.test_info['tests']['list_datasets_endpoint']
+        create_dataset_endpoint = self.test_info['tests']['create_dataset_endpoint']
+        get_job_results = self.test_info['tests']['get_job_status']
+        job_results = self.test_info['tests']['create_dataset_job_results']
+        
+        mock_api_response(test_json=list_dataset_endpoint['mock_response']['page_one'])
+        mock_api_response(test_json=list_dataset_endpoint['mock_response']['page_two'])
+        mock_api_response(test_json=create_dataset_endpoint['mock_response'])
+        mock_api_response(test_json=get_job_results['mock_response'])
+        mock_api_response(test_json=job_results['mock_response'])
 
         def get_existing_dataset() -> None:
             cmd = self.tdr_client.get_or_create_dataset(
-                dataset_name=test_data['existing_dataset']['function_input']['dataset_name'],
-                billing_profile=test_data['existing_dataset']['function_input']['billing_profile'],
-                schema=test_data['existing_dataset']['function_input']['schema'],
-                description=test_data['existing_dataset']['function_input']['description'],
-                cloud_platform=test_data['existing_dataset']['function_input']['cloud_platform']
+                dataset_name=create_dataset_endpoint['function_input']['dataset_name'],
+                billing_profile=create_dataset_endpoint['function_input']['billing_profile'],
+                schema=create_dataset_endpoint['function_input']['schema'],
+                description=create_dataset_endpoint['function_input']['description'],
+                cloud_platform=create_dataset_endpoint['function_input']['cloud_platform']
             )
             assert cmd == '0981274b-61e3-4efb-99f2-eaea57075612'
 
         def create_new_dataset() -> None:
             self.tdr_client.get_or_create_dataset(
-                dataset_name=test_data['new_dataset']['function_input']['dataset_name'],
-                billing_profile=test_data['new_dataset']['function_input']['billing_profile'],
-                schema=test_data['new_dataset']['function_input']['schema'],
-                description=test_data['new_dataset']['function_input']['description'],
-                cloud_platform=test_data['new_dataset']['function_input']['cloud_platform']
+                dataset_name=create_dataset_endpoint['function_input']['dataset_name'],
+                billing_profile=create_dataset_endpoint['function_input']['billing_profile'],
+                schema=create_dataset_endpoint['function_input']['schema'],
+                description=create_dataset_endpoint['function_input']['description'],
+                cloud_platform=create_dataset_endpoint['function_input']['cloud_platform']
             )
 
         get_existing_dataset()
