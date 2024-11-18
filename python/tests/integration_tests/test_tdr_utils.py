@@ -125,7 +125,8 @@ class TestCreateUtils:
                 billing_profile=test_data['new_dataset']['function_input']['billing_profile'],
                 schema=test_data['new_dataset']['function_input']['schema'],
                 description=test_data['new_dataset']['function_input']['description'],
-                cloud_platform=test_data['new_dataset']['function_input']['cloud_platform']
+                cloud_platform=test_data['new_dataset']['function_input']['cloud_platform'],
+                additional_properties=test_data['new_dataset']['function_input']['additional_properties']
             )
 
         get_existing_dataset()

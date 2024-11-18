@@ -209,7 +209,16 @@
 						}]
 					},
 					"description": "",
-					"cloud_platform": "gcp"
+					"cloud_platform": "gcp",
+					"additional_properties": {
+						"policies": {
+							"stewards": [
+								"samn@broadinstitute.org",
+								"jscira@broadinstitute.org",
+								"sahakian@broadinstitute.org"
+							]
+						}
+					}
 				}
 			}
 		},
