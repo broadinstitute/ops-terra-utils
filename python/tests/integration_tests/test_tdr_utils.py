@@ -38,7 +38,8 @@ def mock_api_response(test_json):
                 test_json['url'],
                 body=json.dumps(test_json['response']),
                 status=test_json['status'],
-                content_type='application/json'
+                content_type='application/json',
+                match=[matchers.json_params_matcher(test_json['params'], strict_match=False)]
             )
 
 @pytest.fixture()
@@ -150,14 +151,21 @@ class TestCreateUtils:
     def test_get_or_create_dataset(self) -> None:
         list_dataset_endpoint = self.test_info['tests']['list_datasets_endpoint']
         create_dataset_endpoint = self.test_info['tests']['create_dataset_endpoint']
-        get_job_results = self.test_info['tests']['get_job_status']
-        job_results = self.test_info['tests']['create_dataset_job_results']
+        get_job_status = self.test_info['tests']['get_job_status']
+        get_job_results = self.test_info['tests']['create_dataset_job_results']
         
+        #list datasets for existing dataset - page 1 
         mock_api_response(test_json=list_dataset_endpoint['mock_response']['page_one'])
+        # ^ - page 2 
         mock_api_response(test_json=list_dataset_endpoint['mock_response']['page_two'])
-        mock_api_response(test_json=create_dataset_endpoint['mock_response'])
+        #Create dataset request 
+        mock_api_response(test_json=create_dataset_endpoint['mock_response']['create_dataset'])
+        #list datasets endpoint for new dataset
+        mock_api_response(test_json=create_dataset_endpoint['mock_response']['get_datasets'])
+        #Get job status
+        mock_api_response(test_json=get_job_status['mock_response'])
+        #Get job results
         mock_api_response(test_json=get_job_results['mock_response'])
-        mock_api_response(test_json=job_results['mock_response'])
 
         def get_existing_dataset() -> None:
             cmd = self.tdr_client.get_or_create_dataset(
@@ -165,58 +173,60 @@ class TestCreateUtils:
                 billing_profile=create_dataset_endpoint['function_input']['billing_profile'],
                 schema=create_dataset_endpoint['function_input']['schema'],
                 description=create_dataset_endpoint['function_input']['description'],
-                cloud_platform=create_dataset_endpoint['function_input']['cloud_platform']
+                cloud_platform=create_dataset_endpoint['function_input']['cloud_platform'], 
+                continue_if_exists=True
             )
-            assert cmd == '0981274b-61e3-4efb-99f2-eaea57075612'
+            assert cmd == 'ex_dataset_name_guid'
 
         def create_new_dataset() -> None:
-            self.tdr_client.get_or_create_dataset(
-                dataset_name=create_dataset_endpoint['function_input']['dataset_name'],
+            new_dataset = self.tdr_client.get_or_create_dataset(
+                dataset_name=create_dataset_endpoint['function_input']['new_dataset_name'],
                 billing_profile=create_dataset_endpoint['function_input']['billing_profile'],
                 schema=create_dataset_endpoint['function_input']['schema'],
                 description=create_dataset_endpoint['function_input']['description'],
                 cloud_platform=create_dataset_endpoint['function_input']['cloud_platform']
             )
-
+            assert new_dataset == 'new_dataset_name_guid'
+        
         get_existing_dataset()
         create_new_dataset()
+        
 
     def test_add_user_to_dataset(self) -> None:
         test_data = self.test_info['tests']['test_add_user_to_dataset']
+        mock_api_response(test_json=test_data['mock_response'])
         self.tdr_client.add_user_to_dataset(
             dataset_id=test_data['function_input']['dataset_id'],
             user=test_data['function_input']['user'],
             policy=test_data['function_input']['policy'])
 
+
     def test_update_dataset_schema(self) -> None:
         test_data = self.test_info['tests']['test_update_dataset_schema']
-        dataset_info = self.tdr_client.check_if_dataset_exists(
-            dataset_name=test_data['function_input']['dataset_name'],
-            billing_profile=test_data['function_input']['billing_profile'])
-        dataset_id = dataset_info[0]['id'] if dataset_info else None
-        if dataset_id:
-            self.tdr_client.update_dataset_schema(  # type: ignore[return]
-                dataset_id=dataset_id,
-                update_note=test_data['function_input']['update_note'],
-                tables_to_add=test_data['function_input']['tables_to_add']
-            )
+        mock_api_response(test_json=test_data['mock_response']['update_schema'])
+        mock_api_response(self.test_info['tests']['get_job_status']['mock_response'])
+        mock_api_response(test_json=test_data['mock_response']['job_results'])
+        
+        self.tdr_client.update_dataset_schema(  # type: ignore[return]
+            dataset_id=test_data['function_input']['dataset_guid'],
+            update_note=test_data['function_input']['update_note'],
+            tables_to_add=test_data['function_input']['tables_to_add']
+        )
 
     def test_batch_ingest_to_dataset(self) -> None:
         test_data = self.test_info['tests']['test_batch_ingest']['metadata_ingest']
-        dataset_info = self.tdr_client.check_if_dataset_exists(
-            dataset_name=test_data['function_input']['dataset_name'],
-            billing_profile=test_data['function_input']['billing_profile'])
-        dataset_id = dataset_info[0]['id'] if dataset_info else None
-        if dataset_id:
-            BatchIngest(
-                ingest_metadata=test_data['function_input']['ingest_metadata'],
-                tdr=self.tdr_client,
-                target_table_name=test_data['function_input']['target_table_name'],
-                dataset_id=dataset_id,
-                batch_size=test_data['function_input']['batch_size'],
-                bulk_mode=test_data['function_input']['bulk_mode'],
-                cloud_type=test_data['function_input']['cloud_type']
-            ).run()
+        mock_api_response(test_json=test_data['mock_response']['dataset_ingest'])
+        mock_api_response(self.test_info['tests']['get_job_status']['mock_response'])
+        mock_api_response(test_json=test_data['mock_response']['job_results'])
+        BatchIngest(
+            ingest_metadata=test_data['function_input']['ingest_metadata'],
+            tdr=self.tdr_client,
+            target_table_name=test_data['function_input']['target_table_name'],
+            dataset_id=test_data['function_input']['dataset_id'],
+            batch_size=test_data['function_input']['batch_size'],
+            bulk_mode=test_data['function_input']['bulk_mode'],
+            cloud_type=test_data['function_input']['cloud_type']
+        ).run()
 
     def test_ingest_files(self) -> None:
         test_data = self.test_info['tests']['test_batch_ingest']['file_ingest']
