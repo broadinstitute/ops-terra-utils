@@ -16,10 +16,10 @@ jobs:
             utils:
               - python/utils/**
       - name: Checkout PR Branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Login to GCP
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.INTEGRATION_TEST_ACCOUNT }}
 
