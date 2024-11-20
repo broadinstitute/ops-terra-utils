@@ -338,8 +338,8 @@ class UpdateWorkspaceAttributes:
             workspace_description += "\n\n# Imported WDLs\n"
             for workflow_config in self.workflow_config_list:
                 # Get the read me link for the workflow added to workflow description
-                workspace_description += f"\n{workflow_config.workflow_name} - " + \
-                                         f"[READ ME]({workflow_config.workflow_info['read_me_link']})"
+                workspace_description += f"* {workflow_config.workflow_name} - " + \
+                                         f"[READ ME]({workflow_config.workflow_info['read_me_link']})\n"
         return workspace_description
 
     def run(self) -> None:
@@ -445,7 +445,7 @@ class SetUpWorkflowConfig:
                             "force_disparate_rows_to_string": "true",
                             "bulk_mode": "true",
                             "trunc_and_reload": "false",
-                            "batch_size": 1000
+                            "batch_size": "1000"
                         }
                     )
                 )
