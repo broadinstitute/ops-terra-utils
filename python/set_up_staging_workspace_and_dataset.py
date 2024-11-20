@@ -335,11 +335,11 @@ class UpdateWorkspaceAttributes:
         with open(STAGING_WORKSPACE_DESCRIPTION_FILE_FULL_PATH, "r") as file:
             workspace_description = file.read()
         if self.workflow_config_list:
-            workspace_description += "\n\n# Imported WDLs Read Mes\n"
+            workspace_description += "\n\n# Imported WDLs\n"
             for workflow_config in self.workflow_config_list:
                 # Get the read me link for the workflow added to workflow description
-                workspace_description += f"\n{workflow_config.workflow_name} - " + \
-                                         f"{workflow_config.workflow_info['read_me_link']}"
+                workspace_description += f"* {workflow_config.workflow_name} - " + \
+                                         f"[READ ME]({workflow_config.workflow_info['read_me_link']})\n"
         return workspace_description
 
     def run(self) -> None:
@@ -441,8 +441,11 @@ class SetUpWorkflowConfig:
                             # When creating file inventory ignore submissions folder from terra workflows
                             "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"',
                             # When creating any table make all fields nullable
-                            "all_fields_non_required": "false",
+                            "all_fields_non_required": "true",
                             "force_disparate_rows_to_string": "true",
+                            "bulk_mode": "true",
+                            "trunc_and_reload": "false",
+                            "batch_size": "1000"
                         }
                     )
                 )
