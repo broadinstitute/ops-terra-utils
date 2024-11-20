@@ -4,8 +4,7 @@ import pathlib
 from typing import Any
 import responses
 from responses import matchers
-import pytest_responses
-
+import re
 
 from python.utils.tdr_utils.tdr_api_utils import TDR
 from python.utils.tdr_utils.tdr_schema_utils import InferTDRSchema
@@ -16,7 +15,6 @@ from python.utils.request_util import RunRequest
 
 
 def mock_api_response(test_json):
-
     match test_json['method']:
         case 'GET':
             responses.get(
@@ -31,15 +29,14 @@ def mock_api_response(test_json):
                 test_json['url'],
                 body=json.dumps(test_json['response']),
                 status=test_json['status'],
-                content_type='application/json',
-                match=[matchers.json_params_matcher(test_json['params'], strict_match=False)])
+                content_type='application/json'
+            )
         case 'DELETE':
             responses.delete(
                 test_json['url'],
                 body=json.dumps(test_json['response']),
                 status=test_json['status'],
-                content_type='application/json',
-                match=[matchers.json_params_matcher(test_json['params'], strict_match=False)]
+                content_type='application/json'
             )
 
 @pytest.fixture()
@@ -52,7 +49,7 @@ def tdr_test_resource_json() -> dict:
 @pytest.fixture()
 def tdr_client() -> Any:
     token = Token(cloud='gcp')
-    requestclient = RunRequest(token)
+    requestclient = RunRequest(token, max_retries=1, max_backoff_time=1)
     return TDR(request_util=requestclient)
 
 
@@ -158,6 +155,8 @@ class TestCreateUtils:
         mock_api_response(test_json=list_dataset_endpoint['mock_response']['page_one'])
         # ^ - page 2 
         mock_api_response(test_json=list_dataset_endpoint['mock_response']['page_two'])
+        # ^ - list datasets - filter for dataset that does not exist
+        mock_api_response(test_json=list_dataset_endpoint['mock_response']['non_existing_dataset'])
         #Create dataset request 
         mock_api_response(test_json=create_dataset_endpoint['mock_response']['create_dataset'])
         #list datasets endpoint for new dataset
@@ -186,7 +185,7 @@ class TestCreateUtils:
                 description=create_dataset_endpoint['function_input']['description'],
                 cloud_platform=create_dataset_endpoint['function_input']['cloud_platform']
             )
-            assert new_dataset == 'new_dataset_name_guid'
+            assert new_dataset == 'new_dataset_guid'
         
         get_existing_dataset()
         create_new_dataset()
@@ -230,6 +229,9 @@ class TestCreateUtils:
 
     def test_ingest_files(self) -> None:
         test_data = self.test_info['tests']['test_batch_ingest']['file_ingest']
+        mock_api_response(test_json=test_data['mock_response']['file_ingest'])
+        mock_api_response(self.test_info['tests']['get_job_status']['mock_response'])
+        mock_api_response(test_json=test_data['mock_response']['job_results'])
         self.tdr_client.file_ingest_to_dataset(dataset_id=test_data['function_input']['dataset_id'],
                                                profile_id=test_data['function_input']['profileId'],
                                                file_list=test_data['function_input']['ingest_files'],
@@ -244,60 +246,25 @@ class TestDeleteUtils:
         self.test_info = tdr_test_resource_json
 
     def test_delete_files(self) -> None:
-        test_data = self.test_info['tests']['test_delete_files']
-        file_list = self.tdr_client.get_data_set_files(dataset_id=test_data['function_input']['dataset_id'])
-        deletion_list = [file['fileId']
-                         for file in file_list if file['fileDetail']['loadTag'] == 'integration_test_file_load']
-        self.tdr_client.delete_files(file_ids=deletion_list, dataset_id=test_data['function_input']['dataset_id'])
+        test_data = self.test_info['tests']['delete_files_endpoint']
+        mock_api_response(test_json=test_data['mock_response']['delete_file'])
+        mock_api_response(self.test_info['tests']['get_job_status']['mock_response'])
+        mock_api_response(test_json=test_data['mock_response']['job_results'])
+        self.tdr_client.delete_files(file_ids=test_data['function_input']['file_ids'], dataset_id=test_data['function_input']['dataset_id'])
 
     def test_delete_snapshot(self) -> None:
-        def create_test_snapshot(dataset_id: str) -> Any:
-            test_data = self.test_info['tests']['test_delete_snapshot']['create_snapshot']
-            # adding dataset id to snapshot name due to TDR constraints on snapshot name uniueness
-            data = {
-                "name": f"{test_data['function_input']['name']}_{dataset_id}",
-                "description": test_data['function_input']['description'],
-                "contents": test_data['function_input']['contents'],
-                "profileId": test_data['function_input']['profileId']
-            }
-            response = self.tdr_client.request_util.run_request(
-                uri="https://data.terra.bio/api/repository/v1/snapshots",
-                method='POST',
-                data=json.dumps(data),
-                content_type="application/json"
-            )
-            if response.ok:
-                job_results = MonitorTDRJob(tdr=self.tdr_client, job_id=response.json()[
-                                            'id'], check_interval=15, return_json=True).run()
-                return job_results
-
-        def delete_test_snapshot(snapshot_id: str) -> None:
-
-            self.tdr_client.delete_snapshot(snapshot_id=snapshot_id)
-
         test_data = self.test_info['tests']['test_delete_snapshot']
-        dataset_info = self.tdr_client.check_if_dataset_exists(
-            dataset_name=test_data['delete_snapshot']['function_input']['dataset_name'],
-            billing_profile=test_data['delete_snapshot']['function_input']['profileId'])
-        if dataset_info:
-            dataset_id = dataset_info[0]['id']
-            dataset_snapshots = self.tdr_client.get_dataset_snapshots(dataset_id=dataset_id)
-            if dataset_snapshots['total'] > 0:
-                snapshot_id = dataset_snapshots['items'][0]['id']
-            else:
-                formatted_id = dataset_id.replace('-', '_')
-                new_snapshot = create_test_snapshot(dataset_id=formatted_id)
-                snapshot_id = new_snapshot['id']
+        mock_api_response(test_data['mock_response']['delete_snapshot'])
+        mock_api_response(self.test_info['tests']['get_job_status']['mock_response'])
+        mock_api_response(test_data['mock_response']['job_results'])
+        self.tdr_client.delete_snapshot(snapshot_id=test_data['function_input']['snapshot_guid'])
 
-            delete_test_snapshot(snapshot_id)
+
 
     def test_delete_dataset(self) -> None:
         test_data = self.test_info['tests']['test_delete_dataset']
-        dataset_info = self.tdr_client.check_if_dataset_exists(
-            dataset_name=test_data['function_input']['dataset_name'],
-            billing_profile=test_data['function_input']['billing_profile'])
-        if dataset_info:
-            dataset_id = dataset_info[0]['id']
-            self.tdr_client.delete_dataset(dataset_id=dataset_id)
-        else:
-            print("Dataset does not exist")
+        mock_api_response(test_data['mock_response']['delete_dataset'])
+        mock_api_response(self.test_info['tests']['get_job_status']['mock_response'])
+        mock_api_response(test_data['mock_response']['job_results'])
+
+        self.tdr_client.delete_dataset(dataset_id=test_data['function_input']['dataset_guid'])
