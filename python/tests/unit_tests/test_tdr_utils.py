@@ -4,12 +4,10 @@ import pathlib
 from typing import Any
 import responses
 from responses import matchers
-import re
 
 from python.utils.tdr_utils.tdr_api_utils import TDR
 from python.utils.tdr_utils.tdr_schema_utils import InferTDRSchema
 from python.utils.tdr_utils.tdr_ingest_utils import BatchIngest
-from python.utils.tdr_utils.tdr_job_utils import MonitorTDRJob
 from python.utils.token_util import Token
 from python.utils.request_util import RunRequest
 
@@ -25,7 +23,7 @@ def mock_api_response(test_json):
                 match=[matchers.query_param_matcher(test_json['params'], strict_match=False)]
             )
         case 'POST':
-            responses.post(                
+            responses.post(
                 test_json['url'],
                 body=json.dumps(test_json['response']),
                 status=test_json['status'],
@@ -38,6 +36,7 @@ def mock_api_response(test_json):
                 status=test_json['status'],
                 content_type='application/json'
             )
+
 
 @pytest.fixture()
 def tdr_test_resource_json() -> dict:
@@ -119,9 +118,8 @@ class TestGetUtils:
             dataset_id=test_data['function_input']['dataset_id'],
             target_table_name=test_data['function_input']['table_name'],
             entity_id=test_data['function_input']['entity_id'])
-        
-        assert sample_ids
 
+        assert sample_ids
 
     def test_get_files_from_snapshot(self) -> None:
         test_data = self.test_info['tests']['get_snapshot_files']
@@ -150,20 +148,20 @@ class TestCreateUtils:
         create_dataset_endpoint = self.test_info['tests']['create_dataset_endpoint']
         get_job_status = self.test_info['tests']['get_job_status']
         get_job_results = self.test_info['tests']['create_dataset_job_results']
-        
-        #list datasets for existing dataset - page 1 
+
+        # list datasets for existing dataset - page 1
         mock_api_response(test_json=list_dataset_endpoint['mock_response']['page_one'])
-        # ^ - page 2 
+        # ^ - page 2
         mock_api_response(test_json=list_dataset_endpoint['mock_response']['page_two'])
         # ^ - list datasets - filter for dataset that does not exist
         mock_api_response(test_json=list_dataset_endpoint['mock_response']['non_existing_dataset'])
-        #Create dataset request 
+        # Create dataset request
         mock_api_response(test_json=create_dataset_endpoint['mock_response']['create_dataset'])
-        #list datasets endpoint for new dataset
+        # list datasets endpoint for new dataset
         mock_api_response(test_json=create_dataset_endpoint['mock_response']['get_datasets'])
-        #Get job status
+        # Get job status
         mock_api_response(test_json=get_job_status['mock_response'])
-        #Get job results
+        # Get job results
         mock_api_response(test_json=get_job_results['mock_response'])
 
         def get_existing_dataset() -> None:
@@ -172,7 +170,7 @@ class TestCreateUtils:
                 billing_profile=create_dataset_endpoint['function_input']['billing_profile'],
                 schema=create_dataset_endpoint['function_input']['schema'],
                 description=create_dataset_endpoint['function_input']['description'],
-                cloud_platform=create_dataset_endpoint['function_input']['cloud_platform'], 
+                cloud_platform=create_dataset_endpoint['function_input']['cloud_platform'],
                 continue_if_exists=True
             )
             assert cmd == 'ex_dataset_name_guid'
@@ -186,10 +184,9 @@ class TestCreateUtils:
                 cloud_platform=create_dataset_endpoint['function_input']['cloud_platform']
             )
             assert new_dataset == 'new_dataset_guid'
-        
+
         get_existing_dataset()
         create_new_dataset()
-        
 
     def test_add_user_to_dataset(self) -> None:
         test_data = self.test_info['tests']['test_add_user_to_dataset']
@@ -199,13 +196,12 @@ class TestCreateUtils:
             user=test_data['function_input']['user'],
             policy=test_data['function_input']['policy'])
 
-
     def test_update_dataset_schema(self) -> None:
         test_data = self.test_info['tests']['test_update_dataset_schema']
         mock_api_response(test_json=test_data['mock_response']['update_schema'])
         mock_api_response(self.test_info['tests']['get_job_status']['mock_response'])
         mock_api_response(test_json=test_data['mock_response']['job_results'])
-        
+
         self.tdr_client.update_dataset_schema(  # type: ignore[return]
             dataset_id=test_data['function_input']['dataset_guid'],
             update_note=test_data['function_input']['update_note'],
@@ -250,7 +246,8 @@ class TestDeleteUtils:
         mock_api_response(test_json=test_data['mock_response']['delete_file'])
         mock_api_response(self.test_info['tests']['get_job_status']['mock_response'])
         mock_api_response(test_json=test_data['mock_response']['job_results'])
-        self.tdr_client.delete_files(file_ids=test_data['function_input']['file_ids'], dataset_id=test_data['function_input']['dataset_id'])
+        self.tdr_client.delete_files(file_ids=test_data['function_input']['file_ids'],
+                                     dataset_id=test_data['function_input']['dataset_id'])
 
     def test_delete_snapshot(self) -> None:
         test_data = self.test_info['tests']['test_delete_snapshot']
@@ -258,8 +255,6 @@ class TestDeleteUtils:
         mock_api_response(self.test_info['tests']['get_job_status']['mock_response'])
         mock_api_response(test_data['mock_response']['job_results'])
         self.tdr_client.delete_snapshot(snapshot_id=test_data['function_input']['snapshot_guid'])
-
-
 
     def test_delete_dataset(self) -> None:
         test_data = self.test_info['tests']['test_delete_dataset']
