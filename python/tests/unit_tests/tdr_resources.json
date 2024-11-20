@@ -387,7 +387,7 @@
                         "items": []
                     }
                 },
-				"non_existing_dataset": {
+                "non_existing_dataset": {
                     "method": "GET",
                     "url": "https://data.terra.bio/api/repository/v1/datasets",
                     "params": {
@@ -1381,252 +1381,116 @@
                     }
                 }
             },
-			"metadata_ingest": {
-				"function_input": {
-					"ingest_metadata": [
-						{
-							"col_1": "ex_data_col_1_1",
-							"col_2": "ex_data_col_2_1",
-							"col_3": "ex_data_col_3_1"
-						},
-						{
-							"col_1": "ex_data_col_1_2",
-							"col_2": "ex_data_col_2_2",
-							"col_3": "ex_data_col_3_2"
-						},
-						{
-							"col_1": "ex_data_col_1_3",
-							"col_2": "ex_data_col_2_3",
-							"col_3": "ex_data_col_3_3"
-						}
-					],
-					"target_table_name": "table_name",
-					"dataset_name": "dataset_name",
-					"dataset_id": "dataset_guid",
-					"billing_profile": "billing_profile_guid",
-					"batch_size": 5,
-					"bulk_mode": false,
-					"cloud_type": "gcp"
-				},
-				"mock_response": {
-					"dataset_ingest": {
-						"method": "POST",
-						"url": "https://data.terra.bio/api/repository/v1/datasets/dataset_guid/ingest",
-						"params": {},
-						"status": 200,
-						"response": {
-							"id": "job_guid",
-							"description": "string",
-							"job_status": "running",
-							"status_code": 200,
-							"submitted": "string",
-							"completed": "string",
-							"class_name": "string",
-							"target_iam_resource": {
-								"type": "string",
-								"id": "string",
-								"action": "string"
-							}
-						}
-					},
-					"job_results": {
-						"method": "GET",
-						"url": "https://data.terra.bio/api/repository/v1/jobs/job_guid/results",
-						"params": {},
-						"status": 200,
-						"response": {
-							"result": [
-								{
-									"col_1": "ex_data_col_1_1",
-									"col_2": "ex_data_col_2_1",
-									"col_3": "ex_data_col_3_1"
-								},
-								{
-									"col_1": "ex_data_col_1_2",
-									"col_2": "ex_data_col_2_2",
-									"col_3": "ex_data_col_3_2"
-								},
-								{
-									"col_1": "ex_data_col_1_3",
-									"col_2": "ex_data_col_2_3",
-									"col_3": "ex_data_col_3_3"
-								}
-							],
-							"totalRowCount": 3,
-							"filteredRowCount": 3
-						}
-					}
-				}
-			}
-		},
-		"test_update_dataset_schema": {
-			"function_input": {
-				"dataset_guid": "dataset_guid",
-				"billing_profile": "billing_profile_guid",
-				"update_note": "integration test",
-				"tables_to_add": [
-					{
-						"name": "table_name",
-						"columns": [
-							{
-								"name": "col_1",
-								"datatype": "string"
-							},
-							{
-								"name": "col_2",
-								"datatype": "string"
-							},
-							{
-								"name": "col_3",
-								"datatype": "string"
-							}
-						]
-					}
-				]
-			},
-			"mock_response": {
-				"update_schema": {
-					"method": "POST",
-					"url": "https://data.terra.bio/api/repository/v1/datasets/dataset_guid/updateSchema",
-					"params": {},
-					"status": 200,
-					"response": {
-						"id": "job_guid",
-						"description": "string",
-						"job_status": "running",
-						"status_code": 0,
-						"submitted": "string",
-						"completed": "string",
-						"class_name": "string",
-						"target_iam_resource": {
-							"type": "string",
-							"id": "string",
-							"action": "string"
-						}
-					}
-				},
-				"job_results": {
-					"method": "GET",
-					"url": "https://data.terra.bio/api/repository/v1/jobs/job_guid/result",
-					"params": {},
-					"response": {
-						"id": "new_dataset_guid",
-						"name": "non_existing_dataset_name",
-						"description": "string",
-						"defaultProfileId": "ex_billing_profile_id",
-						"dataProject": "string",
-						"schema": {
-							"tables": [
-								{
-									"name": "table_name",
-									"columns": [
-										{
-											"name": "col_1",
-											"datatype": "string"
-										},
-										{
-											"name": "col_2",
-											"datatype": "string"
-										},
-										{
-											"name": "col_3",
-											"datatype": "string"
-										}
-									]
-								}
-							]
-						}
-					},
-					"status": 200
-				}
-			}
-		},
-		"delete_files_endpoint": {
-			"function_input": {
-				"dataset_id": "dataset_guid",
-				"file_ids": [
-					"file_guid_1"
-				]
-			},
-			"mock_response": {
-				"delete_file":{
-					"method": "DELETE",
-					"url":"https://data.terra.bio/api/repository/v1/datasets/dataset_guid/files/file_guid_1",
-					"params":{},
-					"response":{
-						"id": "job_guid",
-						"description": "string",
-						"job_status": "running",
-						"status_code": 200,
-						"submitted": "string",
-						"completed": "string",
-						"class_name": "string",
-						"target_iam_resource": {
-							"type": "string",
-							"id": "string",
-							"action": "string"
-						}
-					}, 
-					"status": 200
-				},
-				"job_results": {
-					"method": "GET",
-					"url":"https://data.terra.bio/api/repository/v1/jobs/job_guid/result",
-					"params": {},
-					"status": 200,
-					"response": {
-						"result": []
-					}
-				}
-			}
-		},
-		"test_delete_dataset": {
-			"function_input": {
-				"dataset_guid": "dataset_guid"
-			},
-			"mock_response": {
-				"delete_dataset":{
-					"method": "DELETE",
-					"url":"https://data.terra.bio/api/repository/v1/datasets/dataset_guid",
-					"params":{},
-					"response": {
-						 "id": "job_guid",
-						"description": "string",
-						"job_status": "running",
-						"status_code": 200,
-						"submitted": "string",
-						"completed": "string",
-						"class_name": "string",
-						"target_iam_resource": {
-							"type": "string",
-							"id": "string",
-							"action": "string"
-						}
-					}, 
-					"status": 200
-
-				},
-				"job_results":{
-					"method": "GET",
-					"url":"https://data.terra.bio/api/repository/v1/jobs/job_guid/result",
-					"params": {},
-					"status": 200,
-					"response": {
-						"result": []
-					}        
-				}
-			}
-		},
-		"test_delete_snapshot": {
-			"function_input": {
-				"snapshot_guid": "snapshot_guid"
-				},
-			"mock_response": {
-				"delete_snapshot":{
-					"method": "DELETE",
-					"url":"https://data.terra.bio/api/repository/v1/snapshots/snapshot_guid",
-					"params":{},
-					"response":{
+            "metadata_ingest": {
+                "function_input": {
+                    "ingest_metadata": [
+                        {
+                            "col_1": "ex_data_col_1_1",
+                            "col_2": "ex_data_col_2_1",
+                            "col_3": "ex_data_col_3_1"
+                        },
+                        {
+                            "col_1": "ex_data_col_1_2",
+                            "col_2": "ex_data_col_2_2",
+                            "col_3": "ex_data_col_3_2"
+                        },
+                        {
+                            "col_1": "ex_data_col_1_3",
+                            "col_2": "ex_data_col_2_3",
+                            "col_3": "ex_data_col_3_3"
+                        }
+                    ],
+                    "target_table_name": "table_name",
+                    "dataset_name": "dataset_name",
+                    "dataset_id": "dataset_guid",
+                    "billing_profile": "billing_profile_guid",
+                    "batch_size": 5,
+                    "bulk_mode": false,
+                    "cloud_type": "gcp"
+                },
+                "mock_response": {
+                    "dataset_ingest": {
+                        "method": "POST",
+                        "url": "https://data.terra.bio/api/repository/v1/datasets/dataset_guid/ingest",
+                        "params": {},
+                        "status": 200,
+                        "response": {
+                            "id": "job_guid",
+                            "description": "string",
+                            "job_status": "running",
+                            "status_code": 200,
+                            "submitted": "string",
+                            "completed": "string",
+                            "class_name": "string",
+                            "target_iam_resource": {
+                                "type": "string",
+                                "id": "string",
+                                "action": "string"
+                            }
+                        }
+                    },
+                    "job_results": {
+                        "method": "GET",
+                        "url": "https://data.terra.bio/api/repository/v1/jobs/job_guid/results",
+                        "params": {},
+                        "status": 200,
+                        "response": {
+                            "result": [
+                                {
+                                    "col_1": "ex_data_col_1_1",
+                                    "col_2": "ex_data_col_2_1",
+                                    "col_3": "ex_data_col_3_1"
+                                },
+                                {
+                                    "col_1": "ex_data_col_1_2",
+                                    "col_2": "ex_data_col_2_2",
+                                    "col_3": "ex_data_col_3_2"
+                                },
+                                {
+                                    "col_1": "ex_data_col_1_3",
+                                    "col_2": "ex_data_col_2_3",
+                                    "col_3": "ex_data_col_3_3"
+                                }
+                            ],
+                            "totalRowCount": 3,
+                            "filteredRowCount": 3
+                        }
+                    }
+                }
+            }
+        },
+        "test_update_dataset_schema": {
+            "function_input": {
+                "dataset_guid": "dataset_guid",
+                "billing_profile": "billing_profile_guid",
+                "update_note": "integration test",
+                "tables_to_add": [
+                    {
+                        "name": "table_name",
+                        "columns": [
+                            {
+                                "name": "col_1",
+                                "datatype": "string"
+                            },
+                            {
+                                "name": "col_2",
+                                "datatype": "string"
+                            },
+                            {
+                                "name": "col_3",
+                                "datatype": "string"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "mock_response": {
+                "update_schema": {
+                    "method": "POST",
+                    "url": "https://data.terra.bio/api/repository/v1/datasets/dataset_guid/updateSchema",
+                    "params": {},
+                    "status": 200,
+                    "response": {
                         "id": "job_guid",
                         "description": "string",
                         "job_status": "running",
@@ -1639,19 +1503,154 @@
                             "id": "string",
                             "action": "string"
                         }
-                    }, 
-					"status": 200
-				},
-				"job_results":{
-					"method": "GET",
-					"url":"https://data.terra.bio/api/repository/v1/jobs/job_guid/result",
-					"params": {},
-					"status": 200,
-					"response": {
-						"result": []
-					}        
-				}
-			}
-		}
-	}
+                    }
+                },
+                "job_results": {
+                    "method": "GET",
+                    "url": "https://data.terra.bio/api/repository/v1/jobs/job_guid/result",
+                    "params": {},
+                    "response": {
+                        "id": "new_dataset_guid",
+                        "name": "non_existing_dataset_name",
+                        "description": "string",
+                        "defaultProfileId": "ex_billing_profile_id",
+                        "dataProject": "string",
+                        "schema": {
+                            "tables": [
+                                {
+                                    "name": "table_name",
+                                    "columns": [
+                                        {
+                                            "name": "col_1",
+                                            "datatype": "string"
+                                        },
+                                        {
+                                            "name": "col_2",
+                                            "datatype": "string"
+                                        },
+                                        {
+                                            "name": "col_3",
+                                            "datatype": "string"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    "status": 200
+                }
+            }
+        },
+        "delete_files_endpoint": {
+            "function_input": {
+                "dataset_id": "dataset_guid",
+                "file_ids": [
+                    "file_guid_1"
+                ]
+            },
+            "mock_response": {
+                "delete_file": {
+                    "method": "DELETE",
+                    "url": "https://data.terra.bio/api/repository/v1/datasets/dataset_guid/files/file_guid_1",
+                    "params": {},
+                    "response": {
+                        "id": "job_guid",
+                        "description": "string",
+                        "job_status": "running",
+                        "status_code": 200,
+                        "submitted": "string",
+                        "completed": "string",
+                        "class_name": "string",
+                        "target_iam_resource": {
+                            "type": "string",
+                            "id": "string",
+                            "action": "string"
+                        }
+                    },
+                    "status": 200
+                },
+                "job_results": {
+                    "method": "GET",
+                    "url": "https://data.terra.bio/api/repository/v1/jobs/job_guid/result",
+                    "params": {},
+                    "status": 200,
+                    "response": {
+                        "result": []
+                    }
+                }
+            }
+        },
+        "test_delete_dataset": {
+            "function_input": {
+                "dataset_guid": "dataset_guid"
+            },
+            "mock_response": {
+                "delete_dataset": {
+                    "method": "DELETE",
+                    "url": "https://data.terra.bio/api/repository/v1/datasets/dataset_guid",
+                    "params": {},
+                    "response": {
+                        "id": "job_guid",
+                        "description": "string",
+                        "job_status": "running",
+                        "status_code": 200,
+                        "submitted": "string",
+                        "completed": "string",
+                        "class_name": "string",
+                        "target_iam_resource": {
+                            "type": "string",
+                            "id": "string",
+                            "action": "string"
+                        }
+                    },
+                    "status": 200
+                },
+                "job_results": {
+                    "method": "GET",
+                    "url": "https://data.terra.bio/api/repository/v1/jobs/job_guid/result",
+                    "params": {},
+                    "status": 200,
+                    "response": {
+                        "result": []
+                    }
+                }
+            }
+        },
+        "test_delete_snapshot": {
+            "function_input": {
+                "snapshot_guid": "snapshot_guid"
+            },
+            "mock_response": {
+                "delete_snapshot": {
+                    "method": "DELETE",
+                    "url": "https://data.terra.bio/api/repository/v1/snapshots/snapshot_guid",
+                    "params": {},
+                    "response": {
+                        "id": "job_guid",
+                        "description": "string",
+                        "job_status": "running",
+                        "status_code": 0,
+                        "submitted": "string",
+                        "completed": "string",
+                        "class_name": "string",
+                        "target_iam_resource": {
+                            "type": "string",
+                            "id": "string",
+                            "action": "string"
+                        }
+                    },
+                    "status": 200
+                },
+                "job_results": {
+                    "method": "GET",
+                    "url": "https://data.terra.bio/api/repository/v1/jobs/job_guid/result",
+                    "params": {},
+                    "status": 200,
+                    "response": {
+                        "result": []
+                    }
+                }
+            }
+        }
+    }
 }
