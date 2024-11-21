@@ -148,7 +148,8 @@ if __name__ == "__main__":
     entity_metrics = terra_workspace.get_workspace_entity_info()
 
     for table, attributes in entity_metrics.items():
-        terra_workspace.all_valid_headers_for_tdr_conversion(table_name=table, headers=attributes["attributeNames"])
+        terra_workspace.validate_terra_headers_for_tdr_conversion(
+            table_name=table, headers=attributes["attributeNames"])
 
     # Check if dataset is selfHosted. If it isn't then getting UUIDs for files will not work
     if not dataset_info["selfHosted"] and check_if_files_already_ingested:

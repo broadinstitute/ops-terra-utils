@@ -195,7 +195,7 @@ class TerraWorkspace:
             yield next_page.json()
 
     @staticmethod
-    def all_valid_headers_for_tdr_conversion(table_name: str, headers: list[str]) -> None:
+    def validate_terra_headers_for_tdr_conversion(table_name: str, headers: list[str]) -> None:
         tdr_header_allowed_pattern = "^[a-zA-Z0-9][_a-zA-Z0-9]*$"
         tdr_max_header_length = 63
 
