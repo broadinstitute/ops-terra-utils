@@ -146,6 +146,10 @@ if __name__ == "__main__":
     ).run()
     # Get entity metrics for workspace
     entity_metrics = terra_workspace.get_workspace_entity_info()
+
+    for table, attributes in entity_metrics.items():
+        terra_workspace.all_valid_headers_for_tdr_conversion(table_name=table, headers=attributes["attributeNames"])
+
     # Check if dataset is selfHosted. If it isn't then getting UUIDs for files will not work
     if not dataset_info["selfHosted"] and check_if_files_already_ingested:
         logging.warning("Dataset is not selfHosted. Cannot check if files have already been ingested and use UUIDs")
@@ -156,6 +160,10 @@ if __name__ == "__main__":
 
         # Get sample metrics from Terra
         sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name, remove_dicts=True)
+        #print(sample_metrics)
+        import sys
+        sys.exit()
+
         try:
             primary_key_column_name = entity_metrics[terra_table_name]["idName"]
         except KeyError:
