@@ -215,7 +215,7 @@ class TerraWorkspace:
         characters: "{', '.join(headers_containing_too_many_characters)}". The max number of characters for a header
         allowed in TDR is {tdr_max_header_length}.\n"""
         invalid_characters_error_message = f"""The following header(s) in table "{table_name}" contain invalid
-        characters: "{', '.join(headers_contain_invalid_characters)}". TDR headers must start with letter, and must
+        characters: "{', '.join(headers_contain_invalid_characters)}". TDR headers must start with a letter, and must
         only contain numbers, letters, and underscore characters.\n"""
 
         error_to_report = ""
