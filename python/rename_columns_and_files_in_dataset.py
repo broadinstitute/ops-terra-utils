@@ -1,4 +1,3 @@
-import json
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
@@ -31,14 +30,15 @@ def get_args() -> Namespace:
         type=int,
         required=False,
         default=500,
-        help=f"The number of rows to copy to temp location and then ingest at a time. Defaults to {COPY_AND_INGEST_BATCH_SIZE}"
+        help="The number of rows to copy to temp location and then ingest at a time. "
+             f"Defaults to {COPY_AND_INGEST_BATCH_SIZE}"
     )
     parser.add_argument(
         "-cu",
         "--column_to_update",
         required=True,
-        help="The tdr column to update which you want to values renamed. Also what it searches basename in files to update for. "
-             "This cannot be the same as a tables primary key"
+        help="The tdr column to update which you want to values renamed. Also what it searches "
+             "basename in files to update for. This cannot be the same as a tables primary key"
     )
     parser.add_argument(
         "-nc",
