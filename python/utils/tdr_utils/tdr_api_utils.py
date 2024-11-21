@@ -411,7 +411,7 @@ class TDR:
         response = self.request_util.run_request(uri=uri, method=GET)
         return json.loads(response.text)
 
-    def get_table_schema_info(self, dataset_id: str, table_name: str, dataset_info: dict = None) -> Union[dict, None]:
+    def get_table_schema_info(self, dataset_id: str, table_name: str, dataset_info: Optional[dict] = None) -> Union[dict, None]:
         """
         Get schema information for a specific table within a dataset.
 

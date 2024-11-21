@@ -18,6 +18,7 @@ workflow RenameColumnsAndFilesInDataset {
     }
 
     Boolean report_updates_only_bool = select_first([report_updates_only, true])
+    Boolean update_columns_only = select_first([update_columns_only, false])
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
     call RenameColumnsAndFiles {
@@ -50,7 +51,7 @@ task RenameColumnsAndFiles {
         Int? max_backoff_time
         String billing_project
         String workspace_name
-        Boolean? update_columns_only
+        Boolean update_columns_only
     }
 
     command <<<
