@@ -469,9 +469,7 @@ class GCPCloudFunctions:
             destination_path (str): The destination GCS path.
             source_file (str): The source file path.
         """
-        file_path_components = self.process_cloud_path(destination_path)
-        bucket_obj = self.client.bucket(bucket_name=file_path_components['bucket'])
-        blob = bucket_obj.blob(file_path_components['blob_url'])
+        blob = self.load_blob_from_full_path(destination_path)
         blob.upload_from_filename(source_file)
 
     def get_object_md5(

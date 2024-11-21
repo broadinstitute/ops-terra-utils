@@ -20,6 +20,22 @@ class GetRowAndFileInfoForReingest:
             update_original_column: bool = False,
             column_update_only: bool = False
     ):
+        """
+        Initialize the GetRowAndFileInfoForReingest class.
+
+        Args:
+            table_schema_info (dict): Schema information of the table.
+            files_info (dict): A dictionary where the key is the file UUID and the value is the file metadata.
+            table_metrics (list[dict]): Metrics of the TDR table to update.
+            original_column (str): The column name with the original value.
+            new_column (str): The column name with the new value.
+            row_identifier (str): The identifier for the row. Should be the primary key.
+            temp_bucket (str): The temporary bucket for storing files.
+            update_original_column (bool, optional): Whether to update the original column.
+                If not used will just update file paths Defaults to False.
+            column_update_only (bool, optional): Whether to update only the column and
+                not update the file paths. Defaults to False.
+        """
         self.table_schema_info = table_schema_info
         self.files_info = files_info
         self.table_metrics = table_metrics
@@ -32,6 +48,17 @@ class GetRowAndFileInfoForReingest:
         self.column_update_only = column_update_only
 
     def _create_paths(self, file_info: dict, og_basename: str, new_basename: str) -> Tuple[str, str, str]:
+        """
+        Create paths for the file in TDR, updated TDR metadata, and temporary storage.
+
+        Args:
+            file_info (dict): Information about the file returned from TDR.
+            og_basename (str): The original basename of the file.
+            new_basename (str): The new basename of the file.
+
+        Returns:
+            Tuple[str, str, str]: Paths for temporary storage, updated TDR metadata, and access URL.
+        """
         # Access url is the full path to the file in TDR
         access_url = file_info["fileDetail"]["accessUrl"]
         # Get basename of file
@@ -53,8 +80,17 @@ class GetRowAndFileInfoForReingest:
     def _create_row_dict(
             self, row_dict: dict, file_ref_columns: list[str]
     ) -> Tuple[Optional[dict], Optional[list[dict]]]:
-        """Go through each row and check each cell if it is a file and if it needs to be re-ingested.
-        If so, create a new row dict with the new file path."""
+        """
+        Go through each row and check each cell if it is a file and if it needs to be re-ingested.
+        If so, create a new row dict with the new file path.
+
+        Args:
+            row_dict (dict): The original row dictionary.
+            file_ref_columns (list[str]): List of columns that are file references.
+
+        Returns:
+            Tuple[Optional[dict], Optional[list[dict]]]: New row dictionary and list of files to copy, or None if no re-ingestion is needed.
+        """
         reingest_row = False
         # Create new dictionary for ingest just the row identifier so can merge with right row later
         new_row_dict = {self.row_identifier: row_dict[self.row_identifier]}
@@ -105,9 +141,18 @@ class GetRowAndFileInfoForReingest:
             return None, None
 
     def get_new_copy_and_ingest_list(self) -> Tuple[list[dict], list[list]]:
+        """
+        Get the list of rows to re-ingest and files to copy to temporary storage.
+
+        This method iterates through the table metrics, identifies the rows and files that need to be re-ingested,
+        and prepares lists of these rows and files.
+
+        Returns:
+            Tuple[list[dict], list[list]]: A tuple containing a list of rows to re-ingest and a list of files to copy.
+        """
         rows_to_reingest = []
         files_to_copy_to_temp = []
-        # Get all columns in table that are filerefs
+        # Get all columns in the table that are file references
         file_ref_columns = [
             col['name'] for col in self.table_schema_info['columns'] if col['datatype'] == 'fileref']
         for row_dict in self.table_metrics:
@@ -133,8 +178,23 @@ class BatchCopyAndIngest:
             dataset_id: str,
             copy_and_ingest_batch_size: int,
             row_files_to_copy: list[list[dict]],
-            wait_time_to_poll: int = ARG_DEFAULTS['waiting_time_to_poll']
+            wait_time_to_poll: int = ARG_DEFAULTS['waiting_time_to_poll']  # type: ignore[assignment]
     ) -> None:
+        """
+        Initialize the BatchCopyAndIngest class.
+
+        Args:
+            rows_to_ingest (list[dict]): List of rows to ingest.
+            tdr (TDR): TDR instance for interacting with the TDR API.
+            target_table_name (str): Name of the target table.
+            cloud_type (str): Type of cloud storage.
+            update_strategy (str): Strategy for updating the data.
+            workers (int): Number of workers for parallel processing copies of files to temp location.
+            dataset_id (str): ID of the dataset.
+            copy_and_ingest_batch_size (int): Size of each batch for copying and ingesting.
+            row_files_to_copy (list[list[dict]]): List of files to copy for each row.
+            wait_time_to_poll (int, optional): Time to wait between polling for ingest status. Defaults to ARG_DEFAULTS['waiting_time_to_poll'].
+        """
         self.rows_to_ingest = rows_to_ingest
         self.tdr = tdr
         self.target_table_name = target_table_name
@@ -147,6 +207,11 @@ class BatchCopyAndIngest:
         self.row_files_to_copy = row_files_to_copy
 
     def run(self) -> None:
+        """
+        Run the batch copy and ingest process.
+
+        This method batches the rows to copy files and ingest them into the dataset. It also deletes the temporary files after ingestion.
+        """
         # Batch through rows to copy files down and ingest so if script fails partway through large
         # copy and ingest it will have copied over and ingested some of the files already
         logging.info(
