@@ -196,7 +196,7 @@ class TerraWorkspace:
 
     @staticmethod
     def validate_terra_headers_for_tdr_conversion(table_name: str, headers: list[str]) -> None:
-        tdr_header_allowed_pattern = "^[a-zA-Z0-9][_a-zA-Z0-9]*$"
+        tdr_header_allowed_pattern = "^[a-zA-Z][_a-zA-Z0-9]*$"
         tdr_max_header_length = 63
 
         headers_containing_too_many_characters = []
@@ -215,8 +215,8 @@ class TerraWorkspace:
         characters: "{', '.join(headers_containing_too_many_characters)}". The max number of characters for a header
         allowed in TDR is {tdr_max_header_length}.\n"""
         invalid_characters_error_message = f"""The following header(s) in table "{table_name}" contain invalid
-        characters: "{', '.join(headers_contain_invalid_characters)}". TDR headers must start with a number
-        or letter, and must only contain numbers, letters, and underscore characters.\n"""
+        characters: "{', '.join(headers_contain_invalid_characters)}". TDR headers must start with letter, and must
+        only contain numbers, letters, and underscore characters.\n"""
 
         error_to_report = ""
         if headers_containing_too_many_characters:
