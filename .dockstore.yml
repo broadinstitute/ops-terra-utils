@@ -97,3 +97,10 @@ workflows:
     readMePath: /wdl/ReUploadGcpObjectWithMd5/README.md
     testParameterFiles:
       - /wdl/ReUploadGcpObjectWithMd5/ReUploadGcpObjectWithMd5.wdl
+
+  - name: RenameColumnsAndFilesInDataset
+    subclass: WDL
+    primaryDescriptorPath: /wdl/RenameColumnsAndFilesInDataset/RenameColumnsAndFilesInDataset.wdl
+    readMePath: /wdl/RenameColumnsAndFilesInDataset/README.md
+    testParameterFiles:
+      - /wdl/RenameColumnsAndFilesInDataset/RenameColumnsAndFilesInDataset.wdl

@@ -133,7 +133,7 @@ class CreateIngestRecords:
         file_ref_columns = [
             col['name'] for col in self.table_schema_info['columns'] if col['datatype'] == 'fileref']
         # Download table metadata
-        table_metadata = tdr.get_data_set_table_metrics(orig_dataset_id, table_dict['name'])
+        table_metadata = tdr.get_dataset_table_metrics(orig_dataset_id, table_dict['name'])
         new_ingest_records = []
         # Go through each row in table
         for row_dict in table_metadata:

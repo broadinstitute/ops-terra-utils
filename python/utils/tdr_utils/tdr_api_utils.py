@@ -411,18 +411,20 @@ class TDR:
         response = self.request_util.run_request(uri=uri, method=GET)
         return json.loads(response.text)
 
-    def get_table_schema_info(self, dataset_id: str, table_name: str) -> Union[dict, None]:
+    def get_table_schema_info(self, dataset_id: str, table_name: str, dataset_info: dict = None) -> Union[dict, None]:
         """
         Get schema information for a specific table within a dataset.
 
         Args:
             dataset_id (str): The ID of the dataset.
             table_name (str): The name of the table.
+            dataset_info (dict, optional): The dataset information if already retrieved. Defaults to None.
 
         Returns:
             Union[dict, None]: A dictionary containing the table schema information, or None if the table is not found.
         """
-        dataset_info = self.get_dataset_info(dataset_id=dataset_id, info_to_include=["SCHEMA"])
+        if not dataset_info:
+            dataset_info = self.get_dataset_info(dataset_id=dataset_id, info_to_include=["SCHEMA"])
         for table in dataset_info["schema"]["tables"]:
             if table["name"] == table_name:
                 return table
@@ -507,7 +509,7 @@ class TDR:
         job_results = MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30, return_json=True).run()
         return job_results  # type: ignore[return-value]
 
-    def get_data_set_table_metrics(
+    def get_dataset_table_metrics(
             self, dataset_id: str, target_table_name: str, query_limit: int = 1000
     ) -> list[dict]:
         """
@@ -523,14 +525,14 @@ class TDR:
         """
         return [
             metric
-            for metric in self._yield_data_set_metrics(
+            for metric in self._yield_dataset_metrics(
                 dataset_id=dataset_id,
                 target_table_name=target_table_name,
                 query_limit=query_limit
             )
         ]
 
-    def _yield_data_set_metrics(self, dataset_id: str, target_table_name: str, query_limit: int = 1000) -> Any:
+    def _yield_dataset_metrics(self, dataset_id: str, target_table_name: str, query_limit: int = 1000) -> Any:
         """
         Yield all entity metrics from a dataset.
 
@@ -578,7 +580,7 @@ class TDR:
         Returns:
             list[str]: A list of entity IDs from the specified table.
         """
-        data_set_metadata = self._yield_data_set_metrics(dataset_id=dataset_id, target_table_name=target_table_name)
+        data_set_metadata = self._yield_dataset_metrics(dataset_id=dataset_id, target_table_name=target_table_name)
         return [str(sample_dict[entity_id]) for sample_dict in data_set_metadata]
 
     def get_job_status(self, job_id: str) -> requests.Response:
@@ -614,7 +616,7 @@ class TDR:
             logging.info(f"Getting all file information for {table_name}")
             # Get just columns where datatype is fileref
             file_columns = [column["name"] for column in table["columns"] if column["datatype"] == "fileref"]
-            data_set_metrics = self.get_data_set_table_metrics(dataset_id=dataset_id, target_table_name=table_name)
+            data_set_metrics = self.get_dataset_table_metrics(dataset_id=dataset_id, target_table_name=table_name)
             # Get unique list of file uuids
             file_uuids = list(
                 set(
@@ -694,7 +696,7 @@ class TDR:
         Returns:
             None
         """
-        data_set_metrics = self.get_data_set_table_metrics(
+        data_set_metrics = self.get_dataset_table_metrics(
             dataset_id=dataset_id, target_table_name=table_name, query_limit=query_limit
         )
         row_ids = [metric["datarepo_row_id"] for metric in data_set_metrics]

@@ -105,7 +105,7 @@ class TestGetUtils:
         test_data = self.test_info['tests']['get_dataset_table']
         mock_api_response(test_json=test_data['mock_response']['page_one'])
         mock_api_response(test_json=test_data['mock_response']['page_two'])
-        table_metrics = self.tdr_client.get_data_set_table_metrics(
+        table_metrics = self.tdr_client.get_dataset_table_metrics(
             dataset_id=test_data['function_input']['dataset_id'],
             target_table_name=test_data['function_input']['table_name'])
         assert table_metrics
