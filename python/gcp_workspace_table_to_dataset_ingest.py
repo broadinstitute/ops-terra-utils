@@ -160,10 +160,6 @@ if __name__ == "__main__":
 
         # Get sample metrics from Terra
         sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name, remove_dicts=True)
-        #print(sample_metrics)
-        import sys
-        sys.exit()
-
         try:
             primary_key_column_name = entity_metrics[terra_table_name]["idName"]
         except KeyError:
