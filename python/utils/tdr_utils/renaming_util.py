@@ -89,7 +89,8 @@ class GetRowAndFileInfoForReingest:
             file_ref_columns (list[str]): List of columns that are file references.
 
         Returns:
-            Tuple[Optional[dict], Optional[list[dict]]]: New row dictionary and list of files to copy, or None if no re-ingestion is needed.
+            Tuple[Optional[dict], Optional[list[dict]]]: New row dictionary and list of files to copy,
+                or None if no re-ingestion is needed.
         """
         reingest_row = False
         # Create new dictionary for ingest just the row identifier so can merge with right row later
@@ -193,7 +194,8 @@ class BatchCopyAndIngest:
             dataset_id (str): ID of the dataset.
             copy_and_ingest_batch_size (int): Size of each batch for copying and ingesting.
             row_files_to_copy (list[list[dict]]): List of files to copy for each row.
-            wait_time_to_poll (int, optional): Time to wait between polling for ingest status. Defaults to ARG_DEFAULTS['waiting_time_to_poll'].
+            wait_time_to_poll (int, optional): Time to wait between polling for ingest status.
+                Defaults to ARG_DEFAULTS['waiting_time_to_poll'].
         """
         self.rows_to_ingest = rows_to_ingest
         self.tdr = tdr
@@ -210,7 +212,8 @@ class BatchCopyAndIngest:
         """
         Run the batch copy and ingest process.
 
-        This method batches the rows to copy files and ingest them into the dataset. It also deletes the temporary files after ingestion.
+        This method batches the rows to copy files and ingest them into the dataset. It also
+        deletes the temporary files after ingestion.
         """
         # Batch through rows to copy files down and ingest so if script fails partway through large
         # copy and ingest it will have copied over and ingested some of the files already
