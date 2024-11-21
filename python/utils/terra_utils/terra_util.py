@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from typing import Any, Optional
 from urllib.parse import urlparse
 
@@ -192,6 +193,39 @@ class TerraWorkspace:
                 params={"page": page}
             )
             yield next_page.json()
+
+    @staticmethod
+    def validate_terra_headers_for_tdr_conversion(table_name: str, headers: list[str]) -> None:
+        tdr_header_allowed_pattern = "^[a-zA-Z][_a-zA-Z0-9]*$"
+        tdr_max_header_length = 63
+
+        headers_containing_too_many_characters = []
+        headers_contain_invalid_characters = []
+
+        for header in headers:
+            if len(header) > tdr_max_header_length:
+                headers_containing_too_many_characters.append(header)
+            if not re.match(tdr_header_allowed_pattern, header):
+                headers_contain_invalid_characters.append(header)
+
+        base_error_message = """In order to proceed, please update the problematic header(s) in you Terra table,
+        and then re-attempt the import once all problematic header(s) have been updated to follow TDR rules for
+        header naming."""
+        too_many_characters_error_message = f"""The following header(s) in table "{table_name}" contain too many
+        characters: "{', '.join(headers_containing_too_many_characters)}". The max number of characters for a header
+        allowed in TDR is {tdr_max_header_length}.\n"""
+        invalid_characters_error_message = f"""The following header(s) in table "{table_name}" contain invalid
+        characters: "{', '.join(headers_contain_invalid_characters)}". TDR headers must start with a letter, and must
+        only contain numbers, letters, and underscore characters.\n"""
+
+        error_to_report = ""
+        if headers_containing_too_many_characters:
+            error_to_report += too_many_characters_error_message
+        if headers_contain_invalid_characters:
+            error_to_report += invalid_characters_error_message
+        if error_to_report:
+            error_to_report += base_error_message
+            raise ValueError(error_to_report)
 
     def get_workspace_info(self) -> dict:
         """
