@@ -11,7 +11,7 @@ from python.utils.tdr_utils.tdr_ingest_utils import BatchIngest
 from python.utils.token_util import Token
 from python.utils.request_util import RunRequest
 
-
+@responses.activate
 def mock_api_response(test_json):
     match test_json['method']:
         case 'GET':
