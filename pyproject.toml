@@ -1,3 +1,9 @@
 [tool.autopep8]
 max_line_length = 120
 ignore = ["E265"]
+[tool.pytest.ini_options]
+addopts = "-re -q"
+testpaths = [
+    "python/tests/unit_tests",
+    "python/tests/integration_tests",
+]
