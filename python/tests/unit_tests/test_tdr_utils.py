@@ -22,7 +22,7 @@ def mock_api_response(test_json):
                 content_type='application/json',
                 match=[matchers.query_param_matcher(test_json['params'], strict_match=False)]
             )
-            
+
         case 'POST':
             responses.post(
                 url=test_json['url'],
@@ -59,7 +59,7 @@ class TestGetUtils:
     def _get_tdr_client(self, tdr_client: Any, tdr_test_resource_json: Any) -> None:
         self.tdr_client = tdr_client
         self.test_info = tdr_test_resource_json
-    
+
     @responses.activate
     def test_get_data_set_files(self) -> None:
         test_data = self.test_info['tests']['get_files_endpoint']
@@ -99,7 +99,7 @@ class TestGetUtils:
         mock_api_response(test_json=test_data['mock_response'])
         found_dataset = self.tdr_client.get_dataset_info(dataset_id=test_data['function_input']['dataset_id'])
         assert found_dataset
-    
+
     @responses.activate
     def test_get_table_schema_info(self) -> None:
         test_data = self.test_info['tests']['get_dataset_endpoint']
@@ -107,7 +107,7 @@ class TestGetUtils:
         schema_info = self.tdr_client.get_table_schema_info(
             dataset_id=test_data['function_input']['dataset_id'], table_name=test_data['function_input']['table_name'])
         assert schema_info
-    
+
     @responses.activate
     def test_get_data_set_table_metrics(self) -> None:
         test_data = self.test_info['tests']['get_dataset_table']
@@ -117,7 +117,7 @@ class TestGetUtils:
             dataset_id=test_data['function_input']['dataset_id'],
             target_table_name=test_data['function_input']['table_name'])
         assert table_metrics
-    
+
     @responses.activate
     def test_get_data_set_sample_ids(self) -> None:
         test_data = self.test_info['tests']['get_dataset_table']
