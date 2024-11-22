@@ -16,18 +16,18 @@ logging.basicConfig(
 def get_args() -> Namespace:
     parser = ArgumentParser(
         description="""Copy files from Azure terra workspace to GCP bucket""")
-    subparsers = parser.add_subparsers()
-    full_workspace_export = subparsers.add_parser("full_workspace_export")
-    full_workspace_export.add_argument("-w", "--workspace_name", required=True,
+    subparsers = parser.add_subparsers(dest='command')
+    blanket_export = subparsers.add_parser("blanket_export", help="blanket export of all files in Azure workspace to google bucket")
+    blanket_export.add_argument("-w", "--workspace_name", required=True,
                         help="terra workspace name")
-    full_workspace_export.add_argument("-b", "--billing_project", required=True,
+    blanket_export.add_argument("-b", "--billing_project", required=True,
                         help="Terra billing project name")
-    full_workspace_export.add_argument("-bucket", "--gcp_bucket", required=True,
+    blanket_export.add_argument("-bucket", "--gcp_bucket", required=True,
                         help="GCP bucket id")
-    filtered_workspace_export = subparsers.add_parser("filtered_workspace_export")
-    filtered_workspace_export.add_argument("-t", "--input_tsv", required=True,
-                                           help="tsv file with the following columns: workspace_name, billing_project, directory_path, export_bucket")
-
+    filtered_export = subparsers.add_parser("filtered_export", help="Use input tsv to specify specific paths to export to GCP buckets")
+    filtered_export.add_argument("-tsv", "--tsv_path", required=True, help="input tsv file containing the following headers and input information:\n  \
+                                 'azure_path','workspace_name','billing_project','gcp_bucket_path'\n \
+                                  'https://{azure_landing_zone}.blob.core.windows.net/{storage_container_id}/export/path','example_workspace_name','example_billing_project','gs://bucket_name'")
     parser.add_argument("-t", "--tmp_path", required=False,
                         help="temp path to use. Defaults to ./tmp", default="./tmp")
 
@@ -88,6 +88,10 @@ if __name__ == "__main__":
     token = Token(cloud='gcp')
     request_util = RunRequest(token)
 
+    if args.command == "blanket_export":
+        pass
+    elif args.command == "filtered_export":
+        pass
     workspace_client = TerraWorkspace(workspace_name=args.workspace_name,
                                       billing_project=args.billing_project,
                                       request_util=request_util)
