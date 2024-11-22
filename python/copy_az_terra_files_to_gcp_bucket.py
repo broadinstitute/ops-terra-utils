@@ -16,12 +16,18 @@ logging.basicConfig(
 def get_args() -> Namespace:
     parser = ArgumentParser(
         description="""Copy files from Azure terra workspace to GCP bucket""")
-    parser.add_argument("-w", "--workspace_name", required=True,
+    subparsers = parser.add_subparsers()
+    full_workspace_export = subparsers.add_parser("full_workspace_export")
+    full_workspace_export.add_argument("-w", "--workspace_name", required=True,
                         help="terra workspace name")
-    parser.add_argument("-b", "--billing_project", required=True,
+    full_workspace_export.add_argument("-b", "--billing_project", required=True,
                         help="Terra billing project name")
-    parser.add_argument("-bucket", "--gcp_bucket", required=True,
+    full_workspace_export.add_argument("-bucket", "--gcp_bucket", required=True,
                         help="GCP bucket id")
+    filtered_workspace_export = subparsers.add_parser("filtered_workspace_export")
+    filtered_workspace_export.add_argument("-t", "--input_tsv", required=True,
+                                           help="tsv file with the following columns: workspace_name, billing_project, directory_path, export_bucket")
+
     parser.add_argument("-t", "--tmp_path", required=False,
                         help="temp path to use. Defaults to ./tmp", default="./tmp")
 
@@ -78,6 +84,7 @@ class AzureToGoogleFileTransfer():
 
 if __name__ == "__main__":
     args = get_args()
+    breakpoint()
     token = Token(cloud='gcp')
     request_util = RunRequest(token)
 
