@@ -19,6 +19,7 @@ logging.basicConfig(
 OWNER = "OWNER"
 WRITER = "WRITER"
 READER = "READER"
+NO_ACCESS = "NO ACCESS"
 
 # Define the relative path to the file
 STAGING_WORKSPACE_DESCRIPTION_FILE = "../general_markdown/staging_workspace_description.md"
@@ -583,3 +584,10 @@ if __name__ == '__main__':
             dataset_id=dataset_id,
             terra_groups=terra_groups
         ).run()
+
+    print(f'SA: {data_ingest_sa}')
+    # Remove the SA at the very end
+    terra_workspace.update_user_acl(
+        email=data_ingest_sa,
+        access_level=NO_ACCESS
+    )
