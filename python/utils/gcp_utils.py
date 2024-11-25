@@ -64,15 +64,11 @@ class GCPCloudFunctions:
             Any: The GCS blob object.
         """
         file_path_components = self._process_cloud_path(full_path)
-        #try:
         blob = self.client.bucket(file_path_components["bucket"]).blob(file_path_components["blob_url"])
         # If blob exists in GCS reload it so metadata is there
         if blob.exists():
             blob.reload()
         return blob
-        #except Exception as e:
-        #    logging.error(f"Error loading blob from {full_path}: {e}")
-        #    return None
 
     @staticmethod
     def _create_bucket_contents_dict(bucket_name: str, blob: Any, file_name_only: bool) -> dict:

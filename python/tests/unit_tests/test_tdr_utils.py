@@ -16,22 +16,24 @@ def mock_api_response(test_json):
     match test_json['method']:
         case 'GET':
             responses.get(
-                test_json['url'],
+                url=test_json['url'],
                 body=json.dumps(test_json['response']),
                 status=test_json['status'],
                 content_type='application/json',
                 match=[matchers.query_param_matcher(test_json['params'], strict_match=False)]
             )
+
         case 'POST':
             responses.post(
-                test_json['url'],
+                url=test_json['url'],
                 body=json.dumps(test_json['response']),
                 status=test_json['status'],
                 content_type='application/json'
             )
+
         case 'DELETE':
             responses.delete(
-                test_json['url'],
+                url=test_json['url'],
                 body=json.dumps(test_json['response']),
                 status=test_json['status'],
                 content_type='application/json'
@@ -59,6 +61,7 @@ class TestGetUtils:
         self.tdr_client = tdr_client
         self.test_info = tdr_test_resource_json
 
+    @responses.activate
     def test_get_data_set_files(self) -> None:
         test_data = self.test_info['tests']['get_files_endpoint']
         mock_api_response(test_json=test_data['mock_response']['page_one'])
@@ -66,6 +69,7 @@ class TestGetUtils:
         file_list = self.tdr_client.get_data_set_files(dataset_id=test_data['function_input'])
         assert len(file_list) == 3
 
+    @responses.activate
     def test_create_file_dict(self) -> None:
         test_data = self.test_info['tests']['get_files_endpoint']
         mock_api_response(test_json=test_data['mock_response']['page_one'])
@@ -73,12 +77,14 @@ class TestGetUtils:
         file_dict = self.tdr_client.create_file_dict(dataset_id=test_data['function_input'])
         assert len(file_dict.keys()) == 3
 
+    @responses.activate
     def test_get_snapshot_info(self) -> None:
         test_data = self.test_info['tests']['get_snapshot_endpoint']
         mock_api_response(test_json=test_data['mock_response'])
         cmd = self.tdr_client.get_snapshot_info(snapshot_id=test_data['function_input'])
         assert cmd['name'] == 'snapshot name'
 
+    @responses.activate
     def test_check_if_dataset_exists(self) -> None:
         test_data = self.test_info['tests']['list_datasets_endpoint']
         mock_api_response(test_json=test_data['mock_response']['page_one'])
@@ -88,12 +94,14 @@ class TestGetUtils:
             billing_profile=test_data['function_input']['billing_profile'])
         assert dataset_exists
 
+    @responses.activate
     def test_get_dataset_info(self) -> None:
         test_data = self.test_info['tests']['get_dataset_endpoint']
         mock_api_response(test_json=test_data['mock_response'])
         found_dataset = self.tdr_client.get_dataset_info(dataset_id=test_data['function_input']['dataset_id'])
         assert found_dataset
 
+    @responses.activate
     def test_get_table_schema_info(self) -> None:
         test_data = self.test_info['tests']['get_dataset_endpoint']
         mock_api_response(test_json=test_data['mock_response'])
@@ -101,6 +109,7 @@ class TestGetUtils:
             dataset_id=test_data['function_input']['dataset_id'], table_name=test_data['function_input']['table_name'])
         assert schema_info
 
+    @responses.activate
     def test_get_data_set_table_metrics(self) -> None:
         test_data = self.test_info['tests']['get_dataset_table']
         mock_api_response(test_json=test_data['mock_response']['page_one'])
@@ -110,6 +119,7 @@ class TestGetUtils:
             target_table_name=test_data['function_input']['table_name'])
         assert table_metrics
 
+    @responses.activate
     def test_get_data_set_sample_ids(self) -> None:
         test_data = self.test_info['tests']['get_dataset_table']
         mock_api_response(test_json=test_data['mock_response']['page_one'])
@@ -121,6 +131,7 @@ class TestGetUtils:
 
         assert sample_ids
 
+    @responses.activate
     def test_get_files_from_snapshot(self) -> None:
         test_data = self.test_info['tests']['get_snapshot_files']
         mock_api_response(test_json=test_data['mock_response']['page_one'])
@@ -128,6 +139,7 @@ class TestGetUtils:
         snapshot_files = self.tdr_client.get_files_from_snapshot(snapshot_id=test_data['function_input'])
         assert snapshot_files
 
+    @responses.activate
     def test_InferTDRSchema(self) -> None:
         # input_metadata: list[dict], table_name
         test_data = self.test_info['tests']['InferTDRSchema']
@@ -143,6 +155,7 @@ class TestCreateUtils:
         self.tdr_client = tdr_client
         self.test_info = tdr_test_resource_json
 
+    @responses.activate
     def test_get_or_create_dataset(self) -> None:
         list_dataset_endpoint = self.test_info['tests']['list_datasets_endpoint']
         create_dataset_endpoint = self.test_info['tests']['create_dataset_endpoint']
@@ -188,6 +201,7 @@ class TestCreateUtils:
         get_existing_dataset()
         create_new_dataset()
 
+    @responses.activate
     def test_add_user_to_dataset(self) -> None:
         test_data = self.test_info['tests']['test_add_user_to_dataset']
         mock_api_response(test_json=test_data['mock_response'])
@@ -196,6 +210,7 @@ class TestCreateUtils:
             user=test_data['function_input']['user'],
             policy=test_data['function_input']['policy'])
 
+    @responses.activate
     def test_update_dataset_schema(self) -> None:
         test_data = self.test_info['tests']['test_update_dataset_schema']
         mock_api_response(test_json=test_data['mock_response']['update_schema'])
@@ -208,6 +223,7 @@ class TestCreateUtils:
             tables_to_add=test_data['function_input']['tables_to_add']
         )
 
+    @responses.activate
     def test_batch_ingest_to_dataset(self) -> None:
         test_data = self.test_info['tests']['test_batch_ingest']['metadata_ingest']
         mock_api_response(test_json=test_data['mock_response']['dataset_ingest'])
@@ -223,6 +239,7 @@ class TestCreateUtils:
             cloud_type=test_data['function_input']['cloud_type']
         ).run()
 
+    @responses.activate
     def test_ingest_files(self) -> None:
         test_data = self.test_info['tests']['test_batch_ingest']['file_ingest']
         mock_api_response(test_json=test_data['mock_response']['file_ingest'])
@@ -241,6 +258,7 @@ class TestDeleteUtils:
         self.tdr_client = tdr_client
         self.test_info = tdr_test_resource_json
 
+    @responses.activate
     def test_delete_files(self) -> None:
         test_data = self.test_info['tests']['delete_files_endpoint']
         mock_api_response(test_json=test_data['mock_response']['delete_file'])
@@ -249,6 +267,7 @@ class TestDeleteUtils:
         self.tdr_client.delete_files(file_ids=test_data['function_input']['file_ids'],
                                      dataset_id=test_data['function_input']['dataset_id'])
 
+    @responses.activate
     def test_delete_snapshot(self) -> None:
         test_data = self.test_info['tests']['test_delete_snapshot']
         mock_api_response(test_data['mock_response']['delete_snapshot'])
@@ -256,6 +275,7 @@ class TestDeleteUtils:
         mock_api_response(test_data['mock_response']['job_results'])
         self.tdr_client.delete_snapshot(snapshot_id=test_data['function_input']['snapshot_guid'])
 
+    @responses.activate
     def test_delete_dataset(self) -> None:
         test_data = self.test_info['tests']['test_delete_dataset']
         mock_api_response(test_data['mock_response']['delete_dataset'])
