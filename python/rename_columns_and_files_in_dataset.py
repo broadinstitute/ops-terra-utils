@@ -127,7 +127,7 @@ class GetWorkspaceInfo:
         self.table_name = table_name
         self.dataset_info = dataset_info
 
-    def run(self):
+    def run(self) -> tuple[list[dict], str]:
         terra_table_metrics = self.terra.get_gcp_workspace_metrics(entity_type=self.table_name)
         terra_bucket = f"gs://{self.terra.get_workspace_bucket()}/"
         # Make sure dataset SA has permissions to bucket
@@ -263,5 +263,5 @@ if __name__ == '__main__':
             dataset_id=dataset_id,
             copy_and_ingest_batch_size=copy_and_ingest_batch_size,
             row_files_to_copy=files_to_copy_to_temp,
-            wait_time_to_poll=ARG_DEFAULTS["wait_time_to_poll"]
+            wait_time_to_poll=ARG_DEFAULTS["waiting_time_to_poll"]
         ).run()

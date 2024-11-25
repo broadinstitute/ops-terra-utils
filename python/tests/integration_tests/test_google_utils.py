@@ -176,7 +176,7 @@ def test_validate_file_pair() -> None:
     files_do_not_match = GCPCloudFunctions().validate_file_pair(
         source_file=test_data['function_input']['file_1'], full_destination_path=test_data['function_input']['file_2'])
 
-    assert files_match is None and files_do_not_match is not None, "File validations did not return expected results"
+    assert files_match['identical'] and not files_do_not_match['identical'], "File validations did not return expected results"
 
 
 def test_loop_and_log_validation_files_multithreaded() -> None:

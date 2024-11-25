@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from typing import Optional, Tuple
 from .tdr_ingest_utils import StartAndMonitorIngest
 from .tdr_api_utils import TDR
