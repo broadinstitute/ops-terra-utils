@@ -585,7 +585,6 @@ if __name__ == '__main__':
             terra_groups=terra_groups
         ).run()
 
-    print(f'SA: {data_ingest_sa}')
     # Remove OLD SA(s) at the very end of the workflow
     for account in terra_workspace.get_workspace_acl()["acl"]:
         if account != data_ingest_sa and account.startswith("tdr-ingest-sa"):
