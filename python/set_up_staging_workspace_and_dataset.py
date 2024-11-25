@@ -288,7 +288,7 @@ class RemoveAllIndividualAccess:
         logging.info(
             f"Removing {self.current_user_email} from workspace {self.terra_workspace}, dataset {self.dataset_id}, "
             f"and group {self.auth_group}")
-        self.terra_workspace.leave_workspace()
+        self.terra_workspace.leave_workspace(ignore_direct_access_error=True)
         self.tdr.remove_user_from_dataset(
             dataset_id=self.dataset_id,
             user=self.current_user_email,
