@@ -585,8 +585,7 @@ if __name__ == '__main__':
             terra_groups=terra_groups
         ).run()
 
-    print(f'SA: {data_ingest_sa}')
-    # Remove the SA at the very end
+    # Remove the SA at the very end of the workflow
     terra_workspace.update_user_acl(
         email=data_ingest_sa,
         access_level=NO_ACCESS
