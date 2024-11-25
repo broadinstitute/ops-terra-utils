@@ -4,8 +4,6 @@ import re
 from typing import Any, Optional
 from urllib.parse import urlparse
 
-from cryptography.hazmat.primitives.asymmetric.ec import ECDSA
-
 from .. import GCP
 
 from ..request_util import GET, POST, PATCH, PUT, DELETE
