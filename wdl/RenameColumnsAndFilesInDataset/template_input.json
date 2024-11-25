@@ -1,6 +1,6 @@
 {
-    "RenameColumnsAndFilesInDataset.dataset_id": "str",
-    "RenameColumnsAndFilesInDataset.copy_and_ingest_batch_size": "Int",
+	"RenameColumnsAndFilesInDataset.dataset_id": "str",
+	"RenameColumnsAndFilesInDataset.copy_and_ingest_batch_size": "Int",
 	"RenameColumnsAndFilesInDataset.column_to_update":"str",
 	"RenameColumnsAndFilesInDataset.column_with_new_value":"str",
 	"RenameColumnsAndFilesInDataset.table_name":"str",
