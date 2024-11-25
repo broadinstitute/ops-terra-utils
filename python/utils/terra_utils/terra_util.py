@@ -708,18 +708,15 @@ class TerraWorkspace:
             workspace_info = self.get_workspace_info()
             workspace_id = workspace_info['workspace']['workspaceId']
         accepted_return_code = [403] if ignore_direct_access_error else []
-        try:
-            res = self.request_util.run_request(
-                uri=f"{SAM_LINK}/resources/v2/workspace/{workspace_id}/leave",
-                method=DELETE,
-                accept_return_codes=accepted_return_code
+
+        res = self.request_util.run_request(
+            uri=f"{SAM_LINK}/resources/v2/workspace/{workspace_id}/leave",
+            method=DELETE,
+            accept_return_codes=accepted_return_code
+        )
+        if (res.status_code == 403
+                and res.json()["message"] == "You can only leave a resource that you have direct access to."):
+            logging.info(
+                f"Did not remove user from workspace with id '{workspace_id}' as current user does not have direct"
+                f"access to the workspace (they could be an owner on the billing project)"
             )
-            if (res.status_code == 403
-                    and res.json()["message"] == "You can only leave a resource that you have direct access to."
-                    and ignore_direct_access_error):
-                logging.info(
-                    f"Did not remove user from workspace with id '{workspace_id}' as current user does not have direct"
-                    f"access to the workspace (they could be an owner on the billing project)"
-                )
-        except Exception as e:
-            logging.error(f"Encountered the following error while trying to leave workspace: {e}")
