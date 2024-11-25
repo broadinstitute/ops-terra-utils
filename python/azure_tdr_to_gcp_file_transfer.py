@@ -77,13 +77,12 @@ class DownloadAzBlob:
             self.sas_token = self.tdr_client.get_sas_token(
                 snapshot_id=self.export_info["id"])
 
-    @staticmethod
-    def run_az_copy(blob_path: str, output_path: str) -> subprocess.CompletedProcess:
+    def run_az_copy(self, blob_path: str, output_path: str) -> subprocess.CompletedProcess:
         az_copy_command = ["azcopy", "copy", f"{blob_path}",
                            f"{output_path}", "--output-type=json"]
         # used for test datasets where checksums don't match provided file
         # , "--check-md5=NoCheck"
-        copy_cmd = subprocess.run(az_copy_command, capture_output=True)
+        copy_cmd = subprocess.run(az_copy_command, capture_output=True, timeout=1200)
         return copy_cmd
 
     def check_copy_completed_successfully(self, output_path: str) -> bool:
@@ -182,6 +181,7 @@ if __name__ == "__main__":
         gcp_upload_path = construct_upload_path(file, args)
         destination_blob = gcp_bucket.blob(gcp_upload_path)
         if not destination_blob.exists():
+            logging.info(f"Downloading {access_url} to {download_path}")
             file_download_completed, job_logs = download_client.run(
                 blob_path=access_url, output_path=download_path)
             file_name = Path(access_url).name
@@ -192,7 +192,6 @@ if __name__ == "__main__":
                 "destination_path": gcp_upload_path,
                 "md5": md5["checksum"]
             }
-
             if file_download_completed:
                 copy_info["download_completed_successfully"] = 'True'
                 logging.info(f"Uploading {file_name} to {gcp_upload_path}")
@@ -205,6 +204,6 @@ if __name__ == "__main__":
             else:
                 copy_info["download_completed_successfully"] = 'False'
                 write_to_transfer_manifest(copy_info)
-                logging.error(f"Failed to download {file_name}")
+                logging.error(f"Failed to download {file_name} \n job_log: {job_logs}")
     else:
         logging.info("File already uploaded to target bucket, moving to next file")
