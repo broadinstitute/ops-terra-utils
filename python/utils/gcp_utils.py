@@ -253,7 +253,7 @@ class GCPCloudFunctions:
         dest_blob = self.load_blob_from_full_path(dest_cloud_path)
 
         # If either blob is None or does not exist
-        if not src_blob or not src_blob.exists() or not dest_blob or not dest_blob.exists():
+        if not src_blob or not dest_blob or not src_blob.exists() or not dest_blob.exists():
             return False
         # If the MD5 hashes exist
         if src_blob.md5_hash and dest_blob.md5_hash:
