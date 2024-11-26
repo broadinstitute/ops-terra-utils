@@ -252,6 +252,13 @@ class SetUpDataset:
             policy="custodian"
         )
 
+    def get_sa_for_dataset_to_delete(self) -> list:
+        dataset_metadata = self.tdr.check_if_dataset_exists(
+            dataset_name=dataset_name,
+            billing_profile=self.tdr_billing_profile
+        )
+        return dataset_metadata
+
     def run(self) -> dict:
         dataset_id = self.tdr.get_or_create_dataset(
             dataset_name=dataset_name,
@@ -506,8 +513,7 @@ if __name__ == '__main__':
     logging.info("Finished setting up Terra workspace")
     workspace_bucket = f"gs://{terra_workspace.get_workspace_bucket()}"
 
-    # Set up dataset
-    dataset_info = SetUpDataset(
+    dataset_setup = SetUpDataset(
         tdr=tdr,
         dataset_name=dataset_name,
         tdr_billing_profile=tdr_billing_profile,
@@ -519,7 +525,19 @@ if __name__ == '__main__':
         auth_group=auth_group,
         controlled_access=controlled_access,
         delete_existing_dataset=delete_existing_dataset
-    ).run()
+    )
+    if delete_existing_dataset:
+        dataset_to_delete_metadata = dataset_setup.get_sa_for_dataset_to_delete()
+        if dataset_to_delete_metadata:
+            data_project = dataset_to_delete_metadata[0]["dataProject"]
+            service_account = f"tdr-ingest-sa@{data_project}.iam.gserviceaccount.com"
+            logging.info(
+                f"Removing workspace access for service account '{service_account}' associated with the OLD dataset"
+            )
+            terra_workspace.update_user_acl(email=service_account, access_level=NO_ACCESS)
+
+    # Set up dataset
+    dataset_info = dataset_setup.run()
 
     data_ingest_sa = dataset_info["ingestServiceAccount"]
     dataset_id = dataset_info["id"]
@@ -584,9 +602,3 @@ if __name__ == '__main__':
             dataset_id=dataset_id,
             terra_groups=terra_groups
         ).run()
-
-    # Remove OLD SA(s) at the very end of the workflow
-    for account in terra_workspace.get_workspace_acl()["acl"]:
-        if account != data_ingest_sa and account.startswith("tdr-ingest-sa"):
-            logging.info(f"Removing old service account from workspace: {account}")
-            terra_workspace.update_user_acl(email=account, access_level=NO_ACCESS)
