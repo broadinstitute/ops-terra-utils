@@ -252,15 +252,20 @@ class GCPCloudFunctions:
         src_blob = self.load_blob_from_full_path(src_cloud_path)
         dest_blob = self.load_blob_from_full_path(dest_cloud_path)
 
-        # If either blob is None, return False
-        if not src_blob or not dest_blob:
+        # If either blob is None or does not exist
+        if not src_blob or not dest_blob or src_blob.exists() or not dest_blob.exists():
             return False
-        # If the MD5 hashes of the two blobs are the same, return True
-        if src_blob.md5_hash == dest_blob.md5_hash:
-            return True
-        # Otherwise, return False
+        # If the MD5 hashes exist
+        if src_blob.md5_hash and dest_blob.md5_hash:
+            # And are the same return True
+            if src_blob.md5_hash == dest_blob.md5_hash:
+                return True
         else:
-            return False
+            # If md5 do not exist (for larger files they may not) check size matches
+            if src_blob.size == dest_blob.size:
+                return True
+        # Otherwise, return False
+        return False
 
     def delete_multiple_files(
             self,
