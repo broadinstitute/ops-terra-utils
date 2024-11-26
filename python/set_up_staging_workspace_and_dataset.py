@@ -252,12 +252,15 @@ class SetUpDataset:
             policy="custodian"
         )
 
-    def get_sa_for_dataset_to_delete(self) -> list:
+    def get_sa_for_dataset_to_delete(self) -> Optional[str]:
         dataset_metadata = self.tdr.check_if_dataset_exists(
             dataset_name=dataset_name,
             billing_profile=self.tdr_billing_profile
         )
-        return dataset_metadata
+        if dataset_metadata:
+            info = self.tdr.get_dataset_info(dataset_id=dataset_metadata[0]["id"])
+            return info["ingestServiceAccount"]
+        return None
 
     def run(self) -> dict:
         dataset_id = self.tdr.get_or_create_dataset(
@@ -527,14 +530,13 @@ if __name__ == '__main__':
         delete_existing_dataset=delete_existing_dataset
     )
     if delete_existing_dataset:
-        dataset_to_delete_metadata = dataset_setup.get_sa_for_dataset_to_delete()
-        if dataset_to_delete_metadata:
-            data_project = dataset_to_delete_metadata[0]["dataProject"]
-            service_account = f"tdr-ingest-sa@{data_project}.iam.gserviceaccount.com"
+        sa_for_dataset_to_delete = dataset_setup.get_sa_for_dataset_to_delete()
+        if sa_for_dataset_to_delete:
             logging.info(
-                f"Removing workspace access for service account '{service_account}' associated with the OLD dataset"
+                f"Removing workspace access for service account '{sa_for_dataset_to_delete}' associated with the OLD "
+                f"dataset"
             )
-            terra_workspace.update_user_acl(email=service_account, access_level=NO_ACCESS)
+            terra_workspace.update_user_acl(email=sa_for_dataset_to_delete, access_level=NO_ACCESS)
 
     # Set up dataset
     dataset_info = dataset_setup.run()
