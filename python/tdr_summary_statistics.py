@@ -1,3 +1,4 @@
+import json
 import logging
 from argparse import ArgumentParser, Namespace
 
@@ -35,8 +36,8 @@ class GetAssetInfo:
             info_to_include=["SCHEMA", "ACCESS_INFORMATION"]
         )
         return {
-            "bq_project": dataset_info["access_information"]["big_query"]["project_id"],
-            "bq_schema": dataset_info["access_information"]["big_query"]["dataset_name"],
+            "bq_project": dataset_info["accessInformation"]["bigQuery"]["projectId"],
+            "bq_schema": dataset_info["accessInformation"]["bigQuery"]["datasetName"],
             "tables": dataset_info["schema"]["tables"],
             "relationships": dataset_info["schema"]["relationships"]
         }
@@ -47,8 +48,8 @@ class GetAssetInfo:
             info_to_include=["TABLES", "RELATIONSHIPS", "ACCESS_INFORMATION"]
         )
         return {
-            "bq_project": snapshot_info["access_information"]["big_query"]["project_id"],
-            "bq_schema": snapshot_info["access_information"]["big_query"]["dataset_name"],
+            "bq_project": snapshot_info["accessInformation"]["bigQuery"]["projectId"],
+            "bq_schema": snapshot_info["accessInformation"]["bigQuery"]["datasetName"],
             "tables": snapshot_info["tables"],
             "relationships": snapshot_info["relationships"]
         }
@@ -70,3 +71,7 @@ if __name__ == '__main__':
     tdr = TDR(request_util=request_util)
 
     asset_info_dict = GetAssetInfo(tdr=tdr, dataset_id=dataset_id, snapshot_id=snapshot_id).run()
+    print(asset_info_dict["bq_project"])
+    print(asset_info_dict["bq_schema"])
+    print(asset_info_dict["tables"])
+    big_query_util = BigQueryUtil()
