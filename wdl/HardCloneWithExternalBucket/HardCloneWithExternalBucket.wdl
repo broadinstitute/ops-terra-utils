@@ -2,7 +2,7 @@ version 1.0
 
 import "../utils/GcpUtils.wdl" as gcp_utils
 
-workflow HardCloneTerraWorkspace {
+workflow HardCloneWithExternalBucket {
     input {
 		String source_billing_project
 		String source_workspace_name
@@ -24,7 +24,7 @@ workflow HardCloneTerraWorkspace {
 	String rysnc_regex_exclude = ".*/HardCloneTerraWorkspace/.*"
 	Int memory = select_first([memory_gb, 8])
 
-	call HardCloneTerraWorkspaceTask {
+	call HardCloneWithExternalBucketTask {
 		input:
 			source_billing_project=source_billing_project,
 			source_workspace_name=source_workspace_name,
@@ -51,7 +51,7 @@ workflow HardCloneTerraWorkspace {
 	}
 }
 
-task HardCloneTerraWorkspaceTask {
+task HardCloneWithExternalBucketTask {
 	input {
 		String source_billing_project
 		String source_workspace_name

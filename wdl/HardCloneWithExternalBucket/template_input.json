@@ -4,5 +4,6 @@
     "HardCloneWithExternalBucket.dest_billing_project": "String",
     "HardCloneWithExternalBucket.dest_workspace_name": "String",
     "HardCloneWithExternalBucket.allow_already_created": "Boolean",
+    "HardCloneWithExternalBucket.external_bucket": "String",
     "HardCloneWithExternalBucket.rsync": "Boolean"
 }
