@@ -2,7 +2,6 @@ import pytest
 import json
 import pathlib
 
-
 from python.utils.gcp_utils import GCPCloudFunctions
 from google.cloud import storage
 from google.auth import default
@@ -15,7 +14,7 @@ def gcp_test_resource_json():
 
 
 def check_cloud_paths(path_dicts):
-    def gcs_client() -> storage.Client:
+    def gcs_client():
         credentials, project = default()
         return storage.Client(credentials=credentials, project=project)
 
@@ -29,9 +28,6 @@ def check_cloud_paths(path_dicts):
 
 @pytest.fixture(scope='session', autouse=True)
 def setup_test_gcs_resources():
-
-    # def gen_rand_str() -> str:
-    #    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=30))
 
     def gcp_test_resource_json():
         resource_json = pathlib.Path(__file__).parent.joinpath("gcp_resources.json")

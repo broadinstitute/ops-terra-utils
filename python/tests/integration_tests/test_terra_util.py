@@ -2,7 +2,6 @@ import pytest
 import requests
 import os
 import re
-from typing import Any
 
 from python.utils import GCP
 from python.utils.request_util import RunRequest
