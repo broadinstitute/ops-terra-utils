@@ -405,7 +405,7 @@ class TerraWorkspace:
 
     def get_workspace_bucket(self) -> str:
         """
-        Get the workspace bucket name.
+        Get the workspace bucket name. Does not include the gs:// prefix.
 
         Returns:
             str: The bucket name.

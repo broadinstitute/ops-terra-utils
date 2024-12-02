@@ -1,0 +1,8 @@
+{
+    "HardCloneWithExternalBucket.source_billing_project": "String",
+    "HardCloneWithExternalBucket.source_workspace_name": "String",
+    "HardCloneWithExternalBucket.dest_billing_project": "String",
+    "HardCloneWithExternalBucket.dest_workspace_name": "String",
+    "HardCloneWithExternalBucket.allow_already_created": "Boolean",
+    "HardCloneWithExternalBucket.rsync": "Boolean"
+}
