@@ -74,7 +74,7 @@ task HardCloneWithExternalBucketTask {
 		--source_workspace_name "~{source_workspace_name}" \
 		--dest_billing_project ~{dest_billing_project} \
 		--dest_workspace_name "~{dest_workspace_name}" \
-        --external_bucket ~{external_bucket} \
+		--external_bucket ~{external_bucket} \
 		~{if allow_already_created then "--allow_already_created" else ""} \
 		~{"--workers " + workers} \
 		~{"--extensions_to_ignore " + extensions_to_ignore} \
