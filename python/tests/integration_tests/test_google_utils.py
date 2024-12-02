@@ -9,7 +9,7 @@ from google.cloud import storage
 from google.auth import default
 
 
-def gcp_test_resource_json() -> dict:
+def gcp_test_resource_json():
     resource_json = pathlib.Path(__file__).parent.joinpath("gcp_resources.json")
     json_data = json.loads(resource_json.read_text())
     return json_data
