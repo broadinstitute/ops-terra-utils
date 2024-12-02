@@ -44,8 +44,8 @@ workflow HardCloneWithExternalBucket {
 	if (rsync_workspace) {
 		call gcp_utils.GcloudRsync {
 			input:
-				source=HardCloneTerraWorkspaceTask.src_bucket,
-				destination=HardCloneTerraWorkspaceTask.dest_bucket,
+				source=HardCloneWithExternalBucketTask.src_bucket,
+				destination=HardCloneWithExternalBucketTask.dest_bucket,
 				exclude_regex=rysnc_regex_exclude
 		}
 	}
