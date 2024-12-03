@@ -161,7 +161,10 @@ class CreateSummaryStatistics:
 
             for column_name in df.columns:
                 column_info = self.table_schema_dict[table_name]["columns"][column_name]
-                column_result = {"column_type": column_info["datatype"]}
+                column_result = {
+                    "column_type": column_info["datatype"],
+                    "is_array": column_info["array_of"]
+                }
 
                 # Handle arrays by converting to sorted strings
                 processed_column = df[column_name].apply(
@@ -202,18 +205,23 @@ class CreateSummaryStatistics:
 
 
 class WriteTsv:
+    HEADERS = [
+        "Table", "Column", "Column Type", "Column Array", "Total Table Rows", "Empty Cells",
+        "Distinct Values", "Unmatched Foreign Keys", "Flagged", "Flag Reason"
+    ]
+
     def __init__(self, results: dict):
         self.results = results
 
     def run(self) -> None:
-        headers = ["Table", "Column", "Column Type", "Total Table Rows", "Empty Cells",
-                   "Distinct Values", "Unmatched Foreign Keys", "Flagged", "Flag Reason"]
+
         orphaned_files = self.results["orphaned_files"]
         tsv_data = [
             {
                 "Table": "Orphaned Files",
                 "Column": "N/A",
                 "Column Type": "N/A",
+                "Column Array": "N/A",
                 "Total Table Rows": self.results["orphaned_files"],
                 "Empty Cells": "N/A",
                 "Distinct Values": "N/A",
@@ -229,6 +237,7 @@ class WriteTsv:
                     "Table": table_name,
                     "Column": "N/A",
                     "Column Type": "N/A",
+                    "Column Array": "N/A",
                     "Total Table Rows": table_info["total_records"],
                     "Empty Cells": "N/A",
                     "Distinct Values": "N/A",
@@ -244,6 +253,7 @@ class WriteTsv:
                         "Table": table_name,
                         "Column": column_name,
                         "Column Type": column_info["column_type"],
+                        "Column Array": column_info["is_array"],
                         "Total Table Rows": table_info["total_records"],
                         "Empty Cells": column_info["empty_cells"],
                         "Distinct Values": column_info["distinct_values"],
@@ -254,7 +264,7 @@ class WriteTsv:
                     }
                 )
         Csv(file_path=OUTPUT_FILE).create_tsv_from_list_of_dicts(
-            header_list=headers,
+            header_list=self.HEADERS,
             list_of_dicts=tsv_data
         )
 
