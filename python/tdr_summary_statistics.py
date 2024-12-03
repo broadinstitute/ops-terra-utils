@@ -214,18 +214,18 @@ class WriteTsv:
         self.results = results
 
     def run(self) -> None:
-
+        na = "N/A"
         orphaned_files = self.results["orphaned_files"]
         tsv_data = [
             {
                 "Table": "Orphaned Files",
-                "Column": "N/A",
-                "Column Type": "N/A",
-                "Column Array": "N/A",
+                "Column": na,
+                "Column Type": na,
+                "Column Array": na,
                 "Total Table Rows": self.results["orphaned_files"],
-                "Empty Cells": "N/A",
-                "Distinct Values": "N/A",
-                "Unmatched Foreign Keys": "N/A",
+                "Empty Cells": na,
+                "Distinct Values": na,
+                "Unmatched Foreign Keys": na,
                 "Flagged": True if orphaned_files > 0 else False,
                 "Flag Reason": "Orphaned files" if orphaned_files > 0 else ""
             }
@@ -235,13 +235,13 @@ class WriteTsv:
             tsv_data.append(
                 {
                     "Table": table_name,
-                    "Column": "N/A",
-                    "Column Type": "N/A",
-                    "Column Array": "N/A",
+                    "Column": na,
+                    "Column Type": na,
+                    "Column Array": na,
                     "Total Table Rows": table_info["total_records"],
-                    "Empty Cells": "N/A",
-                    "Distinct Values": "N/A",
-                    "Unmatched Foreign Keys": "N/A",
+                    "Empty Cells": na,
+                    "Distinct Values": na,
+                    "Unmatched Foreign Keys": na,
                     # Flag table if it has no records
                     "Flagged": True if total_record == 0 else False,
                     "Flag Reason": "No records" if total_record == 0 else ""
@@ -257,7 +257,7 @@ class WriteTsv:
                         "Total Table Rows": table_info["total_records"],
                         "Empty Cells": column_info["empty_cells"],
                         "Distinct Values": column_info["distinct_values"],
-                        "Unmatched Foreign Keys": column_info.get("unmatched_foreign_keys", "N/A"),
+                        "Unmatched Foreign Keys": column_info.get("unmatched_foreign_keys", na),
                         "Flagged": True if column_info.get("unmatched_foreign_keys", 0) > 0 else False,
                         "Flag Reason": "Unmatched foreign keys" if
                         column_info.get("unmatched_foreign_keys", 0) > 0 else ""
