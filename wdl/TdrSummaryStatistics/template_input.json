@@ -1,5 +1,5 @@
 {
-    "TdrSummaryStatistics.dataset_id": "String",
-    "TdrSummaryStatistics.snapshot_id": "String",
-	"TdrSummaryStatistics.docker": "String"
+  "TdrSummaryStatistics.dataset_id": "String",
+  "TdrSummaryStatistics.snapshot_id": "String",
+  "TdrSummaryStatistics.docker": "String"
 }
