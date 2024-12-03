@@ -5,13 +5,17 @@ from typing import Any
 
 
 class BigQueryUtil:
-    def __init__(self):
+    def __init__(self, project_id: str):
         """
         Initialize the BigQuery utility with user authentication.
         """
-        self.client = bigquery.Client()
+        self.project_id = project_id
+        if project_id:
+            self.client = bigquery.Client(project=project_id)
+        else:
+            self.client = bigquery.Client()
 
-    def upload_data_to_table(self, table_id: str, rows: list[dict]):
+    def upload_data_to_table(self, table_id: str, rows: list[dict]) -> None:
         """
         Uploads data directly from a list of dictionaries to a BigQuery table.
 
