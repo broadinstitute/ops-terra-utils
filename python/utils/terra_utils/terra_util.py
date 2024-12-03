@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from typing import Any, Optional
 from urllib.parse import urlparse
 
@@ -193,6 +194,39 @@ class TerraWorkspace:
             )
             yield next_page.json()
 
+    @staticmethod
+    def validate_terra_headers_for_tdr_conversion(table_name: str, headers: list[str]) -> None:
+        tdr_header_allowed_pattern = "^[a-zA-Z][_a-zA-Z0-9]*$"
+        tdr_max_header_length = 63
+
+        headers_containing_too_many_characters = []
+        headers_contain_invalid_characters = []
+
+        for header in headers:
+            if len(header) > tdr_max_header_length:
+                headers_containing_too_many_characters.append(header)
+            if not re.match(tdr_header_allowed_pattern, header):
+                headers_contain_invalid_characters.append(header)
+
+        base_error_message = """In order to proceed, please update the problematic header(s) in you Terra table,
+        and then re-attempt the import once all problematic header(s) have been updated to follow TDR rules for
+        header naming."""
+        too_many_characters_error_message = f"""The following header(s) in table "{table_name}" contain too many
+        characters: "{', '.join(headers_containing_too_many_characters)}". The max number of characters for a header
+        allowed in TDR is {tdr_max_header_length}.\n"""
+        invalid_characters_error_message = f"""The following header(s) in table "{table_name}" contain invalid
+        characters: "{', '.join(headers_contain_invalid_characters)}". TDR headers must start with a letter, and must
+        only contain numbers, letters, and underscore characters.\n"""
+
+        error_to_report = ""
+        if headers_containing_too_many_characters:
+            error_to_report += too_many_characters_error_message
+        if headers_contain_invalid_characters:
+            error_to_report += invalid_characters_error_message
+        if error_to_report:
+            error_to_report += base_error_message
+            raise ValueError(error_to_report)
+
     def get_workspace_info(self) -> dict:
         """
         Get workspace information.
@@ -371,7 +405,7 @@ class TerraWorkspace:
 
     def get_workspace_bucket(self) -> str:
         """
-        Get the workspace bucket name.
+        Get the workspace bucket name. Does not include the gs:// prefix.
 
         Returns:
             str: The bucket name.
@@ -661,17 +695,28 @@ class TerraWorkspace:
             content_type="application/json"
         )
 
-    def leave_workspace(self, workspace_id: Optional[str] = None) -> None:
+    def leave_workspace(self, workspace_id: Optional[str] = None, ignore_direct_access_error: bool = False) -> None:
         """
         Leave a workspace. If workspace ID not supplied will look it up
 
         Args:
             workspace_id (Optional[str], optional): The workspace ID. Defaults to None.
+            ignore_direct_access_error (Optional[bool], optional): Whether to ignore direct access errors.
+             Defaults to False.
         """
         if not workspace_id:
             workspace_info = self.get_workspace_info()
             workspace_id = workspace_info['workspace']['workspaceId']
-        self.request_util.run_request(
+        accepted_return_code = [403] if ignore_direct_access_error else []
+
+        res = self.request_util.run_request(
             uri=f"{SAM_LINK}/resources/v2/workspace/{workspace_id}/leave",
-            method=DELETE
+            method=DELETE,
+            accept_return_codes=accepted_return_code
         )
+        if (res.status_code == 403
+                and res.json()["message"] == "You can only leave a resource that you have direct access to."):
+            logging.info(
+                f"Did not remove user from workspace with id '{workspace_id}' as current user does not have direct"
+                f"access to the workspace (they could be an owner on the billing project)"
+            )

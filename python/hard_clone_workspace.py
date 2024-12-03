@@ -24,6 +24,8 @@ def get_args() -> Namespace:
     parser.add_argument('--source_workspace_name', "-sn", type=str, required=True)
     parser.add_argument('--dest_billing_project', "-db", type=str, required=True)
     parser.add_argument('--dest_workspace_name', "-dn", type=str, required=True)
+    parser.add_argument('--external_bucket', "-eb", type=str,
+                        help="gcp bucket if you want to store files in bucket outside of workspace gs://bucket/")
     parser.add_argument('--allow_already_created', "-a", action="store_true",
                         help="Allow the destination workspace to already exist")
     parser.add_argument('--workers', "-w", type=int, default=ARG_DEFAULTS['multithread_workers'],
@@ -192,6 +194,13 @@ if __name__ == '__main__':
     batch_size = args.batch_size
     metadata_only = args.metadata_only
     do_not_update_acls = args.do_not_update_acls
+    external_bucket = args.external_bucket
+
+    if external_bucket:
+        if not external_bucket.startswith("gs://") or not external_bucket.endswith("/"):
+            raise ValueError("gcp_bucket must start with gs:// and end with /")
+        # Remove the gs:// prefix and trailing slash to match what is returned by the Terra API
+        external_bucket = external_bucket.lstrip("gs://").rstrip("/")
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -235,6 +244,9 @@ if __name__ == '__main__':
 
     dest_workspace_info = dest_workspace.get_workspace_info()
     dest_bucket = dest_workspace_info["workspace"]["bucketName"]
+
+    # Use the external bucket if it is provided, otherwise use the destination workspace bucket
+    dest_bucket = external_bucket if external_bucket else dest_bucket
 
     # Get source workspace metadata
     tsvs_to_upload = CreateEntityTsv(

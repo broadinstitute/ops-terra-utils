@@ -248,18 +248,24 @@ class GCPCloudFunctions:
         Returns:
             bool: True if the files are identical, False otherwise.
         """
+
         src_blob = self.load_blob_from_full_path(src_cloud_path)
         dest_blob = self.load_blob_from_full_path(dest_cloud_path)
 
-        # If either blob is None, return False
-        if not src_blob or not dest_blob:
+        # If either blob is None or does not exist
+        if not src_blob or not dest_blob or not src_blob.exists() or not dest_blob.exists():
             return False
-        # If the MD5 hashes of the two blobs are the same, return True
-        if src_blob.md5_hash == dest_blob.md5_hash:
-            return True
-        # Otherwise, return False
+        # If the MD5 hashes exist
+        if src_blob.md5_hash and dest_blob.md5_hash:
+            # And are the same return True
+            if src_blob.md5_hash == dest_blob.md5_hash:
+                return True
         else:
-            return False
+            # If md5 do not exist (for larger files they may not) check size matches
+            if src_blob.size == dest_blob.size:
+                return True
+        # Otherwise, return False
+        return False
 
     def delete_multiple_files(
             self,
@@ -292,7 +298,7 @@ class GCPCloudFunctions:
             jobs_complete_for_logging=job_complete_for_logging
         )
 
-    def validate_file_pair(self, source_file: str, full_destination_path: str) -> Optional[dict]:
+    def validate_file_pair(self, source_file: str, full_destination_path: str) -> dict:
         """
         Helper function to validate if source and destination files are identical.
 
@@ -301,11 +307,13 @@ class GCPCloudFunctions:
             full_destination_path (str): The destination file path.
 
         Returns:
-            dict: The file dictionary if the files are not identical, otherwise None.
+            dict: The file dictionary of the files with a boolean indicating if they are identical.
         """
-        if not self.validate_files_are_same(source_file, full_destination_path):
-            return {"source_file": source_file, "full_destination_path": full_destination_path}
-        return None
+        if self.validate_files_are_same(source_file, full_destination_path):
+            identical = True
+        else:
+            identical = False
+        return {"source_file": source_file, "full_destination_path": full_destination_path, "identical": identical}
 
     def loop_and_log_validation_files_multithreaded(
             self,
@@ -335,7 +343,7 @@ class GCPCloudFunctions:
         jobs = [(file_dict['source_file'], file_dict['full_destination_path']) for file_dict in files_to_validate]
 
         # Use multithreaded job runner to validate the files
-        not_valid_files = MultiThreadedJobs().run_multi_threaded_job(
+        checked_files = MultiThreadedJobs().run_multi_threaded_job(
             workers=workers,
             function=self.validate_file_pair,
             list_of_jobs_args_list=jobs,
@@ -343,21 +351,25 @@ class GCPCloudFunctions:
             max_retries=max_retries,
             jobs_complete_for_logging=job_complete_for_logging
         )
+        # If any files failed to load, raise an exception
+        if files_to_validate and None in checked_files:  # type: ignore[operator]
+            logging.error("Failed to validate all files, could not load some blobs")
+            raise Exception("Failed to validate all files")
 
-        # If only here so linting will be happy
-        if not_valid_files:
-            # Filter out any None results (which represent files that are identical)
-            not_valid_files = [file_dict for file_dict in not_valid_files if file_dict is not None]
-            if not_valid_files:
-                if log_difference:
-                    for file_dict in not_valid_files:
-                        logging.warning(
-                            f"File {file_dict['source_file']} and {file_dict['full_destination_path']} are not identical"
-                        )
-                logging.info(f"Validation complete. {len(not_valid_files)} files are not identical.")
-                return not_valid_files
-        # If all files are identical, return an empty list
-        return []
+        # Get all files that are not identical
+        not_identical_files = [
+            file_dict
+            for file_dict in checked_files  # type: ignore[operator, union-attr]
+            if not file_dict['identical']
+        ]
+        if not_identical_files:
+            if log_difference:
+                for file_dict in not_identical_files:
+                    logging.warning(
+                        f"File {file_dict['source_file']} and {file_dict['full_destination_path']} are not identical"
+                    )
+            logging.info(f"Validation complete. {len(not_identical_files)} files are not identical.")
+        return not_identical_files
 
     def multithread_copy_of_files_with_validation(
             self, files_to_copy: list[dict], workers: int, max_retries: int
@@ -469,9 +481,7 @@ class GCPCloudFunctions:
             destination_path (str): The destination GCS path.
             source_file (str): The source file path.
         """
-        file_path_components = self.process_cloud_path(destination_path)
-        bucket_obj = self.client.bucket(bucket_name=file_path_components['bucket'])
-        blob = bucket_obj.blob(file_path_components['blob_url'])
+        blob = self.load_blob_from_full_path(destination_path)
         blob.upload_from_filename(source_file)
 
     def get_object_md5(

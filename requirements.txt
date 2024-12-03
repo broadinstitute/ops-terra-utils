@@ -18,3 +18,4 @@ db-dtypes
 pydantic==2.9.1
 pyyaml
 humanfriendly
+responses

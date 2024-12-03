@@ -63,7 +63,7 @@ class Token:
             self.expiry = datetime.fromtimestamp(self.az_token.expires_on)
         return self.token_string
 
-    def _get_sa_token(self):
+    def _get_sa_token(self) -> Union[str, None]:
         if not self.token_string or not self.expiry or self.expiry < datetime.now(pytz.UTC) + timedelta(minutes=5):
             SCOPES = ['https://www.googleapis.com/auth/userinfo.profile',
                       'https://www.googleapis.com/auth/userinfo.email']

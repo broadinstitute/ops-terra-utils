@@ -14,9 +14,10 @@ repos:
     -   id: python-check-blanket-noqa # Enforce that noqa annotations always occur with specific codes.
     -   id: python-check-blanket-type-ignore # Enforce that # type: ignore annotations always occur with specific codes.
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.4.1
+    rev: v1.13.0
     hooks:
     -   id: mypy # Mypy is a static type checker for Python.
+        language_version: python3.11
         args: [
             --disallow-untyped-defs,
             --disallow-incomplete-defs,
@@ -24,6 +25,7 @@ repos:
             --ignore-missing-imports,
             --python-version=3.11
         ]
+        exclude: "^python/tests/"
         additional_dependencies: [
             "types-requests",
             "types-python-dateutil",

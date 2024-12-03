@@ -76,7 +76,8 @@ class MultiThreadedJobs:
                 job_args = future_to_job[future]
                 try:
                     result = future.result()
-                    if result or result is None:  # Successful result or no result (for jobs that don't return anything)
+                    # Successful result or no result if not collecting output
+                    if result or (result is None and not collect_output):
                         completed_jobs += 1
                         # Log progress every `jobs_complete_for_logging` jobs
                         if completed_jobs % jobs_complete_for_logging == 0:
