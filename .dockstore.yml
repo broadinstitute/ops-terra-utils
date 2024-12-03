@@ -97,3 +97,10 @@ workflows:
     readMePath: /wdl/ReUploadGcpObjectWithMd5/README.md
     testParameterFiles:
       - /wdl/ReUploadGcpObjectWithMd5/ReUploadGcpObjectWithMd5.wdl
+
+  - name: TdrSummaryStatistics
+    subclass: WDL
+    primaryDescriptorPath: /wdl/TdrSummaryStatistics/TdrSummaryStatistics.wdl
+    readMePath: /wdl/TdrSummaryStatistics/README.md
+    testParameterFiles:
+      - /wdl/TdrSummaryStatistics/TdrSummaryStatistics.wdl

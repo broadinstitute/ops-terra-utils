@@ -13,6 +13,7 @@ from utils.csv_util import Csv
 from utils import GCP
 
 FILE_REF = "fileref"
+OUTPUT_FILE = "summary_statistics.tsv"
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -214,10 +215,10 @@ class WriteTsv:
                 "Table": "Orphaned Files",
                 "Column": "N/A",
                 "Column Type": "N/A",
-                "Total Table Rows": "N/A",
+                "Total Table Rows": self.results["orphaned_files"],
                 "Empty Cells": "N/A",
                 "Distinct Values": "N/A",
-                "Unmatched Foreign Keys": self.results["orphaned_files"],
+                "Unmatched Foreign Keys": "N/A",
                 "Flagged": True if orphaned_files > 0 else False,
                 "Flag Reason": "Orphaned files" if orphaned_files > 0 else ""
             }
@@ -252,7 +253,7 @@ class WriteTsv:
                         "Flag Reason": "Unmatched foreign keys" if column_info.get("unmatched_foreign_keys", 0) > 0 else ""
                     }
                 )
-        Csv(file_path="summary_statistics.tsv").create_tsv_from_list_of_dicts(
+        Csv(file_path=OUTPUT_FILE).create_tsv_from_list_of_dicts(
             header_list=headers,
             list_of_dicts=tsv_data
         )
