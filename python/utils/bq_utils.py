@@ -1,5 +1,4 @@
 from google.cloud import bigquery
-from google.auth import default
 import logging
 from typing import Any
 

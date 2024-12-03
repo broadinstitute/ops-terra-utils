@@ -249,7 +249,8 @@ class WriteTsv:
                         "Distinct Values": column_info["distinct_values"],
                         "Unmatched Foreign Keys": column_info.get("unmatched_foreign_keys", "N/A"),
                         "Flagged": True if column_info.get("unmatched_foreign_keys", 0) > 0 else False,
-                        "Flag Reason": "Unmatched foreign keys" if column_info.get("unmatched_foreign_keys", 0) > 0 else ""
+                        "Flag Reason": "Unmatched foreign keys" if
+                        column_info.get("unmatched_foreign_keys", 0) > 0 else ""
                     }
                 )
         Csv(file_path=OUTPUT_FILE).create_tsv_from_list_of_dicts(
