@@ -81,6 +81,5 @@ class BigQueryUtil:
                 logging.error("Raising error because raise_on_other_failure is set to True")
                 raise e
             else:
-                logging.error(
-                    f"Continuing execution because raise_on_other_failure is set to False.")
+                logging.error("Continuing execution because raise_on_other_failure is set to False.")
                 return False
