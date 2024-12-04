@@ -1,4 +1,5 @@
 from google.cloud import bigquery
+from google.api_core.exceptions import Forbidden
 import logging
 from typing import Any
 
@@ -55,3 +56,31 @@ class BigQueryUtil:
         if to_dataframe:
             return query_job.result().to_dataframe()
         return [row for row in query_job.result()]
+
+    def check_permissions(self, raise_on_other_failure: bool = True) -> bool:
+        """
+        Checks if the user has permission to run queries and access the project.
+
+        Args:
+            raise_on_other_failure (bool): If True, raises an error if an unexpected error occurs. Default is True.
+
+        Returns:
+            bool: True if the user has permissions, False if a 403 Forbidden error is encountered.
+        """
+        try:
+            # A simple query that should succeed if the user has permissions
+            query = "SELECT 1"
+            self.client.query(query).result()  # Run a lightweight query
+            return True
+        except Forbidden:
+            logging.warning("403 Permission Denied")
+            return False
+        except Exception as e:
+            logging.error(f"Unexpected error when trying to check permissions for project {self.project_id}. {e}")
+            if raise_on_other_failure:
+                logging.error("Raising error because raise_on_other_failure is set to True")
+                raise e
+            else:
+                logging.error(
+                    f"Continuing execution because raise_on_other_failure is set to False.")
+                return False

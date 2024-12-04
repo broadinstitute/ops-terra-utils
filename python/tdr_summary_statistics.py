@@ -3,12 +3,11 @@ from argparse import ArgumentParser, Namespace
 import numpy as np
 
 from pandas import DataFrame
-from typing import Optional
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.request_util import RunRequest
 from utils.token_util import Token
-from utils.bq_utils import BigQueryUtil
 from utils.csv_util import Csv
+from utils.tdr_utils.tdr_bq_utils import TdrBq, GetTdrAssetInfo
 from utils import GCP
 
 FILE_REF = "fileref"
@@ -25,42 +24,6 @@ def get_args() -> Namespace:
     mutually_exclusive_group.add_argument("--dataset_id", "-d")
     mutually_exclusive_group.add_argument("--snapshot_id", "-s")
     return parser.parse_args()
-
-
-class GetAssetInfo:
-    def __init__(self, tdr: TDR, dataset_id: Optional[str], snapshot_id: Optional[str]):
-        self.tdr = tdr
-        self.dataset_id = dataset_id
-        self.snapshot_id = snapshot_id
-
-    def _get_dataset_info(self) -> dict:
-        dataset_info = self.tdr.get_dataset_info(
-            dataset_id=self.dataset_id,
-            info_to_include=["SCHEMA", "ACCESS_INFORMATION"]
-        )
-        return {
-            "bq_project": dataset_info["accessInformation"]["bigQuery"]["projectId"],
-            "bq_schema": dataset_info["accessInformation"]["bigQuery"]["datasetName"],
-            "tables": dataset_info["schema"]["tables"],
-            "relationships": dataset_info["schema"]["relationships"]
-        }
-
-    def _get_snapshot_info(self) -> dict:
-        snapshot_info = self.tdr.get_snapshot_info(
-            snapshot_id=self.snapshot_id,
-            info_to_include=["TABLES", "RELATIONSHIPS", "ACCESS_INFORMATION"]
-        )
-        return {
-            "bq_project": snapshot_info["accessInformation"]["bigQuery"]["projectId"],
-            "bq_schema": snapshot_info["accessInformation"]["bigQuery"]["datasetName"],
-            "tables": snapshot_info["tables"],
-            "relationships": snapshot_info["relationships"]
-        }
-
-    def run(self) -> dict:
-        if self.dataset_id:
-            return self._get_dataset_info()
-        return self._get_snapshot_info()
 
 
 class CreateSchemaDict:
@@ -104,26 +67,26 @@ class CreateSchemaDict:
 
 
 class GetTableContents:
-    def __init__(self, big_query_util: BigQueryUtil, table_schema_dict: dict, bq_project: str, bq_schema: str):
-        self.big_query_util = big_query_util
+    def __init__(self, tdr_bq_util: TdrBq, table_schema_dict: dict, bq_project: str, bq_schema: str):
+        self.tdr_bq_util = tdr_bq_util
         self.bq_project = bq_project
         self.bq_schema = bq_schema
         self.table_schema_dict = table_schema_dict
 
-    def _get_table_contents(self, table_name: str, exclude_datarepo_id: bool = True) -> list[dict]:
-        if exclude_datarepo_id:
-            exclude_str = "EXCEPT (datarepo_row_id)"
-        else:
-            exclude_str = ""
-        query = f"""SELECT * {exclude_str} FROM `{self.bq_project}.{self.bq_schema}.{table_name}`"""
-        logging.info(f"Getting contents of table {table_name} from BQ")
-        return self.big_query_util.query_table(query=query, to_dataframe=True)
-
     def run(self) -> tuple[dict, DataFrame]:
         table_contents_dict = {}
         for table_name in self.table_schema_dict.keys():
-            table_contents_dict[table_name] = self._get_table_contents(table_name)
-        return table_contents_dict, self._get_table_contents('datarepo_load_history', exclude_datarepo_id=False)
+            table_contents_dict[table_name] = self.tdr_bq_util.get_tdr_table_contents(
+                table_name=table_name,
+                to_dataframe=True,
+                exclude_datarepo_id=True
+            )
+        load_history_df = self.tdr_bq_util.get_tdr_table_contents(
+            table_name='datarepo_load_history',
+            to_dataframe=True,
+            exclude_datarepo_id=False
+        )
+        return table_contents_dict, load_history_df
 
 
 class CreateSummaryStatistics:
@@ -278,16 +241,26 @@ if __name__ == '__main__':
     request_util = RunRequest(token=token, max_retries=1, max_backoff_time=1)
     tdr = TDR(request_util=request_util)
 
-    asset_info_dict = GetAssetInfo(tdr=tdr, dataset_id=dataset_id, snapshot_id=snapshot_id).run()
+    asset_info_dict = GetTdrAssetInfo(tdr=tdr, dataset_id=dataset_id, snapshot_id=snapshot_id).run()
 
     table_schema_dict = CreateSchemaDict(
         tdr_table_info=asset_info_dict["tables"],
         relationships=asset_info_dict["relationships"]
     ).run()
 
-    big_query_util = BigQueryUtil(project_id=asset_info_dict["bq_project"])
+    tdr_bq_util = TdrBq(
+        project_id=asset_info_dict["bq_project"],
+        bq_schema=asset_info_dict["bq_schema"]
+    )
+    if not tdr_bq_util.check_permissions(raise_on_other_failure=True):
+        raise ValueError(
+            "User does not have sufficient permissions to access BigQuery project. If running in WDL "
+            "it can take time for permissions to propagate. You can try to run the task again later. "
+            f"To check project manually you can try going to the BigQuery console going "
+            f"to project {asset_info_dict['bq_project']}."
+        )
     table_contents_dict, file_load_df = GetTableContents(
-        big_query_util=big_query_util,
+        tdr_bq_util=tdr_bq_util,
         table_schema_dict=table_schema_dict,
         bq_project=asset_info_dict["bq_project"],
         bq_schema=asset_info_dict["bq_schema"]
