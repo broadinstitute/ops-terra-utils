@@ -6,7 +6,7 @@ from typing import Optional, Any
 
 
 class GetTdrAssetInfo:
-    def __init__(self, tdr: TDR, dataset_id: Optional[str], snapshot_id: Optional[str]):
+    def __init__(self, tdr: TDR, dataset_id: Optional[str] = None, snapshot_id: Optional[str] = None):
         """
         Initialize the GetTdrAssetInfo class.
 
@@ -15,6 +15,8 @@ class GetTdrAssetInfo:
             dataset_id (Optional[str]): ID of the dataset.
             snapshot_id (Optional[str]): ID of the snapshot.
         """
+        if not dataset_id and not snapshot_id:
+            raise ValueError("Either dataset_id or snapshot_id must be provided.")
         self.tdr = tdr
         self.dataset_id = dataset_id
         self.snapshot_id = snapshot_id
@@ -80,9 +82,9 @@ class TdrBq:
         self.bq_schema = bq_schema
         self.bq_util = BigQueryUtil(project_id)
 
-    def check_permissions(self, raise_on_other_failure: bool) -> bool:
+    def check_permissions_for_dataset(self, raise_on_other_failure: bool) -> bool:
         """
-        Check the permissions for accessing BigQuery.
+        Check the permissions for accessing BigQuery for specific dataset.
 
         Args:
             raise_on_other_failure (bool): Whether to raise an exception on other failures.
@@ -90,7 +92,11 @@ class TdrBq:
         Returns:
             bool: True if permissions are sufficient, False otherwise.
         """
-        return self.bq_util.check_permissions(raise_on_other_failure=raise_on_other_failure)
+        query = f"""SELECT 1 FROM `{self.project_id}.{self.bq_schema}.INFORMATION_SCHEMA.TABLES`"""
+        return self.bq_util.check_permissions_for_query(
+            query=query,
+            raise_on_other_failure=raise_on_other_failure
+        )
 
     def get_tdr_table_contents(self, exclude_datarepo_id: bool, table_name: str, to_dataframe: bool) -> Any:
         """

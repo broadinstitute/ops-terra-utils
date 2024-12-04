@@ -57,7 +57,32 @@ class BigQueryUtil:
             return query_job.result().to_dataframe()
         return [row for row in query_job.result()]
 
-    def check_permissions(self, raise_on_other_failure: bool = True) -> bool:
+    def check_permissions_to_project(self, raise_on_other_failure: bool = True) -> bool:
+        """
+        Checks if the user has permission to access the project.
+
+        Args:
+            raise_on_other_failure (bool): If True, raises an error if an unexpected error occurs. Default is True.
+
+        Returns:
+            bool: True if the user has permissions, False if a 403 Forbidden error is encountered.
+        """
+        return self._check_permissions("SELECT 1", raise_on_other_failure)
+
+    def check_permissions_for_query(self, query: str, raise_on_other_failure: bool = True) -> bool:
+        """
+        Checks if the user has permission to run a specific query.
+
+        Args:
+            query (str): SQL query to execute.
+            raise_on_other_failure (bool): If True, raises an error if an unexpected error occurs. Default is True.
+
+        Returns:
+            bool: True if the user has permissions, False if a 403 Forbidden error is encountered.
+        """
+        return self._check_permissions(query, raise_on_other_failure)
+
+    def _check_permissions(self, qry: str, raise_on_other_failure: bool = True) -> bool:
         """
         Checks if the user has permission to run queries and access the project.
 
@@ -69,7 +94,7 @@ class BigQueryUtil:
         """
         try:
             # A simple query that should succeed if the user has permissions
-            query = "SELECT 1"
+            query = qry
             self.client.query(query).result()  # Run a lightweight query
             return True
         except Forbidden:
