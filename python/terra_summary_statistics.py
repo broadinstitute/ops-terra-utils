@@ -162,7 +162,15 @@ class CompareExpectedToActual:
         self.actual_workspace_info = actual_workspace_info
 
     @staticmethod
-    def _create_row_dict(table: str, column: str, label: str, description: str, column_dict: dict, flagged: bool, notes: str) -> dict:
+    def _create_row_dict(
+            table: str,
+            column: str,
+            label: str,
+            description: str,
+            column_dict: dict,
+            flagged: bool,
+            notes: str
+    ) -> dict:
         return {
             'table_name': table,
             'column_name': column,
