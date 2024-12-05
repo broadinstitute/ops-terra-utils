@@ -8,7 +8,7 @@ workflow HardCloneWithExternalBucket {
 		String source_workspace_name
 		String dest_billing_project
 		String dest_workspace_name
-        String external_bucket
+		String external_bucket
 		Boolean allow_already_created
 		Boolean rsync_workspace
 		Boolean do_not_update_acls
@@ -21,7 +21,7 @@ workflow HardCloneWithExternalBucket {
 
 	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 	# Ignore HardCloneTerraWorkspace submisisons files so do not write to src as copying to dest
-	String rysnc_regex_exclude = ".*/HardCloneTerraWorkspace/.*"
+	String rysnc_regex_exclude = ".*/HardCloneWithExternalBucket/.*"
 	Int memory = select_first([memory_gb, 8])
 
 	call HardCloneWithExternalBucketTask {
@@ -31,7 +31,7 @@ workflow HardCloneWithExternalBucket {
 			dest_billing_project=dest_billing_project,
 			dest_workspace_name=dest_workspace_name,
 			allow_already_created=allow_already_created,
-            external_bucket=external_bucket,
+			external_bucket=external_bucket,
 			workers=workers,
 			extensions_to_ignore=extensions_to_ignore,
 			docker_name=docker_name,
@@ -58,7 +58,7 @@ task HardCloneWithExternalBucketTask {
 		String dest_billing_project
 		String dest_workspace_name
 		Boolean allow_already_created
-        String external_bucket
+		String external_bucket
 		Int? workers
 		String? extensions_to_ignore
 		String docker_name
