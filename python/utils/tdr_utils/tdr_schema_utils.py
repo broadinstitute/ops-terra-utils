@@ -43,6 +43,8 @@ class InferTDRSchema:
             all_fields_non_required (bool): A boolean indicating whether all columns should be set to non-required
                 besides for primary key.
             primary_key (str): The name of the primary key column. Used to determine column should be required
+            allow_disparate_data_types_in_column (bool): A boolean indicating whether force disparate data types in a
+                column to be strings.
         """
         self.input_metadata = input_metadata
         self.table_name = table_name
@@ -81,7 +83,7 @@ class InferTDRSchema:
                     first_match_type = type([v[0] for v in non_empty_substrings][0])
                     all_values_matching = all(
                         all(isinstance(item, first_match_type) for item in sublist) for sublist in non_empty_substrings
-                        )
+                    )
                 else:
                     # if all "sub-lists" are empty, assume that all types are matching (all empty lists are handled
                     # below)
@@ -117,7 +119,7 @@ class InferTDRSchema:
                     }
                 )
             else:
-                matching.append({header: all_values_matching})  # type ignore[dict-item]
+                matching.append({header: all_values_matching})  # type: ignore[dict-item]
                 disparate_header_info.append(
                     {
                         "header": header,
