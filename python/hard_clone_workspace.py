@@ -111,7 +111,7 @@ class CopyFilesToDestWorkspace:
             file_extensions_to_ignore=self.extensions_to_ignore,
             file_name_only=True,
             # Ignore log files for this workflow since could be updating as running
-            file_strings_to_ignore=["/HardCloneTerraWorkspace/"]
+            file_strings_to_ignore=["/HardCloneTerraWorkspace/", "/HardCloneWithExternalBucket/"]
         )
 
         files_to_copy = [
@@ -200,7 +200,7 @@ if __name__ == '__main__':
         if not external_bucket.startswith("gs://") or not external_bucket.endswith("/"):
             raise ValueError("gcp_bucket must start with gs:// and end with /")
         # Remove the gs:// prefix and trailing slash to match what is returned by the Terra API
-        external_bucket = external_bucket.lstrip("gs://").rstrip("/")
+        external_bucket = external_bucket.replace("gs://", "").rstrip("/")
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
