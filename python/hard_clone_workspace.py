@@ -3,12 +3,12 @@ import logging
 from typing import Any
 from argparse import Namespace, ArgumentParser
 
-from python.utils import GCP, comma_separated_list, ARG_DEFAULTS
-from python.utils.terra_utils.terra_util import TerraWorkspace
-from python.utils.request_util import RunRequest
-from python.utils.token_util import Token
-from python.utils.csv_util import Csv
-from python.utils.gcp_utils import GCPCloudFunctions
+from utils import GCP, comma_separated_list, ARG_DEFAULTS
+from utils.terra_utils.terra_util import TerraWorkspace
+from utils.request_util import RunRequest
+from utils.token_util import Token
+from utils.csv_util import Csv
+from utils.gcp_utils import GCPCloudFunctions
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
