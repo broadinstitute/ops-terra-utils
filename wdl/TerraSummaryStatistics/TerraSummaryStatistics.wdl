@@ -32,7 +32,7 @@ task TerraSummaryStatisticsTask {
     }
 
     command <<<
-        python /etc/terra_utils/python/tdr_summary_statistics.py \
+        python /etc/terra_utils/python/terra_summary_statistics.py \
         --billing_project ~{billing_project} \
         --workspace_name ~{workspace_name} \
         ~{"--data_dictionary_file " + data_dictionary_file}
