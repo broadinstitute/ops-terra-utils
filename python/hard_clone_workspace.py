@@ -3,12 +3,12 @@ import logging
 from typing import Any
 from argparse import Namespace, ArgumentParser
 
-from utils import GCP, comma_separated_list, ARG_DEFAULTS
-from utils.terra_utils.terra_util import TerraWorkspace
-from utils.request_util import RunRequest
-from utils.token_util import Token
-from utils.csv_util import Csv
-from utils.gcp_utils import GCPCloudFunctions
+from python.utils import GCP, comma_separated_list, ARG_DEFAULTS
+from python.utils.terra_utils.terra_util import TerraWorkspace
+from python.utils.request_util import RunRequest
+from python.utils.token_util import Token
+from python.utils.csv_util import Csv
+from python.utils.gcp_utils import GCPCloudFunctions
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -135,8 +135,8 @@ class CopyFilesToDestWorkspace:
         # Process each batch separately
         for i, batch in enumerate(file_batches):
             logging.info(
-                f"Copying batch {i + 1}/{len(file_batches)} with {len(batch)} files to "
-                f"destination bucket {self.dest_bucket}")
+                f"Starting validation on batch {i + 1}/{len(file_batches)} with {len(batch)} files to "
+                f"be copied to destination bucket: '{self.dest_bucket}'")
             self.gcp_cloud_functions.multithread_copy_of_files_with_validation(
                 files_to_copy=batch,
                 workers=self.workers,
