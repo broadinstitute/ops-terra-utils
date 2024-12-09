@@ -118,3 +118,10 @@ workflows:
     readMePath: /wdl/RenameColumnsAndFilesInDataset/README.md
     testParameterFiles:
       - /wdl/RenameColumnsAndFilesInDataset/RenameColumnsAndFilesInDataset.wdl
+
+  - name: TerraSummaryStatistics
+    subclass: WDL
+    primaryDescriptorPath: /wdl/TerraSummaryStatistics/TerraSummaryStatistics.wdl
+    readMePath: /wdl/TerraSummaryStatistics/README.md
+    testParameterFiles:
+      - /wdl/TerraSummaryStatistics/TerraSummaryStatistics.wdl
