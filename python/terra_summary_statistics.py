@@ -58,13 +58,24 @@ class ParseInputDataDict:
     def __init__(self, data_dictionary_file: str):
         self.data_dictionary_file = data_dictionary_file
 
+    @staticmethod
+    def _convert_to_bool(value: str) -> Any:
+        if not value:
+            return None
+        if value.lower() == 'y':
+            return True
+        elif value.lower() == 'n':
+            return False
+        else:
+            return value
+
     def run(self) -> dict:
         if not self.data_dictionary_file:
             return {}
         input_data = Csv(self.data_dictionary_file).create_list_of_dicts_from_tsv(expected_headers=INPUT_HEADERS)
         # Create a dictionary with the key being a tuple of table_name and column_name
         return {
-            (row['table_name'], row['column_name']): row
+            (row['table_name'], row['column_name']): {k: self._convert_to_bool(v) for k, v in row.items()}
             for row in input_data
         }
 
@@ -189,10 +200,10 @@ class CompareExpectedToActual:
             'label': label,
             'description': description,
             'data_type': expected_info.get('data_type'),
-            'multiple_values_allowed': self._convert_to_bool(expected_info.get('multiple_values_allowed')),  # type: ignore[arg-type]
-            'primary_key': self._convert_to_bool(expected_info.get('primary_key')),  # type: ignore[arg-type]
+            'multiple_values_allowed': expected_info.get('multiple_values_allowed'),
+            'primary_key': expected_info.get('primary_key'),
             'refers_to_column': expected_info.get('refers_to_column'),
-            'required': self._convert_to_bool(expected_info.get('required')),  # type: ignore[arg-type]
+            'required': expected_info.get('required'),
             'inferred_multiple_values_allowed': column_dict['inferred_multiple_values_allowed'],
             'inferred_data_type': column_dict['inferred_data_type'],
             'inferred_primary_key': column_dict['primary_key'],
@@ -205,26 +216,14 @@ class CompareExpectedToActual:
             'notes': notes
         }
 
-    @staticmethod
-    def _convert_to_bool(value: str) -> Any:
-        if not value:
-            return None
-        if value.lower() == 'y':
-            return True
-        elif value.lower() == 'n':
-            return False
-        else:
-            return value
-
     def _compare_values(self, expected: Any, actual: Any, column: str) -> Tuple[bool, str]:
-        converted_expected = self._convert_to_bool(expected)
         flagged = False
         # If the expected data type is not in the expected types, flag it
         if column == 'data_type' and expected not in INPUT_DT_TO_INFERRED_DTS:
             note = f"Data type {expected} not in expected types: {list(INPUT_DT_TO_INFERRED_DTS.keys())}"
             flagged = True
         # If the expected value is not the same as the actual value, flag it
-        elif converted_expected != actual:
+        elif expected != actual:
             flagged = True
             note = f'Column "{column}" not matching'
         else:
