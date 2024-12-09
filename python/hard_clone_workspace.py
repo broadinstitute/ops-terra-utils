@@ -135,8 +135,8 @@ class CopyFilesToDestWorkspace:
         # Process each batch separately
         for i, batch in enumerate(file_batches):
             logging.info(
-                f"Copying batch {i + 1}/{len(file_batches)} with {len(batch)} files to "
-                f"destination bucket {self.dest_bucket}")
+                f"Starting validation on batch {i + 1}/{len(file_batches)} with {len(batch)} files to "
+                f"be copied to destination bucket: '{self.dest_bucket}'")
             self.gcp_cloud_functions.multithread_copy_of_files_with_validation(
                 files_to_copy=batch,
                 workers=self.workers,
