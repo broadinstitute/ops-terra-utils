@@ -16,24 +16,35 @@ logging.basicConfig(
 )
 
 INPUT_HEADERS = [
-    "table_name", "column_name", "label", "array", "description", "primary_key", "refers_to_column", "required"
+    "table_name", "column_name", "label", "multiple_values_allowed", "description", "data_type",
+    "primary_key", "refers_to_column", "required"
 ]
 OUTPUT_HEADERS = [
-    "table_name", "column_name", "label", "description", "array", "data_type", "primary_key", "refers_to_column",
-    "required", "record_count", "null_value_count", "unique_value_count", "flagged", "notes"
+    "table_name", "column_name", "label", "description", "multiple_values_allowed", "data_type", "primary_key",
+    "refers_to_column", "required", "inferred_multiple_values_allowed", "inferred_data_type",
+    "inferred_primary_key", "inferred_refers_to_column", "inferred_required", "record_count", "null_value_count",
+    "unique_value_count", "flagged", "notes"
 ]
 
 ALL_FIELDS_NON_REQUIRED = False
 FORCE_COLUMNS_TO_STRING = True
 NA = "N/A"
-OUTPUT = "/Users/samn/Desktop/test_output.tsv"
+
+INPUT_DT_TO_INFERRED_DTS = {
+    "boolean": "boolean",
+    "date": "date",
+    "datetime": "datetime",
+    "float": "float64",
+    "int": "int64",
+    "string": "string",
+    "fileref": "fileref"
+}
 
 
 def get_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--workspace_name", "-w", type=str, required=True, help="Terra workspace name")
     parser.add_argument("--billing_project", "-b", type=str, required=True, help="Billing project name")
-    parser.add_argument("--output_tsv", "-o", type=str, help="Output tsv file", default=OUTPUT)
     parser.add_argument(
         "--data_dictionary_file",
         "-d", type=str,
@@ -151,7 +162,7 @@ class AddInferredInfo:
             for inferred_column in inferred_schema['columns']:
                 column_dict = table_info['column_info'][inferred_column['name']]
                 column_dict['inferred_data_type'] = inferred_column['datatype']
-                column_dict['inferred_array'] = inferred_column['array_of']
+                column_dict['inferred_multiple_values_allowed'] = inferred_column['array_of']
                 column_dict['inferred_required'] = inferred_column['required']
         return self.tables_info
 
@@ -161,13 +172,14 @@ class CompareExpectedToActual:
         self.expected_data = expected_data
         self.actual_workspace_info = actual_workspace_info
 
-    @staticmethod
     def _create_row_dict(
+            self,
             table: str,
             column: str,
             label: str,
             description: str,
             column_dict: dict,
+            expected_info: dict,
             flagged: bool,
             notes: str
     ) -> dict:
@@ -176,11 +188,16 @@ class CompareExpectedToActual:
             'column_name': column,
             'label': label,
             'description': description,
-            'array': column_dict['inferred_array'],
-            'data_type': column_dict['inferred_data_type'],
-            'primary_key': column_dict['primary_key'],
-            'refers_to_column': column_dict.get('linked_column', NA),
-            'required': column_dict['inferred_required'],
+            'data_type': expected_info.get('data_type'),
+            'multiple_values_allowed': self._convert_to_bool(expected_info.get('multiple_values_allowed')),  # type: ignore[arg-type]
+            'primary_key': self._convert_to_bool(expected_info.get('primary_key')),  # type: ignore[arg-type]
+            'refers_to_column': expected_info.get('refers_to_column'),
+            'required': self._convert_to_bool(expected_info.get('required')),  # type: ignore[arg-type]
+            'inferred_multiple_values_allowed': column_dict['inferred_multiple_values_allowed'],
+            'inferred_data_type': column_dict['inferred_data_type'],
+            'inferred_primary_key': column_dict['primary_key'],
+            'inferred_refers_to_column': column_dict.get('linked_column'),
+            'inferred_required': column_dict['inferred_required'],
             'record_count': column_dict['record_count'],
             'null_value_count': column_dict['empty_cells'],
             'unique_value_count': column_dict['distinct_values'],
@@ -189,7 +206,7 @@ class CompareExpectedToActual:
         }
 
     @staticmethod
-    def _convert_for_comparison(value: str) -> Any:
+    def _convert_to_bool(value: str) -> Any:
         if not value:
             return None
         if value.lower() == 'y':
@@ -199,49 +216,69 @@ class CompareExpectedToActual:
         else:
             return value
 
-    def _compare_values(self, expected: Any, actual: Any, column: str) -> Tuple[bool, str, Any]:
-        converted_expected = self._convert_for_comparison(expected)
+    def _compare_values(self, expected: Any, actual: Any, column: str) -> Tuple[bool, str]:
+        converted_expected = self._convert_to_bool(expected)
         flagged = False
-        if converted_expected != actual:
+        # If the expected data type is not in the expected types, flag it
+        if column == 'data_type' and expected not in INPUT_DT_TO_INFERRED_DTS:
+            note = f"Data type {expected} not in expected types: {list(INPUT_DT_TO_INFERRED_DTS.keys())}"
             flagged = True
-            note = f'Column "{column}": Expected: {converted_expected}, Actual: {actual}'
+        # If the expected value is not the same as the actual value, flag it
+        elif converted_expected != actual:
+            flagged = True
+            note = f'Column "{column}" not matching'
         else:
             note = ""
-        return flagged, note, converted_expected
+        return flagged, note
 
     def _validate_column(self, expected_info: dict, actual_column_info: dict) -> Tuple[bool, str]:
-        required_flagged, required_notes, required_converted = self._compare_values(
+        required_flagged, required_notes = self._compare_values(
             expected=expected_info['required'],
             actual=actual_column_info['inferred_required'],
             column='required'
         )
 
-        array_flagged, array_notes, array_converted = self._compare_values(
-            expected=expected_info['array'],
-            actual=actual_column_info['inferred_array'],
-            column='array'
+        multiple_values_allowed_flagged, multiple_values_allowed_notes = self._compare_values(
+            expected=expected_info['multiple_values_allowed'],
+            actual=actual_column_info['inferred_multiple_values_allowed'],
+            column='multiple_values_allowed'
         )
 
-        primary_key_flagged, primary_key_notes, primary_key_converted = self._compare_values(
+        primary_key_flagged, primary_key_notes = self._compare_values(
             expected=expected_info['primary_key'],
             actual=actual_column_info['primary_key'],
             column='primary_key'
         )
 
-        refers_to_column_flagged, refers_to_column_notes, refers_to_column_converted = self._compare_values(
+        refers_to_column_flagged, refers_to_column_notes = self._compare_values(
             expected=expected_info['refers_to_column'],
             actual=actual_column_info['linked_column'],
             column='refers_to_column'
         )
-        flagged = any([required_flagged, array_flagged, primary_key_flagged, refers_to_column_flagged])
-        notes = [note for note in [required_notes, array_notes, primary_key_notes, refers_to_column_notes] if note]
+        data_type_flagged, data_type_notes = self._compare_values(
+            expected=INPUT_DT_TO_INFERRED_DTS.get(expected_info['data_type'].lower(), expected_info['data_type']),
+            actual=actual_column_info['inferred_data_type'],
+            column='data_type'
+        )
+        flagged = any(
+            [
+                data_type_flagged, required_flagged, multiple_values_allowed_flagged,
+                primary_key_flagged, refers_to_column_flagged
+            ]
+        )
+        notes = [
+            note for note in [
+                required_notes, multiple_values_allowed_notes, primary_key_notes,
+                refers_to_column_notes, data_type_notes
+            ] if note
+        ]
         return flagged, ", ".join(notes)
 
     def run(self) -> list[dict]:
         output_content = []
         for table, table_info in self.actual_workspace_info.items():
             for column, column_info in table_info['column_info'].items():
-                expected_info = self.expected_data.get((table, column))
+                expected_info = self.expected_data.get((table, column), {})
                 if not expected_info:
                     flagged = True
                     notes = "Column not found in expected data"
@@ -262,6 +299,7 @@ class CompareExpectedToActual:
                         description=description,
                         column_dict=column_info,
                         flagged=flagged,
+                        expected_info=expected_info,
                         notes=notes
                     )
                 )
@@ -273,7 +311,7 @@ if __name__ == '__main__':
     workspace_name = args.workspace_name
     billing_project = args.billing_project
     data_dictionary_file = args.data_dictionary_file
-    output_file = args.output_tsv
+    output_file = f"{billing_project}.{workspace_name}.summary_stats.tsv"
 
     # Parse the input data dictionary file
     input_data = ParseInputDataDict(data_dictionary_file).run()

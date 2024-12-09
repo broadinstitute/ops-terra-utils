@@ -1,0 +1,5 @@
+{
+    "TerraSummaryStatistics.billing_project": "String",
+    "TerraSummaryStatistics.workspace_name": "String",
+    "TerraSummaryStatistics.data_dictionary_file": "File"
+}

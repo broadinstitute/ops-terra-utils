@@ -19,3 +19,19 @@ task GcloudRsync {
     }
 
 }
+
+task GcloudCp {
+    input {
+        String source
+        String destination
+    }
+
+    command <<<
+        gcloud storage cp ~{source} ~{destination}
+    >>>
+
+    runtime {
+        docker: "google/cloud-sdk:latest"
+    }
+
+}
