@@ -68,6 +68,7 @@ task CopyDataDictionary {
     }
 
     command <<<
+        echo "Copying data dictionary file to the same directory as the summary file"
         gcloud storage cp ~{summary_file} ~{data_dictionary_file_dir}
     >>>
 
