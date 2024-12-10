@@ -18,7 +18,6 @@ workflow TerraSummaryStatistics {
             docker_image = docker_image
     }
 
-    #Boolean data_dictionary_file_exists =
     if (defined(data_dictionary_file)) {
         # Get the file directory of the data_dictionary_file as a string
         String data_dictionary_string = select_first([data_dictionary_file, ""])
