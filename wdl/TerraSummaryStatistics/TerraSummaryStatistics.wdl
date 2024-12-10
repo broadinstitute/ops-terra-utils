@@ -12,10 +12,13 @@ workflow TerraSummaryStatistics {
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
+    # If the data dictionary file is provided convert it to a file
     if (data_dictionary_file) {
+        # Will always be a string if here, so turning into String from String?
+        String data_dictionary_string = select_first([data_dictionary_file, ""])
         call utils.ConvertToFile {
             input:
-                cloud_path = data_dictionary_file
+                cloud_path = data_dictionary_string
         }
     }
 
