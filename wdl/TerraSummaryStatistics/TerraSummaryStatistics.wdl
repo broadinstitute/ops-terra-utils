@@ -58,7 +58,7 @@ task TerraSummaryStatisticsTask {
 task CopyDataDictionary {
     input {
         File summary_file
-        String data_dictionary_file
+        String? data_dictionary_file
     }
 
     command <<<
