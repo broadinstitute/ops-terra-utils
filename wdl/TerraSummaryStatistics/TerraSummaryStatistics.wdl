@@ -1,5 +1,6 @@
 version 1.0
 
+import "../utils/GeneralUtils.wdl" as utils
 
 workflow TerraSummaryStatistics {
     input {
@@ -11,11 +12,21 @@ workflow TerraSummaryStatistics {
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
+    if (data_dictionary_file) {
+        call utils.ConvertToFile {
+            input:
+                cloud_path = data_dictionary_file
+        }
+    }
+
+    # If the data dictionary file is provided get the localized file
+    File? data_dictionary_file_local = select_first([ConvertToFile.localized_file, data_dictionary_file])
+
     call TerraSummaryStatisticsTask {
         input:
             billing_project = billing_project,
             workspace_name = workspace_name,
-            data_dictionary_file = data_dictionary_file,
+            data_dictionary_file = data_dictionary_file_local,
             docker_image = docker_image
     }
 
