@@ -1,10 +1,11 @@
 version 1.0
 
+
 workflow TerraSummaryStatistics {
     input {
         String billing_project
         String workspace_name
-        File? data_dictionary_file
+        String? data_dictionary_file
         String? docker
     }
 
