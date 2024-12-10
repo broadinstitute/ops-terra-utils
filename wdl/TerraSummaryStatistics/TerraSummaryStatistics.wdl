@@ -18,6 +18,14 @@ workflow TerraSummaryStatistics {
             docker_image = docker_image
     }
 
+    if (data_dictionary_file) {
+        call CopyDataDictionary {
+            input:
+                summary_file = TerraSummaryStatisticsTask.summary_statistics,
+                data_dictionary_file = data_dictionary_file
+        }
+    }
+
     output {
         File summary_statistics = TerraSummaryStatisticsTask.summary_statistics
     }
@@ -44,5 +52,21 @@ task TerraSummaryStatisticsTask {
 
     runtime {
         docker: docker_image
+    }
+}
+
+task CopyDataDictionary {
+    input {
+        File summary_file
+        String data_dictionary_file
+    }
+
+    command <<<
+        directory=$(dirname "$~{data_dictionary_file}")
+        gcloud storage cp ~{summary_file} "$directory"/
+    >>>
+
+    runtime {
+        docker: "google/cloud-sdk:latest"
     }
 }
