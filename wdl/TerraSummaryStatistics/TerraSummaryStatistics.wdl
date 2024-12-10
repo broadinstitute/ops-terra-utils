@@ -4,8 +4,8 @@ workflow TerraSummaryStatistics {
     input {
         String billing_project
         String workspace_name
-        File? data_dictionary_file
         String? docker
+        File? data_dictionary_file
     }
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -18,7 +18,8 @@ workflow TerraSummaryStatistics {
             docker_image = docker_image
     }
 
-    if (data_dictionary_file) {
+    #Boolean data_dictionary_file_exists =
+    if (defined(data_dictionary_file)) {
         # Get the file directory of the data_dictionary_file as a string
         String data_dictionary_string = select_first([data_dictionary_file, ""])
         # Get the file name of the data_dictionary_file
