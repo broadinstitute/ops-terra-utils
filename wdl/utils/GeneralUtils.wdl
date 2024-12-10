@@ -1,6 +1,8 @@
+version 1.0
+
 task ConvertToFile {
     input {
-        String cloud_path  # Cloud file path as a string
+        String cloud_path
     }
 
     command <<<
@@ -8,6 +10,6 @@ task ConvertToFile {
     >>>
 
     output {
-        File localized_file = "~{cloud_path}"  # Automatically localizes it
+        File localized_file = "~{cloud_path}"
     }
 }
