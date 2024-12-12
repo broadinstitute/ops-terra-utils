@@ -201,8 +201,8 @@ class GCPCloudFunctions:
 
         except Exception as e:
             logging.error(
-                f"Encountered the following error while attempting to copy file: {e}. If this is a "
-                f"retryable error, it will be re-attempted"
+                f"Encountered the following error while attempting to copy file from '{src_cloud_path}' to "
+                f"'{full_destination_path}': {e}. If this is a retryable error, it will be re-attempted"
             )
             raise
 
