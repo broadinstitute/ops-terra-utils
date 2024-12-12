@@ -1,8 +1,10 @@
 import logging
+import os.path
 from typing import Any, Tuple, Optional
 from pandas import DataFrame
 import numpy as np
 from argparse import ArgumentParser, Namespace
+from datetime import datetime
 
 from utils.request_util import RunRequest
 from utils.token_util import Token
@@ -15,11 +17,8 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-INPUT_HEADERS = [
-    "table_name", "column_name", "label", "multiple_values_allowed", "description", "data_type",
-    "primary_key", "refers_to_column", "required"
-]
-OUTPUT_HEADERS = [
+INPUT_HEADERS = ["table_name", "column_name"]
+REQUIRED_OUTPUT_HEADERS = [
     "table_name", "column_name", "label", "description", "multiple_values_allowed", "data_type", "primary_key",
     "refers_to_column", "required", "inferred_multiple_values_allowed", "inferred_data_type",
     "inferred_primary_key", "inferred_refers_to_column", "inferred_required", "record_count", "null_value_count",
@@ -72,7 +71,10 @@ class ParseInputDataDict:
     def run(self) -> dict:
         if not self.data_dictionary_file:
             return {}
-        input_data = Csv(self.data_dictionary_file).create_list_of_dicts_from_tsv(expected_headers=INPUT_HEADERS)
+        input_data = Csv(self.data_dictionary_file).create_list_of_dicts_from_tsv(
+            expected_headers=INPUT_HEADERS,
+            allow_extra_headers=True
+        )
         # Create a dictionary with the key being a tuple of table_name and column_name
         return {
             (row['table_name'], row['column_name']): {k: self._convert_to_bool(v) for k, v in row.items()}
@@ -194,7 +196,7 @@ class CompareExpectedToActual:
             flagged: bool,
             notes: str
     ) -> dict:
-        return {
+        base_dict = {
             'table_name': table,
             'column_name': column,
             'label': label,
@@ -215,15 +217,27 @@ class CompareExpectedToActual:
             'flagged': flagged,
             'notes': notes
         }
+        # Add any extra key-value pairs from expected_info
+        additional_info = {k: v for k, v in expected_info.items() if k not in base_dict}
+        base_dict.update(additional_info)
+        return base_dict
 
-    def _compare_values(self, expected: Any, actual: Any, column: str) -> Tuple[bool, str]:
+    @staticmethod
+    def _compare_values(expected: Any, actual: Any, column: str) -> Tuple[bool, str]:
         flagged = False
-        # If the expected data type is not in the expected types, flag it
-        if column == 'data_type' and expected not in INPUT_DT_TO_INFERRED_DTS:
-            note = f"Data type {expected} not in expected types: {list(INPUT_DT_TO_INFERRED_DTS.keys())}"
-            flagged = True
+        # If the expected value is not provided, do not flag it and return an empty note
+        if not expected:
+            return flagged, ""
+        if column == 'data_type':
+            if expected not in INPUT_DT_TO_INFERRED_DTS:
+                note = f"Data type {expected} not in expected types: {list(INPUT_DT_TO_INFERRED_DTS.keys())}"
+                flagged = True
+                return flagged, note
+            else:
+                # Convert the expected data type to the inferred data type
+                expected = INPUT_DT_TO_INFERRED_DTS[expected]
         # If the expected value is not the same as the actual value, flag it
-        elif expected != actual:
+        if expected != actual:
             flagged = True
             note = f'Column "{column}" not matching'
         else:
@@ -232,30 +246,31 @@ class CompareExpectedToActual:
 
     def _validate_column(self, expected_info: dict, actual_column_info: dict) -> Tuple[bool, str]:
         required_flagged, required_notes = self._compare_values(
-            expected=expected_info['required'],
+            expected=expected_info.get('required'),
             actual=actual_column_info['inferred_required'],
             column='required'
         )
 
         multiple_values_allowed_flagged, multiple_values_allowed_notes = self._compare_values(
-            expected=expected_info['multiple_values_allowed'],
+            expected=expected_info.get('multiple_values_allowed'),
             actual=actual_column_info['inferred_multiple_values_allowed'],
             column='multiple_values_allowed'
         )
 
         primary_key_flagged, primary_key_notes = self._compare_values(
-            expected=expected_info['primary_key'],
+            expected=expected_info.get('primary_key'),
             actual=actual_column_info['primary_key'],
             column='primary_key'
         )
 
         refers_to_column_flagged, refers_to_column_notes = self._compare_values(
-            expected=expected_info['refers_to_column'],
+            expected=expected_info.get('refers_to_column'),
             actual=actual_column_info['linked_column'],
             column='refers_to_column'
         )
         data_type_flagged, data_type_notes = self._compare_values(
-            expected=INPUT_DT_TO_INFERRED_DTS.get(expected_info['data_type'].lower(), expected_info['data_type']),
+            # Convert the expected data type to the inferred data type
+            expected=expected_info.get('data_type'),
             actual=actual_column_info['inferred_data_type'],
             column='data_type'
         )
@@ -278,14 +293,12 @@ class CompareExpectedToActual:
         for table, table_info in self.actual_workspace_info.items():
             for column, column_info in table_info['column_info'].items():
                 expected_info = self.expected_data.get((table, column), {})
+                label = expected_info.get('label', NA)
+                description = expected_info.get('description', NA)
                 if not expected_info:
                     flagged = True
-                    notes = "Column not found in expected data"
-                    label = NA
-                    description = NA
+                    notes = "Column not found in input file"
                 else:
-                    label = expected_info['label']
-                    description = expected_info['description']
                     flagged, notes = self._validate_column(
                         expected_info=expected_info,
                         actual_column_info=column_info
@@ -305,12 +318,40 @@ class CompareExpectedToActual:
         return output_content
 
 
+class CreateOutputTsv:
+    def __init__(self, output_file: str, output_content: list[dict]):
+        self.output_file = output_file
+        self.output_content = output_content
+
+    def _create_ordered_header_list(self) -> list[str]:
+        all_keys: set[str] = set()
+        for record in self.output_content:
+            all_keys.update(record.keys())
+        # Add any keys that are not already in the output_headers to the end of the list
+        updated_headers = REQUIRED_OUTPUT_HEADERS + [key for key in all_keys if key not in REQUIRED_OUTPUT_HEADERS]
+        return updated_headers
+
+    def run(self) -> None:
+        Csv(
+            file_path=self.output_file
+        ).create_tsv_from_list_of_dicts(
+            list_of_dicts=self.output_content,
+            header_list=self._create_ordered_header_list()
+        )
+
+
 if __name__ == '__main__':
     args = get_args()
     workspace_name = args.workspace_name
     billing_project = args.billing_project
     data_dictionary_file = args.data_dictionary_file
-    output_file = f"{billing_project}.{workspace_name}.summary_stats.tsv"
+
+    date_string = datetime.now().strftime("%Y%m%d")
+    if data_dictionary_file:
+        data_dict_file_name = os.path.basename(data_dictionary_file).replace(".tsv", "")
+        output_file = f"{data_dict_file_name}.summary_stats.{date_string}.tsv"
+    else:
+        output_file = f"{billing_project}.{workspace_name}.summary_stats.{date_string}.tsv"
 
     # Parse the input data dictionary file
     input_data = ParseInputDataDict(data_dictionary_file).run()
@@ -330,4 +371,4 @@ if __name__ == '__main__':
         actual_workspace_info=full_tables_info
     ).run()
 
-    Csv(file_path=output_file).create_tsv_from_list_of_dicts(output_content, header_list=OUTPUT_HEADERS)
+    CreateOutputTsv(output_file=output_file, output_content=output_content).run()
