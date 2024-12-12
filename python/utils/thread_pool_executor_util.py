@@ -23,7 +23,7 @@ class MultiThreadedJobs:
             Any: The result of the function if it executes successfully, None otherwise.
         """
         retries = 0
-        while retries <= max_retries:
+        while retries < max_retries:
             try:
                 return function(*job_args_list)
             except Exception as e:

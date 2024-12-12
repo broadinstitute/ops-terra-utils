@@ -200,7 +200,10 @@ class GCPCloudFunctions:
                     break
 
         except Exception as e:
-            logging.error(f"Error copying file from {src_cloud_path} to {full_destination_path}: {e}")
+            logging.error(
+                f"Encountered the following error while attempting to copy file from '{src_cloud_path}' to "
+                f"'{full_destination_path}': {e}. If this is a retryable error, it will be re-attempted"
+            )
             raise
 
     def delete_cloud_file(self, full_cloud_path: str) -> None:
