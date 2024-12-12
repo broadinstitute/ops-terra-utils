@@ -53,7 +53,7 @@ task TerraSummaryStatisticsTask {
     >>>
 
     output {
-        File summary_statistics = "~{billing_project}.~{workspace_name}.summary_stats.tsv"
+        File summary_statistics = select_first(glob("*.summary_stats.*.tsv"))
     }
 
     runtime {
