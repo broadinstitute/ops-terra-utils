@@ -6,13 +6,14 @@ import responses
 import responses._recorder
 import git
 
+
 def make_filename(func):
     module = inspect.getmodule(func)
-    
+
     file_path = Path(module.__file__)
     repo = git.Repo(file_path, search_parent_directories=True)
     git_root = repo.git.rev_parse("--show-toplevel")
-    return Path(git_root).joinpath(f"mock_output.yaml")
+    return Path(git_root).joinpath("mock_output.yaml")
 
 
 def activate_responses():
@@ -57,7 +58,7 @@ def mock_responses(activate=False, update_results=False, output_filename=None):
     Usage:
         import requests
         from python.tests.utils.mock_responses import mock_responses
-        
+
 
         class MyTestCase(TestCase):
             @mock_responses(update_results=settings.TESTS_UPDATE_STORED_RESULTS)
