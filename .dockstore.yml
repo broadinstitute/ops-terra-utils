@@ -56,6 +56,13 @@ workflows:
     testParameterFiles:
       - /wdl/HardCloneWorkspace/HardCloneWorkspace.wdl
 
+  - name: HardCloneWithExternalBucket
+    subclass: WDL
+    primaryDescriptorPath: /wdl/HardCloneWithExternalBucket/HardCloneWithExternalBucket.wdl
+    readMePath: /wdl/HardCloneWithExternalBucket/README.md
+    testParameterFiles:
+      - /wdl/HardCloneWithExternalBucket/HardCloneWithExternalBucket.wdl
+
   - name: FileExportAzureTdrToGcp
     subclass: WDL
     primaryDescriptorPath: /wdl/FileExportAzureTdrToGcp/FileExportAzureTdrToGcp.wdl
@@ -98,9 +105,23 @@ workflows:
     testParameterFiles:
       - /wdl/ReUploadGcpObjectWithMd5/ReUploadGcpObjectWithMd5.wdl
 
+  - name: TdrSummaryStatistics
+    subclass: WDL
+    primaryDescriptorPath: /wdl/TdrSummaryStatistics/TdrSummaryStatistics.wdl
+    readMePath: /wdl/TdrSummaryStatistics/README.md
+    testParameterFiles:
+      - /wdl/TdrSummaryStatistics/TdrSummaryStatistics.wdl
+
   - name: RenameColumnsAndFilesInDataset
     subclass: WDL
     primaryDescriptorPath: /wdl/RenameColumnsAndFilesInDataset/RenameColumnsAndFilesInDataset.wdl
     readMePath: /wdl/RenameColumnsAndFilesInDataset/README.md
     testParameterFiles:
       - /wdl/RenameColumnsAndFilesInDataset/RenameColumnsAndFilesInDataset.wdl
+
+  - name: TerraSummaryStatistics
+    subclass: WDL
+    primaryDescriptorPath: /wdl/TerraSummaryStatistics/TerraSummaryStatistics.wdl
+    readMePath: /wdl/TerraSummaryStatistics/README.md
+    testParameterFiles:
+      - /wdl/TerraSummaryStatistics/TerraSummaryStatistics.wdl

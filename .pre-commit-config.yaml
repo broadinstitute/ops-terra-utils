@@ -25,6 +25,7 @@ repos:
             --ignore-missing-imports,
             --python-version=3.11
         ]
+        exclude: "^python/tests/"
         additional_dependencies: [
             "types-requests",
             "types-python-dateutil",

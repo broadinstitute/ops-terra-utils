@@ -23,7 +23,7 @@ class MultiThreadedJobs:
             Any: The result of the function if it executes successfully, None otherwise.
         """
         retries = 0
-        while retries <= max_retries:
+        while retries < max_retries:
             try:
                 return function(*job_args_list)
             except Exception as e:
@@ -58,9 +58,9 @@ class MultiThreadedJobs:
         Returns:
             Optional[list[Any]]: A list of job results if `collect_output` is True, otherwise None.
         """
-        logging.info(f'Attempting to run {function.__name__} for a total of {len(list_of_jobs_args_list)} jobs')
-
         total_jobs = len(list_of_jobs_args_list)
+        logging.info(f'Attempting to run {function.__name__} for a total of {total_jobs} jobs')
+
         completed_jobs = 0
         failed_jobs = 0
         # Initialize job results list if output is expected

@@ -251,20 +251,43 @@ class TDR:
         job_id = response.json()['id']
         MonitorTDRJob(tdr=self, job_id=job_id, check_interval=30, return_json=False).run()
 
-    def get_snapshot_info(self, snapshot_id: str, continue_not_found: bool = False) -> dict:
+    def get_snapshot_info(
+            self,
+            snapshot_id: str,
+            continue_not_found: bool = False,
+            info_to_include: Optional[list[str]] = None
+    ) -> dict:
         """
         Get information about a snapshot.
 
         Args:
             snapshot_id (str): The ID of the snapshot.
             continue_not_found (bool, optional): Whether to accept a 404 response. Defaults to False.
+            info_to_include (Optional[list[str]]): A list of additional information to include. Defaults to None.
+                Options are: SOURCES, TABLES, RELATIONSHIPS, ACCESS_INFORMATION, PROFILE, PROPERTIES, DATA_PROJECT,
+                CREATION_INFORMATION, DUOS
 
         Returns:
             dict: A dictionary containing the snapshot information.
         """
         acceptable_return_code = [404, 403] if continue_not_found else []
-        uri = f"{self.TDR_LINK}/snapshots/{snapshot_id}"
-        response = self.request_util.run_request(uri=uri, method=GET, accept_return_codes=acceptable_return_code)
+        acceptable_include_info = [
+            "SOURCES", "TABLES", "RELATIONSHIPS",
+            "ACCESS_INFORMATION", "PROFILE", "PROPERTIES",
+            "DATA_PROJECT", "CREATION_INFORMATION", "DUOS"
+        ]
+        if info_to_include:
+            if not all(info in acceptable_include_info for info in info_to_include):
+                raise ValueError(f"info_to_include must be a subset of {acceptable_include_info}")
+            include_string = '&include='.join(info_to_include)
+        else:
+            include_string = ""
+        uri = f"{self.TDR_LINK}/snapshots/{snapshot_id}?include={include_string}"
+        response = self.request_util.run_request(
+            uri=uri,
+            method=GET,
+            accept_return_codes=acceptable_return_code
+        )
         if response.status_code == 404:
             logging.warning(f"Snapshot {snapshot_id} not found")
             return {}

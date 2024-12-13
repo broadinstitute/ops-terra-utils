@@ -19,6 +19,7 @@ logging.basicConfig(
 OWNER = "OWNER"
 WRITER = "WRITER"
 READER = "READER"
+NO_ACCESS = "NO ACCESS"
 
 # Define the relative path to the file
 STAGING_WORKSPACE_DESCRIPTION_FILE = "../general_markdown/staging_workspace_description.md"
@@ -250,6 +251,16 @@ class SetUpDataset:
             user=f'{self.auth_group}@firecloud.org',
             policy="custodian"
         )
+
+    def get_sa_for_dataset_to_delete(self) -> Optional[str]:
+        dataset_metadata = self.tdr.check_if_dataset_exists(
+            dataset_name=dataset_name,
+            billing_profile=self.tdr_billing_profile
+        )
+        if dataset_metadata:
+            info = self.tdr.get_dataset_info(dataset_id=dataset_metadata[0]["id"])
+            return info["ingestServiceAccount"]
+        return None
 
     def run(self) -> dict:
         dataset_id = self.tdr.get_or_create_dataset(
@@ -505,8 +516,7 @@ if __name__ == '__main__':
     logging.info("Finished setting up Terra workspace")
     workspace_bucket = f"gs://{terra_workspace.get_workspace_bucket()}"
 
-    # Set up dataset
-    dataset_info = SetUpDataset(
+    dataset_setup = SetUpDataset(
         tdr=tdr,
         dataset_name=dataset_name,
         tdr_billing_profile=tdr_billing_profile,
@@ -518,7 +528,18 @@ if __name__ == '__main__':
         auth_group=auth_group,
         controlled_access=controlled_access,
         delete_existing_dataset=delete_existing_dataset
-    ).run()
+    )
+    if delete_existing_dataset:
+        sa_for_dataset_to_delete = dataset_setup.get_sa_for_dataset_to_delete()
+        if sa_for_dataset_to_delete:
+            logging.info(
+                f"Removing workspace access for service account '{sa_for_dataset_to_delete}' associated with the OLD "
+                f"dataset"
+            )
+            terra_workspace.update_user_acl(email=sa_for_dataset_to_delete, access_level=NO_ACCESS)
+
+    # Set up dataset
+    dataset_info = dataset_setup.run()
 
     data_ingest_sa = dataset_info["ingestServiceAccount"]
     dataset_id = dataset_info["id"]
