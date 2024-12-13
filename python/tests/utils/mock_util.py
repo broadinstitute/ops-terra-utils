@@ -49,7 +49,7 @@ def activate_recorder():
     return outer_decorator
 
 
-def mock_responses(activate=False, update_results=False, output_filename=None):
+def mock_responses(activate=False, update_results=False):
     """Decorator to record then mock requests made with the requests module.
 
     When update_results is True, will store requests to a yaml file. When it
@@ -66,8 +66,12 @@ def mock_responses(activate=False, update_results=False, output_filename=None):
                 request.get("https://example.com)
                 ...
     """
-    if activate:
-        if update_results:
-            return activate_recorder()
+    def conditional_decorator(func):
+        if activate:
+            if update_results:
+                return activate_recorder()
+            else:
+                return activate_responses()
         else:
-            return activate_responses()
+            return func            
+    return conditional_decorator
