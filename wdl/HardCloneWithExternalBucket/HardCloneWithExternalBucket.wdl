@@ -86,8 +86,8 @@ task HardCloneWithExternalBucketTask {
 		~{"--extensions_to_ignore " + extensions_to_ignore} \
 		~{"--batch_size " + batch_size} \
 		~{if metadata_only then "--metadata_only" else ""} \
-		~{if do_not_update_acls then "--do_not_update_acls" else ""}
-		~{if check_and_wait_for_permissions then "--check_and_wait_for_permissions" else ""}
+		~{if do_not_update_acls then "--do_not_update_acls" else ""} \
+		~{if check_and_wait_for_permissions then "--check_and_wait_for_permissions" else ""} \
 		~{"--max_permissions_wait_time " + max_permissions_wait_time} \
 	>>>
 
