@@ -1,0 +1,25 @@
+responses:
+- response:
+    auto_calculate_content_length: false
+    body: '{"catalog":false,"workspaceSubmissionStats":{"runningSubmissionsCount":0},"accessLevel":"OWNER","owners":["jscira@broadinstitute.org"],"workspace":{"attributes":{"description":""},"authorizationDomain":[],"billingAccount":"billingAccounts/006351-1F5067-BF7B50","bucketName":"fc-912e0ea1-de65-4c99-93c0-2b914063ba22","cloudPlatform":"Gcp","createdBy":"jscira@broadinstitute.org","createdDate":"2024-04-26T17:18:03.425Z","googleProject":"terra-e5e03853","googleProjectNumber":"873795997732","isLocked":false,"lastModified":"2024-10-29T20:28:12.501Z","name":"js_test","namespace":"dsp-ops-gp-development-terra","state":"Ready","workflowCollectionName":"912e0ea1-de65-4c99-93c0-2b914063ba22","workspaceId":"912e0ea1-de65-4c99-93c0-2b914063ba22","workspaceType":"rawls","workspaceVersion":"v2"},"canShare":true,"bucketOptions":{"location":"US-CENTRAL1","requesterPays":false},"canCompute":true,"policies":[]}'
+    content_type: text/plain
+    headers:
+      Access-Control-Allow-Headers: authorization,content-type,accept,origin,x-app-id
+      Access-Control-Allow-Methods: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
+      Access-Control-Allow-Origin: '*'
+      Access-Control-Max-Age: '1728000'
+      Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000, h3=":443"; ma=2592000,h3-29=":443";
+        ma=2592000
+      Cache-control: no-store
+      Pragma: no-cache
+      Referrer-Policy: strict-origin-when-cross-origin
+      Strict-Transport-Security: max-age=31536000; includeSubDomains
+      Transfer-Encoding: chunked
+      Vary: Accept-Encoding
+      Via: 1.1 google, 1.1 google
+      X-Content-Type-Options: nosniff
+      X-Frame-Options: SAMEORIGIN
+      X-XSS-Protection: 1; mode=block
+    method: GET
+    status: 200
+    url: https://api.firecloud.org/api/workspaces/dsp-ops-gp-development-terra/js_test

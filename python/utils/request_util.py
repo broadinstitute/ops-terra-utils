@@ -1,6 +1,8 @@
 from typing import Any, Optional
+from python.tests.utils.mock_util import mock_responses
 import requests
 import backoff
+
 
 GET = "GET"
 POST = "POST"
@@ -10,7 +12,7 @@ PUT = "PUT"
 
 
 class RunRequest:
-    def __init__(self, token: Any, max_retries: int = 5, max_backoff_time: int = 5 * 60):
+    def __init__(self, token: Any, max_retries: int = 5, max_backoff_time: int = 5 * 60, create_mocks: bool = False):
         """
         Initialize the RunRequest class.
 
@@ -18,10 +20,13 @@ class RunRequest:
             token (Any): The token used for authentication.
             max_retries (int, optional): The maximum number of retries for a request. Defaults to 5.
             max_backoff_time (int, optional): The maximum backoff time in seconds. Defaults to 5 * 60.
+            create_mocks (bool, optional): Used to capture responses for use with unit tests,
+                outputs to a yaml file. Defaults to False.
         """
         self.max_retries = max_retries
         self.max_backoff_time = max_backoff_time
         self.token = token
+        self.create_mocks = create_mocks
 
     @staticmethod
     def _create_backoff_decorator(max_tries: int, factor: int, max_time: int) -> Any:
@@ -69,6 +74,7 @@ class RunRequest:
         Returns:
             requests.Response: The response from the request.
         """
+
         # Create a custom backoff decorator with the provided parameters
         backoff_decorator = self._create_backoff_decorator(
             max_tries=self.max_retries,
@@ -76,7 +82,8 @@ class RunRequest:
             max_time=self.max_backoff_time
         )
 
-        # Apply the backoff decorator to the actual request execution
+        # Apply decorators to request execution
+        @mock_responses(activate=self.create_mocks, update_results=True)
         @backoff_decorator
         def _make_request() -> requests.Response:
             if method == GET:
