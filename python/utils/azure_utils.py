@@ -6,16 +6,19 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Union
 from urllib.parse import unquote
-
+from azure.core.credentials import AzureSasCredential
 
 class AzureBlobDetails:
     def __init__(self, account_url: str, sas_token: str, container_name: str):
         from azure.storage.blob import BlobServiceClient
         self.account_url = account_url
-        self.sas_token = sas_token
+        self.sas_token_obj = AzureSasCredential(sas_token)
         self.container_name = container_name
         self.blob_service_client = BlobServiceClient(
-            account_url=self.account_url, credential=self.sas_token)
+            account_url=self.account_url, credential=self.sas_token_obj)
+
+    def update_sas_token(self, updated_token: str): 
+        self.sas_token_obj.update(updated_token)
 
     def get_blob_details(self, max_per_page: int = 500) -> list[dict]:
         container_client = self.blob_service_client.get_container_client(
@@ -53,11 +56,22 @@ class AzureBlobDetails:
         return details
 
     def download_blob(self, blob_name: str, dl_path: Path):
+        logging.info(f"Downloading {blob_name} to {dl_path}")
         blob_client = self.blob_service_client.get_blob_client(blob=blob_name, container=self.container_name)
         dl_path.parent.mkdir(parents=True, exist_ok=True)
         with dl_path.open(mode='wb') as file:
             blob_data = blob_client.download_blob()
             file.write(blob_data.readall())
+    
+    def chunk_blob_download(self, blob_name: str, dl_path: Path): 
+        logging.info(f"Downloading {blob_name} to {dl_path}")
+        blob_client = self.blob_service_client.get_blob_client(blob=blob_name, container=self.container_name)
+        dl_path.parent.mkdir(parents=True, exist_ok=True)
+        blob_data = blob_client.download_blob()
+        with dl_path.open(mode='wb') as file:
+            for chunk in blob_data.chunks():
+                file.write(chunk)
+            
 
 
 class SasTokenUtil:

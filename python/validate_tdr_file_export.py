@@ -36,11 +36,15 @@ if __name__ == "__main__":
         # if bucket id passed in with trailing slash remove it
         blob_path = f"{args.bucket_id.removesuffix('/')}{row['path']}"
         target_blob = gcp_storage_client.load_blob_from_full_path(full_path=blob_path)
+        if target_blob.exists():
         # Transform GCP md5 hash to match TDR md5 checksum
-        blob_converted_md5 = binascii.hexlify(base64.urlsafe_b64decode(target_blob.md5_hash)).decode()
-        tdr_md5 = next(checksum['checksum'] for checksum in row['checksums'] if checksum['type'] == 'md5')
-        sizes_match = target_blob.size == int(row['size'])
-
+            blob_converted_md5 = binascii.hexlify(base64.urlsafe_b64decode(target_blob.md5_hash)).decode()
+            tdr_md5 = next(checksum['checksum'] for checksum in row['checksums'] if checksum['type'] == 'md5')
+            sizes_match = target_blob.size == int(row['size'])
+        else: 
+            tdr_md5 = ""
+            sizes_match = ""
+            
         check_dict = {
             "file": row['path'],
             "file_exists_in_gcp": target_blob.exists(),
