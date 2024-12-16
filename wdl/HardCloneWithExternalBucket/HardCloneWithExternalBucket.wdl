@@ -17,6 +17,7 @@ workflow HardCloneWithExternalBucket {
 		String? docker
 		Int? memory_gb
 		Int? batch_size
+		Boolean check_and_wait_for_permissions
 	}
 
 	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -38,7 +39,8 @@ workflow HardCloneWithExternalBucket {
 			memory_gb=memory,
 			batch_size=batch_size,
 			metadata_only=rsync_workspace,
-			do_not_update_acls=do_not_update_acls
+			do_not_update_acls=do_not_update_acls,
+			check_and_wait_for_permissions=check_and_wait_for_permissions
 	}
 
 	if (rsync_workspace) {
@@ -66,6 +68,7 @@ task HardCloneWithExternalBucketTask {
 		Boolean metadata_only
 		Boolean do_not_update_acls
 		Int? batch_size
+		Boolean check_and_wait_for_permissions
 	}
 
 	command <<<
@@ -81,6 +84,7 @@ task HardCloneWithExternalBucketTask {
 		~{"--batch_size " + batch_size} \
 		~{if metadata_only then "--metadata_only" else ""} \
 		~{if do_not_update_acls then "--do_not_update_acls" else ""}
+		~{if check_and_wait_for_permissions then "--check_and_wait_for_permissions" else ""}
 	>>>
 
 	output {
