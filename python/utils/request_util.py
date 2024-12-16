@@ -20,7 +20,8 @@ class RunRequest:
             token (Any): The token used for authentication.
             max_retries (int, optional): The maximum number of retries for a request. Defaults to 5.
             max_backoff_time (int, optional): The maximum backoff time in seconds. Defaults to 5 * 60.
-            create_mocks (bool, optional): Used to capture responses for use with unit tests, outputs to a yaml file. Defaults to False.
+            create_mocks (bool, optional): Used to capture responses for use with unit tests,
+                outputs to a yaml file. Defaults to False.
         """
         self.max_retries = max_retries
         self.max_backoff_time = max_backoff_time

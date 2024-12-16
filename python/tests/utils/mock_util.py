@@ -73,5 +73,5 @@ def mock_responses(activate=False, update_results=False):
             else:
                 return activate_responses()
         else:
-            return func   
+            return func
     return conditional_decorator
