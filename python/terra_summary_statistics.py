@@ -3,6 +3,7 @@ import os.path
 from typing import Any, Tuple, Optional
 from pandas import DataFrame
 import numpy as np
+import re
 from argparse import ArgumentParser, Namespace
 from datetime import datetime
 
@@ -20,12 +21,13 @@ logging.basicConfig(
 INPUT_HEADERS = ["table_name", "column_name"]
 REQUIRED_OUTPUT_HEADERS = [
     "table_name", "column_name", "label", "description", "multiple_values_allowed", "data_type", "primary_key",
-    "refers_to_column", "required", "inferred_multiple_values_allowed", "inferred_data_type",
-    "inferred_primary_key", "inferred_refers_to_column", "inferred_required", "record_count", "null_value_count",
+    "refers_to_column", "required", "allowed_values_list", "allowed_values_pattern",
+    "inferred_multiple_values_allowed", "inferred_data_type",
+    "inferred_primary_key", "inferred_refers_to_column", "record_count", "null_value_count",
     "unique_value_count", "flagged", "notes"
 ]
 
-ALL_FIELDS_NON_REQUIRED = False
+ALL_FIELDS_NON_REQUIRED = True
 FORCE_COLUMNS_TO_STRING = True
 NA = "N/A"
 
@@ -169,14 +171,11 @@ class AddInferredInfo:
                 all_fields_non_required=ALL_FIELDS_NON_REQUIRED,
                 allow_disparate_data_types_in_column=FORCE_COLUMNS_TO_STRING
             ).infer_schema()
-            # Remove the table_contents key from the table_info dictionary
-            del table_info['table_contents']
             # Add the inferred schema to the table_info dictionary
             for inferred_column in inferred_schema['columns']:
                 column_dict = table_info['column_info'][inferred_column['name']]
                 column_dict['inferred_data_type'] = inferred_column['datatype']
                 column_dict['inferred_multiple_values_allowed'] = inferred_column['array_of']
-                column_dict['inferred_required'] = inferred_column['required']
         return self.tables_info
 
 
@@ -210,10 +209,11 @@ class CompareExpectedToActual:
             'inferred_data_type': column_dict['inferred_data_type'],
             'inferred_primary_key': column_dict['primary_key'],
             'inferred_refers_to_column': column_dict.get('linked_column'),
-            'inferred_required': column_dict['inferred_required'],
             'record_count': column_dict['record_count'],
             'null_value_count': column_dict['empty_cells'],
             'unique_value_count': column_dict['distinct_values'],
+            'allowed_values_list': expected_info.get('allowed_values_list'),
+            'allowed_values_pattern': expected_info.get('allowed_values_pattern'),
             'flagged': flagged,
             'notes': notes
         }
@@ -228,6 +228,7 @@ class CompareExpectedToActual:
         # If the expected value is not provided, do not flag it and return an empty note
         if not expected:
             return flagged, ""
+        # If the column is data_type, check if the expected data type is in the expected types
         if column == 'data_type':
             if expected not in INPUT_DT_TO_INFERRED_DTS:
                 note = f"Data type {expected} not in expected types: {list(INPUT_DT_TO_INFERRED_DTS.keys())}"
@@ -244,11 +245,72 @@ class CompareExpectedToActual:
             note = ""
         return flagged, note
 
-    def _validate_column(self, expected_info: dict, actual_column_info: dict) -> Tuple[bool, str]:
-        required_flagged, required_notes = self._compare_values(
-            expected=expected_info.get('required'),
-            actual=actual_column_info['inferred_required'],
-            column='required'
+    @staticmethod
+    def _validate_column_contents(expected_info: dict, actual_column_info: list[Any]) -> Tuple[bool, str]:
+        flagged = False
+        notes = ""
+        allowed_values = expected_info.get('allowed_values_list')
+        if allowed_values:
+            allowed_values_list = [
+                allowed_value.strip()
+                for allowed_value in allowed_values.split(',')
+            ]
+            # Check if any of the actual values are not in the allowed values list
+            if any([value not in allowed_values_list for value in actual_column_info if value]):
+                flagged = True
+                notes = "Column contains values not in allowed value list"
+        allowed_pattern = expected_info.get('allowed_values_pattern')
+        if allowed_pattern:
+            # Check if any of the actual values do not match the allowed pattern
+            if any([not re.search(allowed_pattern, str(value)) for value in actual_column_info if value]):
+                flagged = True
+                if notes:
+                    notes += ", "
+                notes += "Column contains values not matching allowed value pattern"
+        return flagged, notes
+
+    @staticmethod
+    def _check_required(required: Any, null_fields: int) -> Tuple[bool, str]:
+        flagged = False
+        notes = ""
+        if required and null_fields > 0:
+            flagged = True
+            notes = "Column is required but has empty cells"
+        return flagged, notes
+
+    def _check_referenced_column(
+            self, refers_to_column: Optional[str], column_contents: list[Any]
+    ) -> Tuple[bool, str]:
+        flagged = False
+        notes = ""
+        if refers_to_column:
+            table, column = refers_to_column.split('.')
+            if table not in self.actual_workspace_info:
+                flagged = True
+                notes = "Referenced table not found in workspace"
+            elif column not in self.actual_workspace_info[table]['column_info']:
+                flagged = True
+                notes = "Referenced column not found in workspace"
+            else:
+                referenced_column_contents = [
+                    row[column] for row in
+                    self.actual_workspace_info[table]['table_contents']
+                ]
+                if any([value not in referenced_column_contents for value in column_contents if value]):
+                    flagged = True
+                    notes = "Column contains values not in referenced column"
+        return flagged, notes
+
+    def _validate_column(
+            self,
+            column_name: str,
+            expected_info: dict,
+            actual_column_info: dict,
+            table_contents: list[Any]
+    ) -> Tuple[bool, str]:
+        required_flagged, required_notes = self._check_required(
+            required=expected_info.get('required'),
+            null_fields=actual_column_info['empty_cells'],
         )
 
         multiple_values_allowed_flagged, multiple_values_allowed_notes = self._compare_values(
@@ -263,27 +325,43 @@ class CompareExpectedToActual:
             column='primary_key'
         )
 
-        refers_to_column_flagged, refers_to_column_notes = self._compare_values(
-            expected=expected_info.get('refers_to_column'),
-            actual=actual_column_info['linked_column'],
-            column='refers_to_column'
-        )
         data_type_flagged, data_type_notes = self._compare_values(
             # Convert the expected data type to the inferred data type
             expected=expected_info.get('data_type'),
             actual=actual_column_info['inferred_data_type'],
             column='data_type'
         )
+
+        if expected_info.get('allowed_values_list') or expected_info.get('allowed_values_pattern') or \
+                expected_info.get('refers_to_column'):
+            # Only get column contents if need to check allowed values or referenced column
+            column_contents = [row[column_name] for row in table_contents if column_name in row]
+
+            contents_flagged, content_notes = self._validate_column_contents(
+                expected_info=expected_info,
+                actual_column_info=column_contents
+            )
+
+            refers_to_flagged, refers_to_notes = self._check_referenced_column(
+                refers_to_column=expected_info.get('refers_to_column'),
+                column_contents=column_contents
+            )
+        else:
+            contents_flagged = False
+            content_notes = ""
+            refers_to_flagged = False
+            refers_to_notes = ""
+
         flagged = any(
             [
                 data_type_flagged, required_flagged, multiple_values_allowed_flagged,
-                primary_key_flagged, refers_to_column_flagged
+                primary_key_flagged, contents_flagged, refers_to_flagged
             ]
         )
         notes = [
             note for note in [
                 required_notes, multiple_values_allowed_notes, primary_key_notes,
-                refers_to_column_notes, data_type_notes
+                data_type_notes, content_notes, refers_to_notes
             ] if note
         ]
         return flagged, ", ".join(notes)
@@ -300,8 +378,10 @@ class CompareExpectedToActual:
                     notes = "Column not found in input file"
                 else:
                     flagged, notes = self._validate_column(
+                        column_name=column,
                         expected_info=expected_info,
-                        actual_column_info=column_info
+                        actual_column_info=column_info,
+                        table_contents=table_info['table_contents']
                     )
                 output_content.append(
                     self._create_row_dict(

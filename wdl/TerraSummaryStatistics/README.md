@@ -22,7 +22,9 @@ This optional file can be used to provide expected information on the columns in
 - description
 - data_type
 - primary_key
-- refers_to_column
+- refers_to_column - column in another table that this column references
+- allowed_values_pattern - list of acceptable values for column
+- allowed_values_list - regex to match column values against
 - required
 
 You do not need to include every table/column pair from the Terra Workspace.
