@@ -1,4 +1,3 @@
-import json
 import logging
 import os.path
 from typing import Any, Tuple, Optional
@@ -22,7 +21,8 @@ logging.basicConfig(
 INPUT_HEADERS = ["table_name", "column_name"]
 REQUIRED_OUTPUT_HEADERS = [
     "table_name", "column_name", "label", "description", "multiple_values_allowed", "data_type", "primary_key",
-    "refers_to_column", "required", "allowed_values_list", "allowed_values_pattern", "inferred_multiple_values_allowed", "inferred_data_type",
+    "refers_to_column", "required", "allowed_values_list", "allowed_values_pattern",
+    "inferred_multiple_values_allowed", "inferred_data_type",
     "inferred_primary_key", "inferred_refers_to_column", "record_count", "null_value_count",
     "unique_value_count", "flagged", "notes"
 ]
@@ -301,7 +301,13 @@ class CompareExpectedToActual:
                     notes = "Column contains values not in referenced column"
         return flagged, notes
 
-    def _validate_column(self, column_name: str, expected_info: dict, actual_column_info: dict, table_contents: list[Any]) -> Tuple[bool, str]:
+    def _validate_column(
+            self,
+            column_name: str,
+            expected_info: dict,
+            actual_column_info: dict,
+            table_contents: list[Any]
+    ) -> Tuple[bool, str]:
         required_flagged, required_notes = self._check_required(
             required=expected_info.get('required'),
             null_fields=actual_column_info['empty_cells'],
