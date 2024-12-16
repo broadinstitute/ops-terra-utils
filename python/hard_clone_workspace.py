@@ -1,3 +1,6 @@
+import time
+from google.api_core.exceptions import Forbidden, GoogleAPICallError
+from google.cloud import storage
 from typing import Optional
 import logging
 from typing import Any
@@ -16,6 +19,7 @@ logging.basicConfig(
 
 DEST_BUCKET_FILE = "dest_workspace_bucket.txt"
 SOURCE_BUCKET_FILE = "source_workspace_bucket.txt"
+MAX_TIME_TO_CHECK_FOR_PERMISSIONS = 5  # in hours
 
 
 def get_args() -> Namespace:
@@ -41,6 +45,21 @@ def get_args() -> Namespace:
     parser.add_argument('--do_not_update_acls', action="store_true",
                         help="Do not update the destination workspace ACLs with the source workspace ACLs. " +
                              "If you do not have owner access of the source workspace, you should use this flag.")
+    parser.add_argument(
+        "--check_and_wait_for_permissions",
+        action="store_true",
+        help="When used, workflow will check write permissions on destination bucket every 30 minutes for 5 hours"
+             " before exiting. Useful for when permissions were newly added and could take some time to propagate"
+    )
+    parser.add_argument(
+        "--max_permissions_wait_time",
+        type=int,
+        required=False,
+        default=MAX_TIME_TO_CHECK_FOR_PERMISSIONS,
+        help=f"Max time to wait for permissions before exiting. Defaults to {MAX_TIME_TO_CHECK_FOR_PERMISSIONS} hours "
+             f"if not provided. Cannot be more than {MAX_TIME_TO_CHECK_FOR_PERMISSIONS} hours."
+    )
+
     return parser.parse_args()
 
 
@@ -182,6 +201,52 @@ def make_bucket_files(src_bucket: str, dest_bucket: str) -> None:
         f.write(f"gs://{src_bucket}/")
 
 
+def check_and_wait_for_permissions(external_bucket: str, total_hours: int) -> None:
+    """Checks if the account has write permissions for a given bucket. Retries every 30 minutes
+    for a total time of the user provided hours. Cannot wait for more than 5 hours total.
+
+        Args:
+            external_bucket (str): The name of the GCS bucket.
+    """
+    client = storage.Client()
+    bucket = client.bucket(external_bucket)
+    # Temporary file name for testing write permission
+    test_blob_name = "permission_test_file.txt"
+    content = b"This is a test file to check write permissions."
+
+    wait_interval_in_minutes = 30
+    total_retries = int(total_hours * 60 / wait_interval_in_minutes)
+    wait_interval_in_seconds = wait_interval_in_minutes * 60
+
+    for attempt in range(total_retries):
+        attempt_number = attempt + 1
+        try:
+            # Try writing a temporary file to the bucket
+            blob = bucket.blob(test_blob_name)
+            blob.upload_from_string(content)
+            # Clean up the test file
+            blob.delete()
+            logging.info(f"Write permission confirmed on attempt {attempt_number}.")
+            return
+        except Forbidden:
+            logging.error(
+                f"Attempt {attempt_number}: No write permission. Retrying in {wait_interval_in_minutes} minutes..."
+            )
+        except GoogleAPICallError as e:
+            logging.error(
+                f"Attempt {attempt_number}: Error accessing bucket - {e}. Retrying in {wait_interval_in_minutes} "
+                f"minutes..."
+            )
+
+        # Wait before the next retry
+        if attempt < total_retries - 1:
+            time.sleep(wait_interval_in_seconds)
+        else:
+            # Exit after the final attempt
+            logging.error(f"Write permission not detected after {total_hours} hours. Exiting.")
+            raise PermissionError(f"Write permission to bucket '{external_bucket}' could not be confirmed.")
+
+
 if __name__ == '__main__':
     args = get_args()
     source_billing_project = args.source_billing_project
@@ -201,6 +266,17 @@ if __name__ == '__main__':
             raise ValueError("gcp_bucket must start with gs:// and end with /")
         # Remove the gs:// prefix and trailing slash to match what is returned by the Terra API
         external_bucket = external_bucket.replace("gs://", "").rstrip("/")
+        if args.check_and_wait_for_permissions:
+            total_hours = (
+                args.max_permissions_wait_time
+                if args.max_permissions_wait_time <= MAX_TIME_TO_CHECK_FOR_PERMISSIONS
+                else MAX_TIME_TO_CHECK_FOR_PERMISSIONS
+            )
+            logging.info(
+                f"Beginning write-permission check for destination bucket. Will run for a total"
+                f" of {total_hours} hours before exiting."
+            )
+            check_and_wait_for_permissions(external_bucket=external_bucket, total_hours=total_hours)
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
