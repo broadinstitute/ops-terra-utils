@@ -228,7 +228,7 @@ def check_and_wait_for_permissions(external_bucket: str, total_hours: int) -> No
             blob.delete()
             logging.info(f"Write permission confirmed on attempt {attempt_number}.")
             return
-        except Forbidden as e:
+        except Forbidden:
             logging.error(
                 f"Attempt {attempt_number}: No write permission. Retrying in {wait_interval_in_minutes} minutes..."
             )
