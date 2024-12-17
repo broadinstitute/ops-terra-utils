@@ -2,20 +2,27 @@ import os
 import logging
 import base64
 import re
+import subprocess
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Union
 from urllib.parse import unquote
-from azure.core.credentials import AzureSasCredential
+
 
 class AzureBlobDetails:
     def __init__(self, account_url: str, sas_token: str, container_name: str):
         from azure.storage.blob import BlobServiceClient
+        from azure.core.credentials import AzureSasCredential
         self.account_url = account_url
+        self.token_str = sas_token
         self.sas_token_obj = AzureSasCredential(sas_token)
         self.container_name = container_name
         self.blob_service_client = BlobServiceClient(
-            account_url=self.account_url, credential=self.sas_token_obj)
+            account_url=self.account_url,
+            credential=self.sas_token_obj,
+            max_chunk_get_size=1024*1024*64, # 64MB
+            max_concurrency=6
+            )
 
     def update_sas_token(self, updated_token: str): 
         self.sas_token_obj.update(updated_token)
@@ -40,7 +47,7 @@ class AzureBlobDetails:
                     md5_hash = base64.b64encode(props.content_settings.content_md5).decode(
                         'utf-8') if props.content_settings.content_md5 else ""
                     full_path = blob_client.url.replace(
-                        f'?{self.sas_token}', '')
+                        f'?{self.token_str}', '')
                     rel_path = full_path.replace(f"{self.account_url}/{self.container_name}/", '')
                     details.append(
                         {
@@ -71,7 +78,14 @@ class AzureBlobDetails:
         with dl_path.open(mode='wb') as file:
             for chunk in blob_data.chunks():
                 file.write(chunk)
-            
+
+    def dl_blob_with_az_copy(self, blob_path: str, dl_path: str) -> subprocess.CompletedProcess:
+        blob_w_token = f"{blob_path}?{self.token_str}"
+        az_copy_command = ["azcopy", "copy", f"{blob_w_token}",
+                           f"{dl_path}", "--output-type=json"]
+        copy_cmd = subprocess.run(az_copy_command, capture_output=True, timeout=1200)
+        return copy_cmd
+
 
 
 class SasTokenUtil:

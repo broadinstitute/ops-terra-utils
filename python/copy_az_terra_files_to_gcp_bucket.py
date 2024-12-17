@@ -72,21 +72,32 @@ class RunExport():
         token_util = SasTokenUtil(token=self.sas_token)
         tmp_dir = Path(self.temp_dir)
         upload_paths = []
-
+        blob_len = len(blob_list)
+        progress_count = 0
         for blob in blob_list:
             if token_util.seconds_until_token_expires() < 1200:
                 self.sas_token = self.workspace_client.retrieve_sas_token(3000)
             upload_path = self._format_upload_path(blob['relative_path'], export_bucket)
             upload_paths.append(upload_path)
             if not self._blob_exists(upload_path):
-                dl_path = tmp_dir.joinpath(blob['file_name'])
+                blob_name = Path(blob['file_path']).name
+                dl_path = tmp_dir.joinpath(blob_name)
                 blob_client = AzureBlobDetails(account_url=self.workspace_client.account_url,
                                             sas_token=self.sas_token,
                                             container_name=self.workspace_client.storage_container)
-                self.blob_download(blob_client=blob_client, blob_name=blob['relative_path'], dl_path=dl_path)
+                progress_count += 1
+                logging.info(f"Downloading blob {progress_count} of {blob_len}")
+                logging.info(f"Downloading blob {blob_name} to {dl_path}")
+                #self.blob_download(blob_client=blob_client, blob_name=blob['relative_path'], dl_path=dl_path)
+                output = blob_client.dl_blob_with_az_copy(blob_path=blob['file_path'], dl_path=dl_path)
+                logging.info(f"Download output: {output}") 
+                logging.info(f"Uploading {dl_path} to {upload_path}")
                 self.gcp_client.upload_blob(destination_path=upload_path, source_file=dl_path)
                 self._delete_file(dl_path)
-                
+            else: 
+                progress_count += 1
+                logging.info(f"Blob {upload_path} already exists in GCP bucket")
+
 
 class Manifest():
     def __init__(self, export_dict):
@@ -102,7 +113,7 @@ class Manifest():
                 "export_bucket": f"{self.export_dict['gcp_export_bucket']}"
             })
         return manifest_list
-    
+
     def write_manifest(self, output_path):
         manifest_list = self.construct_manifest()
         Csv(file_path=output_path, delimiter=',').create_tsv_from_list_of_dicts(manifest_list)
@@ -113,7 +124,7 @@ if __name__ == "__main__":
     request_util = RunRequest(token)
     gcp_client = GCPCloudFunctions()
 
-    
+
     workspace_client = TerraWorkspace(workspace_name=args.source_workspace,
                             billing_project=args.source_billing_project,
                             request_util=request_util)
@@ -122,8 +133,7 @@ if __name__ == "__main__":
     az_blob_client = AzureBlobDetails(account_url=workspace_client.account_url,
                 sas_token=sas_token,
                 container_name=workspace_client.storage_container)
-    az_blobs = az_blob_client.get_blob_details()
-
+    az_blobs = az_blob_client.get_blob_details(max_per_page=1000)
     export_blobs = []
     for blob in az_blobs:
         if args.azure_source_path:
