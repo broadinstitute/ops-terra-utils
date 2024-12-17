@@ -1,6 +1,6 @@
 import csv
 import logging
-from typing import Optional
+from typing import Optional, Sequence
 
 
 class Csv:
@@ -83,6 +83,17 @@ class Csv:
             reader = csv.DictReader(
                 f, delimiter=self.delimiter, fieldnames=headers_list)
             return [row for row in reader]
+
+    def get_header_order_from_tsv(self) -> Optional[Sequence[str]]:
+        """
+        Get the header order from a TSV file.
+
+        Returns:
+            list[str]: The list of headers in the TSV file.
+        """
+        with open(self.file_path, 'r') as f:
+            reader = csv.DictReader(f, delimiter=self.delimiter, skipinitialspace=True)
+            return reader.fieldnames
 
     def create_list_of_dicts_from_tsv(
             self, expected_headers: Optional[list[str]] = None,
