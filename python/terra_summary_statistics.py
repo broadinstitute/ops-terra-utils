@@ -21,10 +21,9 @@ logging.basicConfig(
 INPUT_HEADERS = ["table_name", "column_name"]
 REQUIRED_OUTPUT_HEADERS = [
     "table_name", "column_name", "label", "description", "multiple_values_allowed", "data_type", "primary_key",
-    "refers_to_column", "required", "allowed_values_list", "allowed_values_pattern",
-    "inferred_multiple_values_allowed", "inferred_data_type",
-    "inferred_primary_key", "inferred_refers_to_column", "record_count", "null_value_count",
-    "unique_value_count", "flagged", "notes"
+    "refers_to_column", "required", "allowed_values_list", "allowed_values_pattern", "inferred_data_type"
+    "inferred_multiple_values_allowed", "record_count", "null_value_count",
+    "unique_value_count", "value_not_in_ref_col_count", "non_allowed_value_count", "flagged", "flag_notes"
 ]
 
 ALL_FIELDS_NON_REQUIRED = True
@@ -193,7 +192,9 @@ class CompareExpectedToActual:
             column_dict: dict,
             expected_info: dict,
             flagged: bool,
-            notes: str
+            flag_notes: str,
+            value_not_in_ref_col_count: int,
+            non_allowed_value_count: int
     ) -> dict:
         base_dict = {
             'table_name': table,
@@ -207,15 +208,15 @@ class CompareExpectedToActual:
             'required': expected_info.get('required'),
             'inferred_multiple_values_allowed': column_dict['inferred_multiple_values_allowed'],
             'inferred_data_type': column_dict['inferred_data_type'],
-            'inferred_primary_key': column_dict['primary_key'],
-            'inferred_refers_to_column': column_dict.get('linked_column'),
             'record_count': column_dict['record_count'],
             'null_value_count': column_dict['empty_cells'],
             'unique_value_count': column_dict['distinct_values'],
             'allowed_values_list': expected_info.get('allowed_values_list'),
             'allowed_values_pattern': expected_info.get('allowed_values_pattern'),
+            'value_not_in_ref_col_count': value_not_in_ref_col_count,
+            'non_allowed_value_count': non_allowed_value_count,
             'flagged': flagged,
-            'notes': notes
+            'flag_notes': flag_notes
         }
         # Add any extra key-value pairs from expected_info
         additional_info = {k: v for k, v in expected_info.items() if k not in base_dict}
@@ -246,9 +247,10 @@ class CompareExpectedToActual:
         return flagged, note
 
     @staticmethod
-    def _validate_column_contents(expected_info: dict, actual_column_info: list[Any]) -> Tuple[bool, str]:
+    def _validate_column_contents(expected_info: dict, actual_column_info: list[Any]) -> Tuple[bool, str, int]:
         flagged = False
-        notes = ""
+        flag_notes = ""
+        non_allowed_value_count = 0
         allowed_values = expected_info.get('allowed_values_list')
         if allowed_values:
             allowed_values_list = [
@@ -256,50 +258,63 @@ class CompareExpectedToActual:
                 for allowed_value in allowed_values.split(',')
             ]
             # Check if any of the actual values are not in the allowed values list
-            if any([value not in allowed_values_list for value in actual_column_info if value]):
+            not_allowed_values = [value for value in actual_column_info if value not in allowed_values_list]
+            if not_allowed_values:
                 flagged = True
-                notes = "Column contains values not in allowed value list"
+                flag_notes = "Column contains values not in allowed value list"
+                # Count the number of values that are not in the allowed values list
+                non_allowed_value_count = len(not_allowed_values)
         allowed_pattern = expected_info.get('allowed_values_pattern')
         if allowed_pattern:
             # Check if any of the actual values do not match the allowed pattern
-            if any([not re.search(allowed_pattern, str(value)) for value in actual_column_info if value]):
+            not_matching_values = [value for value in actual_column_info if not re.search(allowed_pattern, str(value))]
+            if not_matching_values:
                 flagged = True
-                if notes:
-                    notes += ", "
-                notes += "Column contains values not matching allowed value pattern"
-        return flagged, notes
+                if flag_notes:
+                    flag_notes += ", "
+                flag_notes += "Column contains values not matching allowed value pattern"
+                # Count the number of values that do not match the allowed pattern
+                non_allowed_value_count += len(not_matching_values)
+        return flagged, flag_notes, non_allowed_value_count
 
     @staticmethod
     def _check_required(required: Any, null_fields: int) -> Tuple[bool, str]:
         flagged = False
-        notes = ""
+        flag_notes = ""
         if required and null_fields > 0:
             flagged = True
-            notes = "Column is required but has empty cells"
-        return flagged, notes
+            flag_notes = "Column is required but has empty cells"
+        return flagged, flag_notes
 
     def _check_referenced_column(
             self, refers_to_column: Optional[str], column_contents: list[Any]
-    ) -> Tuple[bool, str]:
+    ) -> Tuple[bool, str, int]:
         flagged = False
-        notes = ""
+        flag_notes = ""
+        value_not_in_ref_col_count = 0
         if refers_to_column:
             table, column = refers_to_column.split('.')
             if table not in self.actual_workspace_info:
                 flagged = True
-                notes = "Referenced table not found in workspace"
+                flag_notes = "Referenced table not found in workspace"
+                value_not_in_ref_col_count = len(column_contents)
             elif column not in self.actual_workspace_info[table]['column_info']:
                 flagged = True
-                notes = "Referenced column not found in workspace"
+                flag_notes = "Referenced column not found in workspace"
+                value_not_in_ref_col_count = len(column_contents)
             else:
                 referenced_column_contents = [
                     row[column] for row in
                     self.actual_workspace_info[table]['table_contents']
                 ]
-                if any([value not in referenced_column_contents for value in column_contents if value]):
+                # Check if any of the actual values are not in the referenced column
+                bad_references = [value for value in column_contents if value not in referenced_column_contents]
+                if bad_references:
                     flagged = True
-                    notes = "Column contains values not in referenced column"
-        return flagged, notes
+                    flag_notes = "Column contains values not in referenced column"
+                    value_not_in_ref_col_count = len(bad_references)
+
+        return flagged, flag_notes, value_not_in_ref_col_count
 
     def _validate_column(
             self,
@@ -307,7 +322,7 @@ class CompareExpectedToActual:
             expected_info: dict,
             actual_column_info: dict,
             table_contents: list[Any]
-    ) -> Tuple[bool, str]:
+    ) -> Tuple[bool, str, int, int]:
         required_flagged, required_notes = self._check_required(
             required=expected_info.get('required'),
             null_fields=actual_column_info['empty_cells'],
@@ -337,12 +352,12 @@ class CompareExpectedToActual:
             # Only get column contents if need to check allowed values or referenced column
             column_contents = [row[column_name] for row in table_contents if column_name in row]
 
-            contents_flagged, content_notes = self._validate_column_contents(
+            contents_flagged, content_notes, non_allowed_value_count = self._validate_column_contents(
                 expected_info=expected_info,
                 actual_column_info=column_contents
             )
 
-            refers_to_flagged, refers_to_notes = self._check_referenced_column(
+            refers_to_flagged, refers_to_notes, value_not_in_ref_col_count = self._check_referenced_column(
                 refers_to_column=expected_info.get('refers_to_column'),
                 column_contents=column_contents
             )
@@ -351,6 +366,8 @@ class CompareExpectedToActual:
             content_notes = ""
             refers_to_flagged = False
             refers_to_notes = ""
+            value_not_in_ref_col_count = 0
+            non_allowed_value_count = 0
 
         flagged = any(
             [
@@ -358,13 +375,13 @@ class CompareExpectedToActual:
                 primary_key_flagged, contents_flagged, refers_to_flagged
             ]
         )
-        notes = [
+        flag_notes = [
             note for note in [
                 required_notes, multiple_values_allowed_notes, primary_key_notes,
                 data_type_notes, content_notes, refers_to_notes
             ] if note
         ]
-        return flagged, ", ".join(notes)
+        return flagged, ", ".join(flag_notes), value_not_in_ref_col_count, non_allowed_value_count
 
     def run(self) -> list[dict]:
         output_content = []
@@ -373,11 +390,14 @@ class CompareExpectedToActual:
                 expected_info = self.expected_data.get((table, column), {})
                 label = expected_info.get('label', NA)
                 description = expected_info.get('description', NA)
+                # If the column is not in the expected data, flag it and do not look into the column
                 if not expected_info:
                     flagged = True
-                    notes = "Column not found in input file"
+                    value_not_in_ref_col_count = 0
+                    non_allowed_value_count = 0
+                    flag_notes = "Column not found in input file"
                 else:
-                    flagged, notes = self._validate_column(
+                    flagged, flag_notes, value_not_in_ref_col_count, non_allowed_value_count = self._validate_column(
                         column_name=column,
                         expected_info=expected_info,
                         actual_column_info=column_info,
@@ -392,23 +412,27 @@ class CompareExpectedToActual:
                         column_dict=column_info,
                         flagged=flagged,
                         expected_info=expected_info,
-                        notes=notes
+                        flag_notes=flag_notes,
+                        value_not_in_ref_col_count=value_not_in_ref_col_count,
+                        non_allowed_value_count=non_allowed_value_count
                     )
                 )
         return output_content
 
 
 class CreateOutputTsv:
-    def __init__(self, output_file: str, output_content: list[dict]):
+    def __init__(self, output_file: str, output_content: list[dict], input_headers: list[str] = []):
         self.output_file = output_file
         self.output_content = output_content
+        # If input file is given then get the headers that originally existed to go in front and in that order
+        self.input_headers = input_headers
 
     def _create_ordered_header_list(self) -> list[str]:
         all_keys: set[str] = set()
         for record in self.output_content:
             all_keys.update(record.keys())
         # Add any keys that are not already in the output_headers to the end of the list
-        updated_headers = REQUIRED_OUTPUT_HEADERS + [key for key in all_keys if key not in REQUIRED_OUTPUT_HEADERS]
+        updated_headers = self.input_headers + [key for key in REQUIRED_OUTPUT_HEADERS if key not in self.input_headers]
         return updated_headers
 
     def run(self) -> None:
@@ -430,8 +454,12 @@ if __name__ == '__main__':
     if data_dictionary_file:
         data_dict_file_name = os.path.basename(data_dictionary_file).replace(".tsv", "")
         output_file = f"{data_dict_file_name}.summary_stats.{date_string}.tsv"
+        # Get the headers from the input file to keep the order consistent
+        output_headers = Csv(file_path=data_dictionary_file).get_header_order_from_tsv()
     else:
         output_file = f"{billing_project}.{workspace_name}.summary_stats.{date_string}.tsv"
+        # If no input file then just use the required headers
+        output_headers = []
 
     # Parse the input data dictionary file
     input_data = ParseInputDataDict(data_dictionary_file).run()
