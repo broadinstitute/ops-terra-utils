@@ -161,7 +161,8 @@ def get_args() -> argparse.Namespace:
         help="The path to the bra-mem tar file README file"
     )
 
-    return parser.parse_args()
+    known_args, _ = parser.parse_known_args()
+    return known_args
 
 
 if __name__ == '__main__':
