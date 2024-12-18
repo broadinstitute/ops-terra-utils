@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 from .. import GCP
 
-from ..request_util import GET, POST, PATCH, PUT, DELETE
+from ..requests_utils.request_util import GET, POST, PATCH, PUT, DELETE
 
 TERRA_LINK = "https://api.firecloud.org/api"
 LEONARDO_LINK = "https://leonardo.dsde-prod.broadinstitute.org/api"

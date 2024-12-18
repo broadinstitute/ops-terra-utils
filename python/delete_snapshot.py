@@ -4,7 +4,7 @@ from argparse import ArgumentParser, Namespace
 
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_job_utils import MonitorTDRJob
-from utils.request_util import RunRequest
+from utils.requests_utils.request_util import RunRequest
 from utils.token_util import Token
 from utils import GCP
 from collections import defaultdict

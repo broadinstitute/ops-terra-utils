@@ -7,7 +7,7 @@ from collections import Counter
 from utils.gcp_utils import GCPCloudFunctions
 from utils.token_util import Token
 from utils.tdr_utils.tdr_api_utils import TDR
-from utils.request_util import RunRequest
+from utils.requests_utils.request_util import RunRequest
 from utils import GCP, ARG_DEFAULTS
 
 logging.basicConfig(

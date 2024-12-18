@@ -1,7 +1,7 @@
 import logging
 import requests
 import re
-from utils.request_util import RunRequest
+from utils.requests_utils.request_util import RunRequest
 from utils.token_util import Token
 from utils import GCP, ARG_DEFAULTS
 from argparse import ArgumentParser, Namespace

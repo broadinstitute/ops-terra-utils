@@ -4,7 +4,7 @@ from pathlib import Path
 from utils.azure_utils import AzureBlobDetails, SasTokenUtil
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils.gcp_utils import GCPCloudFunctions
-from utils.request_util import RunRequest
+from utils.requests_utils.request_util import RunRequest
 from utils.token_util import Token
 
 

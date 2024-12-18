@@ -6,7 +6,7 @@ from utils.tdr_utils.renaming_util import GetRowAndFileInfoForReingest, BatchCop
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_ingest_utils import GetPermissionsForWorkspaceIngest
 from utils.token_util import Token
-from utils.request_util import RunRequest
+from utils.requests_utils.request_util import RunRequest
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils import GCP, ARG_DEFAULTS
 
