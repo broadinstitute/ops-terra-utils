@@ -7,7 +7,7 @@ from utils.tdr_utils.tdr_api_utils import TDR
 from utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest
 from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER, ADMIN
 from utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
-from utils.request_util import RunRequest
+from utils.requests_utils.request_util import RunRequest
 from utils.token_util import Token
 from utils.gcp_utils import GCPCloudFunctions
 from utils import GCP, comma_separated_list

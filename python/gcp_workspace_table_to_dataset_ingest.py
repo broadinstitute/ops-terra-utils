@@ -11,7 +11,7 @@ from utils.tdr_utils.tdr_ingest_utils import (
 )
 from utils.tdr_utils.tdr_table_utils import SetUpTDRTables
 from utils.token_util import Token
-from utils.request_util import RunRequest
+from utils.requests_utils.request_util import RunRequest
 
 
 logging.basicConfig(

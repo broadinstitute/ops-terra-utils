@@ -1,5 +1,5 @@
 from typing import Any, Optional
-from python.tests.utils.mock_util import mock_responses
+from .mock_util import mock_responses
 import requests
 import backoff
 
@@ -83,7 +83,7 @@ class RunRequest:
         )
 
         # Apply decorators to request execution
-        @mock_responses(activate=self.create_mocks, update_results=True)
+        @mock_responses(activate=self.create_mocks, update_results=True)  # type: ignore[no-untyped-call]
         @backoff_decorator
         def _make_request() -> requests.Response:
             if method == GET:

@@ -7,7 +7,7 @@ import re
 from argparse import ArgumentParser, Namespace
 from datetime import datetime
 
-from utils.request_util import RunRequest
+from utils.requests_utils.request_util import RunRequest
 from utils.token_util import Token
 from utils import GCP
 from utils.tdr_utils.tdr_schema_utils import InferTDRSchema

@@ -2,7 +2,7 @@ import logging
 import argparse
 from typing import Any
 from utils.terra_utils.terra_util import TerraWorkspace
-from utils.request_util import RunRequest
+from utils.requests_utils.request_util import RunRequest
 from utils.token_util import Token
 from utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
 

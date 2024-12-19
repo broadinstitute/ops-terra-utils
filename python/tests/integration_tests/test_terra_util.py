@@ -4,7 +4,7 @@ import os
 import re
 
 from python.utils import GCP
-from python.utils.request_util import RunRequest
+from python.utils.requests_utils.request_util import RunRequest
 from python.utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER
 from python.utils.terra_utils.terra_workflow_configs import WorkflowConfigs
 from python.utils.token_util import Token
