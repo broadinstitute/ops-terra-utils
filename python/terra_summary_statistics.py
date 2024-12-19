@@ -21,7 +21,7 @@ logging.basicConfig(
 INPUT_HEADERS = ["table_name", "column_name"]
 REQUIRED_OUTPUT_HEADERS = [
     "table_name", "column_name", "label", "description", "multiple_values_allowed", "data_type", "primary_key",
-    "refers_to_column", "required", "allowed_values_list", "allowed_values_pattern", "inferred_data_type"
+    "refers_to_column", "required", "allowed_values_list", "allowed_values_pattern", "inferred_data_type",
     "inferred_multiple_values_allowed", "record_count", "null_value_count",
     "unique_value_count", "value_not_in_ref_col_count", "non_allowed_value_count", "flagged", "flag_notes"
 ]
@@ -455,11 +455,11 @@ if __name__ == '__main__':
         data_dict_file_name = os.path.basename(data_dictionary_file).replace(".tsv", "")
         output_file = f"{data_dict_file_name}.summary_stats.{date_string}.tsv"
         # Get the headers from the input file to keep the order consistent
-        output_headers = Csv(file_path=data_dictionary_file).get_header_order_from_tsv()
+        input_headers = Csv(file_path=data_dictionary_file).get_header_order_from_tsv()
     else:
         output_file = f"{billing_project}.{workspace_name}.summary_stats.{date_string}.tsv"
         # If no input file then just use the required headers
-        output_headers = []
+        input_headers = []
 
     # Parse the input data dictionary file
     input_data = ParseInputDataDict(data_dictionary_file).run()
@@ -479,4 +479,4 @@ if __name__ == '__main__':
         actual_workspace_info=full_tables_info
     ).run()
 
-    CreateOutputTsv(output_file=output_file, output_content=output_content).run()
+    CreateOutputTsv(input_headers=input_headers, output_file=output_file, output_content=output_content).run()
