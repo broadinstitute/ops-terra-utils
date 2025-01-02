@@ -55,8 +55,8 @@ def get_args() -> Namespace:
 
 
 class ParseInputDataDict:
-    def __init__(self, data_dictionary_file: str):
-        self.data_dictionary_file = data_dictionary_file
+    def __init__(self, data_dict_contents: list[dict]):
+        self.data_dict_contents = data_dict_contents
 
     @staticmethod
     def _convert_to_bool(value: str) -> Any:
@@ -70,16 +70,12 @@ class ParseInputDataDict:
             return value
 
     def run(self) -> dict:
-        if not self.data_dictionary_file:
+        if not self.data_dict_contents:
             return {}
-        input_data = Csv(self.data_dictionary_file).create_list_of_dicts_from_tsv(
-            expected_headers=INPUT_HEADERS,
-            allow_extra_headers=True
-        )
         # Create a dictionary with the key being a tuple of table_name and column_name
         return {
             (row['table_name'], row['column_name']): {k: self._convert_to_bool(v) for k, v in row.items()}
-            for row in input_data
+            for row in self.data_dict_contents
         }
 
 
@@ -421,11 +417,18 @@ class CompareExpectedToActual:
 
 
 class CreateOutputTsv:
-    def __init__(self, output_file: str, output_content: list[dict], input_headers: list[str] = []):
+    def __init__(
+            self,
+            output_file: str,
+            output_content: list[dict],
+            input_headers: list[str] = [],
+            row_order: list[tuple[str, str]] = []
+    ):
         self.output_file = output_file
         self.output_content = output_content
         # If input file is given then get the headers that originally existed to go in front and in that order
         self.input_headers = input_headers
+        self.row_order = row_order
 
     def _create_ordered_header_list(self) -> list[str]:
         all_keys: set[str] = set()
@@ -435,11 +438,17 @@ class CreateOutputTsv:
         updated_headers = self.input_headers + [key for key in REQUIRED_OUTPUT_HEADERS if key not in self.input_headers]
         return updated_headers
 
+    def _sort_rows(self, item: dict) -> int:
+        """Sort the output content based on the order of the input file"""
+        item_tuple = (item['table_name'], item['column_name'])
+        # If the tuple is in the order list, return the index of the tuple; otherwise, place it at the end
+        return self.row_order.index(item_tuple) if item_tuple in row_order else len(row_order)
+
     def run(self) -> None:
         Csv(
             file_path=self.output_file
         ).create_tsv_from_list_of_dicts(
-            list_of_dicts=self.output_content,
+            list_of_dicts=sorted(self.output_content, key=self._sort_rows),
             header_list=self._create_ordered_header_list()
         )
 
@@ -456,13 +465,22 @@ if __name__ == '__main__':
         output_file = f"{data_dict_file_name}.summary_stats.{date_string}.tsv"
         # Get the headers from the input file to keep the order consistent
         input_headers = Csv(file_path=data_dictionary_file).get_header_order_from_tsv()
+        # Get the contents of the input file to use as the expected data
+        data_dict_contents = Csv(file_path=data_dictionary_file).create_list_of_dicts_from_tsv(
+            expected_headers=INPUT_HEADERS,
+            allow_extra_headers=True
+        )
+        # Create a list of tuples from input to keep the order consistent later
+        row_order = [(row['table_name'], row['column_name']) for row in data_dict_contents]
     else:
         output_file = f"{billing_project}.{workspace_name}.summary_stats.{date_string}.tsv"
-        # If no input file then just use the required headers
+        # If no input file is given, set the headers, row order, and contents to empty lists
         input_headers = []
+        row_order = []
+        data_dict_contents = []
 
-    # Parse the input data dictionary file
-    input_data = ParseInputDataDict(data_dictionary_file).run()
+    # Parse the input data dictionary contents
+    input_data = ParseInputDataDict(data_dict_contents=data_dict_contents).run()
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -479,4 +497,9 @@ if __name__ == '__main__':
         actual_workspace_info=full_tables_info
     ).run()
 
-    CreateOutputTsv(input_headers=input_headers, output_file=output_file, output_content=output_content).run()
+    CreateOutputTsv(
+        input_headers=input_headers,
+        output_file=output_file,
+        output_content=output_content,
+        row_order=row_order
+    ).run()
