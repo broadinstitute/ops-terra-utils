@@ -299,17 +299,19 @@ class CompareExpectedToActual:
                 flag_notes = "Referenced column not found in workspace"
                 value_not_in_ref_col_count = len(column_contents)
             else:
+                # Get the contents of the referenced column and convert them to strings
+                # for comparison with the actual column contents
                 referenced_column_contents = [
-                    row[column] for row in
+                    str(row[column]) for row in
                     self.actual_workspace_info[table]['table_contents']
                 ]
                 # Check if any of the actual values are not in the referenced column
-                bad_references = [value for value in column_contents if value not in referenced_column_contents]
+                # Convert the values to strings for comparison
+                bad_references = [value for value in column_contents if str(value) not in referenced_column_contents]
                 if bad_references:
                     flagged = True
                     flag_notes = "Column contains values not in referenced column"
                     value_not_in_ref_col_count = len(bad_references)
-
         return flagged, flag_notes, value_not_in_ref_col_count
 
     def _validate_column(
