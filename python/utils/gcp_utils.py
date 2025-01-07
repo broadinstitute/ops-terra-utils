@@ -481,7 +481,7 @@ class GCPCloudFunctions:
 
         blob = self.load_blob_from_full_path(cloud_path)
         # Download the file content as bytes
-        content_bytes = blob.download_as_text()
+        content_bytes = blob.download_as_bytes()
         # Convert bytes to string
         content_str = content_bytes.decode(encoding)
         return content_str

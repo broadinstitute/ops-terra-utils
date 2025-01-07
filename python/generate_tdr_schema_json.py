@@ -88,7 +88,7 @@ if __name__ == '__main__':
         request_util = RunRequest(
             token=token,
             max_retries=ARG_DEFAULTS["max_retries"],
-            max_backoff_time=ARG_DEFAULTS["max_backoff_time"],
+            max_backoff_time=ARG_DEFAULTS["max_backoff_time"],  # ignore type[arg-type]
         )
         terra_workspace = TerraWorkspace(
             billing_project=args.billing_project,
