@@ -16,6 +16,8 @@ workflow HardCloneTerraWorkspace {
 		String? docker
 		Int? memory_gb
 		Int? batch_size
+		Boolean check_and_wait_for_permissions
+		Int? max_permissions_wait_time
 	}
 
 	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -36,7 +38,9 @@ workflow HardCloneTerraWorkspace {
 			memory_gb=memory,
 			batch_size=batch_size,
 			metadata_only=rsync_workspace,
-			do_not_update_acls=do_not_update_acls
+			do_not_update_acls=do_not_update_acls,
+			check_and_wait_for_permissions=check_and_wait_for_permissions,
+			max_permissions_wait_time=max_permissions_wait_time
 	}
 
 	if (rsync_workspace) {
@@ -63,6 +67,8 @@ task HardCloneTerraWorkspaceTask {
 		Boolean metadata_only
 		Boolean do_not_update_acls
 		Int? batch_size
+		Boolean check_and_wait_for_permissions
+		Int? max_permissions_wait_time
 	}
 
 	command <<<
@@ -76,7 +82,9 @@ task HardCloneTerraWorkspaceTask {
 		~{"--extensions_to_ignore " + extensions_to_ignore} \
 		~{"--batch_size " + batch_size} \
 		~{if metadata_only then "--metadata_only" else ""} \
-		~{if do_not_update_acls then "--do_not_update_acls" else ""}
+		~{if do_not_update_acls then "--do_not_update_acls" else ""} \
+		~{if check_and_wait_for_permissions then "--check_and_wait_for_permissions" else ""} \
+		~{"--max_permissions_wait_time " + max_permissions_wait_time}
 	>>>
 
 	output {
