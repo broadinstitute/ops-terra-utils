@@ -33,7 +33,9 @@ class SetUpTDRTables:
             dataset_id (str): The ID of the dataset.
             table_info_dict (dict): A dictionary containing table information.
             all_fields_non_required (bool): A boolean indicating whether all columns are non-required.
-            force_disparate_rows_to_string (bool): A boolean indicating whether to not fail on data type not
+            force_disparate_rows_to_string (bool): A boolean indicating whether disparate rows should be forced to
+                string.
+            ignore_existing_schema_mismatch (bool): A boolean indicating whether to not fail on data type not
                 matching existing schema.
         """
         self.tdr = tdr
