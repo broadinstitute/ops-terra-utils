@@ -107,6 +107,12 @@ def get_args() -> argparse.Namespace:
         help="If used, will attempt to soft-delete all TDR tables in the target dataset that correspond to the Terra "
              "tables that were marked for ingest",
     )
+    parser.add_argument(
+        "--ignore_existing_schema_mismatch",
+        action="store_true",
+        help="If used, will ignore schema mismatch between Terra and existing TDR tables and attempt to ingest anyway "
+             "and force Terra data to match TDR schema",
+    )
 
     return parser.parse_args()
 
@@ -128,6 +134,7 @@ if __name__ == "__main__":
     all_fields_non_required = args.all_fields_non_required
     force_disparate_rows_to_string = args.force_disparate_rows_to_string
     trunc_and_reload = args.trunc_and_reload
+    ignore_existing_schema_mismatch = args.ignore_existing_schema_mismatch
 
     # Initialize the Terra and TDR classes
     token = Token(cloud=CLOUD_TYPE)
@@ -199,6 +206,7 @@ if __name__ == "__main__":
             table_info_dict=table_info_dict,
             all_fields_non_required=all_fields_non_required,
             force_disparate_rows_to_string=force_disparate_rows_to_string,
+            ignore_existing_schema_mismatch=ignore_existing_schema_mismatch
         ).run()
 
         if trunc_and_reload:
@@ -227,6 +235,13 @@ if __name__ == "__main__":
         else:
             file_uuids_dict = None
 
+        # Only use this to make Terra data match what TDR schema is set to if ignore_schema_mismatch is used
+        # This will make it so it will try to force the Terra data to match the existing TDR schema data types
+        if ignore_existing_schema_mismatch:
+            tdr_table_schema_info = tdr.get_table_schema_info(dataset_id=dataset_id, table_name=target_table_name)
+        else:
+            tdr_table_schema_info = None
+
         BatchIngest(
             ingest_metadata=filtered_metrics,
             tdr=tdr,
@@ -239,5 +254,6 @@ if __name__ == "__main__":
             waiting_time_to_poll=ARG_DEFAULTS['waiting_time_to_poll'],
             test_ingest=TEST_INGEST,
             load_tag=f"{billing_project}_{workspace_name}-{dataset_id}",
-            file_to_uuid_dict=file_uuids_dict
+            file_to_uuid_dict=file_uuids_dict,
+            schema_info=tdr_table_schema_info
         ).run()
