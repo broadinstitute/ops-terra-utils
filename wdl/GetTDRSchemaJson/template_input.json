@@ -1,0 +1,6 @@
+{
+    "GetTDRSchemaJson.billing_project": "String",
+    "GetTDRSchemaJson.workspace_name": "String",
+    "GetTDRSchemaJson.terra_table_names": "String",
+    "GetTDRSchemaJson.force_disparate_rows_to_string": "Boolean"
+}
