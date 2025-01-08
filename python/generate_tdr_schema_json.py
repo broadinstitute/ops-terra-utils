@@ -2,10 +2,10 @@ import argparse
 import json
 from pathlib import Path
 
-from python.utils.tdr_utils.tdr_ingest_utils import ConvertTerraTableInfoForIngest
 from utils import GCP, ARG_DEFAULTS, comma_separated_list
 from utils.csv_util import Csv
 from utils.requests_utils.request_util import RunRequest
+from utils.tdr_utils.tdr_ingest_utils import ConvertTerraTableInfoForIngest
 from utils.tdr_utils.tdr_schema_utils import InferTDRSchema
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils.token_util import Token
