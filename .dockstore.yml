@@ -125,3 +125,10 @@ workflows:
     readMePath: /wdl/TerraSummaryStatistics/README.md
     testParameterFiles:
       - /wdl/TerraSummaryStatistics/TerraSummaryStatistics.wdl
+
+  - name: GetTDRSchemaJson
+    subclass: WDL
+    primaryDescriptorPath: /wdl/GetTDRSchemaJson/GetTDRSchemaJson.wdl
+    readMePath: /wdl/GetTDRSchemaJson/README.md
+    testParameterFiles:
+      - /wdl/GetTDRSchemaJson/GetTDRSchemaJson.wdl
