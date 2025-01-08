@@ -2,6 +2,7 @@ import argparse
 import json
 from pathlib import Path
 
+from python.utils.tdr_utils.tdr_ingest_utils import ConvertTerraTableInfoForIngest
 from utils import GCP, ARG_DEFAULTS, comma_separated_list
 from utils.csv_util import Csv
 from utils.requests_utils.request_util import RunRequest
@@ -96,14 +97,14 @@ if __name__ == '__main__':
             request_util=request_util
         )
         for table_name in args.terra_table_names:
-            all_workspace_metadata = terra_workspace.get_gcp_workspace_metrics(
+            table_metadata = terra_workspace.get_gcp_workspace_metrics(
                 entity_type=table_name, remove_dicts=True
             )
-            parsed_metadata = []
-            for i in all_workspace_metadata:
-                sub_dict = i["attributes"]
-                sub_dict[f"{i['entityType']}_id"] = i["name"]
-                parsed_metadata.append(sub_dict)
+            primary_key = [f"{i['entityType']}_id" for i in table_metadata][0]
+
+            parsed_metadata = ConvertTerraTableInfoForIngest(
+                table_metadata=table_metadata, tdr_row_id=primary_key
+            ).run()
 
             schema = InferTDRSchema(
                 input_metadata=parsed_metadata,
