@@ -44,10 +44,10 @@ task ValidateInputs {
     set -euo pipefail
 
     python3 <<CODE
-    tsv = ~{input_metadata_tsv}
-    billing_project = ~{billing_project}
-    workspace_name = ~{workspace_name}
-    terra_table_names = ~{terra_table_names}
+    tsv = "~{input_metadata_tsv}"
+    billing_project = "~{billing_project}"
+    workspace_name = "~{workspace_name}"
+    terra_table_names = "~{terra_table_names}"
 
     terra_params = [billing_project, workspace_name, terra_table_names]
 
