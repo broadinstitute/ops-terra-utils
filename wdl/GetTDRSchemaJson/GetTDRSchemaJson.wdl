@@ -44,28 +44,28 @@ task ValidateInputs {
     set -euo pipefail
 
     python3 <<CODE
-        tsv = ~{input_metadata_tsv}
-        billing_project = ~{billing_project}
-        workspace_name = ~{workspace_name}
-        terra_table_names = ~{terra_table_names}
+    tsv = ~{input_metadata_tsv}
+    billing_project = ~{billing_project}
+    workspace_name = ~{workspace_name}
+    terra_table_names = ~{terra_table_names}
 
-        terra_params = [billing_project, workspace_name, terra_table_names]
+    terra_params = [billing_project, workspace_name, terra_table_names]
 
-        if tsv:
-            if not tsv.startswith("gs://"):
-                raise ValueError("File path must start with 'gs://'")
-            if any(terra_params):
-                raise ValueError(
-                    "If the 'input_metadata_tsv' is provided, none of the terra parameters can also be provided. Please "
-                    "leave 'billing_project', 'workspace_name' and 'terra_table_name' all blank if providing a tsv as input."
-                )
-        elif not tsv and not all(terra_params):
+    if tsv:
+        if not tsv.startswith("gs://"):
+            raise ValueError("File path must start with 'gs://'")
+        if any(terra_params):
             raise ValueError(
-                "If using the Terra workspace table as input, the 'billing_project', 'workspace_name' and "
-                "'terra_table_names' must ALL be provided"
+                "If the 'input_metadata_tsv' is provided, none of the terra parameters can also be provided. Please "
+                "leave 'billing_project', 'workspace_name' and 'terra_table_name' all blank if providing a tsv as input."
             )
-        if (tsv and not any(terra_params)) or (not tsv and all(terra_params)):
-            print("Input parameters validated, continuing")
+    elif not tsv and not all(terra_params):
+        raise ValueError(
+            "If using the Terra workspace table as input, the 'billing_project', 'workspace_name' and "
+            "'terra_table_names' must ALL be provided"
+        )
+    if (tsv and not any(terra_params)) or (not tsv and all(terra_params)):
+        print("Input parameters validated, continuing")
 
     CODE
     >>>
