@@ -96,13 +96,17 @@ if __name__ == '__main__':
             request_util=request_util
         )
         for table_name in args.terra_table_names:
-            metadata = [
-                a["attributes"] for a in terra_workspace.get_gcp_workspace_metrics(
+            all_workspace_metadata = terra_workspace.get_gcp_workspace_metrics(
                     entity_type=table_name, remove_dicts=True
                 )
-            ]
+            parsed_metadata = []
+            for i in all_workspace_metadata:
+                sub_dict = i["attributes"]
+                sub_dict[f"{i['entityType']}_id"] = i["name"]
+                parsed_metadata.append(sub_dict)
+
             schema = InferTDRSchema(
-                input_metadata=metadata,
+                input_metadata=parsed_metadata,
                 table_name=table_name,
                 all_fields_non_required=False,
                 allow_disparate_data_types_in_column=args.force_disparate_rows_to_string,
