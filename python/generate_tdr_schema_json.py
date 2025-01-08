@@ -115,5 +115,5 @@ if __name__ == '__main__':
 
             schema_metadata.append(schema)
 
-    with open(f"schema.json", "w") as schema_json:
+    with open("schema.json", "w") as schema_json:
         schema_json.write(json.dumps(schema_metadata, indent=2))
