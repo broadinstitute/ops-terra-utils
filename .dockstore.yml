@@ -5,21 +5,21 @@ workflows:
     primaryDescriptorPath: /wdl/CopyDataset/CopyDataset.wdl
     readMePath: /wdl/CopyDataset/README.md
     testParameterFiles:
-      - /wdl/CopyDataset.wdl
+      - /wdl/CopyDataset/CopyDataset.wdl
 
   - name: TerraWorkspaceTableToTDRIngest
     subclass: WDL
     primaryDescriptorPath: /wdl/TerraWorkspaceTableIngest/TerraWorkspaceTableIngest.wdl
     readMePath: /wdl/TerraWorkspaceTableIngest/README.md
     testParameterFiles:
-      - /wdl/terraWorkspaceTableIngest.wdl
+      - /wdl/TerraWorkspaceTableIngest/TerraWorkspaceTableIngest.wdl
 
   - name: ExportDataFromSnapshotToOutputBucket
     subclass: WDL
     primaryDescriptorPath: /wdl/ExportDataFromSnapshot/ExportDataFromSnapshot.wdl
     readMePath: /wdl/ExportDataFromSnapshot/README.md
     testParameterFiles:
-      - /wdl/exportDataFromSnapshot.wdl
+      - /wdl/ExportDataFromSnapshot/ExportDataFromSnapshot.wdl
 
   - name: GetAndDeleteOrphanedFilesFromDataset
     subclass: WDL
