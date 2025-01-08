@@ -23,6 +23,7 @@ class SetUpTDRTables:
             table_info_dict: dict,
             all_fields_non_required: bool = False,
             force_disparate_rows_to_string: bool = False,
+            ignore_existing_schema_mismatch: bool = False
     ):
         """
         Initialize the SetUpTDRTables class.
@@ -32,12 +33,17 @@ class SetUpTDRTables:
             dataset_id (str): The ID of the dataset.
             table_info_dict (dict): A dictionary containing table information.
             all_fields_non_required (bool): A boolean indicating whether all columns are non-required.
+            force_disparate_rows_to_string (bool): A boolean indicating whether disparate rows should be forced to
+                string.
+            ignore_existing_schema_mismatch (bool): A boolean indicating whether to not fail on data type not
+                matching existing schema.
         """
         self.tdr = tdr
         self.dataset_id = dataset_id
         self.table_info_dict = table_info_dict
         self.all_fields_non_required = all_fields_non_required
         self.force_disparate_rows_to_string = force_disparate_rows_to_string
+        self.ignore_existing_schema_mismatch = ignore_existing_schema_mismatch
 
     @staticmethod
     def _compare_table(reference_dataset_table: dict, target_dataset_table: list[dict], table_name: str) -> list[dict]:
@@ -66,6 +72,11 @@ class SetUpTDRTables:
                 # Check if column exists but is not set up the same
                 if column_dict != target_dataset_table_dict[column_dict["name"]]:
                     column_dict["action"] = "modify"
+                    logging.warning(
+                        f'Column {column_dict["name"]} in table {table_name} does not match. Expected column info:\n'
+                        f'{json.dumps(column_dict, indent=4)}\nexisting column info:\n'
+                        f'{json.dumps(target_dataset_table_dict[column_dict["name"]], indent=4)}'
+                    )
                     columns_to_update.append(column_dict)
         return columns_to_update
 
@@ -136,10 +147,7 @@ class SetUpTDRTables:
                     # If any updates needed nothing is done for whole ingest
                     valid = False
                     for column_to_update_dict in columns_to_update:
-                        logging.warning(
-                            f"Columns needs updates in {ingest_table_name}: "
-                            f"{json.dumps(column_to_update_dict, indent=4)}"
-                        )
+                        logging.warning(f"Column {column_to_update_dict['name']} needs updates in {ingest_table_name}")
                 else:
                     logging.info(f"Table {ingest_table_name} exists and is up to date")
         if valid:
@@ -156,17 +164,23 @@ class SetUpTDRTables:
                 )
             else:
                 logging.info("All tables in dataset exist and are up to date")
-            # Return schema info for all existing tables after creation
-            data_set_info = self.tdr.get_dataset_info(dataset_id=self.dataset_id, info_to_include=["SCHEMA"])
-            # Return dict with key being table name and value being dict of columns with key being
-            # column name and value being column info
-            return {
-                table_dict["name"]: {
-                    column_dict["name"]: column_dict
-                    for column_dict in table_dict["columns"]
-                }
-                for table_dict in data_set_info["schema"]["tables"]
-            }
         else:
-            logging.error("Tables need manual updating. Exiting")
-            sys.exit(1)
+            logging.warning("Tables do not appear to be valid")
+            if self.ignore_existing_schema_mismatch:
+                logging.warning("Ignoring schema mismatch because ignore_existing_schema_mismatch was used")
+            else:
+                logging.error(
+                    "Tables need manual updating. If want to force through use ignore_existing_schema_mismatch."
+                )
+                sys.exit(1)
+        # Return schema info for all existing tables after creation
+        data_set_info = self.tdr.get_dataset_info(dataset_id=self.dataset_id, info_to_include=["SCHEMA"])
+        # Return dict with key being table name and value being dict of columns with key being
+        # column name and value being column info
+        return {
+            table_dict["name"]: {
+                column_dict["name"]: column_dict
+                for column_dict in table_dict["columns"]
+            }
+            for table_dict in data_set_info["schema"]["tables"]
+        }
