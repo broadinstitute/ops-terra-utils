@@ -97,8 +97,8 @@ if __name__ == '__main__':
         )
         for table_name in args.terra_table_names:
             all_workspace_metadata = terra_workspace.get_gcp_workspace_metrics(
-                    entity_type=table_name, remove_dicts=True
-                )
+                entity_type=table_name, remove_dicts=True
+            )
             parsed_metadata = []
             for i in all_workspace_metadata:
                 sub_dict = i["attributes"]
