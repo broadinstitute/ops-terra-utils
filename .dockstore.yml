@@ -126,7 +126,7 @@ workflows:
     testParameterFiles:
       - /wdl/TerraSummaryStatistics/TerraSummaryStatistics.wdl
 
-  - name: GetTDRSchemaJson
+  - name: GetTdrSchemaJson
     subclass: WDL
     primaryDescriptorPath: /wdl/GetTDRSchemaJson/GetTDRSchemaJson.wdl
     readMePath: /wdl/GetTDRSchemaJson/README.md
