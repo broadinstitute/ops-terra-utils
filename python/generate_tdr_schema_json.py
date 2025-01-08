@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from utils import GCP, ARG_DEFAULTS, comma_separated_list
-from utils.gcp_utils import GCPCloudFunctions
+from utils.csv_util import Csv
 from utils.requests_utils.request_util import RunRequest
 from utils.tdr_utils.tdr_schema_utils import InferTDRSchema
 from utils.terra_utils.terra_util import TerraWorkspace
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     schema_metadata = []
 
     if args.input_tsv:
-        metadata = GCPCloudFunctions().read_tsv_as_list_of_dictionaries(cloud_path=args.input_tsv)
+        metadata = Csv(file_path=args.input_tsv).create_list_of_dicts_from_tsv()
         schema = InferTDRSchema(
             input_metadata=metadata,
             table_name=Path(args.input_tsv).stem,
