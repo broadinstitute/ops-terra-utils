@@ -3,7 +3,6 @@ import logging
 import io
 import hashlib
 import base64
-import csv
 from humanfriendly import format_size, parse_size
 from mimetypes import guess_type
 from typing import Optional, Any
@@ -457,15 +456,6 @@ class GCPCloudFunctions:
             collect_output=False,
             jobs_complete_for_logging=jobs_complete_for_logging
         )
-
-    def read_tsv_as_list_of_dictionaries(self, cloud_path: str, encoding: str = "utf-8") -> list:
-        blob = self.load_blob_from_full_path(cloud_path)
-        contents = []
-        with blob.open("r", encoding=encoding) as f:
-            reader = csv.DictReader(f, delimiter="\t")
-            for row in reader:
-                contents.append(row)
-        return contents
 
     def read_file(self, cloud_path: str, encoding: str = 'utf-8') -> str:
         """
