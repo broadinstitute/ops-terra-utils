@@ -128,7 +128,7 @@ workflows:
 
   - name: GetTdrSchemaJson
     subclass: WDL
-    primaryDescriptorPath: /wdl/GetTDRSchemaJson/GetTDRSchemaJson.wdl
-    readMePath: /wdl/GetTDRSchemaJson/README.md
+    primaryDescriptorPath: /wdl/GetTdrSchemaJson/GetTdrSchemaJson.wdl
+    readMePath: /wdl/GetTdrSchemaJson/README.md
     testParameterFiles:
-      - /wdl/GetTDRSchemaJson/GetTDRSchemaJson.wdl
+      - /wdl/GetTdrSchemaJson/GetTdrSchemaJson.wdl
