@@ -40,8 +40,6 @@ def get_args() -> Namespace:
     parser.add_argument('--batch_size', "-b", type=int,
                         help="Number of files validate and copy at a time. If not specified, "
                              "all files will be copied at once")
-    parser.add_argument('--metadata_only', "-m", action="store_true",
-                        help="Only copy metadata, no actual file copy")
     parser.add_argument('--do_not_update_acls', action="store_true",
                         help="Do not update the destination workspace ACLs with the source workspace ACLs. " +
                              "If you do not have owner access of the source workspace, you should use this flag.")
@@ -191,16 +189,6 @@ class UpdateWorkspaceAcls:
         self.dest_workspace.update_multiple_users_acl(acl_list=src_workspace_acls_list)
 
 
-def make_bucket_files(src_bucket: str, dest_bucket: str) -> None:
-    logging.info(f"Creating {DEST_BUCKET_FILE}")
-    with open(DEST_BUCKET_FILE, "w") as f:
-        f.write(f"gs://{dest_bucket}/")
-
-    logging.info(f"Creating {SOURCE_BUCKET_FILE}")
-    with open(SOURCE_BUCKET_FILE, "w") as f:
-        f.write(f"gs://{src_bucket}/")
-
-
 def check_and_wait_for_permissions(external_bucket: str, total_hours: int) -> None:
     """Checks if the account has write permissions for a given bucket. Retries every 30 minutes
     for a total time of the user provided hours. Cannot wait for more than 5 hours total.
@@ -257,7 +245,6 @@ if __name__ == '__main__':
     workers = args.workers
     extensions_to_ignore = args.extensions_to_ignore
     batch_size = args.batch_size
-    metadata_only = args.metadata_only
     do_not_update_acls = args.do_not_update_acls
     external_bucket = args.external_bucket
 
@@ -335,18 +322,14 @@ if __name__ == '__main__':
         logging.info(f"Uploading {tsv} to destination workspace")
         dest_workspace.upload_metadata_to_workspace_table(entities_tsv=tsv)
 
-    if not metadata_only:
-        # Copy files from source workspace to destination workspace
-        CopyFilesToDestWorkspace(
-            src_bucket=src_bucket,
-            dest_bucket=dest_bucket,
-            extensions_to_ignore=extensions_to_ignore,
-            workers=workers,
-            batch_size=batch_size
-        ).run()
-
-    # This is just done for the wdl to run rsync
-    make_bucket_files(src_bucket, dest_bucket)
+    # Copy files from source workspace to destination workspace
+    CopyFilesToDestWorkspace(
+        src_bucket=src_bucket,
+        dest_bucket=dest_bucket,
+        extensions_to_ignore=extensions_to_ignore,
+        workers=workers,
+        batch_size=batch_size
+    ).run()
 
     # Set the destination workspace ACLs
     if not do_not_update_acls:

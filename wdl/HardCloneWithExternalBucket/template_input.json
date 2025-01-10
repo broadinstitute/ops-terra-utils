@@ -5,6 +5,5 @@
     "HardCloneWithExternalBucket.dest_workspace_name": "String",
     "HardCloneWithExternalBucket.allow_already_created": "Boolean",
     "HardCloneWithExternalBucket.external_bucket": "String",
-    "HardCloneWithExternalBucket.rsync": "Boolean",
     "HardCloneWithExternalBucket.check_and_wait_for_permissions": "Boolean"
 }
