@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+from crypt import methods
 from typing import Any, Optional
 from urllib.parse import urlparse
 
@@ -12,9 +13,30 @@ TERRA_LINK = "https://api.firecloud.org/api"
 LEONARDO_LINK = "https://leonardo.dsde-prod.broadinstitute.org/api"
 WORKSPACE_LINK = "https://workspace.dsde-prod.broadinstitute.org/api/workspaces/v1"
 SAM_LINK = "https://sam.dsde-prod.broadinstitute.org/api"
+RAWLS_LINK = "https://rawls.dsde-prod.broadinstitute.org/api"
 
 MEMBER = "member"
 ADMIN = "admin"
+
+
+class Terra:
+    def __init__(self, request_util: Any):
+        """
+        Initialize the Terra class.
+
+        Args:
+            request_util (Any): An instance of a request utility class to handle HTTP requests.
+        """
+        self.request_util = request_util
+
+    def fetch_accessible_workspaces(self, fields: Optional[list[str]]) -> list[dict]:
+        fields_str = "fields=" + ",".join(fields) if fields else ""
+        url = f'{RAWLS_LINK}/workspaces?{fields_str}'
+        response = self.request_util.run_request(
+            uri=url,
+            method=GET
+        )
+        return response.json()
 
 
 class TerraGroups:
@@ -720,3 +742,16 @@ class TerraWorkspace:
                 f"Did not remove user from workspace with id '{workspace_id}' as current user does not have direct"
                 f"access to the workspace (they could be an owner on the billing project)"
             )
+
+    def make_workspace_public(self) -> None:
+        """
+        Make a workspace public.
+        """
+        workspace_bucket = self.get_workspace_bucket()
+        bucket_prefix_stripped = workspace_bucket.removeprefix("fc-secure-").removeprefix("fc-")
+        self.request_util(
+            uri=f"{SAM_LINK}/resources/v2/workspace/{bucket_prefix_stripped}/policies/reader/public",
+            method=PUT,
+            content_type="application/json",
+            data="true"
+        )
