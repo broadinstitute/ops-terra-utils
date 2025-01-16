@@ -742,15 +742,27 @@ class TerraWorkspace:
                 f"access to the workspace (they could be an owner on the billing project)"
             )
 
-    def make_workspace_public(self) -> None:
+    def change_workspace_public_setting(self, public: bool) -> None:
         """
         Make a workspace public.
         """
         workspace_bucket = self.get_workspace_bucket()
         bucket_prefix_stripped = workspace_bucket.removeprefix("fc-secure-").removeprefix("fc-")
-        self.request_util(
+        self.request_util.run_request(
             uri=f"{SAM_LINK}/resources/v2/workspace/{bucket_prefix_stripped}/policies/reader/public",
             method=PUT,
             content_type="application/json",
-            data="true"
+            data="true" if public else "false"
         )
+
+    def check_workspace_public(self, bucket: Optional[str] = None) -> bool:
+        """
+        Check if a workspace is public.
+        """
+        workspace_bucket = bucket if bucket else self.get_workspace_bucket()
+        bucket_prefix_stripped = workspace_bucket.removeprefix("fc-secure-").removeprefix("fc-")
+        response = self.request_util.run_request(
+            uri=f"{SAM_LINK}/resources/v2/workspace/{bucket_prefix_stripped}/policies/reader/public",
+            method=GET
+        )
+        return response.json()
