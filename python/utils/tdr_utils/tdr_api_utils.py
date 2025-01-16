@@ -176,7 +176,7 @@ class TDR:
             self,
             file_ids: list[str],
             dataset_id: str,
-            batch_size_to_delete_files: int = 100,
+            batch_size_to_delete_files: int = 250,
             check_interval: int = 15) -> None:
         """
         Delete multiple files from a dataset in batches and monitor delete jobs until completion for each batch.

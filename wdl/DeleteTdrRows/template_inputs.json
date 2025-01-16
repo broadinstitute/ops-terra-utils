@@ -1,0 +1,8 @@
+{
+    "DeleteTdrRows.dataset_id": "String",
+    "DeleteTdrRows.tdr_table_name": "String",
+    "DeleteTdrRows.id_column_name": "String",
+    "DeleteTdrRows.delete_files": "Boolean",
+    "DeleteTdrRows.ids_to_delete": "List",
+    "DeleteTdrRows.docker": "String"
+}
