@@ -560,3 +560,50 @@ class GCPCloudFunctions:
             raise Exception(f"{onprem_src_path} does not exist or user does not have permission to it")
         dest_blob = self.load_blob_from_full_path(cloud_dest_path)
         dest_blob.upload_from_filename(onprem_src_path)
+
+    def write_to_gcs(self, cloud_path: str, content: str) -> None:
+        """
+        Write content to a file in GCS.
+
+        Args:
+            cloud_path (str): The GCS path of the file to write.
+            content (str): The content to write.
+        """
+        blob = self.load_blob_from_full_path(cloud_path)
+        blob.upload_from_string(content)
+        logging.info(f"Successfully wrote content to {cloud_path}")
+
+    def set_acl_public_read(self, cloud_path: str) -> None:
+        """
+        Set the file in the bucket to be publicly readable.
+
+        Args:
+            cloud_path (str): The GCS path of the file.
+        """
+        blob = self.load_blob_from_full_path(cloud_path)
+        blob.acl.all().grant_read()
+        blob.acl.save()
+
+    def set_acl_group_owner(self, cloud_path: str, group_email: str) -> None:
+        """
+        Set the file in the bucket to grant OWNER permission to a specific group.
+
+        Args:
+            cloud_path (str): The GCS path of the file.
+            group_email (str): The email of the group to grant OWNER permission
+        """
+        blob = self.load_blob_from_full_path(cloud_path)
+        blob.acl.group(group_email).grant_owner()
+        blob.acl.save()
+
+    def set_metadata_cache_control(self, cloud_path: str, cache_control: str) -> None:
+        """
+        Set Cache-Control metadata for a file.
+
+        Args:
+            cloud_path (str): The GCS path of the file.
+            cache_control (str): The Cache-Control metadata to set.
+        """
+        blob = self.load_blob_from_full_path(cloud_path)
+        blob.cache_control = cache_control
+        blob.patch()
