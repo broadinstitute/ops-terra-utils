@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-from crypt import methods
 from typing import Any, Optional
 from urllib.parse import urlparse
 

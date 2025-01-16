@@ -1,10 +1,7 @@
 import logging
 import os.path
-import sys
 from argparse import ArgumentParser, Namespace
 from urllib.request import urlopen
-
-from responses import options
 
 from utils.token_util import Token
 from utils.requests_utils.request_util import RunRequest
@@ -98,7 +95,7 @@ class ShowcaseContent:
                 "workspace.attributes.tag:tags"
             ]
         )
-        return [workspace for workspace in workspaces if workspace["public"] == True]
+        return [workspace for workspace in workspaces if workspace["public"]]
 
     @staticmethod
     def _get_showcase_data(workspace: dict) -> dict:
