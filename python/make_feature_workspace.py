@@ -1,6 +1,5 @@
 import logging
 import os.path
-import sys
 from argparse import ArgumentParser, Namespace
 from urllib.request import urlopen
 
