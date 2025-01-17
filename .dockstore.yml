@@ -132,3 +132,10 @@ workflows:
     readMePath: /wdl/GetTdrSchemaJson/README.md
     testParameterFiles:
       - /wdl/GetTdrSchemaJson/GetTdrSchemaJson.wdl
+
+  - name: DeleteTdrRows
+    subclass: WDL
+    primaryDescriptorPath: /wdl/DeleteTdrRows/DeleteTdrRows.wdl
+    readMePath: /wdl/DeleteTdrRows/README.md
+    testParameterFiles:
+      - /wdl/DeleteTdrRows/DeleteTdrRows.wdl
