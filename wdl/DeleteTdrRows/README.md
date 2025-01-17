@@ -1,7 +1,7 @@
 # WDL Input Overview
 This WDl will delete rows from a table in a TDR. You can specify the table and the rows to delete. Optionally can delete files linked to the rows.
 
-If data / files are being deleted are STILL part of active snapshot you will run into issues. Make sure to delete the snapshots first.
+If data / files being deleted are STILL part of active snapshot you will run into issues. Make sure to delete the snapshots first.
 
 ## Inputs Table:
 | Input Name               | Description                                                       | Type          | Required | Default                                                                                       |
