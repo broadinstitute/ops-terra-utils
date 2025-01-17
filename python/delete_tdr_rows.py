@@ -1,4 +1,3 @@
-import json
 from argparse import ArgumentParser, Namespace
 
 from utils import GCP
