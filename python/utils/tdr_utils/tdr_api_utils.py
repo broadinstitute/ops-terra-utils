@@ -7,7 +7,8 @@ from typing import Any, Optional, Union
 from urllib.parse import unquote
 from pydantic import ValidationError
 
-from ..requests_utils.request_util import GET, POST, DELETE
+from ..token_util import Token
+from ..requests_utils.request_util import GET, POST, DELETE, RunRequest
 from ..tdr_api_schema.create_dataset_schema import CreateDatasetSchema
 from ..tdr_api_schema.update_dataset_schema import UpdateSchema
 from .tdr_job_utils import MonitorTDRJob, SubmitAndMonitorMultipleJobs
@@ -24,14 +25,26 @@ class TDR:
     """
     TDR_LINK = "https://data.terra.bio/api/repository/v1"
 
-    def __init__(self, request_util: Any):
+    def __init__(self, auth_method: str):
         """
         Initialize the TDR class.
 
         Args:
             request_util (Any): Utility for making HTTP requests.
         """
-        self.request_util = request_util
+        #self.request_util = request_util
+        self.request_util = self._set_request_client(auth_method)
+
+    def _set_request_client(self, auth_method):
+        match auth_method.lower():
+            case "gcp":
+                token =  Token(cloud='gcp')
+                return RunRequest(token=token)
+            case "azure":
+                token = Token(cloud='azure')
+                return RunRequest(token=token)
+            case _:
+                raise ValueError(f"Auth method {auth_method} not supported. Must be 'gcp' or 'azure'")
 
     def get_data_set_files(
             self,
@@ -176,7 +189,7 @@ class TDR:
             self,
             file_ids: list[str],
             dataset_id: str,
-            batch_size_to_delete_files: int = 250,
+            batch_size_to_delete_files: int = 100,
             check_interval: int = 15) -> None:
         """
         Delete multiple files from a dataset in batches and monitor delete jobs until completion for each batch.
