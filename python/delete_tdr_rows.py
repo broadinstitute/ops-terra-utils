@@ -1,3 +1,4 @@
+import json
 from argparse import ArgumentParser, Namespace
 
 from utils import GCP
@@ -39,7 +40,7 @@ class GetRowAndFileInfo:
         table_schema = self.tdr.get_table_schema_info(dataset_id=self.dataset_id, table_name=self.table_name)
         return [col['name'] for col in table_schema['columns'] if col['datatype'] == 'fileref']
 
-    def _log_rows_found_info(self, found_row_ids: list[str], file_uuids: list[str]) -> None:
+    def _log_rows_found_info(self, found_row_ids: list[str], file_uuids: set[str]) -> None:
         logging.info(f"Found {len(found_row_ids)} rows to delete")
         not_found_ids = set(self.ids_to_delete) - set(found_row_ids)
         if not_found_ids:
@@ -48,12 +49,12 @@ class GetRowAndFileInfo:
             )
         logging.info(f"Found {len(file_uuids)} files linked to the rows to delete")
 
-    def run(self) -> tuple[list[str], list[str]]:
+    def run(self) -> tuple[list[str], set[str]]:
         table_metrics = tdr.get_dataset_table_metrics(dataset_id=dataset_id, target_table_name=table_name)
         # tdr_row_ids to be deleted
         tdr_row_ids = []
         # file uuids to be deleted later if options used
-        file_uuids = []
+        file_uuids = set()
         # Used to log the ids that were not found
         found_row_ids = []
 
@@ -67,7 +68,11 @@ class GetRowAndFileInfo:
                 tdr_row_id = row['datarepo_row_id']
                 # If the column is a fileref, store the file_uuid
                 if column in file_ref_columns:
-                    row_file_uuids.append(row[column])
+                    # If the column is a list, store all the file_uuids
+                    if isinstance(row[column], list):
+                        row_file_uuids.extend(row[column])
+                    else:
+                        row_file_uuids.append(row[column])
                 # If the column is the id column, check if the id is in the ids_to_delete_file
                 if column == self.id_column_name:
                     if row[column] in self.ids_to_delete:
@@ -75,7 +80,7 @@ class GetRowAndFileInfo:
                         store = True
             # If the row is to be deleted, store the file_uuids and tdr_row_id
             if store:
-                file_uuids.extend(row_file_uuids)
+                file_uuids.update(row_file_uuids)
                 tdr_row_ids.append(tdr_row_id)
         self._log_rows_found_info(found_row_ids, file_uuids)
         return tdr_row_ids, file_uuids
@@ -111,7 +116,7 @@ if __name__ == '__main__':
         if delete_files:
             if file_uuids:
                 tdr.delete_files(
-                    file_ids=file_uuids,
+                    file_ids=list(file_uuids),
                     dataset_id=dataset_id
                 )
             else:
