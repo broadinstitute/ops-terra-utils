@@ -10,7 +10,8 @@ from utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflo
 from utils.requests_utils.request_util import RunRequest
 from utils.token_util import Token
 from utils.gcp_utils import GCPCloudFunctions
-from utils import GCP, comma_separated_list
+from utils import GCP, comma_separated_list, ARG_DEFAULTS
+
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -88,6 +89,13 @@ def get_args() -> Namespace:
         action="store_true",
         help="If dataset already exists, delete it before creating a new one",
     )
+    parser.add_argument(
+        "--workspace_version",
+        help="The version of the workspace. This should be used when more data needs to be "
+             "uploaded to a dataset, but it's not ready to be made public yet.",
+        required=False,
+        type=int,
+    )
     return parser.parse_args()
 
 
@@ -100,7 +108,8 @@ class SetUpTerraWorkspace:
             continue_if_exists: bool,
             controlled_access: bool,
             resource_owners: list[str],
-            resource_members: Optional[list[str]]
+            resource_members: Optional[list[str]],
+            workspace_version: Optional[int],
     ):
         self.terra_workspace = terra_workspace
         self.terra_groups = terra_groups
@@ -109,10 +118,12 @@ class SetUpTerraWorkspace:
         self.controlled_access = controlled_access
         self.resource_owners = resource_owners
         self.resource_members = resource_members
+        self.workspace_version = workspace_version
 
     def _set_up_access_group(self) -> None:
         logging.info(f"Creating group {self.auth_group}")
-        self.terra_groups.create_group(group_name=self.auth_group, continue_if_exists=self.continue_if_exists)
+        continue_if_exists = True if self.workspace_version else self.continue_if_exists
+        self.terra_groups.create_group(group_name=self.auth_group, continue_if_exists=continue_if_exists)
         for user in self.resource_owners:
             self.terra_groups.add_user_to_group(email=user, group=self.auth_group, role=ADMIN)
         if self.resource_members:
@@ -199,7 +210,8 @@ class SetUpDataset:
             controlled_access: bool,
             terra_billing_project: str,
             delete_existing_dataset: bool,
-            phs_id: Optional[str] = None
+            workspace_version: Optional[int],
+            phs_id: Optional[str] = None,
     ):
         self.tdr = tdr
         self.dataset_name = dataset_name
@@ -212,6 +224,7 @@ class SetUpDataset:
         self.auth_group = auth_group
         self.delete_existing_dataset = delete_existing_dataset
         self.controlled_access = controlled_access
+        self.workspace_version = workspace_version
 
     def _create_dataset_properties(self) -> dict:
         additional_properties = {
@@ -225,17 +238,32 @@ class SetUpDataset:
         return additional_properties
 
     def _add_row_to_table(self, dataset_id: str) -> None:
+        ingest_records = [
+            {
+                "key": "Staging Workspace",
+                "value": f"{self.terra_billing_project}/{self.workspace_name}"
+            },
+            {
+                "key": "Authorization Group",
+                "value": self.auth_group
+            }
+        ]
+        if workspace_version:
+            ingest_records.append(
+                {
+                    "key": f"Staging Workspace Version {self.workspace_version}",
+                    "value": f"{self.terra_billing_project}/{self.workspace_name}"
+                }
+            )
+
         StartAndMonitorIngest(
-            ingest_records=[
-                {"key": "Staging Workspace", "value": f'{self.terra_billing_project}/{self.workspace_name}'},
-                {"key": "Authorization Group", "value": self.auth_group}
-            ],
+            ingest_records=ingest_records,
             target_table_name=self.REFERENCE_TABLE,
             dataset_id=dataset_id,
             load_tag=f"{dataset_name}_initial_load",
             bulk_mode=False,
             update_strategy="replace",
-            waiting_time_to_poll=15,
+            waiting_time_to_poll=ARG_DEFAULTS["waiting_time_to_poll"],
             tdr=self.tdr,
         ).run()
 
@@ -308,7 +336,7 @@ class RemoveAllIndividualAccess:
         self.terra_groups.remove_user_from_group(
             group=self.auth_group,
             email=self.current_user_email,
-            role="admin"
+            role=ADMIN
         )
 
 
@@ -481,6 +509,7 @@ if __name__ == '__main__':
     wdls_to_import = args.wdls_to_import
     notebooks_to_import = args.notebooks_to_import
     delete_existing_dataset = args.delete_existing_dataset
+    workspace_version = args.workspace_version if args.workspace_version and args.workspace_version > 1 else None
 
     # Validate wdls to import are valid and exclude any that are not
     if wdls_to_import:
@@ -489,7 +518,9 @@ if __name__ == '__main__':
             if wdl in GetWorkflowNames().get_workflow_names()
         ]
 
-    workspace_name = f"{dataset_name}_Staging"
+    workspace_name = (
+        f"{dataset_name}_Staging_v{workspace_version}" if workspace_version else f"{dataset_name}_Staging"
+    )
     auth_group = f"AUTH_{dataset_name}"
 
     # Set up Terra, TerraGroups, and TDR classes
@@ -511,7 +542,8 @@ if __name__ == '__main__':
         continue_if_exists=continue_if_exists,
         controlled_access=controlled_access,
         resource_owners=resource_owners,
-        resource_members=resource_members
+        resource_members=resource_members,
+        workspace_version=workspace_version,
     ).run()
     logging.info("Finished setting up Terra workspace")
     workspace_bucket = f"gs://{terra_workspace.get_workspace_bucket()}"
@@ -521,13 +553,14 @@ if __name__ == '__main__':
         dataset_name=dataset_name,
         tdr_billing_profile=tdr_billing_profile,
         phs_id=phs_id,
-        continue_if_exists=continue_if_exists,
+        continue_if_exists=True if workspace_version else continue_if_exists,
         terra_billing_project=terra_billing_project,
         workspace_name=workspace_name,
         resource_owners=resource_owners,
         auth_group=auth_group,
         controlled_access=controlled_access,
-        delete_existing_dataset=delete_existing_dataset
+        delete_existing_dataset=delete_existing_dataset,
+        workspace_version=workspace_version,
     )
     if delete_existing_dataset:
         sa_for_dataset_to_delete = dataset_setup.get_sa_for_dataset_to_delete()

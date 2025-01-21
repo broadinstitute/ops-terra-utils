@@ -17,6 +17,7 @@ workflow SetUpStagingWorkspaceAndDataset {
         String? wdls_to_import
         String? notebooks_to_import
         String? docker
+        Int? workspace_version
     }
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -37,7 +38,8 @@ workflow SetUpStagingWorkspaceAndDataset {
             wdls_to_import = wdls_to_import,
             notebooks_to_import = notebooks_to_import,
             delete_existing_dataset = delete_existing_dataset,
-            docker = docker_image
+            docker = docker_image,
+            workspace_version = workspace_version
     }
 }
 
@@ -58,6 +60,7 @@ task SetUpStagingEnvironments {
         String? wdls_to_import
         String? notebooks_to_import
         String docker
+        Int? workspace_version
     }
 
     command <<<
@@ -75,7 +78,8 @@ task SetUpStagingEnvironments {
             ~{"--duos_identifier " + duos_identifier} \
             ~{"--wdls_to_import " + wdls_to_import} \
             ~{"--notebooks_to_import " + notebooks_to_import} \
-            ~{if delete_existing_dataset then "--delete_existing_dataset" else ""}
+            ~{if delete_existing_dataset then "--delete_existing_dataset" else ""} \
+            ~{"--workspace_version " + workspace_version}
     >>>
 
     runtime {
