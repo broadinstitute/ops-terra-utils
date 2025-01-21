@@ -168,7 +168,7 @@ class RunRequest:
 
 
 def SetRequestClient(auth_method):
-    from .. import Token
+    from ..token_util import Token
     match auth_method.lower():
         case "gcp":
             token = Token(cloud='gcp')
