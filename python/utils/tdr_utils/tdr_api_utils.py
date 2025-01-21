@@ -30,9 +30,8 @@ class TDR:
         Initialize the TDR class.
 
         Args:
-            request_util (Any): Utility for making HTTP requests.
+            auth_method (str): Cloud provider to use for authentication. Should be the same you normally use to authenticate with TDR (gcp or azure).
         """
-        #self.request_util = request_util
         self.request_util = self._set_request_client(auth_method)
 
     def _set_request_client(self, auth_method):
