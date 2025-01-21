@@ -283,7 +283,7 @@ class SetUpDataset:
             dataset_id=dataset_id,
             load_tag=f"{dataset_name}_initial_load",
             bulk_mode=False,
-            update_strategy="replace",
+            update_strategy=ARG_DEFAULTS["update_strategy"],
             waiting_time_to_poll=ARG_DEFAULTS["waiting_time_to_poll"],
             tdr=self.tdr,
         ).run()
@@ -546,7 +546,8 @@ if __name__ == '__main__':
 
     # Set up Terra, TerraGroups, and TDR classes
     token = Token(cloud=GCP)
-    request_util = RunRequest(token=token, max_retries=5, max_backoff_time=60)
+    request_util = RunRequest(
+        token=token, max_retries=ARG_DEFAULTS["max_retries"], max_backoff_time=ARG_DEFAULTS["max_backoff_time"])
     tdr = TDR(request_util=request_util)
     terra_groups = TerraGroups(request_util=request_util)
     terra_workspace = TerraWorkspace(
