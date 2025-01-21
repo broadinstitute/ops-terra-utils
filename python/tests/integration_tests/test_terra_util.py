@@ -3,7 +3,6 @@ import requests
 import os
 import re
 
-from python.utils import GCP
 from python.utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER
 from python.utils.terra_utils.terra_workflow_configs import WorkflowConfigs
 

@@ -171,7 +171,7 @@ def SetRequestClient(auth_method):
     from .. import Token
     match auth_method.lower():
         case "gcp":
-            token =  Token(cloud='gcp')
+            token = Token(cloud='gcp')
             return RunRequest(token=token)
         case "azure":
             token = Token(cloud='azure')

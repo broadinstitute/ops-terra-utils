@@ -7,7 +7,6 @@ from typing import Any, Optional, Union
 from urllib.parse import unquote
 from pydantic import ValidationError
 
-from ..token_util import Token
 from ..requests_utils.request_util import GET, POST, DELETE, SetRequestClient
 from ..tdr_api_schema.create_dataset_schema import CreateDatasetSchema
 from ..tdr_api_schema.update_dataset_schema import UpdateSchema
@@ -30,11 +29,9 @@ class TDR:
         Initialize the TDR class.
 
         Args:
-            auth_method (str): Cloud provider to use for authentication. Should be the same you normally use to authenticate with TDR (gcp or azure).
+            auth_method (str): Cloud provider to use for authentication.
         """
         self.request_util = SetRequestClient(auth_method=auth_method)
-
-
 
     def get_data_set_files(
             self,

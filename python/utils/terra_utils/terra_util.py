@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 
 from .. import GCP
 
-from ..token_util import Token
 from ..requests_utils.request_util import GET, POST, PATCH, PUT, DELETE, SetRequestClient
 
 TERRA_LINK = "https://api.firecloud.org/api"
