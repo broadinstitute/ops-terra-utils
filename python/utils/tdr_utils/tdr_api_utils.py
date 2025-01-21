@@ -8,7 +8,7 @@ from urllib.parse import unquote
 from pydantic import ValidationError
 
 from ..token_util import Token
-from ..requests_utils.request_util import GET, POST, DELETE, RunRequest
+from ..requests_utils.request_util import GET, POST, DELETE, SetRequestClient
 from ..tdr_api_schema.create_dataset_schema import CreateDatasetSchema
 from ..tdr_api_schema.update_dataset_schema import UpdateSchema
 from .tdr_job_utils import MonitorTDRJob, SubmitAndMonitorMultipleJobs
@@ -32,18 +32,9 @@ class TDR:
         Args:
             auth_method (str): Cloud provider to use for authentication. Should be the same you normally use to authenticate with TDR (gcp or azure).
         """
-        self.request_util = self._set_request_client(auth_method)
+        self.request_util = SetRequestClient(auth_method=auth_method)
 
-    def _set_request_client(self, auth_method):
-        match auth_method.lower():
-            case "gcp":
-                token =  Token(cloud='gcp')
-                return RunRequest(token=token)
-            case "azure":
-                token = Token(cloud='azure')
-                return RunRequest(token=token)
-            case _:
-                raise ValueError(f"Auth method {auth_method} not supported. Must be 'gcp' or 'azure'")
+
 
     def get_data_set_files(
             self,

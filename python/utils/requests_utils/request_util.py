@@ -165,3 +165,16 @@ class RunRequest:
             print(response.text)
             response.raise_for_status()  # Raise an exception for non-200 status codes
         return response.text
+
+
+def SetRequestClient(auth_method):
+    from .. import Token
+    match auth_method.lower():
+        case "gcp":
+            token =  Token(cloud='gcp')
+            return RunRequest(token=token)
+        case "azure":
+            token = Token(cloud='azure')
+            return RunRequest(token=token)
+        case _:
+            raise ValueError(f"Auth method {auth_method} not supported. Must be 'gcp' or 'azure'")

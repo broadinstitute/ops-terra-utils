@@ -48,9 +48,7 @@ def tdr_test_resource_json():
 
 @pytest.fixture()
 def tdr_client():
-    token = Token(cloud='gcp')
-    requestclient = RunRequest(token, max_retries=1, max_backoff_time=1)
-    return TDR(request_util=requestclient)
+    return TDR(auth_method='gcp')
 
 
 class TestGetUtils:

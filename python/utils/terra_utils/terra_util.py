@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from .. import GCP
 
 from ..token_util import Token
-from ..requests_utils.request_util import GET, POST, PATCH, PUT, DELETE, RunRequest
+from ..requests_utils.request_util import GET, POST, PATCH, PUT, DELETE, SetRequestClient
 
 TERRA_LINK = "https://api.firecloud.org/api"
 LEONARDO_LINK = "https://leonardo.dsde-prod.broadinstitute.org/api"
@@ -27,18 +27,7 @@ class Terra:
         Args:
             auth_method (str): The authentication method to use. Must be "gcp" or "azure".
         """
-        self.request_util = self._set_request_client(auth_method)
-
-    def _set_request_client(self, auth_method):
-        match auth_method.lower():
-            case "gcp":
-                token =  Token(cloud='gcp')
-                return RunRequest(token=token)
-            case "azure":
-                token = Token(cloud='azure')
-                return RunRequest(token=token)
-            case _:
-                raise ValueError(f"Auth method {auth_method} not supported. Must be 'gcp' or 'azure'")
+        self.request_util = SetRequestClient(auth_method)
 
     def fetch_accessible_workspaces(self, fields: Optional[list[str]]) -> list[dict]:
         fields_str = "fields=" + ",".join(fields) if fields else ""
@@ -57,14 +46,14 @@ class TerraGroups:
 
     GROUP_MEMBERSHIP_OPTIONS = [MEMBER, ADMIN]
 
-    def __init__(self, request_util: Any):
+    def __init__(self, auth_method: str):
         """
         Initialize the TerraGroups class.
 
         Args:
-            request_util (Any): An instance of a request utility class to handle HTTP requests.
+            auth_method (str): The authentication method to use. Must be "gcp" or "azure".
         """
-        self.request_util = request_util
+        self.request_util = SetRequestClient(auth_method)
 
     def _check_role(self, role: str) -> None:
         """
@@ -166,14 +155,14 @@ class TerraGroups:
 
 
 class TerraWorkspace:
-    def __init__(self, billing_project: str, workspace_name: str, request_util: Any):
+    def __init__(self, billing_project: str, workspace_name: str, auth_method: str):
         """
         Initialize the TerraWorkspace class.
 
         Args:
             billing_project (str): The billing project associated with the workspace.
             workspace_name (str): The name of the workspace.
-            request_util (Any): An instance of a request utility class to handle HTTP requests.
+            auth_method (str): The authentication method to use. Must be "gcp" or "azure".
         """
         self.billing_project = billing_project
         self.workspace_name = workspace_name
@@ -183,7 +172,7 @@ class TerraWorkspace:
         self.bucket = None
         self.wds_url = None
         self.account_url: Optional[str] = None
-        self.request_util = request_util
+        self.request_util = SetRequestClient(auth_method)
 
     def __repr__(self) -> str:
         """
