@@ -6,7 +6,8 @@ from urllib.parse import urlparse
 
 from .. import GCP
 
-from ..requests_utils.request_util import GET, POST, PATCH, PUT, DELETE
+from ..token_util import Token
+from ..requests_utils.request_util import GET, POST, PATCH, PUT, DELETE, RunRequest
 
 TERRA_LINK = "https://api.firecloud.org/api"
 LEONARDO_LINK = "https://leonardo.dsde-prod.broadinstitute.org/api"
@@ -19,14 +20,25 @@ ADMIN = "admin"
 
 
 class Terra:
-    def __init__(self, request_util: Any):
+    def __init__(self, auth_method: str):
         """
         Initialize the Terra class.
 
         Args:
-            request_util (Any): An instance of a request utility class to handle HTTP requests.
+            auth_method (str): The authentication method to use. Must be "gcp" or "azure".
         """
-        self.request_util = request_util
+        self.request_util = self._set_request_client(auth_method)
+
+    def _set_request_client(self, auth_method):
+        match auth_method.lower():
+            case "gcp":
+                token =  Token(cloud='gcp')
+                return RunRequest(token=token)
+            case "azure":
+                token = Token(cloud='azure')
+                return RunRequest(token=token)
+            case _:
+                raise ValueError(f"Auth method {auth_method} not supported. Must be 'gcp' or 'azure'")
 
     def fetch_accessible_workspaces(self, fields: Optional[list[str]]) -> list[dict]:
         fields_str = "fields=" + ",".join(fields) if fields else ""
