@@ -238,23 +238,44 @@ class SetUpDataset:
         return additional_properties
 
     def _add_row_to_table(self, dataset_id: str) -> None:
-        ingest_records = [
-            {
-                "key": "Staging Workspace",
-                "value": f"{self.terra_billing_project}/{self.workspace_name}"
-            },
-            {
-                "key": "Authorization Group",
-                "value": self.auth_group
-            }
-        ]
-        if workspace_version:
-            ingest_records.append(
-                {
-                    "key": f"Staging Workspace Version {self.workspace_version}",
-                    "value": f"{self.terra_billing_project}/{self.workspace_name}"
-                }
+        dataset_metrics = tdr.get_dataset_table_metrics(dataset_id=dataset_id, target_table_name=self.REFERENCE_TABLE)
+        workspace_billing_combo = f"{self.terra_billing_project}/{self.workspace_name}"
+
+        ingest_records = []
+        if not dataset_metrics:
+            ingest_records.extend(
+                [
+                    {
+                        "key": "Staging Workspace",
+                        "value": workspace_billing_combo,
+                    },
+                    {
+                        "key": "Authorization Group",
+                        "value": self.auth_group
+                    }
+                ]
             )
+        else:
+            linked_workspaces = [w["value"] for w in dataset_metrics if dataset_metrics]
+            if workspace_billing_combo not in linked_workspaces:
+                if not self.workspace_version:
+                    ingest_records.extend(
+                        [
+                            {
+                                "key": "Staging Workspace",
+                                "value": workspace_billing_combo
+                            }
+                        ]
+                    )
+                else:
+                    ingest_records.extend(
+                        [
+                            {
+                                "key": f"Staging Workspace Version {self.workspace_version}",
+                                "value": workspace_billing_combo
+                            }
+                        ]
+                    )
 
         StartAndMonitorIngest(
             ingest_records=ingest_records,
