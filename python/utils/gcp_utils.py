@@ -607,3 +607,9 @@ class GCPCloudFunctions:
         blob = self.load_blob_from_full_path(cloud_path)
         blob.cache_control = cache_control
         blob.patch()
+
+    def get_file_contents_of_most_recent_blob_in_bucket(self, bucket_name) -> str:
+        blobs = self.client.list_blobs(bucket_name)
+        most_recent_blob = max(blobs, key=lambda blob: blob.updated)
+        file_contents = most_recent_blob.download_as_text()
+        return file_contents
