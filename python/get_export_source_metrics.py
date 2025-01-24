@@ -15,7 +15,7 @@ from utils.gcp_utils import GCPCloudFunctions
 
 def get_args() -> Namespace:
     parser = ArgumentParser(
-        description="""For deletion of on prem aggregations for input samples""")
+        description="""Perform validation and collect metrics for azure to gcp export""")
     parser.add_argument(
         "-f",
         "--input_tsv",
