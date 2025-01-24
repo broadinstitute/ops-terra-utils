@@ -49,16 +49,16 @@ def collect_file_size_metrics(file_dicts, size_key):
     mean_file_size = statistics.mean(list_of_file_sizes)
     total_export_size = sum(list_of_file_sizes)
     return human_readable_size(largest_file), \
-    human_readable_size(mean_file_size), \
-    human_readable_size(total_export_size), \
-    len(list_of_file_sizes)
+        human_readable_size(mean_file_size), \
+        human_readable_size(total_export_size), \
+        len(list_of_file_sizes)
 
 
 def validate_export_buckets(csv_dicts, request_util):
     for row in csv_dicts:
         workspace_client = TerraWorkspace(request_util=request_util,
-                                billing_project=row['destination_billing_project'],
-                                workspace_name=row['destination_workspace_name'])
+                                          billing_project=row['destination_billing_project'],
+                                          workspace_name=row['destination_workspace_name'])
         workspace_bucket = workspace_client.get_workspace_bucket()
         if workspace_bucket != row['export_bucket']:
             logging.error(f"Export bucket {row['export_bucket']} does not match workspace bucket {workspace_bucket}")
@@ -76,12 +76,12 @@ if __name__ == "__main__":
         case  "dataset":
             for row in csv_dicts:
                 file_list = tdr_client.get_data_set_files(dataset_id=row['source_dataset_id'])
-                largest_file, mean_file_size, total_export_size, number_of_files = collect_file_size_metrics(file_list, 'size')
-                collected_size_metrics.append({'DATASET_ID': row['DATASET_ID'], 
+                largest_file, mean_file_size, total_export_size, number_of_files = collect_file_size_metrics(file_list, 'size') # noqa: E501
+                collected_size_metrics.append({'DATASET_ID': row['DATASET_ID'],
                                                'LARGEST_FILE_SIZE': largest_file,
-                                                'MEAN_FILE_SIZE': mean_file_size,
-                                                'TOTAL_EXPORT_SIZE': total_export_size,
-                                                'FILE_COUNT': number_of_files})
+                                               'MEAN_FILE_SIZE': mean_file_size,
+                                               'TOTAL_EXPORT_SIZE': total_export_size,
+                                               'FILE_COUNT': number_of_files})
         case "workspace":
             print('looping through input tsv')
             for row in csv_dicts:
@@ -95,12 +95,12 @@ if __name__ == "__main__":
                     sas_token=sas_token,
                     container_name=workspace_client.storage_container)
                 az_blobs = az_blob_client.get_blob_details(max_per_page=1000)
-                largest_file, mean_file_size, total_export_size, number_of_files = collect_file_size_metrics(az_blobs, 'size_in_bytes')
-                collected_size_metrics.append({'DATASET_ID': row['DATASET_ID'], 
-                                                'LARGEST_FILE_SIZE': largest_file,
-                                                'MEAN_FILE_SIZE': mean_file_size,
-                                                'TOTAL_EXPORT_SIZE': total_export_size,
-                                                'FILE_COUNT': number_of_files})
+                largest_file, mean_file_size, total_export_size, number_of_files = collect_file_size_metrics(az_blobs, 'size_in_bytes') # noqa: E501
+                collected_size_metrics.append({'DATASET_ID': row['DATASET_ID'],
+                                               'LARGEST_FILE_SIZE': largest_file,
+                                               'MEAN_FILE_SIZE': mean_file_size,
+                                               'TOTAL_EXPORT_SIZE': total_export_size,
+                                               'FILE_COUNT': number_of_files})
     report_path = f'{args.target}_metrics.csv'
     Csv(file_path=report_path, delimiter=',').create_tsv_from_list_of_dicts(collected_size_metrics)
 
