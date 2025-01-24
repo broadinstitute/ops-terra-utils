@@ -607,3 +607,11 @@ class GCPCloudFunctions:
         blob = self.load_blob_from_full_path(cloud_path)
         blob.cache_control = cache_control
         blob.patch()
+
+    def read_secret(self, secret_path: str, project: str):
+        from google.cloud import secretmanager_v1
+
+        client = secretmanager_v1.SecretManagerServiceClient()
+        name = client.secret_version_path(project, secret_path, "latest")
+        request = secretmanager_v1.AccessSecretVersionRequest(name=name)
+        return request
