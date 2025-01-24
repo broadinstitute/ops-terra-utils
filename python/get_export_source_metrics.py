@@ -76,7 +76,7 @@ if __name__ == "__main__":
         case  "dataset":
             for row in csv_dicts:
                 file_list = tdr_client.get_data_set_files(dataset_id=row['source_dataset_id'])
-                largest_file, mean_file_size, total_export_size, number_of_files = collect_file_size_metrics(file_list, 'size') # noqa: E501
+                largest_file, mean_file_size, total_export_size, number_of_files = collect_file_size_metrics(file_list, 'size')  # noqa: E501
                 collected_size_metrics.append({'DATASET_ID': row['DATASET_ID'],
                                                'LARGEST_FILE_SIZE': largest_file,
                                                'MEAN_FILE_SIZE': mean_file_size,
@@ -95,7 +95,7 @@ if __name__ == "__main__":
                     sas_token=sas_token,
                     container_name=workspace_client.storage_container)
                 az_blobs = az_blob_client.get_blob_details(max_per_page=1000)
-                largest_file, mean_file_size, total_export_size, number_of_files = collect_file_size_metrics(az_blobs, 'size_in_bytes') # noqa: E501
+                largest_file, mean_file_size, total_export_size, number_of_files = collect_file_size_metrics(az_blobs, 'size_in_bytes')  # noqa: E501
                 collected_size_metrics.append({'DATASET_ID': row['DATASET_ID'],
                                                'LARGEST_FILE_SIZE': largest_file,
                                                'MEAN_FILE_SIZE': mean_file_size,
