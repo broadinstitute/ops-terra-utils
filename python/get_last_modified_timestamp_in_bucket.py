@@ -1,8 +1,10 @@
-import argparse
 import os
 import subprocess
 import logging
+from argparse import ArgumentParser, Namespace
+from typing import Optional
 
+from utils.csv_util import Csv
 from utils.gcp_utils import GCPCloudFunctions
 from utils import GCP
 from utils.requests_utils.request_util import RunRequest
@@ -17,10 +19,18 @@ logging.basicConfig(
 )
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--billing_project", required=True)
-    parser.add_argument("--workspace_name", required=True)
+def parse_args() -> Namespace:
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--input_tsv",
+        required=True,
+        help="Path to the input tsv file with 'billing_project' and 'workspace_name' as headers"
+    )
+    parser.add_argument(
+        "--output_tsv",
+        required=True,
+        help="Path to the output tsv file where metadata should be written"
+    )
     return parser.parse_args()
 
 
@@ -32,20 +42,19 @@ def set_gcloud_account(gcloud_account: str) -> None:
     except subprocess.CalledProcessError as e:
         logging.error(f"Error setting gcloud account: {e}")
 
-def get_user() -> str:
+
+def get_user() -> Optional[str]:
     return os.getenv("USER")
 
-def set_firecloud_account():
+
+def set_firecloud_account() -> None:
     firecloud_account = f"{get_user()}@firecloud.org"
     set_gcloud_account(firecloud_account)
 
-def set_broad_account():
+
+def set_broad_account() -> None:
     gcloud_account = f"{get_user()}@broadinstitute.org"
     set_gcloud_account(gcloud_account)
-
-def set_application_default_credentials():
-    creds_path = "/Users/sahakian/Documents/repositories/ops-terra-utils/firecloud_credentials.json"
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
 
 
 if __name__ == '__main__':
@@ -56,22 +65,43 @@ if __name__ == '__main__':
 
     token = Token(cloud=CLOUD_TYPE)
     request_util = RunRequest(token=token)
-    terra_workspace = TerraWorkspace(billing_project=args.billing_project, workspace_name=args.workspace_name, request_util=request_util)
-    workspace_info = terra_workspace.get_workspace_info()
-    google_project = workspace_info["workspace"]["googleProject"]
-    logging.info(f"Found Google project {google_project} for billing project/workspace {args.billing_project}/{args.workspace_name}")
+    workspaces = Csv(file_path=args.input_tsv).create_list_of_dicts_from_tsv()
+    workspace_metadata = []
 
-    # set firecloud account
-    logging.info("Setting Firecloud account")
-    set_firecloud_account()
-    set_application_default_credentials()
+    for workspace in workspaces:
+        workspace_name = workspace["workspace_name"]
+        billing_project = workspace["billing_project"]
 
-    # instantiate the gcp tools
-    gcp = GCPCloudFunctions(project=google_project)
-    file_contents = gcp.get_file_contents_of_most_recent_blob_in_bucket(bucket_name=f"storage-logs-{google_project}")
-    last_line = file_contents.strip().split("\n")[-1]
-    timestamp_str = last_line.split(",")[0].strip('"')
-    timestamp_microseconds = int(timestamp_str)
-    timestamp_seconds = timestamp_microseconds / 1_000_000
-    human_readable_time = datetime.utcfromtimestamp(timestamp_seconds).strftime('%Y-%m-%d %H:%M:%S')
-    print(human_readable_time)
+        workspace_info = TerraWorkspace(
+            billing_project=billing_project,
+            workspace_name=workspace_name,
+            request_util=request_util
+        ).get_workspace_info()
+        google_project = workspace_info["workspace"]["googleProject"]
+        logging.info(
+            f"Found Google project {google_project} for billing project/workspace {billing_project}/{workspace_name}")
+
+        # set firecloud account
+        logging.info("Setting Firecloud account")
+        set_firecloud_account()
+
+        # instantiate the gcp tools
+        most_recent_file, file_contents = GCPCloudFunctions(
+            project=google_project
+        ).get_file_contents_of_most_recent_blob_in_bucket(bucket_name=f"storage-logs-{google_project}")
+
+        last_line = file_contents.strip().split("\n")[-1]
+        timestamp_microseconds = int(last_line.split(",")[0].strip('"'))
+        timestamp_seconds = timestamp_microseconds / 1_000_000
+        human_readable_time = datetime.utcfromtimestamp(timestamp_seconds).strftime('%Y-%m-%d %H:%M:%S')
+        workspace_metadata.append(
+            {
+                "billing_project": billing_project,
+                "workspace_name": workspace_name,
+                "most_recent_log_file": most_recent_file,
+                "last_line_in_log": last_line,
+                "last_log_timestamp": human_readable_time
+            }
+        )
+
+    Csv(file_path=args.output_tsv).create_tsv_from_list_of_dicts(list_of_dicts=workspace_metadata)
