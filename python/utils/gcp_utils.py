@@ -607,3 +607,35 @@ class GCPCloudFunctions:
         blob = self.load_blob_from_full_path(cloud_path)
         blob.cache_control = cache_control
         blob.patch()
+
+    def get_file_contents_of_most_recent_blob_in_bucket(self, bucket_name: str) -> Optional[tuple[str, str]]:
+        """
+        Gets the most recent blob in the bucket. If the blob with the most recent timestamp doesn't have
+        any logging besides the basic "storage_byte_hours" logging, will continue to look at the next most
+        recent file until a log with useful information is encountered. This is useful when combing through
+        GCP activity logs for Terra workspace buckets.
+
+        Args:
+            bucket_name (str): The GCS bucket name.
+        Returns:
+            Optional tuple of the blob found and the file contents from the blob
+        """
+        blobs = sorted(
+            self.client.list_blobs(bucket_name), key=lambda blob: blob.updated, reverse=True
+        )
+        for blob in blobs:
+            # Download the file contents as a string
+            file_contents = blob.download_as_text()
+
+            # Check if the content matches the undesired format
+            lines = file_contents.splitlines()
+            if len(lines) > 1 and lines[0] == '"bucket","storage_byte_hours"':
+                logging.info(f"Skipping file {blob.name} as it matches the undesired format.")
+                continue
+
+            # If it doesn't match the undesired format, return its content
+            logging.info(f"Found valid file: {blob.name}")
+            return blob, file_contents
+
+        logging.info("No valid files found.")
+        return None
