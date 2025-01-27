@@ -1,3 +1,12 @@
+"""
+This script takes in a tsv of billing_project/workspace_name combinations and finds the
+associated Terra project of the workspace. Using the Terra project, it determines the
+bucket where the GCP logs are located. It then finds the last-modified log in the bucket
+and finds the last logging line within the log file. The idea is to get the last activity
+that occurred in the bucket. It then outputs a tsv with metadata regarding the bucket
+and the associated log information.
+"""
+
 import os
 import subprocess
 import logging
