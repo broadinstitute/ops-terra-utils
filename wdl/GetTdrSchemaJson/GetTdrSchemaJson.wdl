@@ -22,12 +22,18 @@ workflow GetTDRSchemaJson {
 
     call GenerateSchemaJson {
         input:
+            # Set so this step only runs if the input is validated
+            input_validated = ValidateInputs.validated,
             input_metadata_tsv = input_metadata_tsv,
             billing_project = billing_project,
             workspace_name = workspace_name,
             terra_table_names = terra_table_names,
             docker_name = docker_name,
             force_disparate_rows_to_string = force_disparate_rows_to_string
+    }
+
+    output {
+        File tdr_schema_json = GenerateSchemaJson.tdr_schema_json
     }
 }
 
@@ -70,6 +76,10 @@ task ValidateInputs {
     runtime {
 		docker: docker_name
 	}
+
+    output {
+        Boolean validated = true
+    }
 }
 
 
@@ -81,22 +91,16 @@ task GenerateSchemaJson {
         String? terra_table_names
         String docker_name
         Boolean force_disparate_rows_to_string
+        Boolean input_validated
     }
 
     command <<<
-        if [ ! -z "~{input_metadata_tsv}" ]; then
-            python /etc/terra_utils/python/generate_tdr_schema_json.py \
-                        --input_tsv ~{input_metadata_tsv} \
-                        ~{if force_disparate_rows_to_string then "--force_disparate_rows_to_string" else ""}
-
-        else
-            python /etc/terra_utils/python/generate_tdr_schema_json.py \
-                        --billing_project ~{billing_project} \
-                        --workspace_name ~{workspace_name} \
-                        --terra_table_names ~{terra_table_names} \
-                        ~{if force_disparate_rows_to_string then "--force_disparate_rows_to_string" else ""}
-        fi
-
+        python /etc/terra_utils/python/generate_tdr_schema_json.py \
+            ~{"--input_tsv " + input_metadata_tsv} \
+            ~{"--billing_project " + billing_project} \
+            ~{"--workspace_name " + workspace_name} \
+            ~{"--terra_table_names " + terra_table_names} \
+            ~{if force_disparate_rows_to_string then "--force_disparate_rows_to_string" else ""}
     >>>
 
     output {
