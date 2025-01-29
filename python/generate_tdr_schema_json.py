@@ -9,8 +9,13 @@ from utils.tdr_utils.tdr_ingest_utils import ConvertTerraTableInfoForIngest
 from utils.tdr_utils.tdr_schema_utils import InferTDRSchema
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils.token_util import Token
+import logging
 
 CLOUD_TYPE = GCP
+
+logging.basicConfig(
+    format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
+)
 
 
 def get_args() -> argparse.Namespace:
@@ -53,15 +58,15 @@ def get_args() -> argparse.Namespace:
     args = parser.parse_args()
 
     # Custom validation logic
-    workspace_args = [args.billing_project, args.workspace_name, args.terra_table_names]
+    workspace_args = [args.billing_project, args.workspace_name, args.terra_table_names]  # type: ignore[assignment]
     if args.input_tsv:
-        if any(workspace_args):
+        if any(workspace_args):  # type: ignore[arg-type]
             parser.error(
                 "Cannot provide BOTH input_tsv AND the combination of billing_project, workspace_name, "
                 "and terra_table_names."
             )
     else:
-        if not all(workspace_args):
+        if not all(workspace_args):  # type: ignore[arg-type]
             parser.error(
                 "If input_tsv is not provided, you must provide ALL of workspace_name, billing_project, "
                 "and terra_table_names."
