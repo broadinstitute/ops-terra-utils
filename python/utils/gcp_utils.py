@@ -43,7 +43,7 @@ class GCPCloudFunctions:
         Returns:
             dict: A dictionary containing the platform prefix, bucket name, and blob URL.
         """
-        platform_prefix, remaining_url = str.split(str(cloud_path), sep="//")
+        platform_prefix, remaining_url = str.split(str(cloud_path), sep="//", maxsplit=1)
         bucket_name = str.split(remaining_url, sep="/")[0]
         blob_name = "/".join(str.split(remaining_url, sep="/")[1:])
         path_components = {
