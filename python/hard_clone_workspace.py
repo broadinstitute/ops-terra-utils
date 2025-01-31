@@ -69,14 +69,18 @@ class CreateEntityTsv:
 
     def _update_cell_value(self, cell_value: Any) -> Any:
         if isinstance(cell_value, list):
-            return '["' + '","'.join(
-                [
-                    self._update_cell_value(entity)
-                    for entity in cell_value
-                ]
-            ) + '"]'
+            if all(isinstance(item, str) for item in cell_value):
+                return '["' + '","'.join(
+                    [
+                        self._update_cell_value(entity)
+                        for entity in cell_value
+                    ]
+                ) + '"]'
+            else:
+                return cell_value
         elif isinstance(cell_value, str):
             return cell_value.replace(self.src_bucket, self.dest_bucket)
+
         return cell_value
 
     def _update_row_info(self, row_dict: dict, row_id_header: str) -> dict:
@@ -189,15 +193,16 @@ class UpdateWorkspaceAcls:
         self.dest_workspace.update_multiple_users_acl(acl_list=src_workspace_acls_list)
 
 
-def check_and_wait_for_permissions(external_bucket: str, total_hours: int) -> None:
+def check_and_wait_for_permissions(bucket: str, total_hours: int) -> None:
     """Checks if the account has write permissions for a given bucket. Retries every 30 minutes
     for a total time of the user provided hours. Cannot wait for more than 5 hours total.
 
         Args:
-            external_bucket (str): The name of the GCS bucket.
+            bucket (str): The name of the GCS bucket.
+            total_hours (int): The total number of hours to wait before exiting
     """
     client = storage.Client()
-    bucket = client.bucket(external_bucket)
+    bucket = client.bucket(bucket)
     # Temporary file name for testing write permission
     test_blob_name = "permission_test_file.txt"
     content = b"This is a test file to check write permissions."
@@ -232,7 +237,7 @@ def check_and_wait_for_permissions(external_bucket: str, total_hours: int) -> No
         else:
             # Exit after the final attempt
             logging.error(f"Write permission not detected after {total_hours} hours. Exiting.")
-            raise PermissionError(f"Write permission to bucket '{external_bucket}' could not be confirmed.")
+            raise PermissionError(f"Write permission to bucket '{bucket}' could not be confirmed.")
 
 
 if __name__ == '__main__':
@@ -253,31 +258,16 @@ if __name__ == '__main__':
             raise ValueError("gcp_bucket must start with gs:// and end with /")
         # Remove the gs:// prefix and trailing slash to match what is returned by the Terra API
         external_bucket = external_bucket.replace("gs://", "").rstrip("/")
-        if args.check_and_wait_for_permissions:
-            total_hours = (
-                args.max_permissions_wait_time
-                if args.max_permissions_wait_time <= MAX_TIME_TO_CHECK_FOR_PERMISSIONS
-                else MAX_TIME_TO_CHECK_FOR_PERMISSIONS
-            )
-            logging.info(
-                f"Beginning write-permission check for destination bucket. Will run for a total"
-                f" of {total_hours} hours before exiting."
-            )
-            check_and_wait_for_permissions(external_bucket=external_bucket, total_hours=total_hours)
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
     # Initialize the source Terra workspace classes
     src_workspace = TerraWorkspace(
-        billing_project=source_billing_project,
-        workspace_name=source_workspace_name,
-        request_util=request_util
+        billing_project=source_billing_project, workspace_name=source_workspace_name, request_util=request_util
     )
     # Initialize the destination Terra workspace classes
     dest_workspace = TerraWorkspace(
-        billing_project=dest_billing_project,
-        workspace_name=dest_workspace_name,
-        request_util=request_util
+        billing_project=dest_billing_project, workspace_name=dest_workspace_name, request_util=request_util
     )
 
     # Get the source workspace info
@@ -296,10 +286,21 @@ if __name__ == '__main__':
 
     # Create the destination workspace
     dest_workspace.create_workspace(
-        attributes=src_attributes,
-        auth_domain=src_auth_domain,
-        continue_if_exists=allow_already_created
+        attributes=src_attributes, auth_domain=src_auth_domain, continue_if_exists=allow_already_created
     )
+
+    if args.check_and_wait_for_permissions:
+        total_hours = (
+            args.max_permissions_wait_time
+            if args.max_permissions_wait_time <= MAX_TIME_TO_CHECK_FOR_PERMISSIONS
+            else MAX_TIME_TO_CHECK_FOR_PERMISSIONS
+        )
+        logging.info(
+            f"Beginning write-permission check for destination bucket. Will run for a total"
+            f" of {total_hours} hours before exiting."
+        )
+        bucket_to_check = external_bucket if external_bucket else dest_workspace.get_workspace_bucket()
+        check_and_wait_for_permissions(bucket=bucket_to_check, total_hours=total_hours)
 
     # Add the library attributes to the destination workspace if they exist
     if library_attributes:
