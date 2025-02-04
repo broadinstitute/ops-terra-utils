@@ -37,11 +37,7 @@ jobs:
         push: true
         file: ./ops_docker_utils_slim/Dockerfile
         tags: |
-          us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA
-          us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:Test
+          us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/ops_terra_utils_slim:${{ github.sha }}
+          us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/ops_terra_utils_slim:Test
         ssh: |
           default=${{ env.SSH_AUTH_SOCK }}
-      env:
-        PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-        REPOSITORY: ${{ secrets.ARTIFACT_REPO }}
-        GITHUB_SHA: ${{ github.sha }}
