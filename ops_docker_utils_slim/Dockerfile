@@ -40,7 +40,7 @@ RUN sudo pip3 install --upgrade pip\
 # Add github to known hosts 
 RUN mkdir -p -m 0600 /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts
 
-RUN --mount=type=ssh,id=default pip3 install git+ssh://git@github.com/broadinstitute/ops_util_module.git@main
+RUN --mount=type=ssh,id=default pip3 install git+ssh://git@github.com/broadinstitute/ops_util_module.git@test
 
 #install azcopy
 RUN curl -sSL -O https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb  && \
