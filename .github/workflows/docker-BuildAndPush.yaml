@@ -13,31 +13,41 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+    - uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.UTIL_MODULE_REPO_KEY }}
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
+      with:
+        ssh: |
+          default=${{ env.SSH_AUTH_SOCK }}
+
 
     - name: Login to GCP
+      id: auth
       uses: google-github-actions/auth@v2
       with:
+        token_format: access_token
         credentials_json: ${{ secrets.OPS_ARTIFACT_REGISTRY_SVC_ACCOUNT }}
-
-    - name: Configure Docker to use the Google Artifact Registry
-      run: gcloud auth configure-docker us-central1-docker.pkg.dev
+    
+    - name: GCR Auth
+      uses: docker/login-action@v3
+      with: 
+        registry: us-central1-docker.pkg.dev
+        username: oauth2accesstoken
+        password: ${{ steps.auth.outputs.access_token }}
 
     - name: Build and Push Docker Images
-      run: |
-        docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA -f ./ops_docker_utils_slim/Dockerfile .
-        docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA
-      env:
-        PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-        REPOSITORY: ${{ secrets.ARTIFACT_REPO }}
-        GITHUB_SHA: ${{ github.sha }}
-
-    - name: Set image tag to 'latest'
-      run: |
-        docker tag us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:latest
-        docker push us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:latest
+      uses: docker/build-push-action@v6
+      with:
+        push: true
+        file: ./ops_docker_utils_slim/Dockerfile
+        tags: |
+          us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:$GITHUB_SHA
+          us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/ops_terra_utils_slim:Test
+        ssh: |
+          default=${{ env.SSH_AUTH_SOCK }}
       env:
         PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         REPOSITORY: ${{ secrets.ARTIFACT_REPO }}

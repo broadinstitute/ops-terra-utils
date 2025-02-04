@@ -1,4 +1,4 @@
-FROM python:3.11.9
+FROM python:3.11-bookworm
 
 
 USER root
@@ -30,32 +30,27 @@ COPY general_markdown/ /etc/terra_utils/general_markdown
 COPY .dockstore.yml /etc/terra_utils/
 
 
-RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-RUN sudo apt-get update && sudo apt-get install google-cloud-cli -yq
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && apt-get update -y && apt-get install google-cloud-cli -y
 
 ENV PATH /usr/local/bin:$PATH
 
 RUN sudo pip3 install --upgrade pip\
   && sudo pip3 install --upgrade -r /etc/terra-docker/requirements.txt
 
+RUN --mount=type=ssh,id=default pip3 install git+ssh://git@github.com/broadinstitute/ops_util_module.git@main
+
 #install azcopy
-#RUN curl -s -L https://azcopyvnext.azureedge.net/releases/release-10.24.0-20240326/azcopy_linux_amd64_10.24.0.tar.gz | tar xvzf - --strip-components=1 -C /usr/local/bin/ azcopy_linux_amd64_10.24.0/azcopy
-#RUN chown root:root /usr/local/bin/azcopy
-#RUN chmod +x /usr/local/bin/azcopy
-#RUN ldd /usr/local/bin/azcopy
-
-
-ENV AZCOPY_BUFFER_GB: 2
-ENV AZCOPY_CONCURRENCY_VALUE: 4
-
-
+RUN curl -sSL -O https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb  && \
+    dpkg -i packages-microsoft-prod.deb && \
+    rm packages-microsoft-prod.deb && \
+    apt-get update && \
+    apt-get install -y azcopy
 
 ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
 
 ENV PIP_USER=true
-#RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && apt-get update -y && apt-get install google-cloud-cli -y
-
 
 #install gcloud cli
 ENV GPG_TTY=$(tty)
+
+CMD [ "/bin/sh" ]
