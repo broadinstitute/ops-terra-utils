@@ -23,20 +23,13 @@ jobs:
         ssh: |
           default=${{ env.SSH_AUTH_SOCK }}
 
-
-    - name: Login to GCP
-      id: auth
-      uses: google-github-actions/auth@v2
-      with:
-        token_format: access_token
-        credentials_json: ${{ secrets.OPS_ARTIFACT_REGISTRY_SVC_ACCOUNT }}
     
-    - name: GCR Auth
+    - name: GAR Auth
       uses: docker/login-action@v3
       with: 
         registry: us-central1-docker.pkg.dev
-        username: oauth2accesstoken
-        password: ${{ steps.auth.outputs.access_token }}
+        username: _json_key
+        password: ${{ secrets.OPS_ARTIFACT_REGISTRY_SVC_ACCOUNT }}
 
     - name: Build and Push Docker Images
       uses: docker/build-push-action@v6
