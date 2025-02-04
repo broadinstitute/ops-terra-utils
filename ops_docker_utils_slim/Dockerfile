@@ -37,6 +37,9 @@ ENV PATH /usr/local/bin:$PATH
 RUN sudo pip3 install --upgrade pip\
   && sudo pip3 install --upgrade -r /etc/terra-docker/requirements.txt
 
+# Add github to known hosts 
+RUN mkdir -p -m 0600 /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts
+
 RUN --mount=type=ssh,id=default pip3 install git+ssh://git@github.com/broadinstitute/ops_util_module.git@main
 
 #install azcopy
