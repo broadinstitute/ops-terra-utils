@@ -382,6 +382,7 @@ class GCPCloudFunctions:
 
         Args:
             files_to_copy (list[dict]): List of dictionaries containing source and destination file paths.
+                dict should have keys "source_file" and "full_destination_path"
             workers (int): Number of worker threads.
             max_retries (int): Maximum number of retries.
         """

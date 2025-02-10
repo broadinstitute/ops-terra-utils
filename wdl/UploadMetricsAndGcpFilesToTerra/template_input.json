@@ -1,0 +1,10 @@
+{
+    "UploadMetricsAndGcpFilesToTerra.billing_project": "String",
+    "UploadMetricsAndGcpFilesToTerra.workspace_name": "String",
+	"UploadMetricsAndGcpFilesToTerra.metrics_tsv": "String",
+	"UploadMetricsAndGcpFilesToTerra.skip_upload_columns": "String",
+	"UploadMetricsAndGcpFilesToTerra.flatten_path": "Boolean",
+	"UploadMetricsAndGcpFilesToTerra.subdir": "String",
+	"UploadMetricsAndGcpFilesToTerra.id_column": "String",
+	"UploadMetricsAndGcpFilesToTerra.docker": "String"
+}
