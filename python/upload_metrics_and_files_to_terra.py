@@ -83,7 +83,7 @@ class ConvertContents:
         # Check for duplicates in file paths and tsv identifiers
         if not self._check_list_unique(dest_file_paths, "destination file paths"):
             valid = False
-        if not self._check_list_unique(tsv_identifiers, "unique identifiers"):
+        if not self._check_list_unique(tsv_identifiers, self.id_column):
             valid = False
         # Check for id column in TSV
         if f"entity:{self.id_column}" not in self.headers:
