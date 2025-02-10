@@ -139,3 +139,10 @@ workflows:
     readMePath: /wdl/DeleteTdrRows/README.md
     testParameterFiles:
       - /wdl/DeleteTdrRows/DeleteTdrRows.wdl
+
+  - name: UploadMetricsAndGcpFilesToTerra
+    subclass: WDL
+    primaryDescriptorPath: /wdl/UploadMetricsAndGcpFilesToTerra/UploadMetricsAndGcpFilesToTerra.wdl
+    readMePath: /wdl/UploadMetricsAndGcpFilesToTerra/README.md
+    testParameterFiles:
+      - /wdl/UploadMetricsAndGcpFilesToTerra/UploadMetricsAndGcpFilesToTerra.wdl
