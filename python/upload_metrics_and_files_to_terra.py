@@ -89,6 +89,17 @@ class ConvertContents:
         if f"entity:{self.id_column}" not in self.headers:
             logging.error(f"ID column {self.id_column} not found in TSV file.")
             valid = False
+        # Check for null or empty values in id column
+        if None or "" in tsv_identifiers:
+            logging.error(f"ID column {self.id_column} contains null or empty values.")
+            valid = False
+        # Check ids only contain alphanumeric characters, underscores, dashes, and periods
+        for identifier in tsv_identifiers:
+            if not all(char.isalnum() or char in ['_', '-', '.'] for char in identifier):
+                logging.error(
+                    f"Invalid character in ID column {self.id_column}: {identifier}."
+                    f" Only alphanumeric characters, underscores, dashes, and periods are allowed.")
+                valid = False
         if not valid:
             raise ValueError("Invalid input. Check logs for details.")
 
