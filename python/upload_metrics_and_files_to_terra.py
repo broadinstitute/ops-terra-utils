@@ -22,7 +22,7 @@ def get_args() -> Namespace:
     parser.add_argument("--skip_upload_column", "-s", type=comma_separated_list,
                         help="Column name to skip upload. Use comma separated values for multiple columns. Optional")
     parser.add_argument("--flatten_path", "-f", action="store_true",
-                        help="Use if you want all files to be moved to flatten path and put all files in one dir. Optional")
+                        help="If you want to flatten all file paths and put all files in one dir. Optional")
     parser.add_argument("--subdir", "-d", type=str, help="Subdirectory to upload files to. Optional")
     parser.add_argument("--id_column", "-i", type=str, help="Column name for the id column", required=True)
     return parser.parse_args()
