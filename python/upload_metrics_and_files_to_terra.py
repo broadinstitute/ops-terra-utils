@@ -45,6 +45,7 @@ class ConvertContents:
         self.new_bucket_path = f"gs://{bucket_name}" if not subdir else f"gs://{bucket_name}/{subdir}"
         self.files_to_copy: list[dict] = []
         self.headers: set = set()
+        self.new_tsv_contents: list[dict] = []
 
     def _get_file_copy_dict(self, file_path: str) -> dict:
         if self.flatten_path:
@@ -56,15 +57,15 @@ class ConvertContents:
         return {"source_file": file_path, "full_destination_path": new_path}
 
     @staticmethod
-    def _check_paths_unique(file_destinations: list[str]) -> bool:
+    def _check_list_unique(list_of_strs: list[str], list_type: str) -> bool:
         seen = set()
         duplicates = set()
-        for file_path in file_destinations:
-            if file_path in seen:
-                duplicates.add(file_path)
-            seen.add(file_path)
+        for entry in list_of_strs:
+            if entry in seen:
+                duplicates.add(entry)
+            seen.add(entry)
         if duplicates:
-            logging.error(f"Duplicate destination files paths found. Will overwrite each other: {duplicates}")
+            logging.error(f"Duplicate {list_type} found. Will overwrite each other: {duplicates}")
             return False
         return True
 
@@ -76,15 +77,22 @@ class ConvertContents:
         return cell_value
 
     def _validate_results(self) -> None:
+        valid = True
         dest_file_paths = [copy_dict["full_destination_path"] for copy_dict in self.files_to_copy]
-        if not self._check_paths_unique(dest_file_paths):
-            raise ValueError("Duplicate destination file paths found. Will overwrite each other.")
+        tsv_identifiers = [row[f"entity:{self.id_column}"] for row in self.new_tsv_contents]
+        # Check for duplicates in file paths and tsv identifiers
+        if not self._check_list_unique(dest_file_paths, "destination file paths"):
+            valid = False
+        if not self._check_list_unique(tsv_identifiers, "unique identifiers"):
+            valid = False
+        # Check for id column in TSV
         if f"entity:{self.id_column}" not in self.headers:
-            raise ValueError(f"ID column {self.id_column} not found in TSV file.")
+            logging.error(f"ID column {self.id_column} not found in TSV file.")
+            valid = False
+        if not valid:
+            raise ValueError("Invalid input. Check logs for details.")
 
     def run(self) -> tuple[list[dict], list[dict], set]:
-        new_tsv_contents = []
-        # Create set of all headers
         for row in self.contents:
             new_row = {}
             for header, value in row.items():
@@ -104,9 +112,9 @@ class ConvertContents:
                     new_row[header] = new_list
                 else:
                     new_row[header] = self._update_file_paths(value)
-            new_tsv_contents.append(new_row)
+            self.new_tsv_contents.append(new_row)
         self._validate_results()
-        return new_tsv_contents, self.files_to_copy, self.headers
+        return self.new_tsv_contents, self.files_to_copy, self.headers
 
 
 class UploadContentsToTerra:
