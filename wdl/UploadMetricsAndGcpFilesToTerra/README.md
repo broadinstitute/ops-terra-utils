@@ -4,6 +4,10 @@ This workflow will copy metadata and files from a tsv into a Terra workspace. Al
 ## Prerequisites
 * Make sure that your proxy service account has access to the source files in the tsv
 
+## Key Points
+* The table created will be the same name as the id_column
+* The id_column must be unique, be in every column, and only contain alphanumeric characters, underscores, dashes, and periods.
+
 ## Inputs Table:
 | Input Name              | Description                                                                                                                                                                                                                                   | Type    | Required | Default                                                                                     |
 |-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|----------|---------------------------------------------------------------------------------------------|
