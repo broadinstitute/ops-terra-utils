@@ -758,7 +758,7 @@ class TerraWorkspace:
             uri=f"{RAWLS_LINK}/workspaces/v2/{self.billing_project}/{self.workspace_name}/settings",
             method=PUT,
             content_type="application/json",
-            data = json.dumps(body)
+            data=json.dumps(body)
         )
 
     def check_workspace_public(self, bucket: Optional[str] = None) -> bool:
