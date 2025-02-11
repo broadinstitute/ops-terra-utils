@@ -746,13 +746,19 @@ class TerraWorkspace:
         """
         Make a workspace public.
         """
-        workspace_bucket = self.get_workspace_bucket()
-        bucket_prefix_stripped = workspace_bucket.removeprefix("fc-secure-").removeprefix("fc-")
+        body = [
+                {
+                    "settingType": "PubliclyReadable",
+                    "config": {
+                        "enabled": public
+                    }
+                }
+            ]
         self.request_util.run_request(
-            uri=f"{SAM_LINK}/resources/v2/workspace/{bucket_prefix_stripped}/policies/reader/public",
+            uri=f"{RAWLS_LINK}/workspaces/v2/{self.billing_project}/{self.workspace_name}/settings",
             method=PUT,
             content_type="application/json",
-            data="true" if public else "false"
+            data = json.dumps(body)
         )
 
     def check_workspace_public(self, bucket: Optional[str] = None) -> bool:
