@@ -99,10 +99,10 @@ if __name__ == '__main__':
             match = re.search(r"Log file is located at: (\S+)", result.stdout)
             if match:
                 log_file_path = match.group(1)
-                gcp_util.upload_blob(log_file_path, f'{target_url}.azcopy_log.txt')
+                gcp_util.upload_blob(source_file=log_file_path, destination_path=f'{target_url}.azcopy_log.txt')
                 logging.info(f"Uploaded log file to {target_url}.azcopy_log.txt")
             else:
-                logging.warning(f"Could not find log file path in azcopy output")
+                logging.warning("Could not find log file path in azcopy output")
 
             logging.error(f"Error copying {signed_source_url} to {target_url}")
             raise Exception(f"Error copying {signed_source_url} to {target_url}")
