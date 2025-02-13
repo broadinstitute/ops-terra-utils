@@ -60,7 +60,7 @@ task CreateFofns {
 		python /etc/terra_utils/python/create_az_copy_fofns.py \
 		--az_fofn ~{az_fofn} \
 		--width ~{width} \
-		--gcp_destination ~{gcp_destination}
+		--destination_path ~{gcp_destination}
 	>>>
 
 	runtime {
