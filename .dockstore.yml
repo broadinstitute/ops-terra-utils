@@ -146,3 +146,10 @@ workflows:
     readMePath: /wdl/UploadMetricsAndGcpFilesToTerra/README.md
     testParameterFiles:
       - /wdl/UploadMetricsAndGcpFilesToTerra/UploadMetricsAndGcpFilesToTerra.wdl
+
+  - name: AzDatasetToGcp
+    subclass: WDL
+    primaryDescriptorPath: /wdl/AzDatasetToGcp/AzDatasetToGcp.wdl
+    readMePath: /wdl/AzDatasetToGcp/README.md
+    testParameterFiles:
+      - /wdl/AzDatasetToGcp/AzDatasetToGcp.wdl

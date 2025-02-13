@@ -132,6 +132,7 @@ class TDR:
 
         Returns:
             dict: A dictionary containing the SAS token and its expiry time.
+                Expirey time is a string like 2025-02-13T19:31:47Z.
 
         Raises:
             ValueError: If neither snapshot_id nor dataset_id is provided.

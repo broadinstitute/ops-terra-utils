@@ -29,8 +29,31 @@ class Terra:
         self.request_util = request_util
 
     def fetch_accessible_workspaces(self, fields: Optional[list[str]]) -> list[dict]:
+        """
+        Fetch the list of accessible workspaces.
+
+        Args:
+            fields (Optional[list[str]]): A list of fields to include in the response. If None, all fields are included.
+
+        Returns:
+            list[dict]: A list of dictionaries containing the accessible workspaces.
+        """
         fields_str = "fields=" + ",".join(fields) if fields else ""
         url = f'{RAWLS_LINK}/workspaces?{fields_str}'
+        response = self.request_util.run_request(
+            uri=url,
+            method=GET
+        )
+        return response.json()
+
+    def get_pet_account_json(self) -> dict:
+        """
+        Get the service account JSON.
+
+        Returns:
+            dict: The service account JSON.
+        """
+        url = f"{SAM_LINK}/google/v1/user/petServiceAccount/key"
         response = self.request_util.run_request(
             uri=url,
             method=GET
@@ -747,13 +770,13 @@ class TerraWorkspace:
         Make a workspace public.
         """
         body = [
-                {
-                    "settingType": "PubliclyReadable",
-                    "config": {
-                        "enabled": public
-                    }
+            {
+                "settingType": "PubliclyReadable",
+                "config": {
+                    "enabled": public
                 }
-            ]
+            }
+        ]
         self.request_util.run_request(
             uri=f"{RAWLS_LINK}/workspaces/v2/{self.billing_project}/{self.workspace_name}/settings",
             method=PUT,
