@@ -68,12 +68,13 @@ if __name__ == '__main__':
         az_path = row["az_path"]
         dataset_id = row["dataset_id"]
         target_url = row["target_url"]
-        if (dataset_id not in dataset_tokens
-                or should_reload(
-                    expiry_time_str=dataset_tokens[dataset_id]['expiry_time'],
-                    time_before_reload=time_before_reload
-                )  # if no token for dataset or has already expired or will expire soon
-            ):
+        if (
+            dataset_id not in dataset_tokens
+            or should_reload(
+                expiry_time_str=dataset_tokens[dataset_id]['expiry_time'],
+                time_before_reload=time_before_reload
+            )  # if no token for dataset or has already expired or will expire soon
+        ):
             dataset_tokens[dataset_id] = tdr.get_sas_token(dataset_id=dataset_id)
         signed_source_url = az_path + "?" + dataset_tokens[dataset_id]['sas_token']
         azcopy_command = [
