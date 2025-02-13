@@ -12,6 +12,7 @@ import subprocess
 from argparse import ArgumentParser, Namespace
 from datetime import datetime, timedelta, timezone
 import os
+import re
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -70,16 +71,17 @@ if __name__ == '__main__':
     dataset_tokens: dict = {}
     logging.info(f"Starting azcopy for {len(tsv_contents)} files")
     gcp_util = GCPCloudFunctions()
+    files_copied = 0
     for row in tsv_contents:
         az_path = row["az_path"]
         dataset_id = row["dataset_id"]
         target_url = row["target_url"]
         if (
-            dataset_id not in dataset_tokens
-            or should_reload(
-                expiry_time_str=dataset_tokens[dataset_id]['expiry_time'],
-                time_before_reload=time_before_reload
-            )  # if no token for dataset or has already expired or will expire soon
+                dataset_id not in dataset_tokens
+                or should_reload(
+                    expiry_time_str=dataset_tokens[dataset_id]['expiry_time'],
+                    time_before_reload=time_before_reload
+                )  # if no token for dataset or has already expired or will expire soon
         ):
             dataset_tokens[dataset_id] = tdr.get_sas_token(dataset_id=dataset_id)
         signed_source_url = az_path + "?" + dataset_tokens[dataset_id]['sas_token']
@@ -92,10 +94,21 @@ if __name__ == '__main__':
         result = subprocess.run(azcopy_command, env=os.environ, capture_output=True, text=True)
         logging.info(f'stdout for {signed_source_url} to {target_url}: {result.stdout}')
         logging.info(f'stderr for {signed_source_url} to {target_url}: {result.stderr}')
-        if result.returncode != 0:
-            logging.error(f"Error copying {signed_source_url} to {target_url}")
-        else:
-            if gcp_util.check_file_exists(target_url):
-                logging.info(f"Successfully copied {signed_source_url} to {target_url}.")
+        if result.returncode != 0 or not gcp_util.check_file_exists(target_url):
+            # Regular expression to find the log file path
+            match = re.search(r"Log file is located at: (\S+)", result.stdout)
+            if match:
+                log_file_path = match.group(1)
+                gcp_util.upload_blob(log_file_path, f'{target_url}.azcopy_log.txt')
+                logging.info(f"Uploaded log file to {target_url}.azcopy_log.txt")
             else:
-                logging.error(f"Error copying {signed_source_url} to {target_url}")
+                logging.warning(f"Could not find log file path in azcopy output")
+
+            logging.error(f"Error copying {signed_source_url} to {target_url}")
+            raise Exception(f"Error copying {signed_source_url} to {target_url}")
+        else:
+            files_copied += 1
+            logging.info(
+                f"Successfully copied {signed_source_url} to {target_url}. "
+                f"Files copied: {files_copied} / {len(tsv_contents)}"
+            )
