@@ -3,7 +3,6 @@ from argparse import ArgumentParser, Namespace
 import os
 from typing import List
 import pandas as pd
-from numpy.distutils.conv_template import header
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -15,7 +14,8 @@ def get_args() -> Namespace:
     parser.add_argument(
         "--destination_path",
         "-dp",
-        help="Path to where files should be copied. Should be in format gs://bucket_name/path/to/folder/ or gs://bucket_name/",
+        help="Path to where files should be copied. Should be in format "
+             "gs://bucket_name/path/to/folder/ or gs://bucket_name/",
         required=True
     )
     parser.add_argument(
