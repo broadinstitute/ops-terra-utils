@@ -58,7 +58,7 @@ task CreateFofns {
 
 	command <<<
 		python /etc/terra_utils/python/create_az_copy_fofns.py \
-		--az_fofn ~{az_fofn} \
+		--full_az_tsv ~{az_fofn} \
 		--width ~{width} \
 		--destination_path ~{gcp_destination}
 	>>>
