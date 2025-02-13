@@ -40,7 +40,7 @@ task CopyAzToGcp {
 		wget https://aka.ms/downloadazcopy-v10-linux
 		tar -xvf downloadazcopy-v10-linux
 		python /etc/terra_utils/python/run_az_copy_to_gcp.py --tsv ~{tsv} \
-			~{"--minutes_before_reload_token " + minutes_before_reload_token}
+			~{"--time_before_reload " + minutes_before_reload_token}
 	>>>
 
 	runtime {
