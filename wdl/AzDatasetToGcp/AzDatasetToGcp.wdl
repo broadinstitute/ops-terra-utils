@@ -7,6 +7,7 @@ workflow AzDatasetToGcp {
 		String gcp_destination
 		String? docker
 		Int? minutes_before_reload_token
+		Int? disk_size_gb
 	}
 
 	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -24,7 +25,8 @@ workflow AzDatasetToGcp {
 			input:
 				tsv=tsv,
 				docker_name=docker_name,
-				minutes_before_reload_token=minutes_before_reload_token
+				minutes_before_reload_token=minutes_before_reload_token,
+				disk_size_gb=disk_size_gb
 		}
 	}
 }
@@ -34,6 +36,7 @@ task CopyAzToGcp {
 		File tsv
 		String docker_name
 		Int? minutes_before_reload_token
+		Int? disk_size_gb
 	}
 
 	command <<<
@@ -46,6 +49,7 @@ task CopyAzToGcp {
 
 	runtime {
 		docker: docker_name
+		disks: "local-disk " + select_first([disk_size_gb, 50]) + " HDD"
 	}
 }
 
