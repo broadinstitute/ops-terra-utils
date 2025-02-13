@@ -70,6 +70,19 @@ class GCPCloudFunctions:
             blob.reload()
         return blob
 
+    def check_file_exists(self, full_path: str) -> bool:
+        """
+        Check if a file exists in GCS.
+
+        Args:
+            full_path (str): The full GCS path.
+
+        Returns:
+            bool: True if the file exists, False otherwise.
+        """
+        blob = self.load_blob_from_full_path(full_path)
+        return blob.exists()
+
     @staticmethod
     def _create_bucket_contents_dict(bucket_name: str, blob: Any, file_name_only: bool) -> dict:
         """

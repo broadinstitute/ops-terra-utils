@@ -39,8 +39,9 @@ task CopyAzToGcp {
 	command <<<
 		wget https://aka.ms/downloadazcopy-v10-linux
 		tar -xvf downloadazcopy-v10-linux
-		python /etc/terra_utils/python/run_az_copy_to_gcp.py --tsv ~{tsv} \
-			~{"--minutes_before_reload_token " + minutes_before_reload_token}
+		python /etc/terra_utils/python/run_az_copy_to_gcp.py \
+			~{"--time_before_reload " + minutes_before_reload_token} \
+			--tsv ~{tsv}
 	>>>
 
 	runtime {
@@ -58,9 +59,9 @@ task CreateFofns {
 
 	command <<<
 		python /etc/terra_utils/python/create_az_copy_fofns.py \
-		--az_fofn ~{az_fofn} \
+		--full_az_tsv ~{az_fofn} \
 		--width ~{width} \
-		--gcp_destination ~{gcp_destination}
+		--destination_path ~{gcp_destination}
 	>>>
 
 	runtime {
