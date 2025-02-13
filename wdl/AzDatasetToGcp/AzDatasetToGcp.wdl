@@ -6,7 +6,7 @@ workflow AzDatasetToGcp {
 		Int width
 		String gcp_destination
 		String? docker
-		Int? minutes_before_reload_token = 10
+		Int? minutes_before_reload_token
 	}
 
 	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -33,14 +33,14 @@ task CopyAzToGcp {
 	input {
 		File tsv
 		String docker_name
-		Int minutes_before_reload_token
+		Int? minutes_before_reload_token
 	}
 
 	command <<<
 		wget https://aka.ms/downloadazcopy-v10-linux
 		tar -xvf downloadazcopy-v10-linux
 		python /etc/terra_utils/python/run_az_copy_to_gcp.py --tsv ~{tsv} \
-			--minutes_before_reload_token ~{minutes_before_reload_token}
+			~{"--minutes_before_reload_token " + minutes_before_reload_token}
 	>>>
 
 	runtime {
