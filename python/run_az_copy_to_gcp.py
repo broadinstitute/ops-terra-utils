@@ -5,6 +5,7 @@ from utils.tdr_utils.tdr_api_utils import TDR
 from utils.requests_utils.request_util import RunRequest
 from utils.csv_util import Csv
 from utils.token_util import Token
+from utils.gcp_utils import GCPCloudFunctions
 from utils import GCP
 import json
 import subprocess
@@ -68,6 +69,7 @@ if __name__ == '__main__':
 
     dataset_tokens: dict = {}
     logging.info(f"Starting azcopy for {len(tsv_contents)} files")
+    gcp_util = GCPCloudFunctions()
     for row in tsv_contents:
         az_path = row["az_path"]
         dataset_id = row["dataset_id"]
@@ -90,3 +92,10 @@ if __name__ == '__main__':
         result = subprocess.run(azcopy_command, env=os.environ, capture_output=True, text=True)
         logging.info(f'stdout for {signed_source_url} to {target_url}: {result.stdout}')
         logging.info(f'stderr for {signed_source_url} to {target_url}: {result.stderr}')
+        if result.returncode != 0:
+            logging.error(f"Error copying {signed_source_url} to {target_url}")
+        else:
+            if gcp_util.check_file_exists(target_url):
+                logging.info(f"Successfully copied {signed_source_url} to {target_url}.")
+            else:
+                logging.error(f"Error copying {signed_source_url} to {target_url}")
