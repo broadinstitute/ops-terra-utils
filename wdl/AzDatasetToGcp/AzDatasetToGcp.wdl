@@ -1,23 +1,23 @@
 version 1.0
 
 workflow AzDatasetToGcp {
-    input {
+	input {
 		File az_fofn
 		Int width
 		String gcp_destination
-        String? docker
+		String? docker
 		Int? minutes_before_reload_token = 10
 	}
 
 	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
-    call CreateFofns {
-        input:
-            az_fofn=az_fofn,
-            width=width,
-            docker_name=docker_name,
+	call CreateFofns {
+		input:
+			az_fofn=az_fofn,
+			width=width,
+			docker_name=docker_name,
 			gcp_destination=gcp_destination
-    }
+	}
 
 	scatter (tsv in CreateFofns.output_tsvs) {
 		call CopyAzToGcp {
@@ -52,14 +52,14 @@ task CreateFofns {
 	input {
 		File az_fofn
 		Int width
-        String docker_name
+		String docker_name
 		String gcp_destination
 	}
 
 	command <<<
 		python /etc/terra_utils/python/create_az_copy_fofns.py \
-        --az_fofn ~{az_fofn} \
-        --width ~{width} \
+		--az_fofn ~{az_fofn} \
+		--width ~{width} \
 		--gcp_destination ~{gcp_destination}
 	>>>
 
@@ -67,7 +67,7 @@ task CreateFofns {
 		docker: docker_name
 	}
 
-    output {
-        Array[File] output_tsvs = glob("split_*.tsv")
-    }
+	output {
+		Array[File] output_tsvs = glob("split_*.tsv")
+	}
 }
