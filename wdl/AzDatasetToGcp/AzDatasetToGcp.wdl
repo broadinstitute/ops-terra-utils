@@ -49,7 +49,7 @@ task CopyAzToGcp {
 
 	runtime {
 		docker: docker_name
-		disks: "local-disk " + select_first([disk_size_gb, 50]) + " HHD"
+		disks: "local-disk " + select_first([disk_size_gb, 50]) + " HDD"
 	}
 }
 
