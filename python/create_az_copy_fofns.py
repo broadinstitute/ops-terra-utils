@@ -50,7 +50,6 @@ def split_tsv(input_tsv: str, gcp_destination: str, width: int) -> List[str]:
         logging.info(f"Creating {output_filename}")
         split_df.to_csv(output_filename, sep='\t', index=False, header=['az_path', 'dataset_id', 'target_url'])
         output_files.append(output_filename)
-
     return output_files
 
 

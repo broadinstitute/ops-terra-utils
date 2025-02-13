@@ -12,6 +12,10 @@ from argparse import ArgumentParser, Namespace
 from datetime import datetime, timedelta, timezone
 import os
 
+logging.basicConfig(
+    format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
+)
+
 
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Run azcopy of files from Azure dataset to GCP bucket")
