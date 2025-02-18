@@ -11,6 +11,7 @@ import subprocess
 from argparse import ArgumentParser, Namespace
 from datetime import datetime, timedelta, timezone
 import os
+import time
 import re
 
 logging.basicConfig(
@@ -110,14 +111,14 @@ class CopyFile:
                 return True
         return False
 
-    def run(self) -> None:
+    def run(self) -> bool:
         az_path = row["az_path"]
         dataset_id = row["dataset_id"]
         target_url = row["target_url"]
         bytes = row["bytes"]
         if self._already_copied(target_url, bytes):
             logging.info(f"Skipping {target_url} as it has already been copied.")
-            return
+            return False
         # if no token for dataset or has already expired or will expire soon
         if (
                 dataset_id not in self.dataset_tokens
@@ -125,7 +126,7 @@ class CopyFile:
         ):
             dataset_tokens[dataset_id] = tdr.get_sas_token(dataset_id=dataset_id)
         signed_source_url = az_path + "?" + dataset_tokens[dataset_id]['sas_token']
-        logging.info(f"Copying {signed_source_url} to {target_url}")
+        logging.info(f"Copying {signed_source_url} to {os.path.basename(target_url)}")
         local_file = self._run_az_copy_local(signed_source_url, target_url)
         logging.info(f"Uploading {local_file} to {target_url}")
         gcp_util.upload_blob(source_file=local_file, destination_path=target_url)
@@ -133,6 +134,7 @@ class CopyFile:
             f"Successfully copied {signed_source_url} to local path and then uploaded to {target_url}."
             " Removing local file.")
         os.remove(local_file)
+        return True
 
 
 if __name__ == '__main__':
@@ -155,6 +157,7 @@ if __name__ == '__main__':
     gcp_util = GCPCloudFunctions()
     files_copied = 0
     for row in tsv_contents:
+        start_time = time.time()
         CopyFile(
             az_path=az_path,
             time_before_reload=time_before_reload,
@@ -163,5 +166,11 @@ if __name__ == '__main__':
             gcp_util=gcp_util,
             log_dir=log_dir
         ).run()
+        # Log time taken to copy or confirm file copied
+        end_time = time.time()
+        logging.info(
+            f"Time taken to copy or confirm {row['az_path']} ({int(row['bytes']) / (1024 ** 3) } GB) "
+            f"to {row['target_url']} copied: {(end_time - start_time) * 60} minutes"
+        )
         files_copied += 1
         logging.info(f"Files copied: {files_copied} / {len(tsv_contents)}")
