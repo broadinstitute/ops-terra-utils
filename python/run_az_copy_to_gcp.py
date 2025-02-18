@@ -43,7 +43,14 @@ def get_args() -> Namespace:
 
 
 class CopyFile:
-    def __init__(self, az_path: str, time_before_reload: int, dataset_tokens: dict, file_row: dict, gcp_util: GCPCloudFunctions):
+    def __init__(
+            self,
+            az_path: str,
+            time_before_reload: int,
+            dataset_tokens: dict,
+            file_row: dict,
+            gcp_util: GCPCloudFunctions
+    ):
         self.az_path = az_path
         self.time_before_reload = time_before_reload
         self.dataset_tokens = dataset_tokens

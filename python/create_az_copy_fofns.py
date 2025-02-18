@@ -1,6 +1,5 @@
 import logging
 from argparse import ArgumentParser, Namespace
-import os
 from typing import List
 import pandas as pd
 
