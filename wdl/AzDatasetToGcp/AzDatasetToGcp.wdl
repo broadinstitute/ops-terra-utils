@@ -29,9 +29,9 @@ workflow AzDatasetToGcp {
 				tsv=tsv,
 				docker_name=docker_name,
 				minutes_before_reload_token=minutes_before_reload_token,
-				disk_size_gb=disk_size_gb,
-				az_path=DownloadAz.az_file,
-				az_notice=DownloadAz.az_notice
+				disk_size_gb=disk_size_gb#,
+				#az_path=DownloadAz.az_file,
+				#az_notice=DownloadAz.az_notice
 		}
 	}
 }
@@ -40,18 +40,21 @@ task CopyAzToGcp {
 	input {
 		File tsv
 		String docker_name
-		File az_path
+		#File az_path
 		# Needed to also be there for permission?
-		File az_notice
+		#File az_notice
 		Int? minutes_before_reload_token
 		Int? disk_size_gb
 	}
 
 	command <<<
+		wget https://aka.ms/downloadazcopy-v10-linux
+		tar -xvf downloadazcopy-v10-linux
+
 		python /etc/terra_utils/python/run_az_copy_to_gcp.py \
 			~{"--time_before_reload " + minutes_before_reload_token} \
 			--tsv ~{tsv} \
-			--az_path ~{az_path}
+			--az_path azcopy_linux_amd64_10.28.0/azcopy
 	>>>
 
 	runtime {
@@ -75,10 +78,10 @@ task DownloadAz {
 		docker: docker_name
 	}
 
-	output {
-		File az_file = "azcopy_linux_amd64_10.28.0/azcopy"
-		File az_notice = "azcopy_linux_amd64_10.28.0/NOTICE.txt"
-	}
+	#output {
+#		File az_file = "azcopy_linux_amd64_10.28.0/azcopy"
+#		File az_notice = "azcopy_linux_amd64_10.28.0/NOTICE.txt"
+#	}
 }
 
 task CreateFofns {
