@@ -107,7 +107,7 @@ class CopyFile:
     def _already_copied(target_url: str, bytes: int) -> bool:
         logging.info(f"Checking if {target_url} has already been copied.")
         if gcp_util.check_file_exists(target_url):
-            if gcp_util.get_filesize(target_url) == bytes:
+            if gcp_util.get_filesize(target_url) == int(bytes):
                 return True
         return False
 
@@ -167,9 +167,11 @@ if __name__ == '__main__':
         ).run()
         # Log time taken to copy or confirm file copied
         end_time = time.time()
+        file_gb_size = int(row['bytes']) / (1024 ** 3)
+        total_time = (end_time - start_time) / 60
         logging.info(
-            f"Time taken to copy or confirm {row['az_path']} ({int(row['bytes']) / (1024 ** 3) } GB) "
-            f"to {row['target_url']} copied: {(end_time - start_time) * 60} minutes"
+            f"Time taken to copy or confirm {row['az_path']} ({file_gb_size:.2f} GB) "
+            f"to {row['target_url']} copied: {total_time:.2f} minutes"
         )
         files_copied += 1
         logging.info(f"Files copied: {files_copied} / {len(tsv_contents)}")
