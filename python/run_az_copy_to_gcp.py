@@ -98,15 +98,26 @@ class CopyFile:
         ]
         result = subprocess.run(azcopy_command, env=os.environ, capture_output=True, text=True)
         logging.info(f'stdout for {signed_source_url} to {local_path}: {result.stdout}')
-        logging.info(f'stderr for {signed_source_url} to {local_path}: {result.stderr}')
         self._validate_az_copy(local_path, signed_source_url, result)
         logging.info(f"Successfully copied {signed_source_url} to {local_path}")
         return local_path
+
+    @staticmethod
+    def _already_copied(target_url: str, bytes: int) -> bool:
+        logging.info(f"Checking if {target_url} has already been copied.")
+        if gcp_util.check_file_exists(target_url):
+            if gcp_util.get_filesize(target_url) == bytes:
+                return True
+        return False
 
     def run(self) -> None:
         az_path = row["az_path"]
         dataset_id = row["dataset_id"]
         target_url = row["target_url"]
+        bytes = row["bytes"]
+        if self._already_copied(target_url, bytes):
+            logging.info(f"Skipping {target_url} as it has already been copied.")
+            return
         # if no token for dataset or has already expired or will expire soon
         if (
                 dataset_id not in self.dataset_tokens
@@ -114,6 +125,7 @@ class CopyFile:
         ):
             dataset_tokens[dataset_id] = tdr.get_sas_token(dataset_id=dataset_id)
         signed_source_url = az_path + "?" + dataset_tokens[dataset_id]['sas_token']
+        logging.info(f"Copying {signed_source_url} to {target_url}")
         local_file = self._run_az_copy_local(signed_source_url, target_url)
         logging.info(f"Uploading {local_file} to {target_url}")
         gcp_util.upload_blob(source_file=local_file, destination_path=target_url)
@@ -140,7 +152,6 @@ if __name__ == '__main__':
     os.environ["GOOGLE_APPLICATION_CREDENTIALS_JSON"] = json.dumps(pet_account_json)
 
     dataset_tokens: dict = {}
-    logging.info(f"Starting azcopy for {len(tsv_contents)} files")
     gcp_util = GCPCloudFunctions()
     files_copied = 0
     for row in tsv_contents:
