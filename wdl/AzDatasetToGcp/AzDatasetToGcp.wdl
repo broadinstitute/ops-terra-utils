@@ -4,7 +4,7 @@ workflow AzDatasetToGcp {
 	input {
 		File az_fofn
 		Int width
-		String gcp_destination
+		String log_dir
 		String? docker
 		Int? minutes_before_reload_token
 		Int? disk_size_gb
@@ -16,12 +16,6 @@ workflow AzDatasetToGcp {
 		input:
 			az_fofn=az_fofn,
 			width=width,
-			docker_name=docker_name,
-			gcp_destination=gcp_destination
-	}
-
-	call DownloadAz {
-		input:
 			docker_name=docker_name
 	}
 
@@ -32,7 +26,7 @@ workflow AzDatasetToGcp {
 				docker_name=docker_name,
 				minutes_before_reload_token=minutes_before_reload_token,
 				disk_size_gb=disk_size_gb,
-				az_path=DownloadAz.az_file
+				log_dir=log_dir
 		}
 	}
 }
@@ -41,16 +35,20 @@ task CopyAzToGcp {
 	input {
 		File tsv
 		String docker_name
-		File az_path
+		String log_dir
 		Int? minutes_before_reload_token
 		Int? disk_size_gb
 	}
 
 	command <<<
+		wget https://aka.ms/downloadazcopy-v10-linux
+		tar -xvf downloadazcopy-v10-linux
+
 		python /etc/terra_utils/python/run_az_copy_to_gcp.py \
 			~{"--time_before_reload " + minutes_before_reload_token} \
 			--tsv ~{tsv} \
-			--az_path ~{az_path}
+			--az_path azcopy_linux_amd64_10.28.0/azcopy \
+			--log_dir ~{log_dir}
 	>>>
 
 	runtime {
@@ -59,38 +57,17 @@ task CopyAzToGcp {
 	}
 }
 
-task DownloadAz {
-	input {
-		String docker_name
-	}
-
-	command <<<
-		wget https://aka.ms/downloadazcopy-v10-linux
-		tar -xvf downloadazcopy-v10-linux
-	>>>
-
-	runtime {
-		docker: docker_name
-	}
-
-	output {
-		File az_file = "azcopy_linux_amd64_10.28.0/azcopy"
-	}
-}
-
 task CreateFofns {
 	input {
 		File az_fofn
 		Int width
 		String docker_name
-		String gcp_destination
 	}
 
 	command <<<
 		python /etc/terra_utils/python/create_az_copy_fofns.py \
 		--full_az_tsv ~{az_fofn} \
-		--width ~{width} \
-		--destination_path ~{gcp_destination}
+		--width ~{width}
 	>>>
 
 	runtime {

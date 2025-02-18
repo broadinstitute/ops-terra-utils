@@ -30,11 +30,18 @@ def split_tsv(input_tsv: str, width: int) -> List[str]:
     # Read the TSV into a DataFrame
     df = pd.read_csv(input_tsv, sep='\t', header='infer')
 
+    # Check if any row has missing values
+    if df.isnull().any().any() or (df == "").any().any():
+        raise ValueError("Input TSV contains empty values. Please ensure all columns are filled.")
+
     # Split into smaller dataframes
     split_dfs = [df.iloc[i::width] for i in range(width)]
 
     output_files = []
     for idx, split_df in enumerate(split_dfs):
+        if split_df.empty:  # Skip empty splits
+            continue
+
         output_filename = f"split_{idx + 1}.tsv"
         logging.info(f"Creating {output_filename}")
         split_df.to_csv(output_filename, sep='\t', index=False, header=['az_path', 'dataset_id', 'target_url'])
