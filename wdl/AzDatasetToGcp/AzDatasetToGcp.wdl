@@ -4,7 +4,6 @@ workflow AzDatasetToGcp {
 	input {
 		File az_fofn
 		Int width
-		String gcp_destination
 		String? docker
 		Int? minutes_before_reload_token
 		Int? disk_size_gb
@@ -16,8 +15,7 @@ workflow AzDatasetToGcp {
 		input:
 			az_fofn=az_fofn,
 			width=width,
-			docker_name=docker_name,
-			gcp_destination=gcp_destination
+			docker_name=docker_name
 	}
 
 	call DownloadAz {
@@ -83,14 +81,12 @@ task CreateFofns {
 		File az_fofn
 		Int width
 		String docker_name
-		String gcp_destination
 	}
 
 	command <<<
 		python /etc/terra_utils/python/create_az_copy_fofns.py \
 		--full_az_tsv ~{az_fofn} \
-		--width ~{width} \
-		--destination_path ~{gcp_destination}
+		--width ~{width}
 	>>>
 
 	runtime {
