@@ -65,6 +65,7 @@ task DownloadAz {
 	command <<<
 		wget https://aka.ms/downloadazcopy-v10-linux
 		tar -xvf downloadazcopy-v10-linux
+		chmod +x azcopy_linux_amd64_10.28.0/azcopy
 	>>>
 
 	runtime {

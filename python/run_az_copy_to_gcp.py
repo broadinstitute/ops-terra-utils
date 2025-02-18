@@ -98,6 +98,7 @@ class CopyFile:
             signed_source_url,
             target_url
         ]
+        print(azcopy_command)
         result = subprocess.run(azcopy_command, env=os.environ, capture_output=True, text=True)
         logging.info(f'stdout for {signed_source_url} to {target_url}: {result.stdout}')
         logging.info(f'stderr for {signed_source_url} to {target_url}: {result.stderr}')
