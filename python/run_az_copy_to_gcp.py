@@ -1,7 +1,4 @@
 import logging
-
-from dill.pointers import parent
-
 from utils.terra_utils.terra_util import Terra
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.requests_utils.request_util import RunRequest
