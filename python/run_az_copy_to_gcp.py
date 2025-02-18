@@ -1,5 +1,7 @@
 import logging
 
+from dill.pointers import parent
+
 from utils.terra_utils.terra_util import Terra
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.requests_utils.request_util import RunRequest
@@ -39,6 +41,11 @@ def get_args() -> Namespace:
         "-a",
         help="Path to azcopy executable"
     )
+    parser.add_argument(
+        "--log_dir",
+        "-l",
+        help="GCP log directory where to put logs for failed copies"
+    )
     return parser.parse_args()
 
 
@@ -49,12 +56,14 @@ class CopyFile:
             time_before_reload: int,
             dataset_tokens: dict,
             file_row: dict,
+            log_dir: str,
             gcp_util: GCPCloudFunctions
     ):
         self.az_path = az_path
         self.time_before_reload = time_before_reload
         self.dataset_tokens = dataset_tokens
         self.file_row = file_row
+        self.log_dir = log_dir
         self.gcp_util = gcp_util
 
     def _should_reload(self, expiry_time_str: str) -> bool:
@@ -73,8 +82,9 @@ class CopyFile:
             match = re.search(r"Log file is located at: (\S+)", copy_results.stdout)
             if match:
                 log_file_path = match.group(1)
-                gcp_util.upload_blob(source_file=log_file_path, destination_path=f'{target_url}.azcopy_log.txt')
-                logging.info(f"Uploaded log file to {target_url}.azcopy_log.txt")
+                log_copy_path = os.path.join(self.log_dir, f"{os.path.basename(target_url)}.azcopy_log.txt")
+                gcp_util.upload_blob(source_file=log_file_path, destination_path=log_copy_path)
+                logging.info(f"Uploaded log file to {log_copy_path}")
             else:
                 logging.warning("Could not find log file path in azcopy output")
 
@@ -96,7 +106,8 @@ class CopyFile:
             self.az_path,
             "copy",
             signed_source_url,
-            target_url
+            target_url,
+            "--from-to=BlobFSBlob",  # Ensure cross-cloud transfer
         ]
         result = subprocess.run(azcopy_command, env=os.environ, capture_output=True, text=True)
         logging.info(f'stdout for {signed_source_url} to {target_url}: {result.stdout}')
@@ -110,6 +121,7 @@ if __name__ == '__main__':
     tsv = args.tsv
     time_before_reload = args.time_before_reload
     az_path = args.az_path
+    log_dir = args.log_dir
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -130,7 +142,8 @@ if __name__ == '__main__':
             time_before_reload=time_before_reload,
             dataset_tokens=dataset_tokens,
             file_row=row,
-            gcp_util=gcp_util
+            gcp_util=gcp_util,
+            log_dir=log_dir
         ).run()
         files_copied += 1
         logging.info(f"Files copied: {files_copied} / {len(tsv_contents)}")
