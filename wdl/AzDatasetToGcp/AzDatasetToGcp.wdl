@@ -30,7 +30,8 @@ workflow AzDatasetToGcp {
 				docker_name=docker_name,
 				minutes_before_reload_token=minutes_before_reload_token,
 				disk_size_gb=disk_size_gb,
-				az_path=DownloadAz.az_file
+				az_path=DownloadAz.az_file,
+				az_notice=DownloadAz.az_notice
 		}
 	}
 }
@@ -40,6 +41,8 @@ task CopyAzToGcp {
 		File tsv
 		String docker_name
 		File az_path
+		# Needed to also be there for permission?
+		File az_notice
 		Int? minutes_before_reload_token
 		Int? disk_size_gb
 	}
@@ -74,6 +77,7 @@ task DownloadAz {
 
 	output {
 		File az_file = "azcopy_linux_amd64_10.28.0/azcopy"
+		File az_notice = "azcopy_linux_amd64_10.28.0/NOTICE.txt"
 	}
 }
 
