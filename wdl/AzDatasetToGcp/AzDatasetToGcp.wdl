@@ -5,9 +5,10 @@ workflow AzDatasetToGcp {
 		File az_fofn
 		Int width
 		String log_dir
+		Int max_gb_per_disk
+		Boolean skip_too_large_files
 		String? docker
 		Int? minutes_before_reload_token
-		Int? disk_size_gb
 	}
 
 	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -16,19 +17,22 @@ workflow AzDatasetToGcp {
 		input:
 			az_fofn=az_fofn,
 			width=width,
-			docker_name=docker_name
+			docker_name=docker_name,
+			max_gb_per_disk=max_gb_per_disk,
+			skip_too_large_files=skip_too_large_files
 	}
 
-	scatter (tsv in CreateFofns.output_tsvs) {
-		call CopyAzToGcp {
-			input:
-				tsv=tsv,
-				docker_name=docker_name,
-				minutes_before_reload_token=minutes_before_reload_token,
-				disk_size_gb=disk_size_gb,
-				log_dir=log_dir
-		}
-	}
+    scatter (index in range(length(CreateFofns.output_tsvs))) {
+		Int disk_size = read_int(CreateFofns.disk_sizes[index])
+        call CopyAzToGcp {
+            input:
+                tsv=CreateFofns.output_tsvs[index],
+                docker_name=docker_name,
+                minutes_before_reload_token=minutes_before_reload_token,
+                disk_size_gb=CreateFofns.disk_sizes[index],  # Using corresponding disk size
+                log_dir=log_dir
+        }
+    }
 }
 
 task CopyAzToGcp {
@@ -37,8 +41,10 @@ task CopyAzToGcp {
 		String docker_name
 		String log_dir
 		Int? minutes_before_reload_token
-		Int? disk_size_gb
+		Int disk_size_gb
 	}
+
+	Int vm_disk_size = disk_size_gb + 40  # Add 20 GB to disk size
 
 	command <<<
 		wget https://aka.ms/downloadazcopy-v10-linux
@@ -53,7 +59,7 @@ task CopyAzToGcp {
 
 	runtime {
 		docker: docker_name
-		disks: "local-disk " + select_first([disk_size_gb, 50]) + " HDD"
+		disks: "local-disk " + vm_disk_size + " HDD"
 	}
 }
 
@@ -62,12 +68,16 @@ task CreateFofns {
 		File az_fofn
 		Int width
 		String docker_name
+		Int max_gb_per_disk
+		Boolean skip_too_large_files
 	}
 
 	command <<<
 		python /etc/terra_utils/python/create_az_copy_fofns.py \
 		--full_az_tsv ~{az_fofn} \
-		--width ~{width}
+		--width ~{width} \
+		--max_gb_per_disk ~{max_gb_per_disk} \
+		~{if skip_too_large_files then "--skip_too_large_files" else ""}
 	>>>
 
 	runtime {
@@ -76,5 +86,6 @@ task CreateFofns {
 
 	output {
 		Array[File] output_tsvs = glob("split_*.tsv")
+		Array[File] disk_sizes = glob("disk_size_split_*.txt")
 	}
 }
