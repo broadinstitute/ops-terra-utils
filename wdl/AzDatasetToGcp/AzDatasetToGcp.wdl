@@ -29,7 +29,7 @@ workflow AzDatasetToGcp {
                 tsv=CreateFofns.output_tsvs[index],
                 docker_name=docker_name,
                 minutes_before_reload_token=minutes_before_reload_token,
-                disk_size_gb=CreateFofns.disk_sizes[index],  # Using corresponding disk size
+                disk_size_gb=disk_size,  # Using corresponding disk size
                 log_dir=log_dir
         }
     }
