@@ -111,14 +111,14 @@ class CopyFile:
                 return True
         return False
 
-    def run(self) -> bool:
+    def run(self) -> None:
         az_path = row["az_path"]
         dataset_id = row["dataset_id"]
         target_url = row["target_url"]
         bytes = row["bytes"]
         if self._already_copied(target_url, bytes):
             logging.info(f"Skipping {target_url} as it has already been copied.")
-            return False
+            return
         # if no token for dataset or has already expired or will expire soon
         if (
                 dataset_id not in self.dataset_tokens
@@ -134,7 +134,6 @@ class CopyFile:
             f"Successfully copied {signed_source_url} to local path and then uploaded to {target_url}."
             " Removing local file.")
         os.remove(local_file)
-        return True
 
 
 if __name__ == '__main__':
