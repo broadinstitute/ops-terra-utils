@@ -73,20 +73,35 @@ class CopyFile:
         # Check if expired or will expire in 10 minutes # current_time >= expiry_time or
         return (expiry_time - current_time) <= timedelta(minutes=self.time_before_reload)
 
-    def _validate_copy(self, target_url: str, source_url: str, copy_results: subprocess.CompletedProcess) -> None:
-        if copy_results.returncode != 0 or not self.gcp_util.check_file_exists(target_url):
+    def _validate_az_copy(self, local_path: str, source_url: str, copy_results: subprocess.CompletedProcess) -> None:
+        if copy_results.returncode != 0 or not os.path.isfile(local_path):
             # Regular expression to find the log file path
             match = re.search(r"Log file is located at: (\S+)", copy_results.stdout)
             if match:
                 log_file_path = match.group(1)
-                log_copy_path = os.path.join(self.log_dir, f"{os.path.basename(target_url)}.azcopy_log.txt")
+                log_copy_path = os.path.join(self.log_dir, f"{local_path}.azcopy_log.txt")
                 gcp_util.upload_blob(source_file=log_file_path, destination_path=log_copy_path)
                 logging.info(f"Uploaded log file to {log_copy_path}")
             else:
                 logging.warning("Could not find log file path in azcopy output")
 
-            logging.error(f"Error copying {source_url} to {target_url}")
-            raise Exception(f"Error copying {source_url} to {target_url}")
+            logging.error(f"Error copying {source_url} to {local_path}")
+            raise Exception(f"Error copying {source_url} to {local_path}")
+
+    def _run_az_copy_local(self, signed_source_url: str, target_url: str) -> str:
+        local_path = os.path.basename(target_url)
+        azcopy_command = [
+            self.az_path,
+            "copy",
+            signed_source_url,
+            local_path
+        ]
+        result = subprocess.run(azcopy_command, env=os.environ, capture_output=True, text=True)
+        logging.info(f'stdout for {signed_source_url} to {local_path}: {result.stdout}')
+        logging.info(f'stderr for {signed_source_url} to {local_path}: {result.stderr}')
+        self._validate_az_copy(local_path, signed_source_url, result)
+        logging.info(f"Successfully copied {signed_source_url} to {local_path}")
+        return local_path
 
     def run(self) -> None:
         az_path = row["az_path"]
@@ -99,18 +114,13 @@ class CopyFile:
         ):
             dataset_tokens[dataset_id] = tdr.get_sas_token(dataset_id=dataset_id)
         signed_source_url = az_path + "?" + dataset_tokens[dataset_id]['sas_token']
-        azcopy_command = [
-            self.az_path,
-            "copy",
-            signed_source_url,
-            target_url,
-            "--from-to=BlobFSBlob",  # Ensure cross-cloud transfer
-        ]
-        result = subprocess.run(azcopy_command, env=os.environ, capture_output=True, text=True)
-        logging.info(f'stdout for {signed_source_url} to {target_url}: {result.stdout}')
-        logging.info(f'stderr for {signed_source_url} to {target_url}: {result.stderr}')
-        self._validate_copy(target_url, signed_source_url, result)
-        logging.info(f"Successfully copied {signed_source_url} to {target_url}")
+        local_file = self._run_az_copy_local(signed_source_url, target_url)
+        logging.info(f"Uploading {local_file} to {target_url}")
+        gcp_util.upload_blob(source_file=local_file, destination_path=target_url)
+        logging.info(
+            f"Successfully copied {signed_source_url} to local path and then uploaded to {target_url}."
+            " Removing local file.")
+        os.remove(local_file)
 
 
 if __name__ == '__main__':
