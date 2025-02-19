@@ -1,6 +1,5 @@
 import logging
 from argparse import ArgumentParser, Namespace
-from typing import List
 import pandas as pd
 
 logging.basicConfig(
