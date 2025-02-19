@@ -7,6 +7,7 @@ workflow AzDatasetToGcp {
 		String log_dir
 		Int max_gb_per_file
 		Boolean skip_too_large_files
+		Boolean check_already_copied
 		String? docker
 		Int? minutes_before_reload_token
 	}
@@ -19,7 +20,8 @@ workflow AzDatasetToGcp {
 			width=width,
 			docker_name=docker_name,
 			max_gb_per_file=max_gb_per_file,
-			skip_too_large_files=skip_too_large_files
+			skip_too_large_files=skip_too_large_files,
+			check_already_copied=check_already_copied
 	}
 
     scatter (index in range(length(CreateFofns.output_tsvs))) {
@@ -70,6 +72,7 @@ task CreateFofns {
 		String docker_name
 		Int max_gb_per_file
 		Boolean skip_too_large_files
+		Boolean check_already_copied
 	}
 
 	command <<<
@@ -77,7 +80,8 @@ task CreateFofns {
 		--full_az_tsv ~{az_file_tsv} \
 		--width ~{width} \
 		--max_gb_per_file ~{max_gb_per_file} \
-		~{if skip_too_large_files then "--skip_too_large_files" else ""}
+		~{if skip_too_large_files then "--skip_too_large_files" else ""} \
+		~{if check_already_copied then "--check_already_copied" else ""}
 	>>>
 
 	runtime {
