@@ -1,6 +1,5 @@
 import logging
 from argparse import ArgumentParser, Namespace
-from typing import List
 import pandas as pd
 
 logging.basicConfig(
@@ -24,7 +23,7 @@ def get_args() -> Namespace:
         required=True
     )
     parser.add_argument(
-        "--max_gb_per_disk",
+        "--max_gb_per_file",
         "-m",
         type=int,
         help="Maximum size in GB for any file",
@@ -100,7 +99,7 @@ if __name__ == '__main__':
     args = get_args()
     full_az_tsv = args.full_az_tsv
     width = args.width
-    max_gb_per_file = args.max_gb_per_disk
+    max_gb_per_file = args.max_gb_per_file
     skip_too_big_files = args.skip_too_large_files
     SplitTsv(
         input_tsv=full_az_tsv,

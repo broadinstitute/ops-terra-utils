@@ -2,10 +2,10 @@ version 1.0
 
 workflow AzDatasetToGcp {
 	input {
-		File az_fofn
+		File az_file_tsv
 		Int width
 		String log_dir
-		Int max_gb_per_disk
+		Int max_gb_per_file
 		Boolean skip_too_large_files
 		String? docker
 		Int? minutes_before_reload_token
@@ -15,10 +15,10 @@ workflow AzDatasetToGcp {
 
 	call CreateFofns {
 		input:
-			az_fofn=az_fofn,
+			az_file_tsv=az_file_tsv,
 			width=width,
 			docker_name=docker_name,
-			max_gb_per_disk=max_gb_per_disk,
+			max_gb_per_file=max_gb_per_file,
 			skip_too_large_files=skip_too_large_files
 	}
 
@@ -65,18 +65,18 @@ task CopyAzToGcp {
 
 task CreateFofns {
 	input {
-		File az_fofn
+		File az_file_tsv
 		Int width
 		String docker_name
-		Int max_gb_per_disk
+		Int max_gb_per_file
 		Boolean skip_too_large_files
 	}
 
 	command <<<
 		python /etc/terra_utils/python/create_az_copy_fofns.py \
-		--full_az_tsv ~{az_fofn} \
+		--full_az_tsv ~{az_file_tsv} \
 		--width ~{width} \
-		--max_gb_per_disk ~{max_gb_per_disk} \
+		--max_gb_per_file ~{max_gb_per_file} \
 		~{if skip_too_large_files then "--skip_too_large_files" else ""}
 	>>>
 
