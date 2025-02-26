@@ -82,7 +82,7 @@ task ReheaderFile {
     # Output files from the task
     output {
         File new_bam = "~{new_bam}"
-        File new_baii = "~{new_bai}"
+        File new_bai = "~{new_bai}"
         File new_md5 = "~{new_md5}"
     }
 }
