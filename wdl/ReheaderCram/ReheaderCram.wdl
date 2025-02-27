@@ -23,9 +23,9 @@ workflow ReaheaderCram {
 
     # Output of the workflow includes the new CRAM file, its index, and MD5 checksum.
     output {
-        File cram_path = ReheaderFile.new_cram
-        File crai_path = ReheaderFile.new_crai
-        File md5_path = ReheaderFile.new_md5
+        File reheadered_cram_path = ReheaderFile.new_cram
+        File reheadered_crai_path = ReheaderFile.new_crai
+        File reheadered_cram_md5_path = ReheaderFile.new_md5
     }
 }
 

@@ -23,9 +23,9 @@ workflow ReaheaderBam {
 
     # Output of the workflow includes the new BAM file, its index, and MD5 checksum.
     output {
-        File bam_path = ReheaderFile.new_bam
-        File bai_path = ReheaderFile.new_bai
-        File md5_path = ReheaderFile.new_md5
+        File reheadered_bam_path = ReheaderFile.new_bam
+        File reheadered_bai_path = ReheaderFile.new_bai
+        File reheadered_bam_md5_path = ReheaderFile.new_md5
     }
 }
 
