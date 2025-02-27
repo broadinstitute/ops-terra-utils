@@ -153,3 +153,17 @@ workflows:
     readMePath: /wdl/AzDatasetToGcp/README.md
     testParameterFiles:
       - /wdl/AzDatasetToGcp/AzDatasetToGcp.wdl
+
+  - name: ReheaderCram
+    subclass: WDL
+    primaryDescriptorPath: /wdl/ReheaderCram/ReheaderCram.wdl
+    readMePath: /wdl/ReheaderCram/README.md
+    testParameterFiles:
+      - /wdl/ReheaderCram/ReheaderCram.wdl
+
+  - name: ReheaderBam
+    subclass: WDL
+    primaryDescriptorPath: /wdl/ReheaderBam/ReheaderBam.wdl
+    readMePath: /wdl/ReheaderBam/README.md
+    testParameterFiles:
+      - /wdl/ReheaderBam/ReheaderBam.wdl
