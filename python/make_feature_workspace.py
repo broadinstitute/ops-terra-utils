@@ -17,6 +17,7 @@ logging.basicConfig(
 CLOUD_TYPE = GCP
 FEATURED_WORKSPACE_JSON = "featured-workspaces.json"
 SHOWCASE_JSON = "showcase.json"
+DEFAULT_SERVICE_ACCOUNT = "feature-workspace-sa@operations-portal-427515.iam.gserviceaccount.com"
 
 
 def get_args() -> Namespace:
@@ -229,5 +230,7 @@ if __name__ == '__main__':
         request_util=request_util
     ).write_showcase()
 
+    logging.info(
+        f"Attempting to remove SA '{DEFAULT_SERVICE_ACCOUNT}' from workspace: '{billing_project}/{workspace_name}'")
     # Removes the SA as a direct owner on the workspace
     terra_workspace.leave_workspace()
