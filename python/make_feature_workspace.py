@@ -228,3 +228,6 @@ if __name__ == '__main__':
         workspace_name=workspace_name,
         request_util=request_util
     ).write_showcase()
+
+    # Removes the SA as a direct owner on the workspace
+    terra_workspace.leave_workspace()
