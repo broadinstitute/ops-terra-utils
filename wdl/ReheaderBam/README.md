@@ -9,8 +9,6 @@ header needs to be updated to replace the old sample alias with the new sample a
 | **input_bam**        | The path to the original BAM file.                                                                                                                                               | File   | Yes      | N/A      |
 | **old_sample**       | The OLD sample alias.                                                                                                                                                            | String | Yes      | N/A      |
 | **new_sample**       | The NEW sample alias.                                                                                                                                                            | String | Yes      | N/A      |
-| **ref_fasta**        | The path to the fasta file corresponding to the reference that the file is aligned to. Not required, but helps in making the indexing of the new file go faster/cost less money. | File   | No       | N/A      |
-| **ref_fasta_index**  | The path to the fasta file index. Not required, but should be provided if the `ref_fasta` is provided.                                                                           | File   | No       | N/A      |
 
 ## Outputs Table:
 | Output Name                 | Description                                              | Type |
