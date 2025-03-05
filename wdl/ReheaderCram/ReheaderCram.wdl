@@ -7,8 +7,6 @@ workflow ReaheaderCram {
         File input_cram         # Input CRAM file to be reheadered
         String old_sample       # Original sample name in the CRAM file
         String new_sample       # New sample name to replace the original
-        File? ref_fasta          # Reference genome fasta file
-        File? ref_fasta_index    # Index for the reference genome fasta file
     }
 
     # Main task call to perform reheadering
@@ -17,8 +15,6 @@ workflow ReaheaderCram {
             input_cram = input_cram,
             old_sample = old_sample,
             new_sample = new_sample,
-            ref_fasta = ref_fasta,
-            ref_fasta_index = ref_fasta_index,
     }
 
     # Output of the workflow includes the new CRAM file, its index, and MD5 checksum.
@@ -35,8 +31,6 @@ task ReheaderFile {
         File input_cram         # Input CRAM file to be reheadered
         String old_sample       # Original sample name in the CRAM file
         String new_sample       # New sample name to replace the original
-        File? ref_fasta          # Reference genome fasta file
-        File? ref_fasta_index    # Index for the reference genome fasta file
     }
 
     # Naming convention for new files
@@ -45,7 +39,7 @@ task ReheaderFile {
     String new_md5 = new_sample + ".cram.md5"
 
     # Calculate the required disk size based on input file sizes
-    Int disk_size = ceil((2 * size(input_cram, "GiB")) + size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")) + 20
+    Int disk_size = ceil((2 * size(input_cram, "GiB"))) + 20
 
     command {
         set -e
@@ -63,16 +57,6 @@ task ReheaderFile {
         echo "Generating md5 file"
         # Generate MD5 checksum for the new CRAM file
         md5sum ~{new_cram} > ~{new_md5}
-
-        if [ ! -z "~{ref_fasta}" ]; then
-            echo "Loading reference cache to help in indexing cram file"
-            # Prepare REF_CACHE for indexing the CRAM file
-            seq_cache_populate.pl -root ./ref/cache ~{ref_fasta}
-            export REF_PATH=:
-            export REF_CACHE=./ref/cache/%2s/%2s/%s
-        else
-            echo "No reference was provided, not creating cache"
-        fi
 
         echo "Generating index file"
         # Index the new CRAM file
