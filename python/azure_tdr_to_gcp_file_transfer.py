@@ -126,11 +126,11 @@ class ParseAzCopyOutput:
         fallback_job_id = next((json.loads(log['MessageContent'])['JobID']  # type: ignore[arg-type]
                                for log in copy_logs if isinstance(log['MessageContent'], dict)), None)
         job_id = std_job_id if std_job_id else fallback_job_id
-        job_metadata[job_id] = {}
+        job_metadata[job_id] = {}  # type: ignore[index]
         for log in copy_logs:
             if log['MessageType'] in ['Init', 'Progress', 'EndOfJob']:
                 log_info = self._get_copy_logs(log)
-                job_metadata[job_id][log['MessageType']] = log_info
+                job_metadata[job_id][log['MessageType']] = log_info  # type: ignore[index]
         return job_metadata
 
 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     gcp_bucket = gcp_storage_client.bucket(args.bucket_id)
     export_info = {'endpoint': args.export_type, 'id': args.target_id}
     if args.export_type == 'dataset':
-        file_list = tdr_client.get_data_set_files(
+        file_list = tdr_client.get_dataset_files(
             dataset_id=args.target_id)
     elif args.export_type == 'snapshot':
         logging.warning("Snapshot export not yet implemented")

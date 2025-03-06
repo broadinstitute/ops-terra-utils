@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     # You can now use tdr or terra objects to interact with the TDR or Terra like below
     workspace_bucket = terra.get_workspace_bucket()
-    dataset_files = tdr.get_data_set_files(dataset_id="some_dataset_uuid")
+    dataset_files = tdr.get_dataset_files(dataset_id="some_dataset_uuid")
 
     # There is also more utils located in /python/utils/ that you can use, such as the GCP object,
     # azure, csv as well as more specific terra and tdr ones in their respective folders

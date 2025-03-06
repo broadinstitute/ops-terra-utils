@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # Get all file uuids from metadata
     all_metadata_dataset_file_uuids = tdr.get_data_set_file_uuids_from_metadata(dataset_id=dataset_id)
     # Get all files for dataset
-    files_info = tdr.get_data_set_files(dataset_id=dataset_id, limit=batch_size_to_list_files)
+    files_info = tdr.get_dataset_files(dataset_id=dataset_id, limit=batch_size_to_list_files)
     file_uuids = [file_dict["fileId"] for file_dict in files_info]
 
     # Find any file uuids that exist in the dataset but not in the metadata

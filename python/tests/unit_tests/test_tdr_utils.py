@@ -65,7 +65,7 @@ class TestGetUtils:
         test_data = self.test_info['tests']['get_files_endpoint']
         mock_api_response(test_json=test_data['mock_response']['page_one'])
         mock_api_response(test_json=test_data['mock_response']['page_two'])
-        file_list = self.tdr_client.get_data_set_files(dataset_id=test_data['function_input'])
+        file_list = self.tdr_client.get_dataset_files(dataset_id=test_data['function_input'])
         assert len(file_list) == 3
 
     @responses.activate
