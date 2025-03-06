@@ -167,9 +167,16 @@ class GCPCloudFunctions:
         # If the bucket name starts with gs://, remove it
         if bucket_name.startswith("gs://"):
             bucket_name = bucket_name.split("/")[2].strip()
-        logging.info(f"Running list_blobs on gs://{bucket_name}/")
-        blobs = self.client.list_blobs(bucket_name)
-        logging.info("Finished running. Processing files now")
+
+        logging.info(f"Accessing bucket: {bucket_name} with project: {self.client.project}")
+
+        # Get the bucket object and set user_project for Requester Pays
+        bucket = self.client.bucket(bucket_name, user_project=self.client.project)
+
+        # List blobs within the bucket
+        blobs = bucket.list_blobs()
+        logging.info("Finished listing blobs. Processing files now.")
+
         # Create a list of dictionaries containing file information
         file_list = [
             self._create_bucket_contents_dict(
