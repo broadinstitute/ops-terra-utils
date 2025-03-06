@@ -196,7 +196,7 @@ class TerraWorkspace:
         self.account_url: Optional[str] = None
         self.request_util = request_util
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """
         Return a string representation of the TerraWorkspace instance.
 
