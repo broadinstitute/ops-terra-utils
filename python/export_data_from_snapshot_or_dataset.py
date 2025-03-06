@@ -106,7 +106,7 @@ if __name__ == '__main__':
     if snapshot_id:
         file_metadata = tdr.get_files_from_snapshot(snapshot_id=snapshot_id)
     else:
-        file_metadata = tdr.get_data_set_files(dataset_id=dataset_id)
+        file_metadata = tdr.get_dataset_files(dataset_id=dataset_id)
 
     # get the source and destination mapping and validate that all output paths are unique
     mapping = SourceDestinationMapping(

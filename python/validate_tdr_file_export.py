@@ -30,7 +30,7 @@ if __name__ == "__main__":
     request_util = RunRequest(token=token)
     tdr_client = TDR(request_util=request_util)
     gcp_storage_client = GCPCloudFunctions()
-    file_list = tdr_client.get_data_set_files(dataset_id=args.dataset_id)
+    file_list = tdr_client.get_dataset_files(dataset_id=args.dataset_id)
     checks = []
     for row in file_list:
         # if bucket id passed in with trailing slash remove it

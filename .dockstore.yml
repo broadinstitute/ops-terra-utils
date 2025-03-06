@@ -167,3 +167,10 @@ workflows:
     readMePath: /wdl/ReheaderBam/README.md
     testParameterFiles:
       - /wdl/ReheaderBam/ReheaderBam.wdl
+
+  - name: CleanUpStagingWorkspace
+    subclass: WDL
+    primaryDescriptorPath: /wdl/CleanUpStagingWorkspace/CleanUpStagingWorkspace.wdl
+    readMePath: /wdl/CleanUpStagingWorkspace/README.md
+    testParameterFiles:
+      - /wdl/CleanUpStagingWorkspace/CleanUpStagingWorkspace.wdl

@@ -33,7 +33,7 @@ class TDR:
         """
         self.request_util = request_util
 
-    def get_data_set_files(
+    def get_dataset_files(
             self,
             dataset_id: str,
             limit: int = ARG_DEFAULTS['batch_size_to_list_files']  # type: ignore[assignment]
@@ -96,7 +96,7 @@ class TDR:
         """
         return {
             file_dict['fileId']: file_dict
-            for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
+            for file_dict in self.get_dataset_files(dataset_id=dataset_id, limit=limit)
         }
 
     def create_file_uuid_dict_for_ingest_for_experimental_self_hosted_dataset(
@@ -119,7 +119,7 @@ class TDR:
         """
         return {
             file_dict['fileDetail']['accessUrl']: file_dict['fileId']
-            for file_dict in self.get_data_set_files(dataset_id=dataset_id, limit=limit)
+            for file_dict in self.get_dataset_files(dataset_id=dataset_id, limit=limit)
         }
 
     def get_sas_token(self, snapshot_id: str = "", dataset_id: str = "") -> dict:
