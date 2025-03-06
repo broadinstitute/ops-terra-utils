@@ -30,6 +30,8 @@ def get_args() -> Namespace:
                         help="output file to write the paths to delete.")
     parser.add_argument("-r", "--run_delete", action="store_true",
                         help="If not provided, will only print paths to delete")
+    parser.add_argument("-g", "--gcp_project",
+                        help="Optional GCP project to use. If requester pays is turned on will be needed")
     return parser.parse_args()
 
 
@@ -91,6 +93,7 @@ if __name__ == '__main__':
     file_paths_to_ignore = args.file_paths_to_ignore
     output_file = args.output_file
     run_deletes = args.run_delete
+    gcp_project = args.gcp_project
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -100,7 +103,7 @@ if __name__ == '__main__':
         workspace_name=workspace_name,
         request_util=request_util
     )
-    gcp_utils = GCPCloudFunctions()
+    gcp_utils = GCPCloudFunctions(project=gcp_project)
 
     files_to_delete = GetFilesToDelete(
         terra_workspace=terra_workspace,

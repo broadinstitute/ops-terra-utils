@@ -9,6 +9,7 @@ workflow CleanUpStagingWorkspace {
 		String? file_paths_to_ignore
 		String output_file
 		Boolean run_deletes
+		String? google_project
 		String? docker
 	}
 
@@ -23,6 +24,7 @@ workflow CleanUpStagingWorkspace {
 			file_paths_to_ignore=file_paths_to_ignore,
 			output_file=output_file,
 			run_deletes=run_deletes,
+			google_project=google_project,
 			docker_name=docker_name
 	}
 
@@ -39,6 +41,7 @@ task CleanUpStagingWorkspaceTask {
 		String? file_paths_to_ignore
 		String output_file
 		Boolean run_deletes
+		String? google_project
 		String docker_name
 	}
 
@@ -49,6 +52,7 @@ task CleanUpStagingWorkspaceTask {
 		--workspace_name ~{workspace_name} \
 		--output_file ~{output_file} \
 		~{"--file_paths_to_ignore " + file_paths_to_ignore} \
+		~{"--gcp_project " + google_project} \
 		~{if run_deletes then "--run_delete" else ""}
 	>>>
 
