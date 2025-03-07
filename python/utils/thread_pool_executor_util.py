@@ -27,6 +27,7 @@ class MultiThreadedJobs:
             try:
                 job_output = function(*job_args_list)
                 job_completed = True
+                return job_completed, job_output
             except Exception as e:
                 logging.warning(f"Job failed with error: {e}. Retry {retries + 1}/{max_retries}")
                 retries += 1
