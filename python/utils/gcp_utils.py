@@ -312,7 +312,7 @@ class GCPCloudFunctions:
             verbose (bool, optional): Whether to log each job's success. Defaults to False.
             job_complete_for_logging (int, optional): The number of jobs to complete before logging. Defaults to 500.
         """
-        list_of_jobs_args_list = [[file_path] for file_path in files_to_delete]
+        list_of_jobs_args_list = [[file_path] for file_path in set(files_to_delete)]
 
         MultiThreadedJobs().run_multi_threaded_job(
             workers=workers,
