@@ -64,7 +64,11 @@ class GCPCloudFunctions:
             Any: The GCS blob object.
         """
         file_path_components = self._process_cloud_path(full_path)
-        blob = self.client.bucket(file_path_components["bucket"]).blob(file_path_components["blob_url"])
+
+        # Specify the billing project
+        bucket = self.client.bucket(file_path_components["bucket"], user_project=self.client.project)
+        blob = bucket.blob(file_path_components["blob_url"])
+
         # If blob exists in GCS reload it so metadata is there
         if blob.exists():
             blob.reload()
