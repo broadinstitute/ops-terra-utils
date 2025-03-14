@@ -56,21 +56,24 @@ def get_user() -> Optional[str]:
     return os.getenv("USER")
 
 
-def set_firecloud_account() -> None:
-    firecloud_account = f"{get_user()}@firecloud.org"
-    set_gcloud_account(firecloud_account)
+def switch_gcloud_account(account_email: str) -> None:
 
+    if account_email.endswith("broadinstitute.org"):
+        logging.info("PLEASE SELECT YOUR BROAD ACCOUNT")
+    else:
+        logging.info("PLEASE SELECT YOUR FIRECLOUD ACCOUNT")
 
-def set_broad_account() -> None:
-    gcloud_account = f"{get_user()}@broadinstitute.org"
-    set_gcloud_account(gcloud_account)
+    subprocess.run(["gcloud", "auth", "application-default", "login"], check=True)
+
+    subprocess.run(["gcloud", "config", "set", "account", account_email], check=True)
+    logging.info(f"Successfully set account to {account_email}")
 
 
 if __name__ == '__main__':
     args = parse_args()
     # set broad account
     logging.info("Setting Broad account")
-    set_broad_account()
+    switch_gcloud_account(account_email=f"{get_user()}@broadinstitute.org")
 
     token = Token(cloud=CLOUD_TYPE)
     request_util = RunRequest(token=token)
@@ -92,7 +95,7 @@ if __name__ == '__main__':
 
         # set firecloud account
         logging.info("Setting Firecloud account")
-        set_firecloud_account()
+        switch_gcloud_account(account_email=f"{get_user()}@firecloud.org")
 
         # instantiate the gcp tools
         most_recent_file, file_contents = GCPCloudFunctions(
