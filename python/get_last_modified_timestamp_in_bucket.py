@@ -56,27 +56,30 @@ def get_user() -> Optional[str]:
     return os.getenv("USER")
 
 
-def set_firecloud_account() -> None:
-    firecloud_account = f"{get_user()}@firecloud.org"
-    set_gcloud_account(firecloud_account)
+def switch_gcloud_account(account_email: str) -> None:
 
+    if account_email.endswith("broadinstitute.org"):
+        logging.info("PLEASE SELECT YOUR BROAD ACCOUNT")
+    else:
+        logging.info("PLEASE SELECT YOUR FIRECLOUD ACCOUNT")
 
-def set_broad_account() -> None:
-    gcloud_account = f"{get_user()}@broadinstitute.org"
-    set_gcloud_account(gcloud_account)
+    subprocess.run(["gcloud", "auth", "application-default", "login"], check=True)
+
+    subprocess.run(["gcloud", "config", "set", "account", account_email], check=True)
+    logging.info(f"Successfully set account to {account_email}")
 
 
 if __name__ == '__main__':
     args = parse_args()
     # set broad account
     logging.info("Setting Broad account")
-    set_broad_account()
+    switch_gcloud_account(account_email=f"{get_user()}@broadinstitute.org")
 
     token = Token(cloud=CLOUD_TYPE)
     request_util = RunRequest(token=token)
     workspaces = Csv(file_path=args.input_tsv).create_list_of_dicts_from_tsv()
-    workspace_metadata = []
 
+    google_projects = []
     for workspace in workspaces:
         workspace_name = workspace["workspace_name"]
         billing_project = workspace["billing_project"]
@@ -88,16 +91,26 @@ if __name__ == '__main__':
         ).get_workspace_info()
         google_project = workspace_info["workspace"]["googleProject"]
         logging.info(
-            f"Found Google project {google_project} for billing project/workspace {billing_project}/{workspace_name}")
+            f"Found Google project {google_project} for billing project/workspace {billing_project}/{workspace_name}"
+        )
+        google_projects.append(
+            {
+                "billing_project": billing_project,
+                "workspace_name": workspace_name,
+                "google_project": google_project
+            }
+        )
 
-        # set firecloud account
-        logging.info("Setting Firecloud account")
-        set_firecloud_account()
+    # set firecloud account
+    logging.info("Setting Firecloud account")
+    switch_gcloud_account(account_email=f"{get_user()}@firecloud.org")
 
+    workspace_metadata = []
+    for google_project in google_projects:
         # instantiate the gcp tools
         most_recent_file, file_contents = GCPCloudFunctions(
-            project=google_project
-        ).get_file_contents_of_most_recent_blob_in_bucket(bucket_name=f"storage-logs-{google_project}")
+            project=google_project["google_project"],
+        ).get_file_contents_of_most_recent_blob_in_bucket(bucket_name=f"storage-logs-{google_project['google_project']}")
 
         last_line = file_contents.strip().split("\n")[-1]
         timestamp_microseconds = int(last_line.split(",")[0].strip('"'))
@@ -105,8 +118,8 @@ if __name__ == '__main__':
         human_readable_time = datetime.utcfromtimestamp(timestamp_seconds).strftime('%Y-%m-%d %H:%M:%S')
         workspace_metadata.append(
             {
-                "billing_project": billing_project,
-                "workspace_name": workspace_name,
+                "billing_project": google_project["billing_project"],
+                "workspace_name": google_project["workspace_name"],
                 "most_recent_log_file": most_recent_file,
                 "last_line_in_log": last_line,
                 "last_log_timestamp": human_readable_time
