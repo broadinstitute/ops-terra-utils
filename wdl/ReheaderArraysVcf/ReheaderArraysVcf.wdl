@@ -46,12 +46,12 @@ task ReplaceSampleAlias {
         set -e
 
         # This step is necessary in the event that the alias populated in the `sampleAlias` field is not the same as
-        the one populated in the file header
+        # the one populated in the actual file header
 
         # Get the original sample alias by using zgrep (zgrep is required if files are compressed)
         echo "Getting original sample alias from vcf"
         original_sample_alias=$(zgrep 'sampleAlias' ~{input_vcf} | cut -d'=' -f2)
-        echo "Found original sample alias: $original_sample_alias "
+        echo "Found original sample alias: $original_sample_alias"
 
         # Use sed to replace the original sample alias with the new one provided
         echo "Updating VCF to replace the original sample alias with the new sample alias"
@@ -89,7 +89,7 @@ task ReheaderVCF {
 
     command <<<
         # Use the picard tool to change the alias that's present in the actual header of the file. This also outputs
-        a new index file
+        # a new index file
 
         java -jar /usr/picard/picard.jar RenameSampleInVcf \
         INPUT=~{vcf} \
