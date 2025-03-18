@@ -174,3 +174,10 @@ workflows:
     readMePath: /wdl/CleanUpStagingWorkspace/README.md
     testParameterFiles:
       - /wdl/CleanUpStagingWorkspace/CleanUpStagingWorkspace.wdl
+
+  - name: ReheaderArraysVcf
+    subclass: WDL
+    primaryDescriptorPath: /wdl/ReheaderArraysVcf/ReheaderArraysVcf.wdl
+    readMePath: /wdl/ReheaderArraysVcf/README.md
+    testParameterFiles:
+      - /wdl/ReheaderArraysVcf/ReheaderArraysVcf.wdl
