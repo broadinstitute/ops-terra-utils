@@ -48,8 +48,10 @@ task ReplaceSampleAlias {
         echo "Getting original sample alias from vcf"
         original_sample_alias=$(zgrep 'sampleAlias' ~{input_vcf} | cut -d'=' -f2)
 
+        echo "Found original sample alias: $original_sample_alias "
+
         echo "Updating VCF to replace the original sample alias with the new sample alias"
-        gunzip -c  ~{input_vcf} | sed 's/$original_sample_alias/~{new_sample_alias}/g' | gzip > ~{reheadered_vcf}
+        gunzip -c  ~{input_vcf} | sed "s/$original_sample_alias/~{new_sample_alias}/g" | gzip > ~{reheadered_vcf}
 
     }
 
