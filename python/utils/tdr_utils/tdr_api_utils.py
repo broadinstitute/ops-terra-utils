@@ -7,7 +7,7 @@ from typing import Any, Optional, Union
 from urllib.parse import unquote
 from pydantic import ValidationError
 
-from ..requests_utils.request_util import GET, POST, DELETE
+from ..requests_utils.request_util import GET, POST, DELETE, SetRequestClient
 from ..tdr_api_schema.create_dataset_schema import CreateDatasetSchema
 from ..tdr_api_schema.update_dataset_schema import UpdateSchema
 from .tdr_job_utils import MonitorTDRJob, SubmitAndMonitorMultipleJobs
@@ -24,14 +24,14 @@ class TDR:
     """
     TDR_LINK = "https://data.terra.bio/api/repository/v1"
 
-    def __init__(self, request_util: Any):
+    def __init__(self, auth_method: str):
         """
         Initialize the TDR class.
 
         Args:
-            request_util (Any): Utility for making HTTP requests.
+            auth_method (str): Cloud provider to use for authentication.
         """
-        self.request_util = request_util
+        self.request_util = SetRequestClient(auth_method=auth_method)
 
     def get_dataset_files(
             self,
@@ -177,7 +177,7 @@ class TDR:
             self,
             file_ids: list[str],
             dataset_id: str,
-            batch_size_to_delete_files: int = 250,
+            batch_size_to_delete_files: int = 100,
             check_interval: int = 15) -> None:
         """
         Delete multiple files from a dataset in batches and monitor delete jobs until completion for each batch.

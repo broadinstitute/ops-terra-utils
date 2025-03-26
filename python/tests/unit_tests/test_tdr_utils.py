@@ -7,8 +7,6 @@ from responses import matchers
 from python.utils.tdr_utils.tdr_api_utils import TDR
 from python.utils.tdr_utils.tdr_schema_utils import InferTDRSchema
 from python.utils.tdr_utils.tdr_ingest_utils import BatchIngest
-from python.utils.token_util import Token
-from python.utils.requests_utils.request_util import RunRequest
 
 
 def mock_api_response(test_json):
@@ -48,9 +46,7 @@ def tdr_test_resource_json():
 
 @pytest.fixture()
 def tdr_client():
-    token = Token(cloud='gcp')
-    requestclient = RunRequest(token, max_retries=1, max_backoff_time=1)
-    return TDR(request_util=requestclient)
+    return TDR(auth_method='gcp')
 
 
 class TestGetUtils:
