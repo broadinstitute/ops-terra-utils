@@ -531,7 +531,7 @@ class TerraWorkspace:
             )
         return request_json
 
-    @deprecated("Firecloud functionality has been sunset. There is currently no support for this functionality.")
+    @deprecated("Firecloud functionality has been sunset. There is currently no support for adding library attributes in Terra.")
     def put_metadata_for_library_dataset(self, library_metadata: dict, validate: bool = False) -> dict:
         """
         THIS FUNCTION HAS BEEN DEPRECATED
