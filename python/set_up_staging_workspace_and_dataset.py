@@ -40,6 +40,11 @@ def get_args() -> Namespace:
     parser.add_argument("--controlled_access", action="store_true")
     parser.add_argument("-p", "--phs_id", required=False)
     parser.add_argument(
+        "--dataset_self_hosted",
+        action="store_true",
+        help="If set, the dataset will be self-hosted (files will not be ingested). Default is false"
+    )
+    parser.add_argument(
         "-ro", "--resource_owners",
         type=comma_separated_list,
         help="comma seperated list of resource owners",
@@ -210,6 +215,7 @@ class SetUpDataset:
             controlled_access: bool,
             terra_billing_project: str,
             delete_existing_dataset: bool,
+            dataset_self_hosted: bool,
             workspace_version: Optional[int],
             phs_id: Optional[str] = None,
     ):
@@ -225,10 +231,11 @@ class SetUpDataset:
         self.delete_existing_dataset = delete_existing_dataset
         self.controlled_access = controlled_access
         self.workspace_version = workspace_version
+        self.dataset_self_hosted = dataset_self_hosted
 
     def _create_dataset_properties(self) -> dict:
         additional_properties = {
-            "experimentalSelfHosted": True,
+            "experimentalSelfHosted": self.dataset_self_hosted,
             "dedicatedIngestServiceAccount": True,
             "experimentalPredictableFileIds": True,
             "enableSecureMonitoring": True if self.controlled_access else False,
@@ -530,6 +537,7 @@ if __name__ == '__main__':
     wdls_to_import = args.wdls_to_import
     notebooks_to_import = args.notebooks_to_import
     delete_existing_dataset = args.delete_existing_dataset
+    dataset_self_hosted = args.dataset_self_hosted
     workspace_version = args.workspace_version if args.workspace_version and args.workspace_version > 1 else None
 
     # Validate wdls to import are valid and exclude any that are not
@@ -583,6 +591,7 @@ if __name__ == '__main__':
         controlled_access=controlled_access,
         delete_existing_dataset=delete_existing_dataset,
         workspace_version=workspace_version,
+        dataset_self_hosted=dataset_self_hosted
     )
     if delete_existing_dataset:
         sa_for_dataset_to_delete = dataset_setup.get_sa_for_dataset_to_delete()
