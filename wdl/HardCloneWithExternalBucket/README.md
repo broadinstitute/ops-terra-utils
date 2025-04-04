@@ -6,11 +6,11 @@ This WDL script creates a new workspace that is nearly identical to the source w
 >Library attributes are no longer supported with Terra. If your source workspace has library attributes, they will
 > not be copied to the cloned workspace.
 
->[!WARNING]
+>[!IMPORTANT]
 > **If you are NOT an OWNER of the original workspace, use the `do_not_update_acls` option.** If you do not use it, and
 > you are not an OWNER, this script will run into issues when trying to get ACLs of the source workspace.
 
->[!WARNING]
+>[!IMPORTANT]
 > Make sure your Terra "Proxy Group" has full access to the external_bucket.
 
 ## Inputs Table:
