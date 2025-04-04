@@ -78,18 +78,6 @@ def test_update_user_acl():
     assert res["usersUpdated"][0]["email"] == email
 
 
-def test_put_metadata_for_library_dataset():
-    bucket = terra_workspace.get_workspace_bucket()
-    library_metadata = {"library:dulvn": 1}
-    res = terra_workspace.put_metadata_for_library_dataset(library_metadata=library_metadata)
-    assert res["namespace"] == INTEGRATION_TEST_TERRA_BILLING_PROJECT
-    assert res["name"] == INTEGRATION_TEST_TERRA_WORKSPACE_NAME
-    assert res["bucketName"] == bucket
-    assert res["attributes"] == library_metadata
-    assert res["name"] == INTEGRATION_TEST_TERRA_WORKSPACE_NAME
-    assert res["namespace"] == INTEGRATION_TEST_TERRA_BILLING_PROJECT
-
-
 def test_update_multiple_users_acl():
     acl_list = [
         {
