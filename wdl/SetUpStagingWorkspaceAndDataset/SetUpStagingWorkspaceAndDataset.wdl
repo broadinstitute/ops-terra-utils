@@ -83,7 +83,7 @@ task SetUpStagingEnvironments {
             ~{"--notebooks_to_import " + notebooks_to_import} \
             ~{if delete_existing_dataset then "--delete_existing_dataset" else ""} \
             ~{"--workspace_version " + workspace_version} \
-            ~{if dataset_self_hosted then "--dataset_self_hosted" else ""} \
+            ~{if dataset_self_hosted then "--dataset_self_hosted" else ""}
     >>>
 
     runtime {
