@@ -2,7 +2,13 @@
 
 This WDL script creates a new workspace that is nearly identical to the source workspace. It updates all metadata to point towards the new bucket and copies all files into this new bucket. Note that if metadata contains references to other tables, they may not transfer correctly and might appear as dictionaries or JSON in the new workspace.
 
-**If you are NOT an OWNER of the original workspace use do_not_update_acls option.** If you do not use it, and you are not an OWNER, this script will run into issues when trying get ACLs of the source workspace.
+>[!CAUTION]
+>Library attributes are no longer supported with Terra. If your source workspace has library attributes, they will
+> not be copied to the cloned workspace.
+
+>[!WARNING]
+> **If you are NOT an OWNER of the original workspace, use the `do_not_update_acls` option.** If you do not use it, and
+> you are not an OWNER, this script will run into issues when trying to get ACLs of the source workspace.
 
 ## Inputs Table:
 
