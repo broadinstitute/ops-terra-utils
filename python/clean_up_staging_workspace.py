@@ -7,6 +7,7 @@ from utils.tdr_utils.tdr_api_utils import TDR
 from utils.requests_utils.request_util import RunRequest
 from utils.token_util import Token
 from utils.terra_utils.terra_util import TerraWorkspace
+from utils.bq_utils import BigQueryUtil
 from utils import GCP, comma_separated_list
 from utils.gcp_utils import GCPCloudFunctions
 
@@ -75,14 +76,68 @@ class GetFilesToDelete:
         ]
 
     def get_files_to_delete(self) -> list[str]:
-        if not self._is_self_hosted():
-            logging.error("Dataset is not self hosted, this is only for self hosted datasets")
-            sys.exit(1)
-
-        dataset_files = self._get_dataset_files()
+        self_hosted = self._is_self_hosted()
+        dataset_source_files = GetDatasetSourceFiles(
+            dataset_id=self.dataset_id,
+            tdr_util=self.tdr_util,
+            self_hosted=self_hosted
+        ).run()
         workspace_files_to_compare = self._get_workspace_files_to_compare()
         logging.info(f"Found {len(workspace_files_to_compare)} files in workspace after filtering out paths to ignore")
-        return list(set(workspace_files_to_compare) - set(dataset_files))
+        if self_hosted:
+            # Return files that are in the workspace but not in the dataset since those files
+            # since self hosted so those files are NOT uploaded
+            return list(set(workspace_files_to_compare) - set(dataset_source_files))
+        else:
+            # Return files that are in the dataset and in the workspace.
+            # Since the dataset is not self hosted, we want to delete files that are in the dataset since
+            # we are paying twice.
+            return list(set(workspace_files_to_compare) & set(dataset_source_files))
+
+
+class GetDatasetSourceFiles:
+    def __init__(self, dataset_id: str, tdr_util: TDR, self_hosted: bool):
+        self.dataset_id = dataset_id
+        self.tdr_util = tdr_util
+        self.self_hosted = self_hosted
+
+    def _get_load_history_table(self) -> dict:
+        dataset_info = self.tdr_util.get_dataset_info(dataset_id=self.dataset_id)
+        dataset_google_project = dataset_info["dataProject"]
+        dataset_name = dataset_info["name"]
+        load_history_table = f"{dataset_google_project}.datarepo_{dataset_name}.datarepo_load_history"
+        bq_util = BigQueryUtil()
+        query = f"""SELECT source_name, target_path, file_id
+            FROM `{load_history_table}`
+            where state = 'succeeded'"""
+        logging.info(f"Getting load history table: {load_history_table}")
+        results = bq_util.query_table(query=query)
+        return {
+            row['file_id']: row
+            for row in results
+        }
+
+    def _get_non_self_hosted_source_files(self) -> list[str]:
+        load_history_table_dict = self._get_load_history_table()
+        logging.info(f"Found {len(load_history_table_dict)} files in load history table")
+        dataset_files = self.tdr_util.get_dataset_files(self.dataset_id)
+        logging.info(f"Found {len(dataset_files)} files in dataset files using API")
+        return [
+            load_history_table_dict[file_dict['fileId']]['source_name']
+            for file_dict in dataset_files
+            if file_dict['fileId'] in load_history_table_dict
+        ]
+
+    def _get_self_hosted_source_files(self) -> list[str]:
+        return [
+            file_dict['fileDetail']['accessUrl']
+            for file_dict in self.tdr_util.get_dataset_files(dataset_id=self.dataset_id)
+        ]
+
+    def run(self) -> list[str]:
+        if self.self_hosted:
+            return self._get_self_hosted_source_files()
+        return self._get_non_self_hosted_source_files()
 
 
 if __name__ == '__main__':
