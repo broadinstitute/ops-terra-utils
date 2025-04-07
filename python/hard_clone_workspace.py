@@ -275,13 +275,11 @@ if __name__ == '__main__':
     src_auth_domain = src_workspace_info["workspace"]["authorizationDomain"]
     src_bucket = src_workspace_info["workspace"]["bucketName"]
 
-    # Separate the source workspace attributes into src and library attributes
+    # Gather the workspace attributes. Functionality for library attributes has been
+    # deprecated, and we do not need to collect existing library attributes
     src_attributes = {}
-    library_attributes = {}
     for k, v in src_workspace_info['workspace']['attributes'].items():
-        if k.startswith('library:'):
-            library_attributes[k] = v
-        else:
+        if not k.startswith('library:'):
             src_attributes[k] = v
 
     # Create the destination workspace
@@ -301,10 +299,6 @@ if __name__ == '__main__':
         )
         bucket_to_check = external_bucket if external_bucket else dest_workspace.get_workspace_bucket()
         check_and_wait_for_permissions(bucket=bucket_to_check, total_hours=total_hours)
-
-    # Add the library attributes to the destination workspace if they exist
-    if library_attributes:
-        dest_workspace.put_metadata_for_library_dataset(library_metadata=library_attributes)
 
     dest_workspace_info = dest_workspace.get_workspace_info()
     dest_bucket = dest_workspace_info["workspace"]["bucketName"]

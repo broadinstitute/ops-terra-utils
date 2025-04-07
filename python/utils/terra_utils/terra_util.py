@@ -4,8 +4,7 @@ import re
 from typing import Any, Optional
 from urllib.parse import urlparse
 
-from .. import GCP
-
+from .. import GCP, deprecated
 from ..requests_utils.request_util import GET, POST, PATCH, PUT, DELETE
 
 TERRA_LINK = "https://api.firecloud.org/api"
@@ -532,8 +531,14 @@ class TerraWorkspace:
             )
         return request_json
 
+    @deprecated(
+        """Firecloud functionality has been sunset. There is currently no support for adding library
+        attributes in Terra."""
+    )
     def put_metadata_for_library_dataset(self, library_metadata: dict, validate: bool = False) -> dict:
         """
+        THIS FUNCTION HAS BEEN DEPRECATED
+
         Update the metadata for a library dataset.
 
         Args:
