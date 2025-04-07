@@ -2,7 +2,6 @@ import logging
 import os
 from argparse import ArgumentParser, Namespace
 from typing import Optional
-import tempfile
 
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.requests_utils.request_util import RunRequest
