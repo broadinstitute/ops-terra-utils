@@ -2,6 +2,7 @@ import logging
 import os
 from argparse import ArgumentParser, Namespace
 from typing import Optional
+import tempfile
 
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.requests_utils.request_util import RunRequest
@@ -141,6 +142,56 @@ class GetDatasetSourceFiles:
         return self._get_non_self_hosted_source_files()
 
 
+class MakeListAndDelete:
+    def __init__(
+            self,
+            self_hosted: bool,
+            files_in_both: Optional[list[str]],
+            files_in_workspace_only: Optional[list[str]],
+            delete_from_workspace: Optional[str],
+            gcp_output_dir: str,
+            gcp_util: GCPCloudFunctions
+    ):
+        self.self_hosted = self_hosted
+        self.delete_from_workspace = delete_from_workspace
+        self.files_in_both = files_in_both
+        self.files_in_workspace_only = files_in_workspace_only
+        self.gcp_output_dir = gcp_output_dir
+        self.gcp_util = gcp_util
+
+    def run(self) -> None:
+        to_delete = []
+        if self.files_in_workspace_only:
+            output_file = os.path.join(self.gcp_output_dir, 'files_in_workspace_only.txt')
+            logging.info(f"Writing {output_file}")
+            self.gcp_util.write_to_gcp_file(
+                cloud_path=output_file,
+                file_contents="\n".join(self.files_in_workspace_only)
+            )
+            if self.delete_from_workspace and self.delete_from_workspace == WORKSPACE_ONLY:
+                to_delete.extend(files_in_workspace_only)
+
+        if self.files_in_both:
+            output_file = os.path.join(self.gcp_output_dir, 'file_in_both.txt')
+            logging.info(f"Writing {output_file}")
+            self.gcp_util.write_to_gcp_file(
+                cloud_path=output_file,
+                file_contents="\n".join(self.files_in_both)
+            )
+            if delete_from_workspace and delete_from_workspace == FILES_IN_BOTH:
+                if self_hosted:
+                    raise Exception(
+                        "Cannot delete self hosted source files in both because files in workspace are only copy, "
+                        "files in dataset are just references"
+                    )
+                to_delete.extend(files_in_both)
+
+        # Will only be list if delete_from_workspace is provided and files exist to clean up
+        if to_delete:
+            logging.info(f"Deleting {len(to_delete)} files from workspace which are {delete_from_workspace}")
+            GCPCloudFunctions(project=gcp_project).delete_multiple_files(files_to_delete=to_delete)
+
+
 if __name__ == '__main__':
     args = get_args()
     dataset_id = args.dataset_id
@@ -172,30 +223,11 @@ if __name__ == '__main__':
         self_hosted=self_hosted
     ).get_files_to_delete()
 
-    to_delete = []
-
-    if files_in_workspace_only:
-        output_file = os.path.join(cloud_directory, 'file_in_workspace_only.txt')
-        logging.info(f"Writing {len(files_in_workspace_only)} files in workspace only to {output_file}")
-        with open(output_file, 'w') as f:
-            f.write("\n".join(files_in_workspace_only))
-        if delete_from_workspace and delete_from_workspace == WORKSPACE_ONLY:
-            to_delete.extend(files_in_workspace_only)
-
-    if files_in_both:
-        output_file = os.path.join(cloud_directory, 'file_in_both.txt')
-        logging.info(f"Writing {len(files_in_both)} files in both to {output_file}")
-        with open(output_file, 'w') as f:
-            f.write("\n".join(files_in_both))
-        if delete_from_workspace and delete_from_workspace == FILES_IN_BOTH:
-            if self_hosted:
-                raise Exception(
-                    "Cannot delete self hosted source files in both because files in workspace are only copy, "
-                    "files in dataset are just references"
-                )
-            to_delete.extend(files_in_both)
-
-    # Will only be list if delete_from_workspace is provided and files exist to clean up
-    if to_delete:
-        logging.info(f"Deleting {len(to_delete)} files from workspace which are {delete_from_workspace}")
-        GCPCloudFunctions(project=gcp_project).delete_multiple_files(files_to_delete=to_delete)
+    MakeListAndDelete(
+        self_hosted=self_hosted,
+        files_in_both=files_in_both,
+        files_in_workspace_only=files_in_workspace_only,
+        delete_from_workspace=delete_from_workspace,
+        gcp_output_dir=cloud_directory,
+        gcp_util=gcp_utils
+    ).run()
