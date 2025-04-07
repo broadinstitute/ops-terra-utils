@@ -1,5 +1,5 @@
 import logging
-import sys
+import os
 from argparse import ArgumentParser, Namespace
 from typing import Optional
 
@@ -14,8 +14,10 @@ from utils.gcp_utils import GCPCloudFunctions
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
+WORKSPACE_ONLY = "workspace_only_file"
+FILES_IN_BOTH = "files_in_both"
 
-WDL_NAME_TO_IGNORE = "/call-CleanUpStagingWorkspace/"
+WDL_NAME_TO_IGNORE = "/call-DiffAndCleanUpWorkspace/"
 
 
 def get_args() -> Namespace:
@@ -27,22 +29,24 @@ def get_args() -> Namespace:
     parser.add_argument("-n", "--workspace_name", required=True, help="workspace name")
     parser.add_argument("-i", "--file_paths_to_ignore", type=comma_separated_list,
                         help="comma seperated list of gcp paths to ignore (recursively) in workspace. Not required")
-    parser.add_argument("-o", "--output_file", required=True,
-                        help="output file to write the paths to delete.")
-    parser.add_argument("-r", "--run_delete", action="store_true",
-                        help="If not provided, will only print paths to delete")
+    parser.add_argument("-cd", "--cloud_directory", required=True,
+                        help="Cloud directory to write output files")
+    parser.add_argument("-r", "--delete_from_workspace", choices=[WORKSPACE_ONLY, FILES_IN_BOTH],
+                        help="If not provided, will only make list of files to delete. "
+                             "If provided, will delete files from workspace")
     parser.add_argument("-g", "--gcp_project",
                         help="Optional GCP project to use. If requester pays is turned on will be needed")
     return parser.parse_args()
 
 
-class GetFilesToDelete:
+class GetFileLists:
     def __init__(
             self,
             terra_workspace: TerraWorkspace,
             dataset_id: str,
             tdr_util: TDR,
             gcp_util: GCPCloudFunctions,
+            self_hosted: bool,
             file_paths_to_ignore: Optional[list[str]] = None
     ):
         self.terra_workspace = terra_workspace
@@ -50,6 +54,7 @@ class GetFilesToDelete:
         self.gcp_util = gcp_util
         self.file_paths_to_ignore = file_paths_to_ignore
         self.dataset_id = dataset_id
+        self.self_hosted = self_hosted
 
     def _is_self_hosted(self) -> bool:
         dataset_info = self.tdr_util.get_dataset_info(dataset_id=self.dataset_id)
@@ -75,7 +80,7 @@ class GetFilesToDelete:
             for file_dict in self.tdr_util.get_dataset_files(dataset_id=dataset_id)
         ]
 
-    def get_files_to_delete(self) -> list[str]:
+    def get_files_to_delete(self) -> tuple[list[str], list[str]]:
         self_hosted = self._is_self_hosted()
         dataset_source_files = GetDatasetSourceFiles(
             dataset_id=self.dataset_id,
@@ -84,15 +89,11 @@ class GetFilesToDelete:
         ).run()
         workspace_files_to_compare = self._get_workspace_files_to_compare()
         logging.info(f"Found {len(workspace_files_to_compare)} files in workspace after filtering out paths to ignore")
-        if self_hosted:
-            # Return files that are in the workspace but not in the dataset since those files
-            # since self hosted so those files are NOT uploaded
-            return list(set(workspace_files_to_compare) - set(dataset_source_files))
-        else:
-            # Return files that are in the dataset and in the workspace.
-            # Since the dataset is not self hosted, we want to delete files that are in the dataset since
-            # we are paying twice.
-            return list(set(workspace_files_to_compare) & set(dataset_source_files))
+        files_in_workspace_only = list(set(workspace_files_to_compare) - set(dataset_source_files))
+        logging.info(f"Found {len(files_in_workspace_only)} files in workspace that are not in dataset")
+        files_in_both = list(set(workspace_files_to_compare) & set(dataset_source_files))
+        logging.info(f"Found {len(files_in_both)} files in both workspace and dataset")
+        return files_in_workspace_only, files_in_both
 
 
 class GetDatasetSourceFiles:
@@ -146,8 +147,8 @@ if __name__ == '__main__':
     billing_project = args.billing_project
     workspace_name = args.workspace_name
     file_paths_to_ignore = args.file_paths_to_ignore
-    output_file = args.output_file
-    run_deletes = args.run_delete
+    cloud_directory = args.cloud_directory
+    delete_from_workspace = args.delete_from_workspace
     gcp_project = args.gcp_project
 
     token = Token(cloud=GCP)
@@ -160,27 +161,41 @@ if __name__ == '__main__':
     )
     gcp_utils = GCPCloudFunctions(project=gcp_project)
 
-    files_to_delete = GetFilesToDelete(
+    self_hosted = tdr_util.get_dataset_info(dataset_id=dataset_id)['selfHosted']
+
+    files_in_workspace_only, files_in_both = GetFileLists(
         terra_workspace=terra_workspace,
         dataset_id=dataset_id,
         tdr_util=tdr_util,
         gcp_util=gcp_utils,
-        file_paths_to_ignore=file_paths_to_ignore
+        file_paths_to_ignore=file_paths_to_ignore,
+        self_hosted=self_hosted
     ).get_files_to_delete()
 
-    logging.info(
-        f"Found {len(files_to_delete)} files to delete in {billing_project}/{workspace_name} that are "
-        f"not in dataset {dataset_id}"
-    )
+    to_delete = []
 
-    if files_to_delete:
-        with open(output_file, "w") as f:
-            f.write("\n".join(files_to_delete))
-        logging.info(f"Paths to delete written to {output_file}")
-        if run_deletes:
-            logging.info(f"Deleting {len(files_to_delete)} files")
-            gcp_utils.delete_multiple_files(files_to_delete=files_to_delete)
-        else:
-            logging.info("Run with -r flag to delete files")
-    else:
-        logging.info("No files to delete")
+    if files_in_workspace_only:
+        output_file = os.path.join(cloud_directory, 'file_in_workspace_only.txt')
+        logging.info(f"Writing {len(files_in_workspace_only)} files in workspace only to {output_file}")
+        with open(output_file, 'w') as f:
+            f.write("\n".join(files_in_workspace_only))
+        if delete_from_workspace and delete_from_workspace == WORKSPACE_ONLY:
+            to_delete.extend(files_in_workspace_only)
+
+    if files_in_both:
+        output_file = os.path.join(cloud_directory, 'file_in_both.txt')
+        logging.info(f"Writing {len(files_in_both)} files in both to {output_file}")
+        with open(output_file, 'w') as f:
+            f.write("\n".join(files_in_both))
+        if delete_from_workspace and delete_from_workspace == FILES_IN_BOTH:
+            if self_hosted:
+                raise Exception(
+                    "Cannot delete self hosted source files in both because files in workspace are only copy, "
+                    "files in dataset are just references"
+                )
+            to_delete.extend(files_in_both)
+
+    # Will only be list if delete_from_workspace is provided and files exist to clean up
+    if to_delete:
+        logging.info(f"Deleting {len(to_delete)} files from workspace which are {delete_from_workspace}")
+        GCPCloudFunctions(project=gcp_project).delete_multiple_files(files_to_delete=to_delete)
