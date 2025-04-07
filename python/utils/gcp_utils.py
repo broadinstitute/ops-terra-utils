@@ -664,3 +664,10 @@ class GCPCloudFunctions:
 
         logging.info("No valid files found.")
         return None
+
+    def write_to_gcp_file(self, cloud_path: str, file_contents: str) -> None:
+        """
+        Write content to a file in GCS.
+        """
+        blob = self.load_blob_from_full_path(cloud_path)
+        blob.upload_from_string(file_contents)

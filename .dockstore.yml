@@ -168,12 +168,12 @@ workflows:
     testParameterFiles:
       - /wdl/ReheaderBam/ReheaderBam.wdl
 
-  - name: CleanUpStagingWorkspace
+  - name: DiffAndCleanUpWorkspace
     subclass: WDL
-    primaryDescriptorPath: /wdl/CleanUpStagingWorkspace/CleanUpStagingWorkspace.wdl
-    readMePath: /wdl/CleanUpStagingWorkspace/README.md
+    primaryDescriptorPath: /wdl/DiffAndCleanUpWorkspace/DiffAndCleanUpWorkspace.wdl
+    readMePath: /wdl/DiffAndCleanUpWorkspace/README.md
     testParameterFiles:
-      - /wdl/CleanUpStagingWorkspace/CleanUpStagingWorkspace.wdl
+      - /wdl/DiffAndCleanUpWorkspace/DiffAndCleanUpWorkspace.wdl
 
   - name: ReheaderArraysVcf
     subclass: WDL
