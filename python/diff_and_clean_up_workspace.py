@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from argparse import ArgumentParser, Namespace
 from typing import Optional
 
@@ -8,6 +9,7 @@ from utils.requests_utils.request_util import RunRequest
 from utils.token_util import Token
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils.bq_utils import BigQueryUtil
+from datetime import datetime
 from utils import GCP, comma_separated_list
 from utils.gcp_utils import GCPCloudFunctions
 
@@ -16,6 +18,10 @@ logging.basicConfig(
 )
 WORKSPACE_ONLY = "workspace_only_file"
 FILES_IN_BOTH = "files_in_both"
+
+DATE_STR = datetime.now().strftime("%m-%d-%Y")
+WORKSPACE_ONLY_FILE_NAME = f'files_in_workspace_only.{DATE_STR}.txt'
+FILE_IN_BOTH_FILE_NAME = f'files_in_both.{DATE_STR}.txt'
 
 WDL_NAME_TO_IGNORE = "/call-DiffAndCleanUpWorkspaceTask/"
 
@@ -61,11 +67,11 @@ class GetFileLists:
         return dataset_info['selfHosted']
 
     def _get_workspace_files_to_compare(self) -> list[str]:
-        return [
+        all_file_dicts = self.gcp_util.list_bucket_contents(bucket_name=self.terra_workspace.get_workspace_bucket())
+        logging.info(f"Found {len(all_file_dicts)} files to compare")
+        filtered_file = [
             file_dict['path']
-            for file_dict in self.gcp_util.list_bucket_contents(
-                bucket_name=self.terra_workspace.get_workspace_bucket()
-            )
+            for file_dict in all_file_dicts
             # Filter out paths to ignore if provided
             if (not self.file_paths_to_ignore or
                 not any(file_dict['path'].startswith(ignore) for ignore in self.file_paths_to_ignore)
@@ -73,6 +79,8 @@ class GetFileLists:
             # Filter out paths that have the WDL_NAME_TO_IGNORE in them
             or WDL_NAME_TO_IGNORE in file_dict['path']
         ]
+        logging.info(f"Found {len(filtered_file)} files to compare after filtering out paths to ignore")
+        return filtered_file
 
     def _get_dataset_files(self) -> list[str]:
         return [
@@ -88,7 +96,6 @@ class GetFileLists:
             self_hosted=self_hosted
         ).run()
         workspace_files_to_compare = self._get_workspace_files_to_compare()
-        logging.info(f"Found {len(workspace_files_to_compare)} files in workspace after filtering out paths to ignore")
         files_in_workspace_only = list(set(workspace_files_to_compare) - set(dataset_source_files))
         logging.info(f"Found {len(files_in_workspace_only)} files in workspace that are not in dataset")
         files_in_both = list(set(workspace_files_to_compare) & set(dataset_source_files))
@@ -149,7 +156,9 @@ class MakeListAndDelete:
             files_in_workspace_only: Optional[list[str]],
             delete_from_workspace: Optional[str],
             gcp_output_dir: str,
-            gcp_util: GCPCloudFunctions
+            gcp_util: GCPCloudFunctions,
+            workspace_only_file_path: str,
+            files_in_both_file_path: str
     ):
         self.self_hosted = self_hosted
         self.delete_from_workspace = delete_from_workspace
@@ -157,24 +166,24 @@ class MakeListAndDelete:
         self.files_in_workspace_only = files_in_workspace_only
         self.gcp_output_dir = gcp_output_dir
         self.gcp_util = gcp_util
+        self.workspace_only_file_path = workspace_only_file_path
+        self.files_in_both_file_path = files_in_both_file_path
 
     def run(self) -> None:
         to_delete = []
         if self.files_in_workspace_only:
-            output_file = os.path.join(self.gcp_output_dir, 'files_in_workspace_only.txt')
-            logging.info(f"Writing {output_file}")
+            logging.info(f"Writing {self.workspace_only_file_path}")
             self.gcp_util.write_to_gcp_file(
-                cloud_path=output_file,
+                cloud_path=self.workspace_only_file_path,
                 file_contents="\n".join(self.files_in_workspace_only)
             )
             if self.delete_from_workspace and self.delete_from_workspace == WORKSPACE_ONLY:
                 to_delete.extend(files_in_workspace_only)
 
         if self.files_in_both:
-            output_file = os.path.join(self.gcp_output_dir, 'file_in_both.txt')
-            logging.info(f"Writing {output_file}")
+            logging.info(f"Writing {self.files_in_both_file_path}")
             self.gcp_util.write_to_gcp_file(
-                cloud_path=output_file,
+                cloud_path=self.files_in_both_file_path,
                 file_contents="\n".join(self.files_in_both)
             )
             if delete_from_workspace and delete_from_workspace == FILES_IN_BOTH:
@@ -200,6 +209,15 @@ if __name__ == '__main__':
     cloud_directory = args.cloud_directory
     delete_from_workspace = args.delete_from_workspace
     gcp_project = args.gcp_project
+
+    workspace_only_file_path = os.path.join(cloud_directory, WORKSPACE_ONLY_FILE_NAME)
+    files_in_both_file_path = os.path.join(cloud_directory, FILE_IN_BOTH_FILE_NAME)
+
+    # Ignore the files that are created by this script
+    newly_created_file_list = [workspace_only_file_path, files_in_both_file_path]
+    # If file_paths_to_ignore is provided, append the newly created files to it, else create a new list
+    file_paths_to_ignore = file_paths_to_ignore + newly_created_file_list \
+        if file_paths_to_ignore else newly_created_file_list
 
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -228,5 +246,7 @@ if __name__ == '__main__':
         files_in_workspace_only=files_in_workspace_only,
         delete_from_workspace=delete_from_workspace,
         gcp_output_dir=cloud_directory,
-        gcp_util=gcp_utils
+        gcp_util=gcp_utils,
+        workspace_only_file_path=workspace_only_file_path,
+        files_in_both_file_path=files_in_both_file_path
     ).run()
