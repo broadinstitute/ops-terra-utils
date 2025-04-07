@@ -53,7 +53,7 @@ class GetFileLists:
             tdr_util: TDR,
             gcp_util: GCPCloudFunctions,
             self_hosted: bool,
-            file_paths_to_ignore: Optional[list[str]] = None
+            file_paths_to_ignore: list[str]
     ):
         self.terra_workspace = terra_workspace
         self.tdr_util = tdr_util
@@ -73,11 +73,8 @@ class GetFileLists:
             file_dict['path']
             for file_dict in all_file_dicts
             # Filter out paths to ignore if provided
-            if (not self.file_paths_to_ignore or
-                not any(file_dict['path'].startswith(ignore) for ignore in self.file_paths_to_ignore)
-                )
-            # Filter out paths that have the WDL_NAME_TO_IGNORE in them
-            or WDL_NAME_TO_IGNORE in file_dict['path']
+            if not any(file_dict['path'].startswith(ignore) for ignore in self.file_paths_to_ignore)
+            and not WDL_NAME_TO_IGNORE in file_dict['path']
         ]
         logging.info(f"Found {len(filtered_file)} files to compare after filtering out paths to ignore")
         return filtered_file
