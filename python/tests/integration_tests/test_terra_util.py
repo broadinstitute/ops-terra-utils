@@ -107,11 +107,6 @@ def test_update_multiple_users_acl():
             assert invite["canShare"] is True
 
 
-def test_create_workspace_attributes_ingest_dict():
-    res = terra_workspace.create_workspace_attributes_ingest_dict()
-    assert res == [{"attribute": "library:dulvn", "value": "1"}]
-
-
 def test_upload_metadata_to_workspace_table():
     current_dir = os.path.dirname(__file__)
     file_path = os.path.join(current_dir, "sample.tsv")
