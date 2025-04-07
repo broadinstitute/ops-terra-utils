@@ -17,7 +17,7 @@ logging.basicConfig(
 WORKSPACE_ONLY = "workspace_only_file"
 FILES_IN_BOTH = "files_in_both"
 
-WDL_NAME_TO_IGNORE = "/call-DiffAndCleanUpWorkspace/"
+WDL_NAME_TO_IGNORE = "/call-DiffAndCleanUpWorkspaceTask/"
 
 
 def get_args() -> Namespace:
