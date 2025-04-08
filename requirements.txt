@@ -20,4 +20,4 @@ pyyaml
 humanfriendly
 responses
 gitpython
-git+https://github.com/broadinstitute/ops_util_module.git#egg=ops_terra_utils
+git+https://github.com/broadinstitute/ops_util_module.git#egg=ops_util_module
