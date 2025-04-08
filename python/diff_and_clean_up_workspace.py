@@ -1,12 +1,12 @@
 import logging
 import os
-import sys
 from argparse import ArgumentParser, Namespace
 from typing import Optional
 
 from utils.tdr_utils.tdr_api_utils import TDR
 from utils.requests_utils.request_util import RunRequest
-from utils.token_util import Token
+from ops_utils.token_util import Token
+#from utils.token_util import Token
 from utils.terra_utils.terra_util import TerraWorkspace
 from utils.bq_utils import BigQueryUtil
 from datetime import datetime
