@@ -1,14 +1,14 @@
 import os
 import yaml  # type: ignore[import]  # noqa: F401
 import re
-from .terra_util import TerraWorkspace
-from .. import ARG_DEFAULTS
+from ops_utils.terra_utils.terra_util import TerraWorkspace
+from ops_utils.vars import ARG_DEFAULTS
 import logging
 
 DOCKER_IMAGE = "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"
 # Define the relative path to the file
-DOCKSTORE_YAML = "../../../.dockstore.yml"
-WDL_ROOT_DIR = "../../../"
+DOCKSTORE_YAML = "../../.dockstore.yml"
+WDL_ROOT_DIR = "../../"
 
 # Get the absolute path to the file based on the script's location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))

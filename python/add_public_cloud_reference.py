@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 from pathlib import Path
 
-from utils.gcp_utils import GCPCloudFunctions
+from ops_utils.gcp_utils import GCPCloudFunctions
 
 
 logging.basicConfig(
@@ -81,10 +81,10 @@ class CopyPublicCloudReference:
             for file_mapping in gcs_file_mapping:
                 source = file_mapping.get("source")
                 if source:
-                    dest_file_name = Path(file_mapping["source"]).name
+                    dest_file_name = Path(file_mapping["source"]).name  # type: ignore[arg-type]
                     destination = os.path.join(
                         self._replace_public_bucket_location_with_broad_bucket(
-                            destination_path=file_mapping["destination"]
+                            destination_path=file_mapping["destination"]  # type: ignore[arg-type]
                         ),
                         dest_file_name
                     )

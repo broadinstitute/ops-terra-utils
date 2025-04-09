@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from typing import Optional
-from utils.gcp_utils import GCPCloudFunctions
+from ops_utils.gcp_utils import GCPCloudFunctions
 import logging
 import subprocess
 

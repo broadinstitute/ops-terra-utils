@@ -2,7 +2,7 @@ import pytest
 import json
 import pathlib
 
-from python.utils.gcp_utils import GCPCloudFunctions
+from python.utils_scream_test.gcp_utils import GCPCloudFunctions
 from google.cloud import storage
 from google.auth import default
 

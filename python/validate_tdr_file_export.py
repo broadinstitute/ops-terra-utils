@@ -1,12 +1,12 @@
 import base64
 import binascii
 from argparse import ArgumentParser, Namespace
-from utils.tdr_utils.tdr_api_utils import TDR
-from utils.requests_utils.request_util import RunRequest
-from utils.token_util import Token
-from utils.gcp_utils import GCPCloudFunctions
-from utils.csv_util import Csv
-from utils import GCP
+from ops_utils.tdr_utils.tdr_api_utils import TDR
+from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.token_util import Token
+from ops_utils.gcp_utils import GCPCloudFunctions
+from ops_utils.csv_util import Csv
+from ops_utils.vars import GCP
 
 
 def get_args() -> Namespace:
