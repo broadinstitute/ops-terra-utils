@@ -3,14 +3,15 @@ import os
 from argparse import ArgumentParser, Namespace
 from typing import Optional
 
-from utils.tdr_utils.tdr_api_utils import TDR
-from utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest
-from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER, ADMIN
-from utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
-from utils.requests_utils.request_util import RunRequest
-from utils.token_util import Token
-from utils.gcp_utils import GCPCloudFunctions
-from utils import GCP, comma_separated_list, ARG_DEFAULTS
+from ops_utils.tdr_utils.tdr_api_utils import TDR
+from ops_utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest
+from ops_utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER, ADMIN
+from ops_utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
+from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.token_util import Token
+from ops_utils.gcp_utils import GCPCloudFunctions
+from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils import comma_separated_list
 
 
 logging.basicConfig(
