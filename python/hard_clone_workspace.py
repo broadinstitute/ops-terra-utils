@@ -6,12 +6,13 @@ import logging
 from typing import Any
 from argparse import Namespace, ArgumentParser
 
-from utils import GCP, comma_separated_list, ARG_DEFAULTS
-from utils.terra_utils.terra_util import TerraWorkspace
-from utils.requests_utils.request_util import RunRequest
-from utils.token_util import Token
-from utils.csv_util import Csv
-from utils.gcp_utils import GCPCloudFunctions
+from ops_utils import comma_separated_list
+from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils.terra_utils.terra_util import TerraWorkspace
+from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.token_util import Token
+from ops_utils.csv_util import Csv
+from ops_utils.gcp_utils import GCPCloudFunctions
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -215,7 +216,7 @@ def check_and_wait_for_permissions(bucket: str, total_hours: int) -> None:
         attempt_number = attempt + 1
         try:
             # Try writing a temporary file to the bucket
-            blob = bucket.blob(test_blob_name)
+            blob = bucket.blob(test_blob_name)  # type: ignore[attr-defined]
             blob.upload_from_string(content)
             # Clean up the test file
             blob.delete()

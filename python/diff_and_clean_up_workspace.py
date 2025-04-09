@@ -3,15 +3,15 @@ import os
 from argparse import ArgumentParser, Namespace
 from typing import Optional
 
-from utils.tdr_utils.tdr_api_utils import TDR
-from utils.requests_utils.request_util import RunRequest
+from ops_utils.tdr_utils.tdr_api_utils import TDR
+from ops_utils.requests_utils.request_util import RunRequest
 from ops_utils.token_util import Token
-#from utils.token_util import Token
-from utils.terra_utils.terra_util import TerraWorkspace
-from utils.bq_utils import BigQueryUtil
+from ops_utils.terra_utils.terra_util import TerraWorkspace
+from ops_utils.bq_utils import BigQueryUtil
 from datetime import datetime
-from utils import GCP, comma_separated_list
-from utils.gcp_utils import GCPCloudFunctions
+from ops_utils.vars import GCP
+from ops_utils import comma_separated_list
+from ops_utils.gcp_utils import GCPCloudFunctions
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
