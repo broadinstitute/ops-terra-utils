@@ -20,4 +20,4 @@ pyyaml
 humanfriendly
 responses
 gitpython
-git+https://github.com/broadinstitute/ops_util_module.git@3ceee50aa266f950f1747406ce02e21a6ea59307#egg=ops_util_module
+git+https://github.com/broadinstitute/ops_util_module.git#egg=ops_util_module
