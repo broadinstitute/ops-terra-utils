@@ -4,11 +4,11 @@ import os.path
 from argparse import ArgumentParser
 from collections import Counter
 
-from ops_utils.gcp_utils import GCPCloudFunctions
-from ops_utils.token_util import Token
-from ops_utils.tdr_utils.tdr_api_utils import TDR
-from ops_utils.requests_utils.request_util import RunRequest
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from utils.gcp_utils import GCPCloudFunctions
+from utils.token_util import Token
+from utils.tdr_utils.tdr_api_utils import TDR
+from utils.requests_utils.request_util import RunRequest
+from utils import GCP, ARG_DEFAULTS
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO

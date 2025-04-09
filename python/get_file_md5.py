@@ -1,5 +1,5 @@
 from argparse import ArgumentParser, Namespace
-from ops_utils.gcp_utils import GCPCloudFunctions
+from utils.gcp_utils import GCPCloudFunctions
 import os
 import logging
 

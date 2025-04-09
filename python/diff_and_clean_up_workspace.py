@@ -1,17 +1,17 @@
 import logging
 import os
+import sys
 from argparse import ArgumentParser, Namespace
 from typing import Optional
 
-from ops_utils.tdr_utils.tdr_api_utils import TDR
-from ops_utils.requests_utils.request_util import RunRequest
-from ops_utils.token_util import Token
-from ops_utils.terra_utils.terra_util import TerraWorkspace
-from ops_utils.bq_utils import BigQueryUtil
+from utils.tdr_utils.tdr_api_utils import TDR
+from utils.requests_utils.request_util import RunRequest
+from utils.token_util import Token
+from utils.terra_utils.terra_util import TerraWorkspace
+from utils.bq_utils import BigQueryUtil
 from datetime import datetime
-from ops_utils.vars import GCP
-from ops_utils import comma_separated_list
-from ops_utils.gcp_utils import GCPCloudFunctions
+from utils import GCP, comma_separated_list
+from utils.gcp_utils import GCPCloudFunctions
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -74,7 +74,7 @@ class GetFileLists:
             for file_dict in all_file_dicts
             # Filter out paths to ignore if provided
             if not any(file_dict['path'].startswith(ignore) for ignore in self.file_paths_to_ignore)
-            and WDL_NAME_TO_IGNORE not in file_dict['path']
+            and not WDL_NAME_TO_IGNORE in file_dict['path']
         ]
         logging.info(f"Found {len(filtered_file)} files to compare after filtering out paths to ignore")
         return filtered_file

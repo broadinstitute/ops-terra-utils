@@ -2,11 +2,11 @@
 import logging
 from argparse import ArgumentParser, Namespace
 
-from ops_utils.tdr_utils.tdr_api_utils import TDR
-from ops_utils.tdr_utils.tdr_job_utils import MonitorTDRJob
-from ops_utils.requests_utils.request_util import RunRequest
-from ops_utils.token_util import Token
-from ops_utils.vars import GCP
+from utils.tdr_utils.tdr_api_utils import TDR
+from utils.tdr_utils.tdr_job_utils import MonitorTDRJob
+from utils.requests_utils.request_util import RunRequest
+from utils.token_util import Token
+from utils import GCP
 from collections import defaultdict
 
 logging.basicConfig(
