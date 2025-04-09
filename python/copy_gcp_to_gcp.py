@@ -1,10 +1,10 @@
 import logging
 from argparse import ArgumentParser, Namespace
-from ops_utils.vars import ARG_DEFAULTS
+from utils import ARG_DEFAULTS
 import os
 from collections import Counter
 
-from ops_utils.gcp_utils import GCPCloudFunctions
+from utils.gcp_utils import GCPCloudFunctions
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO

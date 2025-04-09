@@ -1,13 +1,13 @@
 import logging
 import requests
 import re
-from ops_utils.requests_utils.request_util import RunRequest
-from ops_utils.token_util import Token
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from utils.requests_utils.request_util import RunRequest
+from utils.token_util import Token
+from utils import GCP, ARG_DEFAULTS
 from argparse import ArgumentParser, Namespace
 
-from ops_utils.tdr_utils.tdr_api_utils import TDR
-from ops_utils.tdr_utils.tdr_job_utils import MonitorTDRJob
+from utils.tdr_utils.tdr_api_utils import TDR
+from utils.tdr_utils.tdr_job_utils import MonitorTDRJob
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO

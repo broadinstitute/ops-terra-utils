@@ -3,11 +3,11 @@ import logging
 import sys
 from argparse import ArgumentParser, Namespace
 
-from ops_utils.tdr_utils.tdr_api_utils import TDR
-from ops_utils.tdr_utils.tdr_ingest_utils import FilterAndBatchIngest
-from ops_utils.requests_utils.request_util import RunRequest
-from ops_utils.token_util import Token
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from utils.tdr_utils.tdr_api_utils import TDR
+from utils.tdr_utils.tdr_ingest_utils import FilterAndBatchIngest
+from utils.requests_utils.request_util import RunRequest
+from utils.token_util import Token
+from utils import GCP, ARG_DEFAULTS
 
 
 logging.basicConfig(

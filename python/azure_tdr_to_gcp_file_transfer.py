@@ -9,9 +9,9 @@ from datetime import datetime, timezone, timedelta
 from argparse import ArgumentParser, Namespace
 from typing import Union
 
-from ops_utils.tdr_utils.tdr_api_utils import TDR
-from ops_utils.requests_utils.request_util import RunRequest
-from ops_utils.token_util import Token
+from utils.tdr_utils.tdr_api_utils import TDR
+from utils.requests_utils.request_util import RunRequest
+from utils.token_util import Token
 
 
 logging.basicConfig(
