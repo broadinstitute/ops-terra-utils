@@ -3,7 +3,7 @@ import json
 from unittest.mock import MagicMock
 from requests import HTTPError
 
-from python.utils.requests_utils.request_util import RunRequest
+from python.utils_scream_test.requests_utils.request_util import RunRequest
 
 
 """The instance of the Token class here is mocked, so we can simply test the functionality of the interaction

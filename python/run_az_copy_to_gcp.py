@@ -1,11 +1,11 @@
 import logging
-from utils.terra_utils.terra_util import Terra
-from utils.tdr_utils.tdr_api_utils import TDR
-from utils.requests_utils.request_util import RunRequest
-from utils.csv_util import Csv
-from utils.token_util import Token
-from utils.gcp_utils import GCPCloudFunctions
-from utils import GCP
+from ops_utils.terra_utils.terra_util import Terra
+from ops_utils.tdr_utils.tdr_api_utils import TDR
+from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.csv_util import Csv
+from ops_utils.token_util import Token
+from ops_utils.gcp_utils import GCPCloudFunctions
+from ops_utils.vars import GCP
 import json
 import subprocess
 from argparse import ArgumentParser, Namespace

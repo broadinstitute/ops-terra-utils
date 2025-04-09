@@ -3,11 +3,11 @@ import requests
 import os
 import re
 
-from python.utils import GCP
-from python.utils.requests_utils.request_util import RunRequest
-from python.utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER
-from python.utils.terra_utils.terra_workflow_configs import WorkflowConfigs
-from python.utils.token_util import Token
+from python.utils_scream_test import GCP
+from python.utils_scream_test.requests_utils.request_util import RunRequest
+from python.utils_scream_test.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER
+from python.utils.terra_workflow_configs import WorkflowConfigs
+from python.utils_scream_test.token_util import Token
 
 
 INTEGRATION_TEST_TERRA_BILLING_PROJECT = "ops-integration-billing"

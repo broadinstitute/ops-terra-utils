@@ -4,11 +4,11 @@ import pathlib
 import responses
 from responses import matchers
 
-from python.utils.tdr_utils.tdr_api_utils import TDR
-from python.utils.tdr_utils.tdr_schema_utils import InferTDRSchema
-from python.utils.tdr_utils.tdr_ingest_utils import BatchIngest
-from python.utils.token_util import Token
-from python.utils.requests_utils.request_util import RunRequest
+from python.utils_scream_test.tdr_utils.tdr_api_utils import TDR
+from python.utils_scream_test.tdr_utils.tdr_schema_utils import InferTDRSchema
+from python.utils_scream_test.tdr_utils.tdr_ingest_utils import BatchIngest
+from python.utils_scream_test.token_util import Token
+from python.utils_scream_test.requests_utils.request_util import RunRequest
 
 
 def mock_api_response(test_json):

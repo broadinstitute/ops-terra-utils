@@ -3,14 +3,16 @@ import os
 from argparse import ArgumentParser, Namespace
 from typing import Optional
 
-from utils.tdr_utils.tdr_api_utils import TDR
-from utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest
-from utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER, ADMIN
-from utils.terra_utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
-from utils.requests_utils.request_util import RunRequest
-from utils.token_util import Token
-from utils.gcp_utils import GCPCloudFunctions
-from utils import GCP, comma_separated_list, ARG_DEFAULTS
+from utils.terra_workflow_configs import WorkflowConfigs, GetWorkflowNames
+
+from ops_utils.tdr_utils.tdr_api_utils import TDR
+from ops_utils.tdr_utils.tdr_ingest_utils import StartAndMonitorIngest
+from ops_utils.terra_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER, ADMIN
+from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.token_util import Token
+from ops_utils.gcp_utils import GCPCloudFunctions
+from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils import comma_separated_list
 
 
 logging.basicConfig(
@@ -79,8 +81,9 @@ def get_args() -> Namespace:
     parser.add_argument(
         "--wdls_to_import",
         type=comma_separated_list,
-        help=f"""WDLs to import in comma separated list. Options are {GetWorkflowNames().get_workflow_names()}\n,
-         Optional. If include workflow not available it will be ignored""",
+        help="WDLs to import in comma separated list. Options are " +
+             f"{GetWorkflowNames().get_workflow_names()}\n, " +
+             "Optional. If include workflow not available it will be ignored",
         required=False
     )
     parser.add_argument(

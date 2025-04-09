@@ -1,11 +1,11 @@
 import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from utils.azure_utils import AzureBlobDetails, SasTokenUtil
-from utils.terra_utils.terra_util import TerraWorkspace
-from utils.gcp_utils import GCPCloudFunctions
-from utils.requests_utils.request_util import RunRequest
-from utils.token_util import Token
+from ops_utils.azure_utils import AzureBlobDetails, SasTokenUtil
+from ops_utils.terra_utils.terra_util import TerraWorkspace
+from ops_utils.gcp_utils import GCPCloudFunctions
+from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.token_util import Token
 
 
 logging.basicConfig(
@@ -29,7 +29,16 @@ def get_args() -> Namespace:
 
 
 class AzureToGoogleFileTransfer():
-    def __init__(self, blob_list, gcp_bucket, gcp_client, az_accnt_url, az_container, workspace_client, temp_dir):
+    def __init__(
+            self,
+            blob_list: list,
+            gcp_bucket: str,
+            gcp_client: GCPCloudFunctions,
+            az_accnt_url: str,
+            az_container: str,
+            workspace_client: TerraWorkspace,
+            temp_dir: str = './tmp'
+    ):
         self.blob_list = blob_list
         self.export_bucket = gcp_bucket
         self.gcp_client = gcp_client
@@ -39,7 +48,10 @@ class AzureToGoogleFileTransfer():
         self.temp_dir = temp_dir
         self.sas_token = None
 
-    def format_upload_path(self, blob_path):
+    def format_upload_path(
+            self,
+            blob_path: str
+    ) -> str:
         bucket_str = self.export_bucket
         if not bucket_str.startswith('gs://'):
             bucket_str = f"gs://{bucket_str}"
@@ -47,16 +59,22 @@ class AzureToGoogleFileTransfer():
             bucket_str = f"{bucket_str}/"
         return f"{bucket_str}{blob_path}"
 
-    def blob_exists(self, upload_path):
+    def blob_exists(
+            self,
+            upload_path: str
+    ) -> bool:
         return GCPCloudFunctions().get_blob_details(upload_path)
 
-    def delete_file_after_transfer(self, file_path):
+    def delete_file_after_transfer(
+            self,
+            file_path: Path
+    ) -> None:
         try:
             file_path.unlink()
         except Exception as e:
             logging.error(f"Error deleting file {file_path}: {e}")
 
-    def run(self):
+    def run(self) -> None:
         self.sas_token = self.workspace_client.retrieve_sas_token(2400)
         token_util = SasTokenUtil(token=self.sas_token)
         tmp_dir = Path(self.temp_dir)
