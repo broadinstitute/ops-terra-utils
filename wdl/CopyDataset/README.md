@@ -5,17 +5,18 @@ This WDL script copies a dataset. It either uses an existing dataset or creates 
 It can take from 12-24 hours for TDR SA ingest account permissions to propagate to the dataset. If fails with permission error, wait 24 hours and try again.
 
 ## Inputs Table:
-| Input Name                               | Description                                                                                                            | Type    | Required | Default |
-|------------------------------------------|------------------------------------------------------------------------------------------------------------------------|---------|----------|---------|
-| **new_billing_profile**                  | The billing profile ID where the dataset will be transferred.                                                          | String  | Yes      | N/A     |
-| **orig_dataset_id**                      | The ID of the original dataset that will be transferred.                                                               | String  | Yes      | N/A     |
-| **bulk_mode**                            | If `true`, enables bulk ingestion mode for faster transfers.                                                           | Boolean | Yes      | N/A     |
-| **new_dataset_name**                     | The name for the new dataset. Cannot be the same as original.                                                          | String  | Yes      | N/A     |
+| Input Name                               | Description                                                                                                             | Type    | Required | Default |
+|------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|---------|----------|---------|
+| **new_billing_profile**                  | The billing profile ID where the dataset will be transferred.                                                           | String  | Yes      | N/A     |
+| **orig_dataset_id**                      | The ID of the original dataset that will be transferred.                                                                | String  | Yes      | N/A     |
+| **bulk_mode**                            | If `true`, enables bulk ingestion mode for faster transfers.                                                            | Boolean | Yes      | N/A     |
+| **new_dataset_name**                     | The name for the new dataset. Cannot be the same as original.                                                           | String  | Yes      | N/A     |
 | **filter_out_entity_already_in_dataset** | Use if you data might already be ingested and you want to skip any rows where the id already exists in the dest dataset | Boolean | Yes      | N/A     |
-| **ingest_batch_size**                    | The batch size for ingesting data into the new dataset. Optional.                                                      | Int     | No       | 500     |
-| **update_strategy**                      | Specifies how to handle updates. Default is `REPLACE`. Optional.                                                       | String  | No       | REPLACE |
-| **waiting_time_to_poll**                 | The time, in seconds, to wait between polling the status of the ingest job. Optional.                                  | Int     | No       | 120     |
-| **docker**                               | Specifies a custom Docker image to use. Optional.                                                                      | String  | No       | N/A     |
+| **continue_if_exists**                   | If `true`, the script will continue even if the dataset already exists. If `false`, it will raise an error.             | Boolean | Yes      | N/A     |
+| **ingest_batch_size**                    | The batch size for ingesting data into the new dataset. Optional.                                                       | Int     | No       | 500     |
+| **update_strategy**                      | Specifies how to handle updates. Default is `REPLACE`. Optional.                                                        | String  | No       | REPLACE |
+| **waiting_time_to_poll**                 | The time, in seconds, to wait between polling the status of the ingest job. Optional.                                   | Int     | No       | 120     |
+| **docker**                               | Specifies a custom Docker image to use. Optional.                                                                       | String  | No       | N/A     |
 
 
 ## Outputs Table:
