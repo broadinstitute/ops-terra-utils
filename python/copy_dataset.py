@@ -37,6 +37,8 @@ def get_args() -> Namespace:
         help=f"default to {ARG_DEFAULTS['waiting_time_to_poll']}",
         default=ARG_DEFAULTS['waiting_time_to_poll'], type=int
     )
+    parser.add_argument("--continue_if_exists", action="store_true",
+                        help="If used, will continue if dataset already exists")
     parser.add_argument(
         "--bulk_mode",
         action="store_true",
@@ -209,6 +211,7 @@ if __name__ == "__main__":
     filter_out_existing_ids = args.filter_out_existing_ids
     bulk_mode, ingest_batch_size, billing_profile = args.bulk_mode, args.ingest_batch_size, args.new_billing_profile
     new_dataset_name = args.new_dataset_name
+    continue_if_exists = args.continue_if_exists
     # Initialize the Terra and TDR classes
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
@@ -232,7 +235,8 @@ if __name__ == "__main__":
         schema=orig_dataset_info['schema'],
         description=orig_dataset_info['description'],
         cloud_platform=GCP,
-        additional_properties_dict=additional_properties
+        additional_properties_dict=additional_properties,
+        continue_if_exists=continue_if_exists
     )
     dest_dataset_info = tdr.get_dataset_info(dest_dataset_id)
 
