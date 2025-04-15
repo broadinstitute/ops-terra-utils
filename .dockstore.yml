@@ -181,3 +181,10 @@ workflows:
     readMePath: /wdl/ReheaderArraysVcf/README.md
     testParameterFiles:
       - /wdl/ReheaderArraysVcf/ReheaderArraysVcf.wdl
+
+  - name: CombineMetricsFiles
+    subclass: WDL
+    primaryDescriptorPath: /wdl/CombineMetricsFiles/CombineMetricsFiles.wdl
+    readMePath: /wdl/CombineMetricsFiles/README.md
+    testParameterFiles:
+      - /wdl/CombineMetricsFiles/CombineMetricsFiles.wdl
