@@ -36,11 +36,3 @@ jobs:
   E2E_wdl_validation:
     needs: E2E_linting_check
     uses: ./.github/workflows/validate_wdls.yaml
-
-  E2E_integration_tests:
-    concurrency:
-      group: integration-tests
-      cancel-in-progress: false
-    needs: E2E_linting_check
-    uses: ./.github/workflows/integration-tests.yaml
-    secrets: inherit
