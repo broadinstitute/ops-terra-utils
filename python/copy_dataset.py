@@ -278,6 +278,11 @@ if __name__ == "__main__":
             orig_dataset_file_info=original_files_info
         ).run()
         table_name = table_dict['name']
+        if not ingest_records:
+            logging.info(
+                f"No ingest records found for table {table_name}. Skipping ingest."
+            )
+            continue
         logging.info(
             f"Starting ingest for table {table_name} with total of {len(ingest_records)} rows")
         FilterAndBatchIngest(
