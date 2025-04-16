@@ -1,4 +1,4 @@
-# Contributing to Ops terra utils
+# Contributing to ops-terra-utils
 
 Thank you for your interest in contributing to this repository! This document outlines the process for making contributions, testing changes, and submitting pull requests.
 
