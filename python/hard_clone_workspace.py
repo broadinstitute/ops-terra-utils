@@ -58,6 +58,11 @@ def get_args() -> Namespace:
         help=f"Max time to wait for permissions before exiting. Defaults to {MAX_TIME_TO_CHECK_FOR_PERMISSIONS} hours "
              f"if not provided. Cannot be more than {MAX_TIME_TO_CHECK_FOR_PERMISSIONS} hours."
     )
+    parser.add_argument(
+        "--skip_check_if_already_copied",
+        action="store_true",
+        help="Skip checking if files have already been copied to the destination bucket and start copying immediately."
+    )
 
     return parser.parse_args()
 
@@ -117,14 +122,22 @@ class CreateEntityTsv:
 
 
 class CopyFilesToDestWorkspace:
-    def __init__(self, src_bucket: str, dest_bucket: str, workers: int, extensions_to_ignore: list[str] = [],
-                 batch_size: Optional[int] = None):
+    def __init__(
+            self,
+            src_bucket: str,
+            dest_bucket: str,
+            workers: int,
+            skip_check_if_already_copied: bool,
+            extensions_to_ignore: list[str] = [],
+            batch_size: Optional[int] = None
+    ):
         self.src_bucket = src_bucket
         self.dest_bucket = dest_bucket
         self.extensions_to_ignore = extensions_to_ignore
         self.gcp_cloud_functions = GCPCloudFunctions()
         self.workers = workers
         self.batch_size = batch_size
+        self.skip_check_if_already_copied = skip_check_if_already_copied
 
     def run(self) -> None:
         logging.info(f"Getting all files from source bucket {self.src_bucket}")
@@ -162,7 +175,8 @@ class CopyFilesToDestWorkspace:
             self.gcp_cloud_functions.multithread_copy_of_files_with_validation(
                 files_to_copy=batch,
                 workers=self.workers,
-                max_retries=5
+                max_retries=5,
+                skip_check_if_already_copied=self.skip_check_if_already_copied
             )
 
     def _batch_files(self, files: list[dict]) -> list[list[dict]]:
@@ -253,6 +267,7 @@ if __name__ == '__main__':
     batch_size = args.batch_size
     do_not_update_acls = args.do_not_update_acls
     external_bucket = args.external_bucket
+    skip_check_if_already_copied = args.skip_check_if_already_copied
 
     if external_bucket:
         if not external_bucket.startswith("gs://") or not external_bucket.endswith("/"):
@@ -324,7 +339,8 @@ if __name__ == '__main__':
         dest_bucket=dest_bucket,
         extensions_to_ignore=extensions_to_ignore,
         workers=workers,
-        batch_size=batch_size
+        batch_size=batch_size,
+        skip_check_if_already_copied=skip_check_if_already_copied
     ).run()
 
     # Set the destination workspace ACLs

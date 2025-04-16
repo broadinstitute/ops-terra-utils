@@ -14,6 +14,7 @@ workflow HardCloneTerraWorkspace {
 		Int? memory_gb
 		Int? batch_size
 		Boolean check_and_wait_for_permissions
+		Boolean skip_check_if_already_copied
 		Int? max_permissions_wait_time
 	}
 
@@ -34,7 +35,8 @@ workflow HardCloneTerraWorkspace {
 			batch_size=batch_size,
 			do_not_update_acls=do_not_update_acls,
 			check_and_wait_for_permissions=check_and_wait_for_permissions,
-			max_permissions_wait_time=max_permissions_wait_time
+			max_permissions_wait_time=max_permissions_wait_time,
+			skip_check_if_already_copied=skip_check_if_already_copied
 	}
 }
 
@@ -52,6 +54,7 @@ task HardCloneTerraWorkspaceTask {
 		Boolean do_not_update_acls
 		Int? batch_size
 		Boolean check_and_wait_for_permissions
+		Boolean skip_check_if_already_copied
 		Int? max_permissions_wait_time
 	}
 
@@ -67,7 +70,8 @@ task HardCloneTerraWorkspaceTask {
 		~{"--batch_size " + batch_size} \
 		~{if do_not_update_acls then "--do_not_update_acls" else ""} \
 		~{if check_and_wait_for_permissions then "--check_and_wait_for_permissions" else ""} \
-		~{"--max_permissions_wait_time " + max_permissions_wait_time}
+		~{"--max_permissions_wait_time " + max_permissions_wait_time} \
+		~{if skip_check_if_already_copied then "--skip_check_if_already_copied" else ""}
 	>>>
 
 	runtime {
