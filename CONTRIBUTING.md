@@ -18,10 +18,10 @@ If you are interacting with Terra or TDR at all in your script, you will want to
 Token and RunRequest from [pyops-service-toolkit](https://github.com/broadinstitute/pyops-service-toolkit):
 
 ```python
-from ops_utils..request_util import RunRequest
-from ops_utils..token_util import Token
-from ops_utils..terra_util import Terra
-from ops_utils..tdr_util import TDR
+from ops_utils.request_util import RunRequest
+from ops_utils.token_util import Token
+from ops_utils.terra_util import Terra
+from ops_utils.tdr_util import TDR
 
 # Initialize the Terra and TDR classes
 token = Token(cloud=TOKEN_TYPE)  # Either gcp or azure
