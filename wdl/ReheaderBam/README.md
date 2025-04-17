@@ -4,6 +4,8 @@ This WDL script re-headers a BAM file using samtools. This can be used when a sa
 header needs to be updated to replace the old sample alias with the new sample alias.
 
 ## Inputs Table:
+This workflow is designed to use `Run workflow(s) with inputs defined by data table` option.
+
 | Input Name           | Description                                                                                                                                                                      | Type   | Required | Default  |
 |----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|----------|----------|
 | **input_bam**        | The path to the original BAM file.                                                                                                                                               | File   | Yes      | N/A      |

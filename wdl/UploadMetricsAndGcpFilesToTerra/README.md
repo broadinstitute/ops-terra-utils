@@ -9,6 +9,8 @@ This workflow will copy metadata and files from a tsv into a Terra workspace. Al
 * The id_column must be unique, be in every column, and only contain alphanumeric characters, underscores, dashes, and periods.
 
 ## Inputs Table:
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
+
 | Input Name              | Description                                                                                                                                                                                                                                   | Type    | Required | Default                                                                                     |
 |-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|----------|---------------------------------------------------------------------------------------------|
 | **billing_project**     | The Terra billing project.                                                                                                                                                                                                                    | String  | Yes      | N/A                                                                                         |

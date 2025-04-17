@@ -6,6 +6,8 @@ This gets you a list of files in both the dataset and the workspace as well as f
 * If a dataset is self-hosted then you CANNOT delete files that are in both the dataset and the workspace. This is because the dataset is just referencing the files in the workspace.
 
 ## Inputs Table:
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
+
 | Input Name                   | Description                                                                                                                                                                                                                                     | Type   | Required | Default |
 |------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|----------|---------|
 | **dataset_id**               | dataset id that is linked to staging workspace                                                                                                                                                                                                  | String | Yes      | N/A     |

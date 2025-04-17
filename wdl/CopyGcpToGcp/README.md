@@ -7,6 +7,8 @@ It will ensure that all output files have different destination paths so nothing
 Make sure user running this has both read access to the source files and write access to the destination path
 
 ## Inputs Table:
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
+
 | Input Name                   | Description                                                                                                                        | Type    | Required | Default                                                                                       |
 |------------------------------|------------------------------------------------------------------------------------------------------------------------------------|---------|----------|-----------------------------------------------------------------------------------------------|
 | **destination_path**         | Path where files should be copied. Could be just a bucket, like gs://bucket/, or a subdirectory like gs://bucket/path/to/copy/.    | String  | Yes      | N/A                                                                                           |

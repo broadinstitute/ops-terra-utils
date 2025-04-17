@@ -3,6 +3,8 @@
 This WDL script processes a specified table within a dataset, copying files to a temporary bucket (either passed in or derived from a Terra workspace) and then ingesting the renamed files back into the dataset. The renaming is based on the original file's basename from a specified column, changing it to a new file basename, while retaining the same file extension. The temporary files are cleaned up after ingestion, and the process is batched based on the user-defined batch size. Note that orphaned files will be left behind in the dataset.
 
 ## Inputs Table:
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
+
 | Input Name                        | Description                                                                                          | Type    | Required | Default                                                                                     |
 |-----------------------------------|------------------------------------------------------------------------------------------------------|---------|----------|---------------------------------------------------------------------------------------------|
 | **dataset_id**                    | The unique identifier of the dataset.                                                                | String  | Yes      | N/A                                                                                         |

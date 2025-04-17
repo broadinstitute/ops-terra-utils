@@ -2,6 +2,8 @@
 This workflow automates the process of ingesting all metadata and related files from a Terra metadata table to a TDR dataset. The dataset must already exist in order for this workflow to be utilized. However, the target table schema does not need to exist in the dataset, this script will handle either creating a new table, or updating an existing one depending on the parameters provided.
 
 ## Inputs Table:
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
+
 | Input Name                         | Description                                                                                                                                                                                                                                                 | Type    | Required | Default   |
 |------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|----------|-----------|
 | **billing_project**                | The GCP billing project associated with the Terra workspace.                                                                                                                                                                                                | String  | Yes      | N/A       |

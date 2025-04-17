@@ -3,6 +3,8 @@
 This WDL creates the md5sum of a GCP object. It calculates the md5 by streaming the file and does not download it locally.
 
 ## Inputs Table:
+ This workflow is designed to use `Run workflow(s) with inputs defined by data table` option.
+
 | Input Name                | Description                                                                                      | Type    | Required | Default                                                                                     |
 |---------------------------|--------------------------------------------------------------------------------------------------|---------|----------|---------------------------------------------------------------------------------------------|
 | **gcp_file_path**         | Path to the GCP file.                                                                            | String  | Yes      | N/A                                                                                         |

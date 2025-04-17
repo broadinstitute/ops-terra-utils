@@ -7,6 +7,8 @@ joint calling). The original sample alias doesn't need to be provided. It will b
 VCF input.
 
 ## Inputs Table:
+This workflow is designed to use `Run workflow(s) with inputs defined by data table` option.
+
 | Input Name               | Description                        | Type   | Required | Default  |
 |--------------------------|------------------------------------|--------|----------|----------|
 | **input_vcf**            | The path to the original VCF file. | File   | Yes      | N/A      |

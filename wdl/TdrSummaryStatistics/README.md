@@ -3,6 +3,8 @@
 This WDL script creates a tsv that has summary statistics for either a TDR dataset or snapshot. **ONE OF SNAPSHOT OR DATASET NEEDS TO BE PROVIDED.**
 
 ## Inputs Table:
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
+
 | Input Name      | Description                                              | Type   | Required | Default                                                                                     |
 |-----------------|----------------------------------------------------------|--------|----------|---------------------------------------------------------------------------------------------|
 | **dataset_id**  | The TDR dataset ID. Cannot be provided with snapshot_id. | String | No       | N/A                                                                                         |

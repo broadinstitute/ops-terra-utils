@@ -3,6 +3,8 @@
 This WDL re-uploads a gcp object so that the md5 will be stored in its metadata. To do the re-upload it uses gcloud storage cp with daisy chain mode.
 
 ## Inputs Table:
+This workflow is designed to use `Run workflow(s) with inputs defined by data table` option.
+
 | Input Name                  | Description                                                                     | Type   | Required | Default                                                                                     |
 |-----------------------------|---------------------------------------------------------------------------------|--------|----------|---------------------------------------------------------------------------------------------|
 | **gcp_file_path**           | Path to the GCP file.                                                           | String | Yes      | N/A                                                                                         |

@@ -6,6 +6,9 @@ This WDl will delete rows from a table in a TDR. You can specify the table and t
 * This should kick off ONE workflow for all entities. Make sure you are selecting a SET containing all entities.
 
 ## Inputs Table:
+ This workflow is designed to `Run workflow(s) with inputs defined by data table` option.
+
+
 | Input Name               | Description                                                                    | Type          | Required | Default                                                                                       |
 |--------------------------|--------------------------------------------------------------------------------|---------------|----------|-----------------------------------------------------------------------------------------------|
 | **dataset_id**           | dataset id where table exists                                                  | String        | Yes      | N/A                                                                                           |
