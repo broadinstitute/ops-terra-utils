@@ -4,6 +4,8 @@ This WDL script re-headers a CRAM file using samtools. This can be used when a s
 header needs to be updated to replace the old sample alias with the new sample alias.
 
 ## Inputs Table:
+This workflow is designed to use `Run workflow(s) with inputs defined by data table` option.
+
 | Input Name          | Description                                                                                                                                                                      | Type   | Required | Default  |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|----------|----------|
 | **input_cram**      | The path to the original CRAM file.                                                                                                                                              | File   | Yes      | N/A      |

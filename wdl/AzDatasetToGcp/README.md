@@ -1,8 +1,9 @@
 # WDL Input Overview
-
 This WDL copies files from an azure dataset to a gcp bucket. It first copies the files to the VM from azure and then copies up to the GCP bucket.
 
-## Inputs Table:
+## Inputs:
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
+
 | Input Name                      | Description                                                                                                                                                                                                                                                                                                                                       | Type    | Required | Default |
 |---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|----------|---------|
 | **az_file_tsv**                 | Tsv with all of the azure files to be copied. It should include the headers `az_path`, `dataset_id`, `target_url`, and `bytes`                                                                                                                                                                                                                    | File    | Yes      | N/A     |

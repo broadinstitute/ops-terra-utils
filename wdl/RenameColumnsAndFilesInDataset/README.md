@@ -11,6 +11,8 @@ There is some prep needed before the WDL can be run.
 4. Make sure you are Custodian of dataset, member of TDR billing profile, and have write, computer, and share access on the workspace.
  ---
 ## Inputs Table:
+This workflow is designed to use `Run workflow(s) with inputs defined by data table` option.
+
 | Input Name                     | Description                                                                                | Type    | Required | Default                                                                                     |
 |--------------------------------|--------------------------------------------------------------------------------------------|---------|----------|---------------------------------------------------------------------------------------------|
 | **dataset_id**                 | The unique identifier of the dataset.                                                      | String  | Yes      | N/A                                                                                         |

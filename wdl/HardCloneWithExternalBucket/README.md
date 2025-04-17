@@ -14,6 +14,7 @@ This WDL script creates a new workspace that is nearly identical to the source w
 > Make sure your Terra "Proxy Group" has full access to the external_bucket.
 
 ## Inputs Table:
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
 
 | Input Name                         | Description                                                                                                                                                                                                  | Type    | Required | Default                                                                                     |
 |------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|----------|---------------------------------------------------------------------------------------------|

@@ -3,6 +3,7 @@
 This WDL lists all files located in the google bucket associated with a given terra workspace, and uploads metadata for these files into the terra workspace into the file_metadata table.
 
 ## Inputs Table
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
 
 | Input Name                 | Description                                                                                                                                                                                                                                                             | Type   | Required  | Default   |
 |----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|-----------|-----------|

@@ -3,6 +3,8 @@
 This WDL script takes attempts to list all the files in a dataset. If any files in a bad state are encountered, they are deleted.
 
 ## Inputs Table:
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
+
 | Input Name               | Description                                                                                                                                                                                        | Type   | Required | Default                                                                                       |
 |--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|----------|-----------------------------------------------------------------------------------------------|
 | **dataset_id**           | The TDR dataset ID.                                                                                                                                                                                | String | Yes      | N/A                                                                                           |

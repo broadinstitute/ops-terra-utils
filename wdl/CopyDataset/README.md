@@ -5,6 +5,8 @@ This WDL script copies a dataset. It either uses an existing dataset or creates 
 It can take from 12-24 hours for TDR SA ingest account permissions to propagate to the dataset. If fails with permission error, wait 24 hours and try again.
 
 ## Inputs Table:
+ This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
+
 | Input Name                               | Description                                                                                                             | Type    | Required | Default |
 |------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|---------|----------|---------|
 | **new_billing_profile**                  | The billing profile ID where the dataset will be transferred.                                                           | String  | Yes      | N/A     |
