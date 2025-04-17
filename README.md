@@ -1,6 +1,6 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 
-# Ops terra utils Overview
+# ops-terra-utils Overview
 
 Welcome to this repository! This repo contains Python scripts and WDLs designed to be used in conjunction with Terra and the Terra Data Repository (TDR).
 

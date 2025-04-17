@@ -1,4 +1,4 @@
-# Contributing to Ops terra utils
+# Contributing to ops-terra-utils
 
 Thank you for your interest in contributing to this repository! This document outlines the process for making contributions, testing changes, and submitting pull requests.
 
@@ -6,19 +6,22 @@ Thank you for your interest in contributing to this repository! This document ou
 
 - **`python/`**: Contains all Python scripts. New scripts should be placed here.
 - **`wdl/`**: Contains all WDLs. New WDLs should be placed in this directory.
-- **`python/utils/`**: Houses reusable Python utility functions. If possible, reuse or contribute new functions here.
+
+All shared Python functionality for interacting with TDR, Terra, GCP, etc. is located in the [pyops-service-toolkit](https://github.com/broadinstitute/pyops-service-toolkit)
+repository, which is a requirement in the [requirements.txt](requirements.txt) file.
 
 ## Template Python Script
-If you are creating a new python script from scratch you can use [templace_script.py](https://github.com/broadinstitute/ops-terra-utils/blob/main/python/template_script.py) as a starting point. This template includes the necessary imports and a basic structure for the script.
+If you are creating a new python script from scratch you can use [template_script.py](https://github.com/broadinstitute/ops-terra-utils/blob/main/python/template_script.py) as a starting point. This template includes the necessary imports and a basic structure for the script.
 
 ## Interacting with Terra and TDR
-If you are interacting with Terra or TDR at all in your script you will want to follow the pattern of importing Token and RunRequest from the utils like below.
+If you are interacting with Terra or TDR at all in your script, you will want to follow the pattern of importing
+Token and RunRequest from [pyops-service-toolkit](https://github.com/broadinstitute/pyops-service-toolkit):
 
 ```python
-from utils.request_util import RunRequest
-from utils.token_util import Token
-from utils.terra_util import Terra
-from utils.tdr_util import TDR
+from ops_utils.request_util import RunRequest
+from ops_utils.token_util import Token
+from ops_utils.terra_util import Terra
+from ops_utils.tdr_util import TDR
 
 # Initialize the Terra and TDR classes
 token = Token(cloud=TOKEN_TYPE)  # Either gcp or azure
@@ -149,7 +152,7 @@ This method of testing makes a few assumptions:
       ```
 
 ### Adding libraries to the Docker image:
-- If you need to add a new library to the Docker image, update the `requirements.txt` with the new library.
+- If you need to add a new library to the Docker image, update the [`requirements.txt`](requirements.txt) with the new library.
 
 ## Automated Tests
 We have two automated tests run via GitHub actions: linting and `womtools` for WDL validation.
@@ -157,7 +160,7 @@ We have two automated tests run via GitHub actions: linting and `womtools` for W
 ## Submitting Changes
 Before merging any branches to main:
 1. Ensure that all tests pass.
-2. Update the README with any new information about the repository or its contents.
+2. Update the [README.md](README.md) with any new information about the repository or its contents.
 3. Update WDL-specific README with any new information about the WDLs.
 4. Test Python code locally and if WDL changes are made, test the WDLs in a Terra Workspace.
 5. Get approval on the PR from a team member
