@@ -26,7 +26,6 @@ sample_b,metric_namez,metric_valuez
 ## Inputs Table:
  This workflow is designed to use `Run workflow with inputs defined by file paths` option. You can use `Run workflow(s) with inputs defined by data table` option if you set up data table specifically to use this wdl.
 
-
 | Input Name                | Description                                                                                                                                                                                     | Type   | Required | Default |
 |---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|----------|---------|
 | **billing_project**       | Billing project for Terra workspace.                                                                                                                                                            | String | Yes      | N/A     |

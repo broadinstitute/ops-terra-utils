@@ -8,7 +8,6 @@ This WDl will delete rows from a table in a TDR. You can specify the table and t
 ## Inputs Table:
  This workflow is designed to `Run workflow(s) with inputs defined by data table` option.
 
-
 | Input Name               | Description                                                                    | Type          | Required | Default                                                                                       |
 |--------------------------|--------------------------------------------------------------------------------|---------------|----------|-----------------------------------------------------------------------------------------------|
 | **dataset_id**           | dataset id where table exists                                                  | String        | Yes      | N/A                                                                                           |
