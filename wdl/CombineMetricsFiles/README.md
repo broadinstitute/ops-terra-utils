@@ -36,4 +36,6 @@ sample_b,metric_namez,metric_valuez
 
 
 ## Outputs Table:
-This script does not generate any outputs directly. However, logs will be provided to track the progress of the dataset transfer, including details about dataset creation, table confirmation, and data ingestion. You can review the logs in the stderr file for information about the transfer process and the status of the ingestion jobs.
+| Input Name                  | Description              | Type   |
+|-----------------------------|--------------------------|--------|
+| **combined_metrics**        | Combined metrics file    | String |

@@ -23,6 +23,10 @@ workflow CombineMetricsFiles {
 			output_gcp_path=output_gcp_path,
 			identifier_column=identifier_column
 	}
+
+	output {
+		String combined_metrics = CombineMetricsFilesTask.output_gcp_path
+	}
 }
 
 task CombineMetricsFilesTask {
@@ -48,5 +52,9 @@ task CombineMetricsFilesTask {
 
 	runtime {
 		docker: docker_name
+	}
+
+	output {
+		String output_gcp_path = output_gcp_path
 	}
 }
