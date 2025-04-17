@@ -25,7 +25,7 @@ workflow CombineMetricsFiles {
 	}
 
 	output {
-		String combined_metrics = CombineMetricsFilesTask.output_gcp_path
+		String combined_metrics = CombineMetricsFilesTask.combined_metrics_file
 	}
 }
 
@@ -55,6 +55,6 @@ task CombineMetricsFilesTask {
 	}
 
 	output {
-		String output_gcp_path = output_gcp_path
+		String combined_metrics_file = output_gcp_path
 	}
 }
