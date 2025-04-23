@@ -37,7 +37,7 @@ WDL_READ_ME_PATH_FULL_PATH = os.path.join(SCRIPT_DIR, WDL_READ_ME_PATH)
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Set up a staging workspace and dataset")
     parser.add_argument("-d", "--dataset_name", required=True)
-    parser.add_argument("-bp", "--tdr_billing_profile", required=True)
+    parser.add_argument("-bp", "--tdr_billing_profile_uuid", required=True)
     parser.add_argument("-b", "--terra_billing_project", required=True)
     parser.add_argument("--controlled_access", action="store_true")
     parser.add_argument("-p", "--phs_id", required=False)
