@@ -212,7 +212,7 @@ class SetUpDataset:
             dataset_name: str,
             continue_if_exists: bool,
             workspace_name: str,
-            tdr_billing_profile: str,
+            tdr_billing_profile_uuid: str,
             resource_owners: list[str],
             auth_group: str,
             controlled_access: bool,
@@ -228,7 +228,7 @@ class SetUpDataset:
         self.continue_if_exists = continue_if_exists
         self.terra_billing_project = terra_billing_project
         self.workspace_name = workspace_name
-        self.tdr_billing_profile = tdr_billing_profile
+        self.tdr_billing_profile_uuid = tdr_billing_profile_uuid
         self.resource_owners = resource_owners
         self.auth_group = auth_group
         self.delete_existing_dataset = delete_existing_dataset
@@ -314,7 +314,7 @@ class SetUpDataset:
     def get_sa_for_dataset_to_delete(self) -> Optional[str]:
         dataset_metadata = self.tdr.check_if_dataset_exists(
             dataset_name=dataset_name,
-            billing_profile=self.tdr_billing_profile
+            billing_profile=self.tdr_billing_profile_uuid
         )
         if dataset_metadata:
             info = self.tdr.get_dataset_info(dataset_id=dataset_metadata[0]["id"])
@@ -324,7 +324,7 @@ class SetUpDataset:
     def run(self) -> dict:
         dataset_id = self.tdr.get_or_create_dataset(
             dataset_name=dataset_name,
-            billing_profile=self.tdr_billing_profile,
+            billing_profile=self.tdr_billing_profile_uuid,
             schema=self.SCHEMA,
             description="",
             cloud_platform=GCP,
@@ -477,14 +477,14 @@ class SetUpWorkflowConfig:
             terra_workspace: TerraWorkspace,
             workflow_names: Optional[list[str]],
             billing_project: str,
-            tdr_billing_profile: str,
+            tdr_billing_profile_uuid: str,
             dataset_id: str,
             workspace_bucket: str
     ):
         self.terra_workspace = terra_workspace
         self.workflow_names = workflow_names
         self.billing_project = billing_project
-        self.tdr_billing_profile = tdr_billing_profile
+        self.tdr_billing_profile_uuid = tdr_billing_profile_uuid
         self.dataset_id = dataset_id
         self.workspace_bucket = workspace_bucket
 
@@ -502,7 +502,7 @@ class SetUpWorkflowConfig:
                         set_input_defaults=True,
                         extra_default_inputs={
                             "dataset_id": f'"{self.dataset_id}"',
-                            "tdr_billing_profile": f'"{self.tdr_billing_profile}"',
+                            "tdr_billing_profile_uuid": f'"{self.tdr_billing_profile_uuid}"',
                             # When ingesting check if files already exist in dataset and update ingest cells with file
                             # UUID
                             "check_existing_ingested_files": "true",
@@ -534,7 +534,7 @@ if __name__ == '__main__':
     resource_owners = args.resource_owners
     resource_members = args.resource_members
     terra_billing_project = args.terra_billing_project
-    tdr_billing_profile = args.tdr_billing_profile
+    tdr_billing_profile_uuid = args.tdr_billing_profile_uuid
     dbgap_consent_code = args.dbgap_consent_code
     duos_identifier = args.duos_identifier
     wdls_to_import = args.wdls_to_import
@@ -584,7 +584,7 @@ if __name__ == '__main__':
     dataset_setup = SetUpDataset(
         tdr=tdr,
         dataset_name=dataset_name,
-        tdr_billing_profile=tdr_billing_profile,
+        tdr_billing_profile_uuid=tdr_billing_profile_uuid,
         phs_id=phs_id,
         continue_if_exists=True if workspace_version else continue_if_exists,
         terra_billing_project=terra_billing_project,
@@ -627,7 +627,7 @@ if __name__ == '__main__':
         terra_workspace=terra_workspace,
         workflow_names=wdls_to_import,
         billing_project=terra_billing_project,
-        tdr_billing_profile=tdr_billing_profile,
+        tdr_billing_profile_uuid=tdr_billing_profile_uuid,
         dataset_id=dataset_id,
         workspace_bucket=workspace_bucket
     ).run()
