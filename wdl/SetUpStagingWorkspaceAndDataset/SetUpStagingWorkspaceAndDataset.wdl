@@ -3,7 +3,7 @@ version 1.0
 workflow SetUpStagingWorkspaceAndDataset {
     input {
         String dataset_name
-        String tdr_billing_profile
+        String tdr_billing_profile_uuid
         String terra_billing_project
         Boolean controlled_access
         String? phs_id
@@ -26,7 +26,7 @@ workflow SetUpStagingWorkspaceAndDataset {
     call SetUpStagingEnvironments {
         input:
             dataset_name = dataset_name,
-            tdr_billing_profile = tdr_billing_profile,
+            tdr_billing_profile_uuid = tdr_billing_profile_uuid,
             terra_billing_project = terra_billing_project,
             controlled_access = controlled_access,
             phs_id = phs_id,
@@ -48,7 +48,7 @@ workflow SetUpStagingWorkspaceAndDataset {
 task SetUpStagingEnvironments {
     input {
         String dataset_name
-        String tdr_billing_profile
+        String tdr_billing_profile_uuid
         String terra_billing_project
         Boolean controlled_access
         String? phs_id
@@ -69,7 +69,7 @@ task SetUpStagingEnvironments {
     command <<<
         python /etc/terra_utils/python/set_up_staging_workspace_and_dataset.py \
             --dataset_name ~{dataset_name} \
-            --tdr_billing_profile ~{tdr_billing_profile} \
+            --tdr_billing_profile_uuid ~{tdr_billing_profile_uuid} \
             --terra_billing_project ~{terra_billing_project} \
             ~{if controlled_access then "--controlled_access" else ""} \
             ~{"--phs_id " + phs_id} \
