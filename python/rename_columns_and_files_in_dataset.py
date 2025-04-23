@@ -257,7 +257,6 @@ if __name__ == '__main__':
             rows_to_ingest=rows_to_reingest,
             tdr=tdr,
             target_table_name=table_name,
-            cloud_type=CLOUD_TYPE,
             update_strategy=UPDATE_STRATEGY,
             workers=WORKERS,
             dataset_id=dataset_id,
