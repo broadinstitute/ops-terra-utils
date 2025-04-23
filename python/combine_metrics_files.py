@@ -114,5 +114,5 @@ if __name__ == '__main__':
     ).run()
     # Write the combined metrics to the output file
     logging.info(f"Writing to {output_gcp_path}")
-    gcp_functions.write_to_gcs(cloud_path=output_gcp_path, content='\n'.join(full_metrics_list))
+    gcp_functions.write_to_gcp_file(cloud_path=output_gcp_path, file_contents='\n'.join(full_metrics_list))
     logging.info(f"Finished writing to {output_gcp_path}")
