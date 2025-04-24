@@ -6,8 +6,8 @@ from ops_utils.tdr_utils.renaming_util import GetRowAndFileInfoForReingest, Batc
 from ops_utils.tdr_utils.tdr_api_utils import TDR
 from ops_utils.tdr_utils.tdr_ingest_utils import GetPermissionsForWorkspaceIngest
 from ops_utils.token_util import Token
-from ops_utils.requests_utils.request_util import RunRequest
-from ops_utils.terra_utils.terra_util import TerraWorkspace
+from ops_utils.request_util import RunRequest
+from ops_utils.terra_util import TerraWorkspace
 from ops_utils.vars import GCP, ARG_DEFAULTS
 
 logging.basicConfig(

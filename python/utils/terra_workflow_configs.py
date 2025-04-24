@@ -1,7 +1,7 @@
 import os
 import yaml  # type: ignore[import]  # noqa: F401
 import re
-from ops_utils.terra_utils.terra_util import TerraWorkspace
+from ops_utils.terra_util import TerraWorkspace
 from ops_utils.vars import ARG_DEFAULTS
 import logging
 
