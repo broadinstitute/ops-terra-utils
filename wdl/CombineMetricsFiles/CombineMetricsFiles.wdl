@@ -37,7 +37,7 @@ task CombineMetricsFilesTask {
 		String metrics_file_column
 		String output_gcp_path
 		String? identifier_column
-		String? docker_name
+		String docker_name
 	}
 
 	command <<<
