@@ -20,10 +20,9 @@ def parse_args() -> Namespace:
     parser.add_argument("-w", "--workspace_name", type=str, required=True)
     parser.add_argument("-t", "--table_name", type=str, required=True)
     parser.add_argument("-m", "--metrics_file_column", type=str, required=True)
-    parser.add_argument(
-        "-identifier", "--identifier_column", type=str,
-        help="If not supplied will use file name as identifier."
-    )
+    parser.add_argument("-i", "--identifier_column", type=str,
+                        help="If not supplied will use file name as identifier."
+                        )
     parser.add_argument("-o", "--output_gcp_path", type=str, required=True)
     return parser.parse_args()
 
@@ -63,7 +62,6 @@ class CombineMetricFilesContents:
 
     def _read_file_and_add_identifier_column(self, file_path: str, identifier: str) -> list[str]:
         """Read the file and add the identifier column to the data."""
-        logging.info(f"Reading file: {file_path}")
         file_contents = self.gcp_functions.read_file(file_path)
         if file_path.endswith(".csv"):
             delimiter = ","
@@ -80,11 +78,34 @@ class CombineMetricFilesContents:
     def run(self) -> list[str]:
         mapping_dict = self._get_identifier_to_metric_map()
         full_metrics_contents = []
+        total_files = len(mapping_dict)
+        files_read_counter = 0
         for identifier, file_path in mapping_dict.items():
             file_contents = self._read_file_and_add_identifier_column(file_path, identifier)
+            files_read_counter += 1
+            if files_read_counter % 10 == 0:
+                logging.info(f"Read {files_read_counter} of {total_files} files.")
             if file_contents:
                 full_metrics_contents.extend(file_contents)
         return full_metrics_contents
+
+
+class GetTableMetrics:
+    def __init__(self, workspace_util: TerraWorkspace, table_name: str):
+        self.workspace_util = workspace_util
+        self.table_name = table_name
+
+    def _convert_terra_metrics(self, row: dict) -> dict:
+        converted_row = row['attributes']
+        converted_row[f"{row['entityType']}_id"] = row['name']
+        return converted_row
+
+    def run(self) -> list[dict]:
+        table_metrics = workspace_util.get_gcp_workspace_metrics(entity_type=self.table_name)
+        return [
+            self._convert_terra_metrics(row)
+            for row in table_metrics
+        ]
 
 
 if __name__ == '__main__':
@@ -96,18 +117,23 @@ if __name__ == '__main__':
     identifier_column = args.identifier_column
     output_gcp_path = args.output_gcp_path
 
+    if not output_gcp_path.startswith("gs://"):
+        raise ValueError(f"Output GCP path must start with 'gs://'. Got: {output_gcp_path}")
+
     token = Token(cloud=GCP)
     request_util = RunRequest(token=token)
     # Initialize the source Terra workspace classes
     workspace_util = TerraWorkspace(
         billing_project=billing_project, workspace_name=workspace_name, request_util=request_util
     )
-    table_metrics = workspace_util.get_gcp_workspace_metrics(entity_type=table_name)
+
+    # Get and convert terra table metrics to be flat dictionaries
+    converted_table_metrics = GetTableMetrics(workspace_util=workspace_util, table_name=table_name).run()
 
     gcp_functions = GCPCloudFunctions()
     # Combine the metrics files and add the identifier column
     full_metrics_list = CombineMetricFilesContents(
-        terra_metrics=table_metrics,
+        terra_metrics=converted_table_metrics,
         metric_column=metrics_file_column,
         id_column=identifier_column,
         gcp_functions=gcp_functions
@@ -115,4 +141,3 @@ if __name__ == '__main__':
     # Write the combined metrics to the output file
     logging.info(f"Writing to {output_gcp_path}")
     gcp_functions.write_to_gcp_file(cloud_path=output_gcp_path, file_contents='\n'.join(full_metrics_list))
-    logging.info(f"Finished writing to {output_gcp_path}")
