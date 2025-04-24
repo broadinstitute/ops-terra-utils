@@ -1,7 +1,7 @@
 import logging
-from ops_utils.terra_utils.terra_util import Terra
+from ops_utils.terra_util import Terra
 from ops_utils.tdr_utils.tdr_api_utils import TDR
-from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.request_util import RunRequest
 from ops_utils.csv_util import Csv
 from ops_utils.token_util import Token
 from ops_utils.gcp_utils import GCPCloudFunctions

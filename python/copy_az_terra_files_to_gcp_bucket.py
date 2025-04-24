@@ -2,9 +2,9 @@ import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from ops_utils.azure_utils import AzureBlobDetails, SasTokenUtil
-from ops_utils.terra_utils.terra_util import TerraWorkspace
+from ops_utils.terra_util import TerraWorkspace
 from ops_utils.gcp_utils import GCPCloudFunctions
-from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 
 

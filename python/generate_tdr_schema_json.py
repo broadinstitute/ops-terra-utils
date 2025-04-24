@@ -5,10 +5,10 @@ from pathlib import Path
 from ops_utils.vars import GCP, ARG_DEFAULTS
 from ops_utils import comma_separated_list
 from ops_utils.csv_util import Csv
-from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.request_util import RunRequest
 from ops_utils.tdr_utils.tdr_ingest_utils import ConvertTerraTableInfoForIngest
 from ops_utils.tdr_utils.tdr_schema_utils import InferTDRSchema
-from ops_utils.terra_utils.terra_util import TerraWorkspace
+from ops_utils.terra_util import TerraWorkspace
 from ops_utils.token_util import Token
 import logging
 

@@ -2,7 +2,7 @@ import logging
 import argparse
 
 from ops_utils.tdr_utils.tdr_api_utils import TDR
-from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 from ops_utils.vars import GCP, ARG_DEFAULTS
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
     # Get all file uuids from metadata
-    all_metadata_dataset_file_uuids = tdr.get_data_set_file_uuids_from_metadata(dataset_id=dataset_id)
+    all_metadata_dataset_file_uuids = tdr.get_dataset_file_uuids_from_metadata(dataset_id=dataset_id)
     # Get all files for dataset
     files_info = tdr.get_dataset_files(dataset_id=dataset_id, limit=batch_size_to_list_files)
     file_uuids = [file_dict["fileId"] for file_dict in files_info]

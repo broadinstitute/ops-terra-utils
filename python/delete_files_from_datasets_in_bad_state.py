@@ -1,7 +1,7 @@
 import logging
 import requests
 import re
-from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 from ops_utils.vars import GCP, ARG_DEFAULTS
 from argparse import ArgumentParser, Namespace

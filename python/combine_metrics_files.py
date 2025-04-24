@@ -4,8 +4,8 @@ from typing import Optional
 from argparse import Namespace, ArgumentParser
 
 from ops_utils.vars import GCP
-from ops_utils.terra_utils.terra_util import TerraWorkspace
-from ops_utils.requests_utils.request_util import RunRequest
+from ops_utils.terra_util import TerraWorkspace
+from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 from ops_utils.gcp_utils import GCPCloudFunctions
 
