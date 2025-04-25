@@ -72,7 +72,7 @@ class ParseInputDataDict:
     def _convert_values(self, key: str, value: Any) -> Any:
         # Always convert data type to lowercase
         if key == 'data_type':
-            return value.lower()
+            return value.lower() if isinstance(value, str) else value
         # If not string then check if boolean and convert
         else:
             return self._convert_to_bool(value)
