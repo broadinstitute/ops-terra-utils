@@ -62,19 +62,27 @@ class ParseInputDataDict:
     def _convert_to_bool(value: str) -> Any:
         if not value:
             return None
-        if value.lower() == 'y':
+        if value.lower() in ['true', 'yes', 'y']:
             return True
-        elif value.lower() == 'n':
+        elif value.lower() in ['false', 'no', 'n']:
             return False
         else:
             return value
+
+    def _convert_values(self, key: str, value: Any) -> Any:
+        # Always convert data type to lowercase
+        if key == 'data_type':
+            return value.lower() if isinstance(value, str) else value
+        # If not string then check if boolean and convert
+        else:
+            return self._convert_to_bool(value)
 
     def run(self) -> dict:
         if not self.data_dict_contents:
             return {}
         # Create a dictionary with the key being a tuple of table_name and column_name
         return {
-            (row['table_name'], row['column_name']): {k: self._convert_to_bool(v) for k, v in row.items()}
+            (row['table_name'], row['column_name']): {k: self._convert_values(k, v) for k, v in row.items()}
             for row in self.data_dict_contents
         }
 
