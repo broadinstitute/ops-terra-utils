@@ -46,9 +46,9 @@ if __name__ == '__main__':
 
         if create_cloud_md5_file:
             logging.info(f"Copying {local_output_file} to {gcp_file_path}.md5")
-            gcp_utils.copy_onprem_to_cloud(
-                onprem_src_path=local_output_file,
-                cloud_dest_path=f"{gcp_file_path}.md5"
+            gcp_utils.upload_blob(
+                source_file=local_output_file,
+                destination_path=f"{gcp_file_path}.md5"
             )
 
         if local_output_file == TEMP_LOCAL_FILE:
