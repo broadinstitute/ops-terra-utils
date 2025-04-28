@@ -6,7 +6,7 @@ import logging
 from typing import Any
 from argparse import Namespace, ArgumentParser
 
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils.vars import ARG_DEFAULTS
 from ops_utils import comma_separated_list
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.request_util import RunRequest

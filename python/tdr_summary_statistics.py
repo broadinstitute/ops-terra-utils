@@ -8,7 +8,6 @@ from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 from ops_utils.csv_util import Csv
 from ops_utils.tdr_utils.tdr_bq_utils import TdrBq, GetTdrAssetInfo
-from ops_utils.vars import GCP
 
 FILE_REF = "fileref"
 OUTPUT_FILE = "summary_statistics.tsv"

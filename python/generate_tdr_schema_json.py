@@ -2,7 +2,7 @@ import argparse
 import json
 from pathlib import Path
 
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils.vars import ARG_DEFAULTS
 from ops_utils import comma_separated_list
 from ops_utils.csv_util import Csv
 from ops_utils.request_util import RunRequest

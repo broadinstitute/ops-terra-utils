@@ -10,7 +10,6 @@ from ops_utils.token_util import Token
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.bq_utils import BigQueryUtil
 from datetime import datetime
-from ops_utils.vars import GCP
 from ops_utils import comma_separated_list
 from ops_utils.gcp_utils import GCPCloudFunctions
 

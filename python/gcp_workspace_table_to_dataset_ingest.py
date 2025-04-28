@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils.vars import ARG_DEFAULTS
 from ops_utils import comma_separated_list
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.tdr_utils.tdr_api_utils import TDR, FilterOutSampleIdsAlreadyInDataset
