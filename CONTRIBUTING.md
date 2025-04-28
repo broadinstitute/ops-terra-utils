@@ -24,7 +24,7 @@ from ops_utils.terra_util import Terra
 from ops_utils.tdr_util import TDR
 
 # Initialize the Terra and TDR classes
-token = Token(cloud=TOKEN_TYPE)  # Either gcp or azure
+token = Token()
 request_util = RunRequest(token=token)
 tdr = TDR(request_util=request_util)
 terra = Terra(request_util=request_util)

@@ -93,7 +93,7 @@ if __name__ == '__main__':
     dataset_id = args.dataset_id
     limit = args.file_query_limit
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token, max_retries=1, max_backoff_time=10)
     tdr = TDR(request_util=request_util)
 

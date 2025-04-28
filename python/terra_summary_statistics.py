@@ -492,7 +492,7 @@ if __name__ == '__main__':
     # Parse the input data dictionary contents
     input_data = ParseInputDataDict(data_dict_contents=data_dict_contents).run()
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     terra = TerraWorkspace(request_util=request_util, workspace_name=workspace_name, billing_project=billing_project)
 

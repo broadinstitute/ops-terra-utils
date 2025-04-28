@@ -14,8 +14,6 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-CLOUD_TYPE = GCP
-
 
 def get_args() -> argparse.Namespace:
     parser = ArgumentParser(description="Download data from an existing snapshot to a Google bucket")
@@ -99,7 +97,7 @@ if __name__ == '__main__':
     if not (snapshot_id or dataset_id):
         raise Exception("Either snapshot id OR dataset id are required. Received neither")
 
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
 

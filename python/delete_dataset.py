@@ -7,13 +7,10 @@ from argparse import ArgumentParser, Namespace
 from ops_utils.tdr_utils.tdr_api_utils import TDR
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
-from ops_utils.vars import GCP
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
-
-CLOUD_TYPE = GCP
 
 
 def get_args() -> Namespace:
@@ -26,7 +23,7 @@ if __name__ == '__main__':
     args = get_args()
     dataset_id = args.dataset_id
 
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
     tdr.delete_dataset(dataset_id=dataset_id)

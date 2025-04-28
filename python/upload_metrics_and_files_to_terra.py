@@ -153,7 +153,7 @@ if __name__ == '__main__':
     metrics_tsv, skip_upload_column = args.metrics_tsv, args.skip_upload_column
     flatten_path, subdir = args.flatten_path, args.subdir
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     # Create Terra object to interact with the Terra with the request_util object
     terra_workspace = TerraWorkspace(

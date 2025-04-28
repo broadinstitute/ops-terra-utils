@@ -26,7 +26,7 @@ def get_args() -> Namespace:
 
 if __name__ == "__main__":
     args = get_args()
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     tdr_client = TDR(request_util=request_util)
     gcp_storage_client = GCPCloudFunctions()

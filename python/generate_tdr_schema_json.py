@@ -12,8 +12,6 @@ from ops_utils.terra_util import TerraWorkspace
 from ops_utils.token_util import Token
 import logging
 
-CLOUD_TYPE = GCP
-
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
@@ -91,7 +89,7 @@ if __name__ == '__main__':
         ).infer_schema()
         schema_metadata.append(schema)
     else:
-        token = Token(cloud=CLOUD_TYPE)
+        token = Token()
         request_util = RunRequest(
             token=token,
             max_retries=ARG_DEFAULTS["max_retries"],

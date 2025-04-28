@@ -62,7 +62,7 @@ if __name__ == '__main__':
     extension_exclude_list = args.extension_exclude_list
     extension_include_list = args.extension_include_list
 
-    auth_token = Token(cloud=GCP)
+    auth_token = Token()
     request_util = RunRequest(token=auth_token)
 
     workspace = TerraWorkspace(billing_project=billing_project,

@@ -217,7 +217,7 @@ if __name__ == '__main__':
     file_paths_to_ignore = file_paths_to_ignore + newly_created_file_list \
         if file_paths_to_ignore else newly_created_file_list
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     tdr_util = TDR(request_util=request_util)
     terra_workspace = TerraWorkspace(

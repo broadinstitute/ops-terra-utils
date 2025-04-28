@@ -237,7 +237,7 @@ if __name__ == '__main__':
     dataset_id = args.dataset_id
     snapshot_id = args.snapshot_id
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token, max_retries=1, max_backoff_time=1)
     tdr = TDR(request_util=request_util)
 

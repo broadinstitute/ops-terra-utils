@@ -21,7 +21,6 @@ logging.basicConfig(
 
 # Columns to ignore when ingesting
 COLUMNS_TO_IGNORE = ["datarepo_row_id", "import:timestamp", "import:snapshot_id", "tdr:sample_id"]
-CLOUD_TYPE = GCP
 TEST_INGEST = False  # Whether to test the ingest by just doing first batch
 
 
@@ -138,7 +137,7 @@ if __name__ == "__main__":
     ignore_existing_schema_mismatch = args.ignore_existing_schema_mismatch
 
     # Initialize the Terra and TDR classes
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     terra_workspace = TerraWorkspace(
         billing_project=billing_project, workspace_name=workspace_name, request_util=request_util
@@ -250,7 +249,6 @@ if __name__ == "__main__":
             dataset_id=dataset_id,
             batch_size=batch_size,
             bulk_mode=bulk_mode,
-            cloud_type=CLOUD_TYPE,
             update_strategy=update_strategy,
             waiting_time_to_poll=ARG_DEFAULTS['waiting_time_to_poll'],
             test_ingest=TEST_INGEST,

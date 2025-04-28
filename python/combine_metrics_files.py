@@ -120,7 +120,7 @@ if __name__ == '__main__':
     if not output_gcp_path.startswith("gs://"):
         raise ValueError(f"Output GCP path must start with 'gs://'. Got: {output_gcp_path}")
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     # Initialize the source Terra workspace classes
     workspace_util = TerraWorkspace(

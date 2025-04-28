@@ -10,8 +10,6 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-CLOUD_TYPE = GCP
-
 
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Get files that are not in the dataset metadata")
@@ -63,7 +61,7 @@ if __name__ == "__main__":
     batch_size_to_delete_files = args.batch_size_to_delete_files
 
     # Initialize the Terra and TDR classes
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
     # Get all file uuids from metadata

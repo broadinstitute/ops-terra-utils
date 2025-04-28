@@ -10,8 +10,6 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-CLOUD_TYPE = GCP
-
 
 def get_args() -> Namespace:
     parser = ArgumentParser(
@@ -97,7 +95,7 @@ if __name__ == '__main__':
         ids_to_delete = list(set(f.read().splitlines()))
     logging.info(f"Found {len(ids_to_delete)} ids in {ids_to_delete_file} to delete")
 
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
 

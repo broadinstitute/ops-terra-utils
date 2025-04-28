@@ -14,7 +14,6 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-CLOUD_TYPE = GCP
 # Different then usual because we want to merge the new files with the old ones
 UPDATE_STRATEGY = 'merge'
 
@@ -163,7 +162,7 @@ if __name__ == '__main__':
     report_updates_only = args.report_updates_only
 
     # Initialize TDR classes
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(
         token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)

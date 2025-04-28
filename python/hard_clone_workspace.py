@@ -275,7 +275,7 @@ if __name__ == '__main__':
         # Remove the gs:// prefix and trailing slash to match what is returned by the Terra API
         external_bucket = external_bucket.replace("gs://", "").rstrip("/")
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     # Initialize the source Terra workspace classes
     src_workspace = TerraWorkspace(
