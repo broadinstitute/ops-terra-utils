@@ -7,14 +7,12 @@ from ops_utils.token_util import Token
 from ops_utils.request_util import RunRequest
 from ops_utils.terra_util import TerraWorkspace, Terra
 from ops_utils.gcp_utils import GCPCloudFunctions
-from ops_utils.vars import GCP
 import json
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-CLOUD_TYPE = GCP
 FEATURED_WORKSPACE_JSON = "featured-workspaces.json"
 SHOWCASE_JSON = "showcase.json"
 DEFAULT_SERVICE_ACCOUNT = "feature-workspace-sa@operations-portal-427515.iam.gserviceaccount.com"
@@ -187,7 +185,7 @@ if __name__ == '__main__':
     comms_group = "fc-comms@firecloud.org" if env == "prod" else f"fc-comms@{env}.test.firecloud.org"
 
     # Initialize the necessary classes
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(token=token)
     terra_workspace = TerraWorkspace(
         billing_project=billing_project,

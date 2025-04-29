@@ -15,13 +15,10 @@ from typing import Optional
 
 from ops_utils.csv_util import Csv
 from ops_utils.gcp_utils import GCPCloudFunctions
-from ops_utils.vars import GCP
 from ops_utils.request_util import RunRequest
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.token_util import Token
 from datetime import datetime
-
-CLOUD_TYPE = GCP
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -75,7 +72,7 @@ if __name__ == '__main__':
     logging.info("Setting Broad account")
     switch_gcloud_account(account_email=f"{get_user()}@broadinstitute.org")
 
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(token=token)
     workspaces = Csv(file_path=args.input_tsv).create_list_of_dicts_from_tsv()
 

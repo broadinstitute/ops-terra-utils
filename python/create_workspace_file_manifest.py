@@ -2,7 +2,6 @@ from ops_utils.terra_util import TerraWorkspace
 from ops_utils.gcp_utils import GCPCloudFunctions
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
-from ops_utils.vars import GCP
 from ops_utils import comma_separated_list
 import csv
 
@@ -62,7 +61,7 @@ if __name__ == '__main__':
     extension_exclude_list = args.extension_exclude_list
     extension_include_list = args.extension_include_list
 
-    auth_token = Token(cloud=GCP)
+    auth_token = Token()
     request_util = RunRequest(token=auth_token)
 
     workspace = TerraWorkspace(billing_project=billing_project,

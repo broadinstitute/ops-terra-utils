@@ -6,7 +6,6 @@ from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 from ops_utils.gcp_utils import GCPCloudFunctions
 from ops_utils.csv_util import Csv
-from ops_utils.vars import GCP
 
 
 def get_args() -> Namespace:
@@ -26,7 +25,7 @@ def get_args() -> Namespace:
 
 if __name__ == "__main__":
     args = get_args()
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     tdr_client = TDR(request_util=request_util)
     gcp_storage_client = GCPCloudFunctions()

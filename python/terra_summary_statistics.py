@@ -9,7 +9,6 @@ from datetime import datetime
 
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
-from ops_utils.vars import GCP
 from ops_utils.tdr_utils.tdr_schema_utils import InferTDRSchema
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.csv_util import Csv
@@ -492,7 +491,7 @@ if __name__ == '__main__':
     # Parse the input data dictionary contents
     input_data = ParseInputDataDict(data_dict_contents=data_dict_contents).run()
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     terra = TerraWorkspace(request_util=request_util, workspace_name=workspace_name, billing_project=billing_project)
 

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 from argparse import Namespace, ArgumentParser
 
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils.vars import ARG_DEFAULTS
 from ops_utils import comma_separated_list
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.request_util import RunRequest
@@ -275,7 +275,7 @@ if __name__ == '__main__':
         # Remove the gs:// prefix and trailing slash to match what is returned by the Terra API
         external_bucket = external_bucket.replace("gs://", "").rstrip("/")
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     # Initialize the source Terra workspace classes
     src_workspace = TerraWorkspace(

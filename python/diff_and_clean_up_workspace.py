@@ -10,7 +10,6 @@ from ops_utils.token_util import Token
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.bq_utils import BigQueryUtil
 from datetime import datetime
-from ops_utils.vars import GCP
 from ops_utils import comma_separated_list
 from ops_utils.gcp_utils import GCPCloudFunctions
 
@@ -217,7 +216,7 @@ if __name__ == '__main__':
     file_paths_to_ignore = file_paths_to_ignore + newly_created_file_list \
         if file_paths_to_ignore else newly_created_file_list
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     tdr_util = TDR(request_util=request_util)
     terra_workspace = TerraWorkspace(

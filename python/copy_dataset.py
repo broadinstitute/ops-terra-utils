@@ -7,7 +7,7 @@ from ops_utils.tdr_utils.tdr_api_utils import TDR
 from ops_utils.tdr_utils.tdr_ingest_utils import FilterAndBatchIngest
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils.vars import ARG_DEFAULTS
 
 
 logging.basicConfig(
@@ -213,7 +213,7 @@ if __name__ == "__main__":
     new_dataset_name = args.new_dataset_name
     continue_if_exists = args.continue_if_exists
     # Initialize the Terra and TDR classes
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
 
@@ -234,7 +234,6 @@ if __name__ == "__main__":
         billing_profile=billing_profile,
         schema=orig_dataset_info['schema'],
         description=orig_dataset_info['description'],
-        cloud_platform=GCP,
         additional_properties_dict=additional_properties,
         continue_if_exists=continue_if_exists
     )
@@ -295,7 +294,6 @@ if __name__ == "__main__":
             ingest_waiting_time_poll=time_to_poll,
             ingest_batch_size=ingest_batch_size,
             bulk_mode=False,
-            cloud_type=GCP,
             update_strategy=update_strategy,
             load_tag=f"{orig_dataset_info['name']}-{new_dataset_name}",
             skip_reformat=True

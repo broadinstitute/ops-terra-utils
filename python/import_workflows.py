@@ -31,7 +31,7 @@ def workflow_already_in_workspace(workflow_name: str, workspace_workflows: list[
 
 if __name__ == '__main__':
     args = get_args()
-    auth_token = Token(cloud='gcp')
+    auth_token = Token()
     request_util = RunRequest(token=auth_token)
     workflows_to_import = args.workflow_list
     workspace = TerraWorkspace(billing_project=args.billing_project,

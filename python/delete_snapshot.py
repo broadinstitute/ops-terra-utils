@@ -6,14 +6,12 @@ from ops_utils.tdr_utils.tdr_api_utils import TDR
 from ops_utils.tdr_utils.tdr_job_utils import MonitorTDRJob
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
-from ops_utils.vars import GCP
 from collections import defaultdict
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-CLOUD_TYPE = GCP
 BATCH_SIZE = 10
 CHECK_INTERVAL = 20
 
@@ -110,7 +108,7 @@ if __name__ == '__main__':
     check_interval = args.check_interval
     verbose = args.verbose
 
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
 

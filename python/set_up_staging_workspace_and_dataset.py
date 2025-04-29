@@ -11,7 +11,7 @@ from ops_utils.terra_util import TerraWorkspace, TerraGroups, MEMBER, ADMIN
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 from ops_utils.gcp_utils import GCPCloudFunctions
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils.vars import ARG_DEFAULTS
 from ops_utils import comma_separated_list
 
 
@@ -152,7 +152,6 @@ class SetUpTerraWorkspace:
             auth_domain = []
         self.terra_workspace.create_workspace(
             auth_domain=auth_domain,
-            cloud_platform=GCP,
             attributes={},
             continue_if_exists=self.continue_if_exists,
         )
@@ -327,7 +326,6 @@ class SetUpDataset:
             billing_profile=self.tdr_billing_profile_uuid,
             schema=self.SCHEMA,
             description="",
-            cloud_platform=GCP,
             additional_properties_dict=self._create_dataset_properties(),
             delete_existing=self.delete_existing_dataset,
             continue_if_exists=self.continue_if_exists
@@ -556,7 +554,7 @@ if __name__ == '__main__':
     auth_group = f"AUTH_{dataset_name}"
 
     # Set up Terra, TerraGroups, and TDR classes
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(
         token=token, max_retries=ARG_DEFAULTS["max_retries"], max_backoff_time=ARG_DEFAULTS["max_backoff_time"])
     tdr = TDR(request_util=request_util)

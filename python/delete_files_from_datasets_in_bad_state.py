@@ -3,7 +3,7 @@ import requests
 import re
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils.vars import ARG_DEFAULTS
 from argparse import ArgumentParser, Namespace
 
 from ops_utils.tdr_utils.tdr_api_utils import TDR
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     dataset_id = args.dataset_id
     limit = args.file_query_limit
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token, max_retries=1, max_backoff_time=10)
     tdr = TDR(request_util=request_util)
 

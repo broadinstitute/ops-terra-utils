@@ -8,13 +8,11 @@ from ops_utils.gcp_utils import GCPCloudFunctions
 from ops_utils.token_util import Token
 from ops_utils.tdr_utils.tdr_api_utils import TDR
 from ops_utils.request_util import RunRequest
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils.vars import ARG_DEFAULTS
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
-
-CLOUD_TYPE = GCP
 
 
 def get_args() -> argparse.Namespace:
@@ -99,7 +97,7 @@ if __name__ == '__main__':
     if not (snapshot_id or dataset_id):
         raise Exception("Either snapshot id OR dataset id are required. Received neither")
 
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
 

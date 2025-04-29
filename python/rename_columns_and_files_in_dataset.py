@@ -8,13 +8,12 @@ from ops_utils.tdr_utils.tdr_ingest_utils import GetPermissionsForWorkspaceInges
 from ops_utils.token_util import Token
 from ops_utils.request_util import RunRequest
 from ops_utils.terra_util import TerraWorkspace
-from ops_utils.vars import GCP, ARG_DEFAULTS
+from ops_utils.vars import ARG_DEFAULTS
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
-CLOUD_TYPE = GCP
 UPDATE_STRATEGY = 'merge'
 WORKERS = ARG_DEFAULTS["multithread_workers"]
 COPY_AND_INGEST_BATCH_SIZE = 500
@@ -196,7 +195,7 @@ if __name__ == '__main__':
     update_columns_only = args.update_columns_only
 
     # Initialize TDR classes
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(
         token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)

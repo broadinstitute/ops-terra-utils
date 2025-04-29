@@ -6,7 +6,7 @@ from ops_utils import comma_separated_list
 from ops_utils.gcp_utils import GCPCloudFunctions
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.csv_util import Csv
-from ops_utils.vars import ARG_DEFAULTS, GCP
+from ops_utils.vars import ARG_DEFAULTS
 import os
 
 logging.basicConfig(
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     metrics_tsv, skip_upload_column = args.metrics_tsv, args.skip_upload_column
     flatten_path, subdir = args.flatten_path, args.subdir
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     # Create Terra object to interact with the Terra with the request_util object
     terra_workspace = TerraWorkspace(

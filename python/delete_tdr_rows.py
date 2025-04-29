@@ -1,6 +1,5 @@
 from argparse import ArgumentParser, Namespace
 
-from ops_utils.vars import GCP
 from ops_utils.request_util import RunRequest
 from ops_utils.tdr_utils.tdr_api_utils import TDR
 from ops_utils.token_util import Token
@@ -9,8 +8,6 @@ import logging
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
-
-CLOUD_TYPE = GCP
 
 
 def get_args() -> Namespace:
@@ -97,7 +94,7 @@ if __name__ == '__main__':
         ids_to_delete = list(set(f.read().splitlines()))
     logging.info(f"Found {len(ids_to_delete)} ids in {ids_to_delete_file} to delete")
 
-    token = Token(cloud=CLOUD_TYPE)
+    token = Token()
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
 

@@ -1,7 +1,0 @@
-{
-    "FileExportAzureTdrToGcp.export_type": "String",
-    "FileExportAzureTdrToGcp.target_id": "String",
-    "FileExportAzureTdrToGcp.bucket_id": "String",
-    "FileExportAzureTdrToGcp.bucket_output_path": "String",
-    "FileExportAzureTdrToGcp.retain_path_structure": "Boolean"
-}

@@ -3,7 +3,6 @@ import os.path
 from typing import Optional
 from argparse import Namespace, ArgumentParser
 
-from ops_utils.vars import GCP
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
@@ -120,7 +119,7 @@ if __name__ == '__main__':
     if not output_gcp_path.startswith("gs://"):
         raise ValueError(f"Output GCP path must start with 'gs://'. Got: {output_gcp_path}")
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token)
     # Initialize the source Terra workspace classes
     workspace_util = TerraWorkspace(

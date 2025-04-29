@@ -8,7 +8,6 @@ from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 from ops_utils.csv_util import Csv
 from ops_utils.tdr_utils.tdr_bq_utils import TdrBq, GetTdrAssetInfo
-from ops_utils.vars import GCP
 
 FILE_REF = "fileref"
 OUTPUT_FILE = "summary_statistics.tsv"
@@ -237,7 +236,7 @@ if __name__ == '__main__':
     dataset_id = args.dataset_id
     snapshot_id = args.snapshot_id
 
-    token = Token(cloud=GCP)
+    token = Token()
     request_util = RunRequest(token=token, max_retries=1, max_backoff_time=1)
     tdr = TDR(request_util=request_util)
 

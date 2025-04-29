@@ -11,8 +11,6 @@ from ops_utils.tdr_utils.tdr_ingest_utils import BatchIngest
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
-from ops_utils.vars import GCP
-
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -42,7 +40,7 @@ if __name__ == '__main__':
     logging.info("Collecting arguments and logging something")
 
     # Create token object. This gets your token for the API calls and auto refreshes when needed
-    token = Token(cloud=GCP)
+    token = Token()
     # Create request object to make API calls and pass in token
     # Can optionally pass in max_retries and max_backoff_time to control retries and backoff time.
     # Defaults to 5 retries and 5 minutes max backoff if not supplied
@@ -73,5 +71,4 @@ if __name__ == '__main__':
         dataset_id="some_dataset_uuid",
         batch_size=1000,
         bulk_mode=True,
-        cloud_type=GCP
     ).run()

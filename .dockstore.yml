@@ -63,13 +63,6 @@ workflows:
     testParameterFiles:
       - /wdl/HardCloneWithExternalBucket/HardCloneWithExternalBucket.wdl
 
-  - name: FileExportAzureTdrToGcp
-    subclass: WDL
-    primaryDescriptorPath: /wdl/FileExportAzureTdrToGcp/FileExportAzureTdrToGcp.wdl
-    readMePath: /wdl/FileExportAzureTdrToGcp/README.md
-    testParameterFiles:
-      - /wdl/FileExportAzureTdrToGcp/FileExportAzureTdrToGcp.wdl
-
   - name: CreateWorkspaceFileManifest
     subclass: WDL
     primaryDescriptorPath: /wdl/CreateWorkspaceFileManifest/CreateWorkspaceFileManifest.wdl
@@ -146,13 +139,6 @@ workflows:
     readMePath: /wdl/UploadMetricsAndGcpFilesToTerra/README.md
     testParameterFiles:
       - /wdl/UploadMetricsAndGcpFilesToTerra/UploadMetricsAndGcpFilesToTerra.wdl
-
-  - name: AzDatasetToGcp
-    subclass: WDL
-    primaryDescriptorPath: /wdl/AzDatasetToGcp/AzDatasetToGcp.wdl
-    readMePath: /wdl/AzDatasetToGcp/README.md
-    testParameterFiles:
-      - /wdl/AzDatasetToGcp/AzDatasetToGcp.wdl
 
   - name: ReheaderCram
     subclass: WDL
