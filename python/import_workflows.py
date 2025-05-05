@@ -26,7 +26,8 @@ def get_args() -> argparse.Namespace:
 
 
 def workflow_already_in_workspace(workflow_name: str, workspace_workflows: list[dict]) -> Any:
-    return any(workflow_name == workflow['name'] for workflow in workspace_workflows if workflow['methodRepoMethod']['methodPath'] == f"github.com/broadinstitute/ops-terra-utils/{workflow_name}")  # noqa: E501
+    # "methodPath" key is only available when workflows are imported via Dockstore
+    return any(workflow_name == workflow['name'] for workflow in workspace_workflows if workflow['methodRepoMethod'].get("methodPath") == f"github.com/broadinstitute/ops-terra-utils/{workflow_name}")  # noqa: E501
 
 
 if __name__ == '__main__':
