@@ -101,7 +101,7 @@ class CreateEntityTsv:
 
     def run(self) -> list[str]:
         tsv_to_upload = []
-        entity_info = self.source_workspace.get_workspace_entity_info()
+        entity_info = self.source_workspace.get_workspace_entity_info().json()
         for table_name in entity_info:
             headers = entity_info[table_name]["attributeNames"]
             row_id_header = f'entity:{entity_info[table_name]["idName"]}'
@@ -194,7 +194,7 @@ class UpdateWorkspaceAcls:
 
     def run(self) -> None:
         # Get the source workspace ACLs and entities
-        src_workspace_acls = self.src_workspace.get_workspace_acl()
+        src_workspace_acls = self.src_workspace.get_workspace_acl().json()
         # Convert the source workspace ACLs to a list of dictionaries
         src_workspace_acls_list = [
             {
@@ -287,7 +287,7 @@ if __name__ == '__main__':
     )
 
     # Get the source workspace info
-    src_workspace_info = src_workspace.get_workspace_info()
+    src_workspace_info = src_workspace.get_workspace_info().json()
     src_auth_domain = src_workspace_info["workspace"]["authorizationDomain"]
     src_bucket = src_workspace_info["workspace"]["bucketName"]
 
@@ -316,7 +316,7 @@ if __name__ == '__main__':
         bucket_to_check = external_bucket if external_bucket else dest_workspace.get_workspace_bucket()
         check_and_wait_for_permissions(bucket=bucket_to_check, total_hours=total_hours)
 
-    dest_workspace_info = dest_workspace.get_workspace_info()
+    dest_workspace_info = dest_workspace.get_workspace_info().json()
     dest_bucket = dest_workspace_info["workspace"]["bucketName"]
 
     # Use the external bucket if it is provided, otherwise use the destination workspace bucket

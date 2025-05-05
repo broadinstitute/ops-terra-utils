@@ -36,7 +36,7 @@ if __name__ == '__main__':
     workflows_to_import = args.workflow_list
     workspace = TerraWorkspace(billing_project=args.billing_project,
                                workspace_name=args.workspace_name, request_util=request_util)
-    imported_workflows = workspace.get_workspace_workflows()
+    imported_workflows = workspace.get_workspace_workflows().json()
     for workflow in workflows_to_import:
         if not workflow_already_in_workspace(workflow_name=workflow, workspace_workflows=imported_workflows):
             logging.info(f"Importing {workflow} into {args.billing_project}/{args.workspace_name}")

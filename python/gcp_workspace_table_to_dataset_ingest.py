@@ -152,7 +152,7 @@ if __name__ == "__main__":
         added_to_auth_domain=True,
     ).run()
     # Get entity metrics for workspace
-    entity_metrics = terra_workspace.get_workspace_entity_info()
+    entity_metrics = terra_workspace.get_workspace_entity_info().json()
 
     for table, attributes in entity_metrics.items():
         terra_workspace.validate_terra_headers_for_tdr_conversion(

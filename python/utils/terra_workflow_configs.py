@@ -1,4 +1,6 @@
 import os
+
+import requests
 import yaml  # type: ignore[import]  # noqa: F401
 import re
 from ops_utils.terra_util import TerraWorkspace
@@ -142,7 +144,7 @@ class WorkflowConfigs:
             workflow_default_inputs[f"{workflow}.{key}"] = value
         return workflow_default_inputs
 
-    def import_workflow(self, continue_if_exists: bool = False) -> int:
+    def import_workflow(self, continue_if_exists: bool = False) -> requests.Response:
         """
         Import the workflow into the Terra workspace.
 
@@ -150,7 +152,7 @@ class WorkflowConfigs:
             continue_if_exists (bool, optional): Whether to continue if the workflow already exists. Defaults to False.
 
         Returns:
-            int: The status code of the import operation.
+            requests.Response: The response from the import request.
         """
         logging.info(f"Importing {self.workflow_name} into {self.terra_workspace_util}")
         return self.terra_workspace_util.import_workflow(

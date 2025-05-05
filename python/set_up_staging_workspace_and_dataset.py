@@ -157,7 +157,7 @@ class SetUpTerraWorkspace:
         )
 
     def _validate_auth_domain(self) -> None:
-        workspace_info = self.terra_workspace.get_workspace_info()
+        workspace_info = self.terra_workspace.get_workspace_info().json()
         auth_domain_list = workspace_info['workspace']['authorizationDomain']
         if (self.controlled_access and
                 (not auth_domain_list or auth_domain_list[0]['membersGroupName'] != self.auth_group)):

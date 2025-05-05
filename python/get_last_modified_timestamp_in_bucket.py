@@ -85,7 +85,7 @@ if __name__ == '__main__':
             billing_project=billing_project,
             workspace_name=workspace_name,
             request_util=request_util
-        ).get_workspace_info()
+        ).get_workspace_info().json()
         google_project = workspace_info["workspace"]["googleProject"]
         logging.info(
             f"Found Google project {google_project} for billing project/workspace {billing_project}/{workspace_name}"
