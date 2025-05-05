@@ -155,7 +155,7 @@ class GetTablesInfo:
 
     def run(self) -> dict:
         tables_dict = {}
-        tables_info = terra.get_workspace_entity_info()
+        tables_info = terra.get_workspace_entity_info().json()
         for table_name, table_info in tables_info.items():
             tables_dict[table_name] = self._create_table_info_dict(table_name, table_info)
         return tables_dict

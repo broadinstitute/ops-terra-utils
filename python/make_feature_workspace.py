@@ -117,7 +117,7 @@ class ShowcaseContent:
                 "workspace.attributes.description",
                 "workspace.attributes.tag:tags"
             ]
-        )
+        ).json()
         return {
             f'{w["workspace"]["namespace"]}.{w["workspace"]["name"]}': w
             for w in workspaces
@@ -154,7 +154,7 @@ class ShowcaseContent:
                         billing_project=namespace,
                         workspace_name=name,
                         request_util=self.request_util
-                ).check_workspace_public():
+                ).check_workspace_public().json():
                     logging.warning(
                         f"featured workspace {namespace}/{name} is not a public workspace but is in featured"
                     )
@@ -202,7 +202,7 @@ if __name__ == '__main__':
 
     # Make the workspace public
     logging.info("Checking if workspace is already public")
-    if terra_workspace.check_workspace_public():
+    if terra_workspace.check_workspace_public().json():
         logging.info("Workspace is already public")
     else:
         logging.info("Making workspace public")
