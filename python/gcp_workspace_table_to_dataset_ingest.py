@@ -144,7 +144,7 @@ if __name__ == "__main__":
     )
     tdr = TDR(request_util=request_util)
 
-    dataset_info = tdr.get_dataset_info(dataset_id=dataset_id)
+    dataset_info = tdr.get_dataset_info(dataset_id=dataset_id).json()
     # Get permissions for workspace ingest
     GetPermissionsForWorkspaceIngest(
         terra_workspace=terra_workspace,

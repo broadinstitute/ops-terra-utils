@@ -217,7 +217,7 @@ if __name__ == "__main__":
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
 
-    orig_dataset_info = tdr.get_dataset_info(orig_dataset_id)
+    orig_dataset_info = tdr.get_dataset_info(orig_dataset_id).json()
 
     # Check dataset id is not already in requested billing profile
     if orig_dataset_info['name'] == new_dataset_name:
@@ -237,7 +237,7 @@ if __name__ == "__main__":
         additional_properties_dict=additional_properties,
         continue_if_exists=continue_if_exists
     )
-    dest_dataset_info = tdr.get_dataset_info(dest_dataset_id)
+    dest_dataset_info = tdr.get_dataset_info(dest_dataset_id).json()
 
     # Check if schema matches and update if needed. Only will be possibly updated if dataset already exists
     MatchSchemas(

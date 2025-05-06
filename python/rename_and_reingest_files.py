@@ -168,7 +168,7 @@ if __name__ == '__main__':
     tdr = TDR(request_util=request_util)
 
     # Get dataset info
-    dataset_info = tdr.get_dataset_info(dataset_id=dataset_id)
+    dataset_info = tdr.get_dataset_info(dataset_id=dataset_id).json()
 
     # Get temp bucket
     temp_bucket = GetTempBucket(
