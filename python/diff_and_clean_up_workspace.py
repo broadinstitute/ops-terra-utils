@@ -63,7 +63,7 @@ class GetFileLists:
         self.self_hosted = self_hosted
 
     def _is_self_hosted(self) -> bool:
-        dataset_info = self.tdr_util.get_dataset_info(dataset_id=self.dataset_id)
+        dataset_info = self.tdr_util.get_dataset_info(dataset_id=self.dataset_id).json()
         return dataset_info['selfHosted']
 
     def _get_workspace_files_to_compare(self) -> list[str]:
@@ -107,7 +107,7 @@ class GetDatasetSourceFiles:
         self.self_hosted = self_hosted
 
     def _get_load_history_table(self) -> dict:
-        dataset_info = self.tdr_util.get_dataset_info(dataset_id=self.dataset_id)
+        dataset_info = self.tdr_util.get_dataset_info(dataset_id=self.dataset_id).json()
         dataset_google_project = dataset_info["dataProject"]
         dataset_name = dataset_info["name"]
         load_history_table = f"{dataset_google_project}.datarepo_{dataset_name}.datarepo_load_history"
@@ -226,7 +226,7 @@ if __name__ == '__main__':
     )
     gcp_utils = GCPCloudFunctions(project=gcp_project)
 
-    self_hosted = tdr_util.get_dataset_info(dataset_id=dataset_id)['selfHosted']
+    self_hosted = tdr_util.get_dataset_info(dataset_id=dataset_id).json()['selfHosted']
 
     files_in_workspace_only, files_in_both = GetFileLists(
         terra_workspace=terra_workspace,

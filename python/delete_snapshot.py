@@ -44,8 +44,9 @@ class DeleteSnapshots:
 
         # Create a dictionary with dataset IDs as keys and a list of snapshot IDs as values
         for snapshot_id in self.snapshot_ids:
-            snapshot_info = self.tdr.get_snapshot_info(snapshot_id=snapshot_id, continue_not_found=True)
-            if snapshot_info:
+            response = self.tdr.get_snapshot_info(snapshot_id=snapshot_id, continue_not_found=True)
+            if response:
+                snapshot_info = response.json()
                 for source_dict in snapshot_info['source']:
                     # Check if the source is a dataset
                     if 'dataset' in source_dict:
@@ -113,7 +114,7 @@ if __name__ == '__main__':
     tdr = TDR(request_util=request_util)
 
     if snapshot_id:
-        job_id = tdr.delete_snapshot(snapshot_id=snapshot_id)
+        job_id = tdr.delete_snapshot(snapshot_id=snapshot_id).json()["id"]
         MonitorTDRJob(tdr=tdr, job_id=job_id, check_interval=check_interval, return_json=False).run()
     else:
         with open(snap_shot_id_file) as file:

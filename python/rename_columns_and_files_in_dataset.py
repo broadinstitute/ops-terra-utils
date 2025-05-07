@@ -97,7 +97,7 @@ class GetDataSetInfo:
         self.table_name = table_name
 
     def run(self) -> dict:
-        dataset_info = tdr.get_dataset_info(dataset_id=self.dataset_id)
+        dataset_info = tdr.get_dataset_info(dataset_id=self.dataset_id).json()
         tdr_table_info = tdr.get_table_schema_info(
             dataset_id=self.dataset_id,
             table_name=self.table_name,

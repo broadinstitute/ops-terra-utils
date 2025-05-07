@@ -316,7 +316,7 @@ class SetUpDataset:
             billing_profile=self.tdr_billing_profile_uuid
         )
         if dataset_metadata:
-            info = self.tdr.get_dataset_info(dataset_id=dataset_metadata[0]["id"])
+            info = self.tdr.get_dataset_info(dataset_id=dataset_metadata[0]["id"]).json()
             return info["ingestServiceAccount"]
         return None
 
@@ -332,7 +332,7 @@ class SetUpDataset:
         )
         self._add_row_to_table(dataset_id)
         self._set_up_permissions(dataset_id)
-        return self.tdr.get_dataset_info(dataset_id)
+        return self.tdr.get_dataset_info(dataset_id).json()
 
 
 class RemoveAllIndividualAccess:
