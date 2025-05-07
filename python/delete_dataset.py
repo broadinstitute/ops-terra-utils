@@ -1,6 +1,4 @@
 """Delete a dataset in TDR"""
-
-
 import logging
 from argparse import ArgumentParser, Namespace
 
