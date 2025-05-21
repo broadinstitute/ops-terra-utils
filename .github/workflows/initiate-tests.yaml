@@ -24,7 +24,7 @@ jobs:
                 repo: context.repo.repo,
                 body: 'Thank you for contributing to the ops-terra-utils repo! \n A test suite will now begin running to ensure that no breaking changes are made.\n If these tests fail you can have them re-run after making changes by commenting `/run_tests`'
             })
-      - name: add label
+      - name: repository dispatch
         if: ${{ github.event.action == 'opened' || contains(github.event.comment.body, '/run_tests') }}
         uses: actions/github-script@v7
         with:
