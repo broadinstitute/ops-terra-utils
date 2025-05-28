@@ -255,11 +255,11 @@ class SetUpDataset:
             ingest_records.extend(
                 [
                     {
-                        "key": "Staging Workspace",
+                        "key": "StagingWorkspace",
                         "value": workspace_billing_combo,
                     },
                     {
-                        "key": "Authorization Group",
+                        "key": "AuthorizationGroup",
                         "value": self.auth_group
                     }
                 ]
@@ -271,7 +271,7 @@ class SetUpDataset:
                     ingest_records.extend(
                         [
                             {
-                                "key": "Staging Workspace",
+                                "key": "StagingWorkspace",
                                 "value": workspace_billing_combo
                             }
                         ]
@@ -280,7 +280,7 @@ class SetUpDataset:
                     ingest_records.extend(
                         [
                             {
-                                "key": f"Staging Workspace Version {self.workspace_version}",
+                                "key": f"StagingWorkspaceVersion{self.workspace_version}",
                                 "value": workspace_billing_combo
                             }
                         ]
