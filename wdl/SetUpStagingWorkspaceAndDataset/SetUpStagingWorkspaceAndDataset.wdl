@@ -19,6 +19,7 @@ workflow SetUpStagingWorkspaceAndDataset {
         String? notebooks_to_import
         String? docker
         Int? workspace_version
+        Boolean is_anvil = false
     }
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -41,7 +42,8 @@ workflow SetUpStagingWorkspaceAndDataset {
             delete_existing_dataset = delete_existing_dataset,
             docker = docker_image,
             dataset_self_hosted = dataset_self_hosted,
-            workspace_version = workspace_version
+            workspace_version = workspace_version,
+            is_anvil = is_anvil
     }
 }
 
@@ -64,6 +66,7 @@ task SetUpStagingEnvironments {
         String docker
         Int? workspace_version
         Boolean dataset_self_hosted
+        Boolean is_anvil
     }
 
     command <<<
@@ -83,7 +86,8 @@ task SetUpStagingEnvironments {
             ~{"--notebooks_to_import " + notebooks_to_import} \
             ~{if delete_existing_dataset then "--delete_existing_dataset" else ""} \
             ~{"--workspace_version " + workspace_version} \
-            ~{if dataset_self_hosted then "--dataset_self_hosted" else ""}
+            ~{if dataset_self_hosted then "--dataset_self_hosted" else ""} \
+            ~{if is_anvil then "--platform anvil" else ""}
     >>>
 
     runtime {
