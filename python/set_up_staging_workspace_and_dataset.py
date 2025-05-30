@@ -24,14 +24,26 @@ WRITER = "WRITER"
 READER = "READER"
 NO_ACCESS = "NO ACCESS"
 
+# Define platform-specific workspace description files
+PLATFORM_DESCRIPTION_FILES = {
+    "anvil": "../general_markdown/anvil_staging_workspace_description.md",
+    "generic": "../general_markdown/generic_staging_workspace_description.md"
+}
+
 # Define the relative path to the file
-STAGING_WORKSPACE_DESCRIPTION_FILE = "../general_markdown/staging_workspace_description.md"
 WDL_READ_ME_PATH = "../wdl/{script_name}/README.md"
 
 # Get the absolute path to the file based on the script's location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-STAGING_WORKSPACE_DESCRIPTION_FILE_FULL_PATH = os.path.join(SCRIPT_DIR, STAGING_WORKSPACE_DESCRIPTION_FILE)
 WDL_READ_ME_PATH_FULL_PATH = os.path.join(SCRIPT_DIR, WDL_READ_ME_PATH)
+
+# Function to get the full path to the appropriate workspace description file
+
+
+def get_workspace_description_file_path(platform: Optional[str]) -> str:
+    platform = platform.lower() if platform else "generic"
+    description_file = PLATFORM_DESCRIPTION_FILES.get(platform, PLATFORM_DESCRIPTION_FILES["generic"])
+    return os.path.join(SCRIPT_DIR, description_file)
 
 
 def get_args() -> Namespace:
@@ -41,6 +53,11 @@ def get_args() -> Namespace:
     parser.add_argument("-b", "--terra_billing_project", required=True)
     parser.add_argument("--controlled_access", action="store_true")
     parser.add_argument("-p", "--phs_id", required=False)
+    parser.add_argument(
+        "--platform",
+        help="Platform-specific configuration (e.g., 'anvil'). If not specified or not recognized, uses generic configuration.",
+        required=False
+    )
     parser.add_argument(
         "--dataset_self_hosted",
         action="store_true",
@@ -380,7 +397,8 @@ class UpdateWorkspaceAttributes:
             dbgap_consent_code: Optional[str] = None,
             duos_identifier: Optional[str] = None,
             phs_id: Optional[str] = None,
-            workflow_config_list: Optional[list[WorkflowConfigs]] = None
+            workflow_config_list: Optional[list[WorkflowConfigs]] = None,
+            platform: Optional[str] = None
     ):
         self.terra_workspace = terra_workspace
         self.auth_group = auth_group
@@ -391,6 +409,7 @@ class UpdateWorkspaceAttributes:
         self.duos_identifier = duos_identifier
         self.phs_id = phs_id
         self.workflow_config_list = workflow_config_list
+        self.platform = platform
 
     def _create_attribute_dict_for_pair(self, attribute_key: str, attribute_value: str) -> dict:
         return {
@@ -400,7 +419,10 @@ class UpdateWorkspaceAttributes:
         }
 
     def _get_staging_workspace_description(self) -> str:
-        with open(STAGING_WORKSPACE_DESCRIPTION_FILE_FULL_PATH, "r") as file:
+        # Get the appropriate workspace description file based on the platform
+        description_file_path = get_workspace_description_file_path(self.platform)
+
+        with open(description_file_path, "r") as file:
             workspace_description = file.read()
         if self.workflow_config_list:
             workspace_description += "\n\n# Imported WDLs\n"
@@ -539,6 +561,7 @@ if __name__ == '__main__':
     notebooks_to_import = args.notebooks_to_import
     delete_existing_dataset = args.delete_existing_dataset
     dataset_self_hosted = args.dataset_self_hosted
+    platform = args.platform
     workspace_version = args.workspace_version if args.workspace_version and args.workspace_version > 1 else None
 
     # Validate wdls to import are valid and exclude any that are not
@@ -655,7 +678,8 @@ if __name__ == '__main__':
         phs_id=phs_id,
         dataset_name=dataset_name,
         data_ingest_sa=data_ingest_sa,
-        workflow_config_list=workflow_configs
+        workflow_config_list=workflow_configs,
+        platform=platform
     ).run()
 
     # Remove current user from workspace and dataset if not a resource owner
