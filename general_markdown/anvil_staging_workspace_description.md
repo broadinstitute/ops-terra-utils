@@ -42,9 +42,3 @@ A staging workspace sacrifices some flexibility in the configuration of cloud re
 - **For step-by-step instructions, see <a href="https://support.terra.bio/hc/en-us/articles/36671511533467-Step-5-Ingest-data-to-TDR" target="blank">Step 5 in Terra Support</a>.**
 
 <br>
-
-# Self-service WDLs
-- CreateWorkspaceFileManifest - <a href="https://dockstore.org/workflows/github.com/broadinstitute/ops-terra-utils/CreateWorkspaceFileManifest" target="blank">READ ME</a>
-- TerraSummaryStatistics - <a href="https://dockstore.org/workflows/github.com/broadinstitute/ops-terra-utils/TerraSummaryStatistics" target="blank">READ ME</a>
-
-- TerraWorkspaceTableToTDRIngest - <a href="https://dockstore.org/workflows/github.com/broadinstitute/ops-terra-utils/TerraWorkspaceTableToTDRIngest" target="blank">READ ME</a>
