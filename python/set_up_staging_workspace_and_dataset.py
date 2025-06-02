@@ -37,6 +37,9 @@ WDL_READ_ME_PATH = "../wdl/{script_name}/README.md"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 WDL_READ_ME_PATH_FULL_PATH = os.path.join(SCRIPT_DIR, WDL_READ_ME_PATH)
 
+UPLOAD_DIR_READ_ME_CONTENT = "Use this folder to store object data files to be ingested into TDR. " + \
+    "You can add additional sub-directories to help keep files organized."
+
 # Function to get the full path to the appropriate workspace description file
 
 
@@ -462,6 +465,7 @@ class ImportWorkflowsAndNotebooks:
             billing_project: str,
             workspace_bucket: str,
             continue_if_exists: bool,
+            gcp_functions: GCPCloudFunctions,
             workflow_config_list: Optional[list[WorkflowConfigs]] = None,
             notebooks: Optional[list[str]] = None
     ):
@@ -469,6 +473,7 @@ class ImportWorkflowsAndNotebooks:
         self.workspace_bucket = workspace_bucket
         self.continue_if_exists = continue_if_exists
         self.workflow_config_list = workflow_config_list
+        self.gcp_functions = gcp_functions
         self.notebooks = notebooks
 
     def _import_workflow(self) -> None:
@@ -476,10 +481,9 @@ class ImportWorkflowsAndNotebooks:
             workflow_config.import_workflow(continue_if_exists=self.continue_if_exists)
 
     def _copy_in_notebooks(self) -> None:
-        gcp_functions = GCPCloudFunctions()
         for notebook in self.notebooks:  # type: ignore[union-attr]
             os.path.basename(notebook)
-            gcp_functions.copy_cloud_file(
+            self.gcp_functions.copy_cloud_file(
                 src_cloud_path=notebook,
                 full_destination_path=f'{self.workspace_bucket}/notebooks/{os.path.basename(notebook)}'
             )
@@ -659,13 +663,17 @@ if __name__ == '__main__':
                 logging.error(f"Invalid notebook path {notebook}. Must start with gs:// and end with .ipynb")
                 exit(1)
 
+    # Set up GCP Cloud Functions
+    gcp_functions = GCPCloudFunctions()
+
     # Import workflows and notebooks
     ImportWorkflowsAndNotebooks(
         billing_project=terra_billing_project,
         workspace_bucket=workspace_bucket,
         workflow_config_list=workflow_configs,
         notebooks=notebooks_to_import,
-        continue_if_exists=continue_if_exists
+        continue_if_exists=continue_if_exists,
+        gcp_functions=gcp_functions
     ).run()
 
     # Update workspace attributes
@@ -681,6 +689,9 @@ if __name__ == '__main__':
         workflow_config_list=workflow_configs,
         platform=platform
     ).run()
+
+    upload_read_me_path = f"{workspace_bucket}/Uploads/README.txt"
+    gcp_functions.write_to_gcp_file(cloud_path=upload_read_me_path, file_contents=UPLOAD_DIR_READ_ME_CONTENT)
 
     # Remove current user from workspace and dataset if not a resource owner
     if current_user_email not in resource_owners:
