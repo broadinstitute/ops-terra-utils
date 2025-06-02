@@ -690,6 +690,7 @@ if __name__ == '__main__':
         platform=platform
     ).run()
 
+    # Upload README file to workspace bucket
     upload_read_me_path = f"{workspace_bucket}/Uploads/README.txt"
     gcp_functions.write_to_gcp_file(cloud_path=upload_read_me_path, file_contents=UPLOAD_DIR_READ_ME_CONTENT)
 
