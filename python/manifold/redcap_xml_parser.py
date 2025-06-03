@@ -17,10 +17,11 @@ import os
 import re
 import pandas as pd
 import xmltodict
-import xml.etree.ElementTree as ET
 from typing import Dict, List, Any, Optional, Tuple
 import logging
 import argparse
+import urllib.parse
+import boto3
 
 # Configure logging
 logging.basicConfig(
@@ -219,6 +220,13 @@ class SchemaProcessor:
         """
         Convert the schema dictionary to a pandas DataFrame.
 
+        The DataFrame includes only the necessary columns for Snowflake table creation:
+        - table_name: The name of the table
+        - column_name: The name of the column
+        - required: Whether the column is required (not nullable)
+        - snowflake_data_type: The Snowflake data type to use for the column
+        - primary_key: Whether the column is a primary key
+
         Returns:
             DataFrame containing schema information
         """
@@ -226,17 +234,47 @@ class SchemaProcessor:
 
         for form_oid, table_details in self.schema_dict.items():
             for item_oid, column_details in table_details["columns"].items():
+                # Map REDCap data types to Snowflake data types
+                data_type = column_details["data_type"]
+                data_length = column_details["data_length"]
+                column_type = column_details["column_type"]
+
+                # Default to VARCHAR
+                snowflake_data_type = "VARCHAR"
+
+                # Map data types to Snowflake data types
+                if data_type == "integer":
+                    snowflake_data_type = "INTEGER"
+                elif data_type == "float":
+                    snowflake_data_type = "FLOAT"
+                elif data_type == "date":
+                    snowflake_data_type = "DATE"
+                elif data_type == "datetime":
+                    snowflake_data_type = "TIMESTAMP_NTZ"
+                elif data_type == "boolean" or column_type == "checkbox":
+                    snowflake_data_type = "BOOLEAN"
+                elif data_type == "text":
+                    # Use data_length if available, otherwise default to VARCHAR(16777216)
+                    if data_length and data_length.isdigit():
+                        snowflake_data_type = f"VARCHAR({data_length})"
+                    else:
+                        snowflake_data_type = "VARCHAR(16777216)"  # Snowflake's maximum VARCHAR size
+
+                # Determine if this is a primary key
+                # For simplicity, we'll consider the study_id as the primary key
+                primary_key = column_details["column_name"] == "study_id"
+
+                # For now, we're not setting up foreign keys
+                foreign_key = False
+                foreign_key_table = None
+                foreign_key_column = None
+
                 schema_results.append({
-                    "form_oid": form_oid,
                     "table_name": table_details["table_name"],
-                    "item_oid": item_oid,
                     "column_name": column_details["column_name"],
-                    "column_type": column_details["column_type"],
-                    "identifier": column_details["identifier"],
                     "required": column_details["required"],
-                    "data_type": column_details["data_type"],
-                    "data_length": column_details["data_length"],
-                    "code_list_oid": column_details["code_list_oid"]
+                    "snowflake_data_type": snowflake_data_type,
+                    "primary_key": primary_key
                 })
 
         return pd.DataFrame.from_dict(schema_results, orient='columns')
@@ -615,15 +653,36 @@ class RedcapXmlParser:
         """
         Parse the XML file.
 
+        The file can be a local file or an S3 URL (s3://bucket/path/to/file).
+
         Returns:
             Dictionary containing parsed XML data
         """
         logger.info(f"Parsing XML file: {self.file_path}")
 
         try:
-            with open(self.file_path, 'r', encoding='utf-8') as file:
-                xml_content = file.read()
-                self.parsed_data = xmltodict.parse(xml_content)
+            # Check if the file is an S3 URL
+            if self.file_path.startswith('s3://'):
+                # Parse the S3 URL
+                parsed_url = urllib.parse.urlparse(self.file_path)
+                bucket_name = parsed_url.netloc
+                object_key = parsed_url.path.lstrip('/')
+
+                # Initialize the S3 client
+                s3_client = boto3.client('s3')
+
+                # Get the object from S3
+                response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+
+                # Read the content and decode to string
+                xml_content = response['Body'].read().decode('utf-8')
+            else:
+                # Read from local file
+                with open(self.file_path, 'r', encoding='utf-8') as file:
+                    xml_content = file.read()
+
+            # Parse the XML content
+            self.parsed_data = xmltodict.parse(xml_content)
 
             return self.parsed_data
         except Exception as e:
@@ -686,10 +745,10 @@ class RedcapXmlParser:
 
     def save_results(self, output_dir: str) -> None:
         """
-        Save the results of processing the REDCap XML data to CSV files.
+        Save the results of processing the REDCap XML data to TSV files.
 
         Args:
-            output_dir: Directory to save the CSV files
+            output_dir: Directory to save the TSV files
         """
         if not self.schema_processor or not self.decoding_processor or not self.data_processor:
             logger.warning("Results not available. Call process() first.")
@@ -700,31 +759,39 @@ class RedcapXmlParser:
 
         # Save schema results
         schema_df = self.schema_processor.get_schema_dataframe()
-        schema_file = os.path.join(output_dir, "schema.csv")
-        schema_df.to_csv(schema_file, index=False)
+        schema_file = os.path.join(output_dir, "schema.tsv")
+        schema_df.to_csv(schema_file, index=False, sep='\t')
         logger.info(f"Schema saved to {schema_file}")
 
         # Save decoding results
         decoding_df = self.decoding_processor.get_decoding_dataframe()
-        decoding_file = os.path.join(output_dir, "decoding.csv")
-        decoding_df.to_csv(decoding_file, index=False)
+        decoding_file = os.path.join(output_dir, "decoding.tsv")
+        decoding_df.to_csv(decoding_file, index=False, sep='\t')
         logger.info(f"Decoding saved to {decoding_file}")
 
         # Save data results
         data_dfs = self.data_processor.get_data_dataframes()
         for table, df in data_dfs.items():
-            data_file = os.path.join(output_dir, f"{table}.csv")
-            df.to_csv(data_file, index=False)
+            data_file = os.path.join(output_dir, f"{table}.tsv")
+            df.to_csv(data_file, index=False, sep='\t')
             logger.info(f"{table} records saved to {data_file}")
 
 
 def main() -> None:
     """
     Main function to run the REDCap XML parser.
+
+    This function parses a REDCap XML file (either local or from S3) and saves the results as TSV files.
+    The TSV files include:
+    - schema.tsv: Contains schema information for all tables
+    - decoding.tsv: Contains decoding information for coded values
+    - [table_name].tsv: One file for each table in the data
     """
     parser = argparse.ArgumentParser(description='Parse REDCap XML data')
-    parser.add_argument('--file', '-f', type=str, required=True, help='Path to the REDCap XML file')
-    parser.add_argument('--output', '-o', type=str, default='output', help='Directory to save output CSV files')
+    parser.add_argument('--file', '-f', type=str, required=True,
+                        help='Path to the REDCap XML file. Can be a local file or an S3 URL (s3://bucket/path/to/file)')
+    parser.add_argument('--output', '-o', type=str, default='output',
+                        help='Directory to save output TSV files')
 
     args = parser.parse_args()
 
@@ -732,7 +799,7 @@ def main() -> None:
     redcap_parser = RedcapXmlParser(args.file)
     redcap_parser.process()
 
-    # Save results to CSV files
+    # Save results to TSV files
     redcap_parser.save_results(args.output)
 
 
