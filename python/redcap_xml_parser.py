@@ -402,13 +402,12 @@ class DataProcessor:
             "study_event": study_event
         }
 
-    def _decode_checkbox_field(self, item_oid: str, column_name: str, item_raw_value: str,
+    def _decode_checkbox_field(self, column_name: str, item_raw_value: str,
                                code_list_oid: str) -> Any:
         """
         Decode a checkbox field value.
 
         Args:
-            item_oid: OID of the item
             column_name: Name of the column
             item_raw_value: Raw value from the XML
             code_list_oid: OID of the code list for decoding
@@ -437,12 +436,11 @@ class DataProcessor:
             # For checkboxes, any value other than "1" means the box is not checked
             return None
 
-    def _decode_standard_field(self, item_oid: str, item_raw_value: str, code_list_oid: str) -> Any:
+    def _decode_standard_field(self, item_raw_value: str, code_list_oid: str) -> Any:
         """
         Decode a standard (non-checkbox) field value.
 
         Args:
-            item_oid: OID of the item
             item_raw_value: Raw value from the XML
             code_list_oid: OID of the code list for decoding
 
@@ -485,10 +483,10 @@ class DataProcessor:
                 try:
                     # Special handling for checkbox fields which have a different decoding logic
                     if column_type == "checkbox":
-                        value = self._decode_checkbox_field(item_oid, column_name, item_raw_value, code_list_oid)
+                        value = self._decode_checkbox_field(column_name, item_raw_value, code_list_oid)
                     # For non-checkbox fields (e.g., radio buttons, dropdowns, etc.)
                     else:
-                        value = self._decode_standard_field(item_oid, item_raw_value, code_list_oid)
+                        value = self._decode_standard_field(item_raw_value, code_list_oid)
                 # Catch any exceptions that might occur during decoding
                 # This ensures the process doesn't fail if there's an issue with a single value
                 except Exception as e:
@@ -727,8 +725,6 @@ def main() -> None:
     parser = argparse.ArgumentParser(description='Parse REDCap XML data')
     parser.add_argument('--file', '-f', type=str, required=True, help='Path to the REDCap XML file')
     parser.add_argument('--output', '-o', type=str, default='output', help='Directory to save output CSV files')
-    parser.add_argument('--display', '-d', action='store_true', help='Display results')
-    parser.add_argument('--save', '-s', action='store_true', help='Save results to CSV files')
 
     args = parser.parse_args()
 
@@ -736,13 +732,8 @@ def main() -> None:
     redcap_parser = RedcapXmlParser(args.file)
     redcap_parser.process()
 
-    # Display results if requested
-    if args.display:
-        redcap_parser.display_results()
-
-    # Save results if requested
-    if args.save:
-        redcap_parser.save_results(args.output)
+    # Save results to CSV files
+    redcap_parser.save_results(args.output)
 
 
 if __name__ == "__main__":
