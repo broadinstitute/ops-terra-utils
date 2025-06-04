@@ -773,7 +773,7 @@ class RedcapXmlParser:
         data_dfs = self.data_processor.get_data_dataframes()
         for table, df in data_dfs.items():
             data_file = os.path.join(output_dir, f"{table}.tsv")
-            df.to_csv(data_file, index=False, sep='\t')
+            df.to_csv(data_file, index=False, sep='\t', encoding='utf-8')
             logger.info(f"{table} records saved to {data_file}")
 
 
