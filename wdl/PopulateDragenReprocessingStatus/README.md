@@ -2,6 +2,9 @@
 
 This WDL script collects the status of Dragen reprocessing samples from BigQuery and uploads summary statistics (such as attempts, status, etc.) to a Terra workspace. It is useful for tracking the progress and outcomes of Dragen workflows for a set of samples.
 
+## Pre-requisites:
+You must add your Terra proxy email as an **BigQuery Job User** and **BigQuery Data Viewer** to the GCP project where the Dragen workflows are running.
+
 ## Inputs Table:
 This workflow is designed to use `Run workflow(s) with inputs defined by data table` option.
 

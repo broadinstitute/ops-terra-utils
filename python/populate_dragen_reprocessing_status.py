@@ -188,3 +188,4 @@ if __name__ == "__main__":
         workspace_name=workspace_name,
         request_util=request_util
     ).upload_metadata_to_workspace_table(entities_tsv=SAMPLE_TSV)
+    logging.info(f"Finished uploading {SAMPLE_TSV} to workspace {billing_project}/{workspace_name}")
