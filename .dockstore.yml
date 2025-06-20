@@ -174,3 +174,10 @@ workflows:
     readMePath: /wdl/CombineMetricsFiles/README.md
     testParameterFiles:
       - /wdl/CombineMetricsFiles/CombineMetricsFiles.wdl
+
+  - name: PopulateDragenReprocessingStatus
+    subclass: WDL
+    primaryDescriptorPath: /wdl/PopulateDragenReprocessingStatus/PopulateDragenReprocessingStatus.wdl
+    readMePath: /wdl/PopulateDragenReprocessingStatus/README.md
+    testParameterFiles:
+      - /wdl/PopulateDragenReprocessingStatus/PopulateDragenReprocessingStatus.wdl
