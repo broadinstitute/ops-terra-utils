@@ -31,8 +31,8 @@ task PopulateDragenReprocessingStatusTask {
 		String workspace_name
 		String gcp_project
 		String data_type
-		String min_start_date
-		String max_start_date
+		String? min_start_date
+		String? max_start_date
 		String docker_name
 	}
 
