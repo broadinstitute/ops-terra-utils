@@ -1,5 +1,5 @@
 version 1.0
-///trigger womtool
+
 workflow CopyDataset {
     input {
 		String new_billing_profile
