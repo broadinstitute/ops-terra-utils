@@ -13,7 +13,7 @@ logging.basicConfig(
 
 
 class CopyPublicCloudReference:
-    BROAD_PUBLIC_REFERENCES_SYNC_BUCKET = "broad-references"
+    BROAD_PUBLIC_REFERENCES_SYNC_BUCKET = "broad-referencesss"
 
     def __init__(
             self,
