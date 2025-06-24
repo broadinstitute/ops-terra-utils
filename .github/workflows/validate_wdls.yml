@@ -1,16 +1,18 @@
+# This workflow validates all pipeline WDL files using the 'womtool' tool
 
-# This workflow validates all pipeline WDL files (those found in the pipelines/ projects/ and beta-pipelines directories) using the 'womtool' tool.
 name: WomtoolCheck
 
 on:
-  workflow_call:
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  validate_wdl_job:
+  validate_wdl:
     runs-on: ubuntu-latest
-    name: Validate all wdl using womtool
+    name: Validate all WDL using womtool
     steps:
-      - name: check for util changes
+      - name: Check for util changes
         uses: dorny/paths-filter@v3
         id: changes
         with:
