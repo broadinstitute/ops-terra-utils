@@ -181,3 +181,10 @@ workflows:
     readMePath: /wdl/PopulateDragenReprocessingStatus/README.md
     testParameterFiles:
       - /wdl/PopulateDragenReprocessingStatus/PopulateDragenReprocessingStatus.wdl
+
+  - name: CreateFailedSampleSetsForDragen
+    subclass: WDL
+    primaryDescriptorPath: /wdl/CreateFailedSampleSetsForDragen/CreateFailedSampleSetsForDragen.wdl
+    readMePath: /wdl/CreateFailedSampleSetsForDragen/README.md
+    testParameterFiles:
+      - /wdl/CreateFailedSampleSetsForDragen/CreateFailedSampleSetsForDragen.wdl
