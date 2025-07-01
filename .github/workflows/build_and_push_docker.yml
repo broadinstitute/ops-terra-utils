@@ -1,4 +1,4 @@
-name: Build and Push Docker images to Google Artifact Registry (GAR)
+name: Build and Push Docker Images to Google Artifact Registry (GAR)
 
 on:
   push:

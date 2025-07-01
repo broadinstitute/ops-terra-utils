@@ -42,7 +42,7 @@ def write_entities_tsv(file_dicts: list[dict]) -> None:
         writer = csv.DictWriter(f, fieldnames=headers, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL)
         writer.writeheader()
         for file_dict in file_dicts:
-            file_id = file_dict['path'].removeprefix("gs://").replace('/', '_')
+            file_id = file_dict['path'].removeprefix("gs://").replace('/', '_').replace(' ', '_')
             formatted_dict = {'entity:file_metadata_id': file_id,
                               "file_path": f"{file_dict['path']}",
                               'file_name': f"{file_dict['name']}",
