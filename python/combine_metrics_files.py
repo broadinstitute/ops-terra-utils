@@ -12,6 +12,8 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
+# something
+
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
