@@ -37,7 +37,7 @@ task PopulateDragenReprocessingStatusTask {
 	}
 
 	command <<<
-		python /etc/terra_utils/python/populate_dragen_reprocessing_status.py \
+		python /etc/terra_utils/python/dragen/populate_dragen_reprocessing_status.py \
 		--billing_project ~{billing_project} \
 		--workspace_name ~{workspace_name} \
 		--gcp_project ~{gcp_project} \

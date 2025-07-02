@@ -31,7 +31,7 @@ task CreateFailedSampleSetsForDragenTask {
     }
 
     command <<<
-    python3 /app/python/create_failed_sample_sets_for_dragen.py \
+    python3 /etc/terra_utils/python/dragen/create_failed_sample_sets_for_dragen.py \
         --workspace_name ~{workspace_name} \
         --billing_project ~{billing_project} \
         --sample_set_append ~{sample_set_append} \
