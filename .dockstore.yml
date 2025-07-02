@@ -188,3 +188,10 @@ workflows:
     readMePath: /wdl/CreateFailedSampleSetsForDragen/README.md
     testParameterFiles:
       - /wdl/CreateFailedSampleSetsForDragen/CreateFailedSampleSetsForDragen.wdl
+
+  - name: StartDragen
+    subclass: WDL
+    primaryDescriptorPath: /wdl/StartDragen/StartDragen.wdl
+    readMePath: /wdl/StartDragen/README.md
+    testParameterFiles:
+      - /wdl/StartDragen/StartDragen.wdl

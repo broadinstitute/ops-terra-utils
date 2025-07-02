@@ -28,5 +28,3 @@ This workflow automates the process of setting up a staging workspace in Terra a
 
 ## Outputs Table:
 This script does not generate any direct outputs. But the target workspace and dataset will be generated if the workflow completes successfully. The logs, which include any errors or warnings, can be reviewed in the stderr file for additional details about the process.
-
-delete_existing_dataset
