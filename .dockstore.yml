@@ -195,3 +195,10 @@ workflows:
     readMePath: /wdl/StartDragen/README.md
     testParameterFiles:
       - /wdl/StartDragen/StartDragen.wdl
+
+  - name: IngestDragenDataToTdr
+    subclass: WDL
+    primaryDescriptorPath: /wdl/IngestDragenDataToTdr/IngestDragenDataToTdr.wdl
+    readMePath: /wdl/IngestDragenDataToTdr/README.md
+    testParameterFiles:
+      - /wdl/IngestDragenDataToTdr/IngestDragenDataToTdr.wdl
