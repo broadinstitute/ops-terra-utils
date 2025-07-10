@@ -31,7 +31,7 @@ task RecreateAnvilMetadataTask {
     String workspace_name
     String billing_project
     String dataset_id
-    Boolean? force = false
+    Boolean force
     String? tables_to_ignore
     String? table_prefix_to_ignore
     String docker_name
@@ -42,9 +42,9 @@ task RecreateAnvilMetadataTask {
       --workspace_name ~{workspace_name} \
       --billing_project ~{billing_project} \
       --dataset_id ~{dataset_id} \
-      ~{if force then '--force' else ''} \
-      ~{if defined(tables_to_ignore) then '--tables_to_ignore ' + tables_to_ignore else ''} \
-      ~{if defined(table_prefix_to_ignore) then '--table_prefix_to_ignore ' + table_prefix_to_ignore else ''}
+      ~{"--tables_to_ignore " + tables_to_ignore} \
+      ~{"--table_prefix_to_ignore " + table_prefix_to_ignore} \
+      ~{if force then '--force' else ''}
   >>>
 
   runtime {
