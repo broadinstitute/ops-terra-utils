@@ -94,11 +94,8 @@ if __name__ == '__main__':
     max_per_sample_set: int = args.max_per_sample_set
     upload_to_workspace: bool = args.upload
 
-    # Create token object. This gets your token for the API calls and auto refreshes when needed
     token = Token()
-    # Create request object to make API calls and pass in token
     request_util = RunRequest(token=token)
-    # Create TDR and Terra objects to interact with the TDR and Terra with the request_util object
     terra_workspace = TerraWorkspace(
         request_util=request_util,
         billing_project=billing_project,
