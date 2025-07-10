@@ -62,7 +62,7 @@ task IngestDragenDataToTdrTask {
         }
 
         command {
-            python /etc/terra_utils/python/dragen/populate_dragen_reprocessing_status.py \
+            python /etc/terra_utils/python/dragen/ingest_dragen_data_to_tdr.py \
                 --sample_set ~{sample_set} \
                 --workspace_name ~{workspace_name} \
                 --billing_project ~{billing_project} \
