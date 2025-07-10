@@ -202,3 +202,10 @@ workflows:
     readMePath: /wdl/IngestDragenDataToTdr/README.md
     testParameterFiles:
       - /wdl/IngestDragenDataToTdr/IngestDragenDataToTdr.wdl
+
+  - name: RecreateAnvilMetadata
+    subclass: WDL
+    primaryDescriptorPath: /wdl/RecreateAnvilMetadata/RecreateAnvilMetadata.wdl
+    readMePath: /wdl/RecreateAnvilMetadata/README.md
+    testParameterFiles:
+      - /wdl/RecreateAnvilMetadata/RecreateAnvilMetadata.wdl
