@@ -106,11 +106,11 @@ def get_args() -> Namespace:
                            help="ID of the TDR dataset to ingest data into")
     argparser.add_argument("--ingest_waiting_time_poll", "-p", type=int, default=180,
                            help="Time in seconds to wait between polling for ingest status")
-    argparser.add_argument("--ingest_batch_size", "-b", type=int, default=1000,
+    argparser.add_argument("--ingest_batch_size", "-bs", type=int, default=1000,
                            help="Number of rows to batch for ingesting into TDR")
     argparser.add_argument("--bulk_mode", "-m", action="store_true",
                            help="Use bulk mode for ingesting data into TDR")
-    argparser.add_argument("--update_strategy", "-s", choices=["replace", "merge", "append"], default="replace",
+    argparser.add_argument("--update_strategy", "-us", choices=["replace", "merge", "append"], default="replace",
                            help="Strategy for updating existing data in TDR")
     argparser.add_argument("--dragen_version", "-v", default=DRAGEN_VERSION,
                            help=f"Version of DRAGEN used for processing samples, defaults to {DRAGEN_VERSION}")
@@ -158,8 +158,6 @@ if __name__ == "__main__":
 
     dataset_info = tdr_util.get_dataset_info(dataset_id).json()
     service_account = dataset_info['ingestServiceAccount']
-    logging.info(
-        f"Adding service account {service_account} to workspace {billing_project}/{workspace_name} with READER access level")
     terra_workspace.update_user_acl(
         email=service_account,
         access_level='READER',
@@ -176,4 +174,4 @@ if __name__ == "__main__":
         bulk_mode=bulk_mode,
         update_strategy=update_strategy,
         load_tag=f"{dataset_id}.{table_name}"
-    )
+    ).run()
