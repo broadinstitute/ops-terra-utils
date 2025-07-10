@@ -73,7 +73,7 @@ task IngestDragenDataToTdrTask {
                 --dragen_version ~{dragen_version} \
                 --ingest_batch_size ~{batch_size} \
                 --update_strategy ~{update_strategy} \
-                ~{if bulk_mode then "--bulk_mode" else ""}
+                ~{if bulk_mode then "--bulk_mode" else ""} \
                 ~{if dry_run then "--dry_run" else ""} \
                 ~{if filter_entity_already_in_dataset then "--filter_existing_ids" else ""}
         }
