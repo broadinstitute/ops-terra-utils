@@ -1,6 +1,6 @@
 version 1.0
 
-workflow ingest_dragen_data_to_tdr {
+workflow IngestDragenDataToTdr {
     input {
         String   sample_set
         String   target_table_name
@@ -22,7 +22,7 @@ workflow ingest_dragen_data_to_tdr {
 
     String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
-    call ingest_dragen_data_to_tdr {
+    call IngestDragenDataToTdrTask {
         input:
             sample_set = sample_set,
             target_table_name = target_table_name,
@@ -42,7 +42,7 @@ workflow ingest_dragen_data_to_tdr {
     }
 }
 
-task ingest_dragen_data_to_tdr {
+task IngestDragenDataToTdrTask {
         input {
             String  sample_set
             String  target_table_name
