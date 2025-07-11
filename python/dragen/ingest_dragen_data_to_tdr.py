@@ -42,7 +42,7 @@ class GetSampleInfo:
             "analysis_date": sample_dict["last_attempt"],
             "collaborator_participant_id": str(sample_dict["collaborator_participant_id"]),
             "collaborator_sample_id": str(sample_dict["collaborator_sample_id"]),
-            "contamination_rate": sample_dict["contamination_rate"],
+            "contamination_rate": sample_dict.get("contamination_rate", ""),
             "genome_crai_path": f"{file_path_prefix}.cram.crai",
             "genome_cram_md5_path": f"{file_path_prefix}.cram.md5sum",
             "genome_cram_path": f"{file_path_prefix}.cram",
