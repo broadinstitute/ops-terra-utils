@@ -97,7 +97,15 @@ class TDRTableDataCollector:
                     if col in row:
                         file_id = row[col]
                         row[col] = self.file_id_to_path_dict.get(file_id, "DOES_NOT_EXIST")
-            collected_tables[table_name] = table_metrics
+            # If the table name is 'workspace_attributes', rename it to 'orig_workspace_attributes'
+            if table_name == "workspace_attributes":
+                table_name = "orig_workspace_attributes"
+
+            # Only add the table if it has data
+            if table_metrics:
+                collected_tables[table_name] = table_metrics
+            else:
+                logging.info(f"Skipping table {table_name} as it has no metrics")
         return collected_tables
 
 
@@ -118,12 +126,12 @@ class TableColumnNormalizer:
                 # Remove uri column if present
                 if "uri" in row:
                     del row["uri"]
-        elif table_name == "workspace_attributes":
+        elif table_name == "orig_workspace_attributes":
             for row in rows:
                 if "attribute" in row:
                     attribute = row.pop("attribute")
                     clean_attribute = attribute.replace(":", "_")
-                    row["workspace_attributes_id"] = clean_attribute
+                    row["orig_workspace_attributes_id"] = clean_attribute
         return rows
 
 
