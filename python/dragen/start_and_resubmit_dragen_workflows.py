@@ -21,6 +21,7 @@ MAX_SAMPLES_PER_BATCH = 2000
 RUNNING_STATUS = "RUNNING"
 FAILED_STATUS = "FAILED"
 STATUS_COLUMN_HEADER = "latest_status"
+MAX_RETRIES = 3
 
 
 def get_args() -> argparse.Namespace:
@@ -59,15 +60,21 @@ def get_args() -> argparse.Namespace:
         "--sample_id_column",
         required=True,
         help="Column to use as sample ID input for WDL (for example, `sample_id`, or `collaborator_sample_id`")
-
+    parser.add_argument(
+        "--max_retries",
+        required=False,
+        default=MAX_RETRIES,
+        help=f"Maximum number of retries for failed submissions. Default is {MAX_RETRIES}."
+    )
     return parser.parse_args()
 
 
 class FindSamplesForSubmission:
-    def __init__(self, workspace_metadata: list[dict], samples_per_batch: int, sample_id_column: str):
+    def __init__(self, workspace_metadata: list[dict], samples_per_batch: int, sample_id_column: str, max_retries: int):
         self.workspace_metadata = workspace_metadata
         self.samples_per_batch = samples_per_batch
         self.sample_id_column = sample_id_column
+        self.max_retries = max_retries
 
     def _find_running_samples(self) -> list:
         """
@@ -88,8 +95,9 @@ class FindSamplesForSubmission:
         research_projects = sorted(set(row["attributes"]["rp"] for row in self.workspace_metadata))
 
         for rp in research_projects:
-            # Filter samples by this research project
-            samples_for_rp = [row for row in self.workspace_metadata if row["attributes"]["rp"] == rp]
+            # Filter samples by this research project that are below the max attempt account
+            samples_for_rp = [row for row in self.workspace_metadata if (
+                row["attributes"]["rp"] == rp and row["attributes"]["attempts"] < self.max_retries)]
 
             # Split into not-submitted and failed samples for this rp
             not_submitted_samples = [row for row in samples_for_rp if not row["attributes"].get(STATUS_COLUMN_HEADER)]
@@ -295,7 +303,8 @@ if __name__ == "__main__":
     research_project, dragen_sample_batch = FindSamplesForSubmission(  # type: ignore[misc]
         workspace_metadata=workspace_metrics,
         samples_per_batch=args.samples_per_batch,
-        sample_id_column=args.sample_id_column
+        sample_id_column=args.sample_id_column,
+        max_retries=args.max_retries,
     ).create_sample_batch()
 
     if dragen_sample_batch:
