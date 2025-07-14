@@ -15,7 +15,7 @@ FAILED = "FAILED"
 
 def get_args() -> Namespace:
     parser = ArgumentParser(
-        description="Get information for files in workspace bucket and upload metata to file_metadata table")
+        description="Get information for files in workspace bucket and upload metadata to file_metadata table")
     parser.add_argument("--workspace_name", "-w", required=True, type=str)
     parser.add_argument("--billing_project", "-b", required=True, type=str)
     parser.add_argument("--sample_set_append", "-sa", type=str, required=True)
