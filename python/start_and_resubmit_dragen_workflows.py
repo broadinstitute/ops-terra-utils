@@ -85,7 +85,7 @@ class FindSamplesForSubmission:
             if row["attributes"].get(STATUS_COLUMN_HEADER) == RUNNING_STATUS
         ]
 
-    def _create_batch(self) -> Union[None, tuple[str, list[dict]]]:
+    def _create_batch(self) -> Union[tuple[None, None], tuple[str, list[dict]]]:
         """
         Create a batch of samples for submission.
         Only samples from a single research project (RP) are included in each batch.
@@ -143,9 +143,9 @@ class FindSamplesForSubmission:
 
         # If the loop finishes, and we never returned: no batch found
         logging.info("No samples to submit across any research project")
-        return None
+        return None, None
 
-    def create_sample_batch(self) -> Union[None, tuple[str, list[dict]]]:
+    def create_sample_batch(self) -> Union[tuple[None, None], tuple[str, list[dict]]]:
         running_samples = self._find_running_samples()
         if running_samples:
             raise Exception(
@@ -303,14 +303,14 @@ if __name__ == "__main__":
     workspace_metrics = workspace.get_gcp_workspace_metrics(entity_type="sample", remove_dicts=True)
 
     # Create a batch of samples for submission to Batch
-    research_project, dragen_sample_batch = FindSamplesForSubmission(  # type: ignore[misc]
+    research_project, dragen_sample_batch = FindSamplesForSubmission(
         workspace_metadata=workspace_metrics,
         samples_per_batch=args.samples_per_batch,
         sample_id_column=args.sample_id_column,
         max_retries=args.max_retries,
     ).create_sample_batch()
 
-    if dragen_sample_batch:
+    if research_project and dragen_sample_batch:
         sample_manifest_filename = "sample_processing_manifest.txt"
 
         # Write the batch sample manifest
