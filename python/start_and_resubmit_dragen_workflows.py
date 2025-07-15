@@ -248,6 +248,8 @@ class TriggerDragenWorkflows:
             destination = item["destination"]
             local_source = item["local_source"]
 
+            logging.info(f"Copying {source} to {destination} (local_source={local_source})")
+            """
             if local_source:
                 self.gcp_util.upload_blob(
                     destination_path=destination,
@@ -258,6 +260,7 @@ class TriggerDragenWorkflows:
                     src_cloud_path=source,
                     full_destination_path=destination,
                 )
+            """
 
 
 if __name__ == "__main__":
