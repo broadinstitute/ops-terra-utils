@@ -12,7 +12,7 @@ from ops_utils.request_util import RunRequest
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.gcp_utils import GCPCloudFunctions
 
-from python.dragen.dragen_utils import GetSampleInfo, CreateSampleTsv, SAMPLE_TSV
+from dragen.dragen_utils import GetSampleInfo, CreateSampleTsv, SAMPLE_TSV
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
