@@ -34,6 +34,8 @@ def get_args() -> Namespace:
         parser.add_argument("--first-column-name", required=True, help="Column name for first file in Terra table.")
         parser.add_argument("--second-column-name", required=True, help="Column name for second file in Terra table.")
         parser.add_argument("--table-name", default="sample", help="Terra data table name (default: sample).")
+        parser.add_argument("--upload-tsv", action="store_true", help="If set, upload the TSV to the Terra workspace.")
+
 
         return parser.parse_args()
 
@@ -48,7 +50,6 @@ if __name__ == '__main__':
 
     if not (len(file_list_1) == len(file_list_2) == len(entity_ids)):
         raise ValueError("Length of all input lists (first files, second files, entity IDs) must match.")
-
 
     bucket = get_workspace_bucket(args.billing_project, args.workspace_name)
     dest_prefix = os.path.join(bucket, args.subdir.strip("/"))
@@ -76,11 +77,16 @@ if __name__ == '__main__':
             args.second_column_name: new_paths_2
         })
 
-    tsv_path = f"{args.table_name}_localized.tsv"
+    tsv_path = f"{args.table_name}_localized_files.tsv"
     df.to_csv(tsv_path, sep="\t", index=False)
 
-    print(f"Uploading TSV to Terra: {tsv_path}")
-    upload_entities_tsv(args.billing_project, args.workspace_name, tsv_path)
+    # Optionally upload to Terra workspace data table
+    if args.upload_tsv:
+        print("Uploading TSV to Terra...")
+        upload_entities_tsv(args.billing_project, args.workspace_name, tsv_path)
+        print("TSV uploaded.")
+    else:
+        print("Skipping TSV upload (use --upload-tsv to enable).")
 
-    print("✅ Localization and table update complete.")
+    print("Localization script completed.")
 
