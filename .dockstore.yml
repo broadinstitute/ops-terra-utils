@@ -209,3 +209,10 @@ workflows:
     readMePath: /wdl/RecreateAnvilMetadata/README.md
     testParameterFiles:
       - /wdl/RecreateAnvilMetadata/RecreateAnvilMetadata.wdl
+
+  - name: CopySnapshotToDiffEnv
+    subclass: WDL
+    primaryDescriptorPath: /wdl/CopySnapshotToDiffEnv/CopySnapshotToDiffEnv.wdl
+    readMePath: /wdl/CopySnapshotToDiffEnv/README.md
+    testParameterFiles:
+      - /wdl/CopySnapshotToDiffEnv/CopySnapshotToDiffEnv.wdl
