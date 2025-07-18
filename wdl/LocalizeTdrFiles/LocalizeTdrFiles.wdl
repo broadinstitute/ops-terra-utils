@@ -3,13 +3,13 @@ version 1.0
 workflow LocalizeTdrFiles {
     input {
         Array[String] input_data  #what should i name these??
-        Array[String] input_data_index
-        Array[String] input_entity_id
-        String workspace_bucket
+		Array[String] input_data_index
+		Array[String] input_entity_id
+		String workspace_bucket
 		String subdirectory_name
-        Boolean update_data_tables = true
+		Boolean update_data_tables = true
 		String billing_project
-        String workspace_name
+		String workspace_name
 		String data_table_name
 		String new_data_column_name
 		String new_data_index_column_name
