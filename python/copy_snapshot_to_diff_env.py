@@ -275,7 +275,7 @@ def get_args() -> Namespace:
                         help="If set, will print additional information during the copy process")
     parser.add_argument("--service_account_json", "-saj", type=str,
                         help="Path to the service account JSON file. If not provided, will use the default credentials.")
-    parser.add_argument("--owner_emails", "-oe", type=comma_separated_list,
+    parser.add_argument("--owner_emails", type=comma_separated_list,
                         help="comma separated list of emails to add to the workspace, dataset, and snapshot as owner/custodian. If not provided, "
                              "will not add anybody.")
     return parser.parse_args()
@@ -356,7 +356,8 @@ if __name__ == '__main__':
         orig_dataset_info=orig_dataset_info,
         new_tdr=new_tdr,
         snapshot_info=snapshot_info,
-        continue_if_exists=continue_if_exists
+        continue_if_exists=continue_if_exists,
+        owner_emails=owner_emails
     ).run()
 
     # Add the ingest service account to the workspace
