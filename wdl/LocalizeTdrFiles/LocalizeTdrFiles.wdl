@@ -16,10 +16,12 @@ workflow LocalizeTdrFiles {
 
 		String? docker
 		Int? memory_gb
+		Int? disk_size_gb
 	}
 
 	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 	Int memory = select_first([memory_gb, 8])
+	Int disk = select_first([disk_size_gb, 50])
 
 	call LocalizeTdrFilesTask {
 		input:
@@ -34,7 +36,9 @@ workflow LocalizeTdrFiles {
 			data_table_name = data_table_name,
 			new_data_column_name = new_data_column_name,
 			new_data_index_column_name = new_data_index_column_name,
-			docker_name = docker_name
+			docker_name = docker_name,
+			memory = memory,
+			disk = disk
 	}
 }
 
@@ -53,6 +57,8 @@ task LocalizeTdrFilesTask {
 		String new_data_index_column_name
 
 		String docker_name
+		String memory
+		String disk
 	}
 
 	File data_array_file = write_lines(data)
@@ -75,7 +81,8 @@ task LocalizeTdrFilesTask {
 
 	runtime {
 		docker: docker_name
-		memory: "${memory_gb} GiB"
+		memory: "${memory} GiB"
+		disks: "local-disk ${disk} HDD"
 	}
 
 	output {
