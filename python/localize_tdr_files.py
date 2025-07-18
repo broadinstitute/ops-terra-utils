@@ -25,16 +25,16 @@ def get_args() -> Namespace:
             description="Copy paired files into Terra workspace bucket and update data table."
         )
 
-        parser.add_argument("--billing-project", required=True, help="Terra billing project.")
-        parser.add_argument("--workspace-name", required=True, help="Terra workspace name.")
-        parser.add_argument("--first-file-list", required=True, help="Path to text file of GCS URIs for first file set.")
-        parser.add_argument("--second-file-list", required=True, help="Path to text file of GCS URIs for second file set.")
-        parser.add_argument("--entity-ids", required=True, help="Path to text file of entity IDs.")
+        parser.add_argument("--billing_project", required=True, help="Terra billing project.")
+        parser.add_argument("--workspace_name", required=True, help="Terra workspace name.")
+        parser.add_argument("--first_file_list", required=True, help="Path to text file of GCS URIs for first file set.")
+        parser.add_argument("--second_file_list", required=True, help="Path to text file of GCS URIs for second file set.")
+        parser.add_argument("--entity_ids", required=True, help="Path to text file of entity IDs.")
         parser.add_argument("--subdir", required=True, help="Subdirectory under workspace bucket (e.g. cram_crai).")
-        parser.add_argument("--first-column-name", required=True, help="Column name for first file in Terra table.")
-        parser.add_argument("--second-column-name", required=True, help="Column name for second file in Terra table.")
-        parser.add_argument("--table-name", default="sample", help="Terra data table name (default: sample).")
-        parser.add_argument("--upload-tsv", action="store_true", help="If set, upload the TSV to the Terra workspace.")
+        parser.add_argument("--first_column_name", required=True, help="Column name for first file in Terra table.")
+        parser.add_argument("--second_column_name", required=True, help="Column name for second file in Terra table.")
+        parser.add_argument("--table_name", default="sample", help="Terra data table name (default: sample).")
+        parser.add_argument("--upload_tsv", action="store_true", help="If set, upload the TSV to the Terra workspace.")
 
 
         return parser.parse_args()
