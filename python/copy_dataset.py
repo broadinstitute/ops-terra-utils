@@ -7,6 +7,7 @@ from ops_utils.tdr_utils.tdr_api_utils import TDR
 from ops_utils.tdr_utils.tdr_ingest_utils import FilterAndBatchIngest
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
+from ops_utils.tdr_utils.tdr_table_utils import MatchSchemas
 from ops_utils.vars import ARG_DEFAULTS
 
 
@@ -159,49 +160,6 @@ class CreateIngestRecords:
             # Add new row dict to list of new ingest records
             new_ingest_records.append(new_row_dict)
         return new_ingest_records
-
-
-class MatchSchemas:
-    def __init__(self, orig_dataset_info: dict, dest_dataset_info: dict, dest_dataset_id: str, tdr: TDR):
-        """
-        Initialize the MatchSchemas class.
-
-        Args:
-            orig_dataset_info (dict): The original dataset information.
-            dest_dataset_info (dict): The destination dataset information.
-            dest_dataset_id (str): The ID of the destination dataset.
-            tdr (TDR): An instance of the TDR class.
-        """
-        self.orig_dataset_info = orig_dataset_info
-        self.dest_dataset_info = dest_dataset_info
-        self.dest_dataset_id = dest_dataset_id
-        self.tdr = tdr
-
-    def run(self) -> None:
-        """
-        Run the process to match tables between the original and destination datasets and add missing tables.
-
-        Returns:
-            None
-        """
-        tables_to_update = []
-        dest_tables = [table['name'] for table in self.dest_dataset_info["schema"]["tables"]]
-        # If table exists already assumes it is the same schema
-        for table in self.orig_dataset_info["schema"]["tables"]:
-            if table['name'] not in dest_tables:
-                logging.info(
-                    f"Table {table['name']} not found in new dataset {new_dataset_name}. will add table"
-                )
-                tables_to_update.append(table)
-        if tables_to_update:
-            logging.info(
-                f"Adding {len(tables_to_update)} tables to new dataset {new_dataset_name}"
-            )
-            self.tdr.update_dataset_schema(
-                dataset_id=self.dest_dataset_id,
-                tables_to_add=tables_to_update,
-                update_note=f"Adding tables to dataset {new_dataset_name}"
-            )
 
 
 if __name__ == "__main__":
