@@ -12,6 +12,7 @@ from ops_utils.tdr_utils.tdr_ingest_utils import BatchIngest
 from utils.copy_dataset_or_snapshot_files import CopyDatasetOrSnapshotFiles
 from ops_utils.gcp_utils import GCPCloudFunctions
 from typing import Optional
+from ops_utils import comma_separated_list
 
 
 logging.basicConfig(
@@ -43,7 +44,8 @@ class CreateAndSetUpDataset:
             orig_dataset_info: dict,
             new_tdr: TDR,
             snapshot_info: dict,
-            continue_if_exists: bool
+            continue_if_exists: bool,
+            owner_emails: list[str] = []
     ):
         """
         Initialize the CreateAndSetUpDataset class.
@@ -53,11 +55,13 @@ class CreateAndSetUpDataset:
             new_tdr (TDR): The new TDR instance where the dataset will be created.
             snapshot_info (dict): Information about the snapshot to be used for creating the new dataset.
             continue_if_exists (bool): If True, will continue without error if the dataset already exists.
+            owner_emails (list[str]): List of emails to be added as owners of the new dataset. Defaults to None.
         """
         self.orig_dataset_info = orig_dataset_info
         self.new_tdr = new_tdr
         self.continue_if_exists = continue_if_exists
         self.snapshot_info = snapshot_info
+        self.owner_emails = owner_emails
 
     def _create_additional_properties(self) -> dict:
         """
@@ -101,6 +105,15 @@ class CreateAndSetUpDataset:
             dest_dataset_id=dest_dataset_id,
             tdr=self.new_tdr
         ).run()
+
+        # Add 'owners' emails to the dataset
+        for email in self.owner_emails:
+            self.new_tdr.add_user_to_dataset(
+                dataset_id=dest_dataset_id,
+                user=email,
+                policy="steward",
+            )
+
         return dest_dataset_id
 
 
@@ -262,6 +275,9 @@ def get_args() -> Namespace:
                         help="If set, will print additional information during the copy process")
     parser.add_argument("--service_account_json", "-saj", type=str,
                         help="Path to the service account JSON file. If not provided, will use the default credentials.")
+    parser.add_argument("--owner_emails", "-oe", type=comma_separated_list,
+                        help="comma separated list of emails to add to the workspace, dataset, and snapshot as owner/custodian. If not provided, "
+                             "will not add anybody.")
     return parser.parse_args()
 
 
@@ -276,6 +292,7 @@ if __name__ == '__main__':
     delete_temp_workspace = args.delete_temp_workspace
     service_account_json = args.service_account_json
     verbose = args.verbose
+    owner_emails = args.owner_emails
 
     # Set src and dest environment
     new_env = 'dev' if orig_env == 'prod' else 'prod'
@@ -303,6 +320,12 @@ if __name__ == '__main__':
     terra_workspace.create_workspace(
         continue_if_exists=continue_if_exists
     )
+    # Add owners emails to temp workspace
+    for email in owner_emails:
+        terra_workspace.update_user_acl(
+            email=email,
+            access_level="OWNER",
+        )
     workspace_bucket = terra_workspace.get_workspace_bucket()
     logging.info(f"Temp workspace bucket: {workspace_bucket}")
 
@@ -366,6 +389,7 @@ if __name__ == '__main__':
         dataset_name=orig_dataset_info['name'],
         snapshot_mode=SNAPSHOT_TYPE,
         profile_id=new_billing_profile,
+        stewards=owner_emails if owner_emails else None,
     )
 
     # If delete_temp_workspace is set, delete the temp workspace
