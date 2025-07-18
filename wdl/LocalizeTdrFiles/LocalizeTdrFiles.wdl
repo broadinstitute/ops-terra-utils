@@ -2,9 +2,9 @@ version 1.0
 
 workflow LocalizeTdrFiles {
     input {
-        Array[String] data  #what should i name these??
-        Array[String] data_index
-        Array[String] entity_id
+        Array[String] input_data  #what should i name these??
+        Array[String] input_data_index
+        Array[String] input_entity_id
         String workspace_bucket
 		String subdirectory_name
         Boolean update_data_tables = true
@@ -25,9 +25,9 @@ workflow LocalizeTdrFiles {
 
 	call LocalizeTdrFilesTask {
 		input:
-			data = data,
-			data_index = data_index,
-			entity_id = entity_id,
+			data = input_data,
+			data_index = input_data_index,
+			entity_id = input_entity_id,
 			workspace_bucket = workspace_bucket,
 			subdirectory_name = subdirectory_name,
 			update_data_tables = update_data_tables,
