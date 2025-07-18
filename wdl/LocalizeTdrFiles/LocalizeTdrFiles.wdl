@@ -2,7 +2,7 @@ version 1.0
 
 workflow LocalizeTdrFiles {
     input {
-        Array[String] input_data  #what should i name these??
+		Array[String] input_data  #what should i name these??
 		Array[String] input_data_index
 		Array[String] input_entity_id
 		String workspace_bucket
