@@ -1,6 +1,5 @@
 import logging
 
-from ops_utils.terra_util import TerraWorkspace
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 from ops_utils.tdr_utils.tdr_api_utils import TDR
@@ -12,6 +11,7 @@ from ops_utils.tdr_utils.tdr_ingest_utils import BatchIngest
 from utils.copy_dataset_or_snapshot_files import CopyDatasetOrSnapshotFiles
 from ops_utils.gcp_utils import GCPCloudFunctions
 from typing import Optional
+import os
 from ops_utils import comma_separated_list
 
 
@@ -71,8 +71,9 @@ class CreateAndSetUpDataset:
             dict: A dictionary containing additional properties for the new dataset.
         """
         additional_properties = {
-            "experimentalSelfHosted": self.snapshot_info["selfHosted"],
-            "dedicatedIngestServiceAccount": True,
+            "experimentalSelfHosted": False,
+            # Use general service account for ingestion and not dataset specific
+            "dedicatedIngestServiceAccount": False,
             "experimentalPredictableFileIds": False,
             "enableSecureMonitoring": self.snapshot_info["secureMonitoringEnabled"],
         }
@@ -178,7 +179,7 @@ class GetLatestSnapsShotInfoAndUpdatePaths:
         file_id = drs_id.split('_')[-1] if drs_id else None
         if file_id in snapshot_file_dict:
             file_metadata = snapshot_file_dict[file_id]
-            return f"gs://{self.workspace_bucket}/{file_metadata['path'].lstrip('/')}"
+            return os.path.join(self.workspace_bucket, file_metadata['path'].lstrip('/'))
         logging.info(f"File {file_id} not found in snapshot files list")
         return None
 
@@ -261,8 +262,9 @@ class GetLatestSnapsShotInfoAndUpdatePaths:
 
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Get files that are not in the dataset metadata")
-    parser.add_argument("--billing_project", "-b", required=True)
-    parser.add_argument("--workspace_name", "-w", required=True)
+    parser.add_argument("--temp_bucket", "-b", required=True,
+                        help="Include gs:// and last slash /. Should have the TDR prod or dev general service "
+                             "account added as well as service account/user running this script")
     parser.add_argument("--dataset_id", "-d", required=True)
     parser.add_argument("--orig_env", "-oe", required=True,
                         choices=['prod', 'dev'], help="Environment of the original dataset. Will copy to the other environment")
@@ -270,7 +272,6 @@ def get_args() -> Namespace:
                         help="Only needed if going dev -> prod")
     parser.add_argument("--continue_if_exists", "-c", action="store_true",
                         help="If the dataset already exists, continue without error")
-    parser.add_argument("--delete_temp_workspace", "-dtw", action="store_true",)
     parser.add_argument("--verbose", "-v", action="store_true",
                         help="If set, will print additional information during the copy process")
     parser.add_argument("--service_account_json", "-saj", type=str,
@@ -278,21 +279,25 @@ def get_args() -> Namespace:
     parser.add_argument("--owner_emails", type=comma_separated_list,
                         help="comma separated list of emails to add to the workspace, dataset, and snapshot as owner/custodian. If not provided, "
                              "will not add anybody.")
+    parser.add_argument("--delete_intermediate_files", "-dm", action="store_true",)
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = get_args()
-    billing_project = args.billing_project
-    workspace_name = args.workspace_name
+    temp_bucket = args.temp_bucket
     dataset_id = args.dataset_id
     orig_env = args.orig_env
     new_billing_profile = args.new_billing_profile
     continue_if_exists = args.continue_if_exists
-    delete_temp_workspace = args.delete_temp_workspace
     service_account_json = args.service_account_json
     verbose = args.verbose
     owner_emails = args.owner_emails
+    delete_intermediate_files = args.delete_intermediate_files
+
+    # Validate bucket
+    if not temp_bucket.startswith('gs://') or not temp_bucket.endswith('/'):
+        raise ValueError("temp_bucket must start with 'gs://' and end with '/'")
 
     # Set src and dest environment
     new_env = 'dev' if orig_env == 'prod' else 'prod'
@@ -306,28 +311,10 @@ if __name__ == '__main__':
     )
     request_util = RunRequest(token=token)
 
+    # Create TDR instances for original and new environments and GCP functions
     orig_tdr = TDR(request_util=request_util, env=orig_env)
     new_tdr = TDR(request_util=request_util, env=new_env)
-
-    terra_workspace = TerraWorkspace(
-        billing_project=billing_project,
-        workspace_name=workspace_name,
-        request_util=request_util,
-        env=new_env,
-    )
-
-    # Create temp workspace to copy files to
-    terra_workspace.create_workspace(
-        continue_if_exists=continue_if_exists
-    )
-    # Add owners emails to temp workspace
-    for email in owner_emails:
-        terra_workspace.update_user_acl(
-            email=email,
-            access_level="OWNER",
-        )
-    workspace_bucket = terra_workspace.get_workspace_bucket()
-    logging.info(f"Temp workspace bucket: {workspace_bucket}")
+    gcp_utils = GCPCloudFunctions(service_account_json=service_account_json)
 
     # Get original dataset info
     orig_dataset_info = orig_tdr.get_dataset_info(dataset_id=dataset_id).json()
@@ -338,16 +325,16 @@ if __name__ == '__main__':
     snapshot_info, all_table_contents = GetLatestSnapsShotInfoAndUpdatePaths(
         tdr=orig_tdr,
         dataset_id=dataset_id,
-        workspace_bucket=workspace_bucket
+        workspace_bucket=temp_bucket
     ).run()
 
     # Copy files from the original dataset snapshot to the new workspace bucket
-    CopyDatasetOrSnapshotFiles(
+    copy_mapping_list = CopyDatasetOrSnapshotFiles(
         tdr=orig_tdr,
         snapshot_id=snapshot_info['id'],
-        output_bucket=workspace_bucket,
+        output_bucket=temp_bucket,
         download_type=DOWNLOAD_TYPE,
-        gcp_functions=GCPCloudFunctions(service_account_json=service_account_json),
+        gcp_functions=gcp_utils,
         verbose=verbose
     ).run()
 
@@ -360,14 +347,10 @@ if __name__ == '__main__':
         owner_emails=owner_emails
     ).run()
 
-    # Add the ingest service account to the workspace
-    dest_dataset_info = new_tdr.get_dataset_info(dest_tdr_id).json()
-    ingest_account = dest_dataset_info.get('ingestServiceAccount')
-    terra_workspace.update_user_acl(
-        email=ingest_account,
-        access_level="READER",
-    )
-
+    ingest_account = "jade-k8-sa@broad-jade-dev.iam.gserviceaccount.com" if new_env == 'dev' \
+        else "datarepo-jade-api@terra-datarepo-production.iam.gserviceaccount.com"
+    logging.info(f"If fails with permission failures make sure {ingest_account} and SA/user proxy account (in new env)"
+                 f"has 'Storage Object Viewer' permissions to temp bucket {temp_bucket}")
     # Ingest the updated table contents into the dataset in new environment
     for table_name, table_contents in all_table_contents.items():
         BatchIngest(
@@ -393,7 +376,7 @@ if __name__ == '__main__':
         stewards=owner_emails if owner_emails else None,
     )
 
-    # If delete_temp_workspace is set, delete the temp workspace
-    if delete_temp_workspace:
-        logging.info("Deleting temp workspace")
-        terra_workspace.delete_workspace()
+    # If delete_intermediate_files is set, delete the files in the temp bucket
+    if delete_intermediate_files:
+        intermediate_files = [mapping['full_destination_path'] for mapping in copy_mapping_list]
+        gcp_utils.delete_multiple_files(files_to_delete=intermediate_files,)

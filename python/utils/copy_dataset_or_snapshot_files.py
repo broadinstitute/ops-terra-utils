@@ -77,7 +77,10 @@ class CopyDatasetOrSnapshotFiles:
         self.gcp_functions = gcp_functions
         self.verbose = verbose
 
-    def run(self) -> None:
+    def run(self) -> list[dict]:
+        """
+        Run the file copying process and return the mapping of source to destination paths.
+        """
         if self.snapshot_id:
             file_metadata = self.tdr.get_files_from_snapshot(snapshot_id=self.snapshot_id)
         else:
@@ -96,3 +99,4 @@ class CopyDatasetOrSnapshotFiles:
         self.gcp_functions.multithread_copy_of_files_with_validation(
             files_to_copy=mapping, workers=ARG_DEFAULTS['multithread_workers']
         )
+        return mapping
