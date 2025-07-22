@@ -12,6 +12,8 @@ workflow CopySnapshotToDiffEnv {
 		String? new_billing_profile
 		File? service_account_json
 		String? owner_emails
+		String? dest_dataset_name
+		String? snapshot_name
 		String? docker
 
 	}
@@ -29,7 +31,9 @@ workflow CopySnapshotToDiffEnv {
 			verbose=verbose,
 			owner_emails=owner_emails,
 			delete_intermediate_files=delete_intermediate_files,
-			service_account_json=service_account_json
+			service_account_json=service_account_json,
+			dest_dataset_name=dest_dataset_name,
+			snapshot_name=snapshot_name
 	}
 }
 
@@ -45,6 +49,8 @@ task RunCopySnapshotToDiffEnv {
 		Boolean delete_intermediate_files
 		String? owner_emails
 		File? service_account_json
+		String? dest_dataset_name
+		String? snapshot_name
 	}
 
 	command <<<
@@ -55,6 +61,8 @@ task RunCopySnapshotToDiffEnv {
 		~{"--new_billing_profile " + new_billing_profile} \
 		~{"--service_account_json " + service_account_json} \
 		~{"--owner_emails " + owner_emails} \
+		~{"--dest_dataset_name " + dest_dataset_name} \
+		~{"--snapshot_name " + snapshot_name} \
 		~{if continue_if_exists then "--continue_if_exists" else ""} \
 		~{if verbose then '--verbose' else ''} \
 		~{if delete_intermediate_files then '--delete_intermediate_files' else ''}

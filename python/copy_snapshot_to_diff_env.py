@@ -45,6 +45,7 @@ class CreateAndSetUpDataset:
             new_tdr: TDR,
             snapshot_info: dict,
             continue_if_exists: bool,
+            destination_dataset_name: str,
             owner_emails: list[str] = []
     ):
         """
@@ -55,13 +56,15 @@ class CreateAndSetUpDataset:
             new_tdr (TDR): The new TDR instance where the dataset will be created.
             snapshot_info (dict): Information about the snapshot to be used for creating the new dataset.
             continue_if_exists (bool): If True, will continue without error if the dataset already exists.
-            owner_emails (list[str]): List of emails to be added as owners of the new dataset. Defaults to None.
+            destination_dataset_name (str): Name for the destination dataset.
+            owner_emails (list[str]): List of emails to be added as owners of the new dataset. Defaults to empty list.
         """
         self.orig_dataset_info = orig_dataset_info
         self.new_tdr = new_tdr
         self.continue_if_exists = continue_if_exists
         self.snapshot_info = snapshot_info
         self.owner_emails = owner_emails
+        self.destination_dataset_name = destination_dataset_name
 
     def _create_additional_properties(self) -> dict:
         """
@@ -89,7 +92,7 @@ class CreateAndSetUpDataset:
         additional_properties = self._create_additional_properties()
 
         dest_dataset_id = self.new_tdr.get_or_create_dataset(
-            dataset_name=self.orig_dataset_info['name'],
+            dataset_name=self.destination_dataset_name,
             billing_profile=new_billing_profile,
             schema=self.snapshot_info['schema'],
             description=self.orig_dataset_info['description'],
@@ -277,8 +280,12 @@ def get_args() -> Namespace:
     parser.add_argument("--service_account_json", "-saj", type=str,
                         help="Path to the service account JSON file. If not provided, will use the default credentials.")
     parser.add_argument("--owner_emails", type=comma_separated_list,
-                        help="comma separated list of emails to add to the workspace, dataset, and snapshot as owner/custodian. If not provided, "
+                        help="comma separated list of emails to add to the workspace, dataset, and snapshot as owner/steward. If not provided, "
                              "will not add anybody.")
+    parser.add_argument("--dest_dataset_name", type=str,
+                        help="Name for the destination dataset. Defaults to the original dataset name if not provided.")
+    parser.add_argument("--snapshot_name", type=str,
+                        help="Name for the new snapshot. Defaults to the original snapshot name if not provided.")
     parser.add_argument("--delete_intermediate_files", "-dm", action="store_true",)
     return parser.parse_args()
 
@@ -298,6 +305,14 @@ if __name__ == '__main__':
     # Validate bucket
     if not temp_bucket.startswith('gs://') or not temp_bucket.endswith('/'):
         raise ValueError("temp_bucket must start with 'gs://' and end with '/'")
+
+    # Require owner_emails when using service_account_json
+    if service_account_json and not owner_emails:
+        raise ValueError("When using service_account_json, owner_emails must be provided")
+
+    # Get the optional arguments for names
+    dest_dataset_name = args.dest_dataset_name
+    snapshot_name = args.snapshot_name
 
     # Set src and dest environment
     new_env = 'dev' if orig_env == 'prod' else 'prod'
@@ -339,12 +354,16 @@ if __name__ == '__main__':
     ).run()
 
     # Create a new dataset in the new environment
+    # Use custom dataset name if provided, otherwise use the original name
+    final_dataset_name = dest_dataset_name if dest_dataset_name else orig_dataset_info['name']
+
     dest_tdr_id = CreateAndSetUpDataset(
         orig_dataset_info=orig_dataset_info,
         new_tdr=new_tdr,
         snapshot_info=snapshot_info,
         continue_if_exists=continue_if_exists,
-        owner_emails=owner_emails
+        owner_emails=owner_emails,
+        destination_dataset_name=final_dataset_name
     ).run()
 
     ingest_account = "jade-k8-sa@broad-jade-dev.iam.gserviceaccount.com" if new_env == 'dev' \
@@ -365,12 +384,15 @@ if __name__ == '__main__':
         ).run()
 
     # Create a snapshot in the new environment
+    # Use custom snapshot name if provided, otherwise use the original name
+    final_snapshot_name = snapshot_name if snapshot_name else snapshot_info['name']
+
     new_tdr.create_snapshot(
-        snapshot_name=snapshot_info['name'],
+        snapshot_name=final_snapshot_name,
         description=snapshot_info['description'],
         consent_code=snapshot_info['consentCode'],
         duos_id=snapshot_info.get('duosId'),
-        dataset_name=orig_dataset_info['name'],
+        dataset_name=final_dataset_name,
         snapshot_mode=SNAPSHOT_TYPE,
         profile_id=new_billing_profile,
         stewards=owner_emails if owner_emails else None,
