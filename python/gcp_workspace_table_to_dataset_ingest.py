@@ -211,7 +211,6 @@ if __name__ == "__main__":
             force_disparate_rows_to_string=force_disparate_rows_to_string,
             ignore_existing_schema_mismatch=ignore_existing_schema_mismatch
         ).run()
-
         if trunc_and_reload:
             logging.info(
                 "Requested trunc and reload - all tables in the target TDR dataset that correspond to Terra ingest "
