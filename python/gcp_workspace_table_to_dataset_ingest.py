@@ -32,8 +32,9 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--dataset_id", required=True)
     parser.add_argument(
         "--terra_tables",
-        required=True,
-        help="The name(s) of the Terra table(s) that you'd like to import into TDR. Comma separated",
+        required=False,
+        help="Optional: the name(s) of the Terra table(s) that you'd like to import into TDR. Comma separated. "
+             "If not provided, all tables in the workspace will be imported to TDR",
         type=comma_separated_list,
     )
     parser.add_argument(
@@ -163,16 +164,18 @@ if __name__ == "__main__":
         logging.warning("Dataset is not selfHosted. Cannot check if files have already been ingested and use UUIDs")
         check_if_files_already_ingested = False
 
-    for terra_table_name in terra_tables:
-        target_table_name = terra_table_name
+    # If no terra tables are provided, use all tables in the workspace
+    target_tables = terra_tables if terra_tables else [table for table in entity_metrics]
 
+    # Now for each table, run the necessary checks, set up the TDR tables, and ingest the data
+    for target_table_name in target_tables:
         # Get sample metrics from Terra
-        sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=terra_table_name, remove_dicts=True)
+        sample_metrics = terra_workspace.get_gcp_workspace_metrics(entity_type=target_table_name, remove_dicts=True)
         try:
-            primary_key_column_name = entity_metrics[terra_table_name]["idName"]
+            primary_key_column_name = entity_metrics[target_table_name]["idName"]
         except KeyError:
             logging.warning(
-                f"Provided Terra table name '{terra_table_name}' does not exist in Terra metadata. Skipping ingest of "
+                f"Provided Terra table name '{target_table_name}' does not exist in Terra metadata. Skipping ingest of "
                 f"this table."
             )
             continue
@@ -214,7 +217,7 @@ if __name__ == "__main__":
                 "Requested trunc and reload - all tables in the target TDR dataset that correspond to Terra ingest "
                 "tables will be soft-deleted if they contain any adata"
             )
-            tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=terra_table_name)
+            tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=target_table_name)
 
         if filter_existing_ids:
             # Filter out sample ids that are already in the dataset

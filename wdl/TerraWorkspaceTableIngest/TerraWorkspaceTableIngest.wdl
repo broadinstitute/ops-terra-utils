@@ -68,7 +68,7 @@ task IngestWorkspaceDataToDataset {
         --billing_project  ~{billing_project} \
         --workspace_name  "~{workspace_name}" \
         --dataset_id  ~{dataset_id} \
-        --terra_tables  ~{terra_tables} \
+        ~{"--terra_tables " + terra_tables} \
         ~{"--update_strategy " + update_strategy} \
         ~{if bulk_mode then "--bulk_mode" else ""} \
         ~{"--max_retries " + max_retries} \
