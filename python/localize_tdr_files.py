@@ -12,6 +12,8 @@ from ops_utils.terra_util import TerraWorkspace
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 from ops_utils.gcp_utils import GCPCloudFunctions
+from ops_utils.vars import ARG_DEFAULTS
+from copy_gcp_to_gcp import CreateCopyDict
 
 
 logging.basicConfig(
@@ -62,27 +64,40 @@ if __name__ == '__main__':
         workspace_name=args.workspace_name
     )
 
-    # You can now use tdr or terra objects to interact with the TDR or Terra like below
     bucket = f"gs://{terra.get_workspace_bucket()}"
     dest_prefix = os.path.join(bucket, args.subdir.strip("/"))
 
-    print(f"Workspace bucket: {bucket}")
-    print(f"Copying files to: {dest_prefix}")
+    logging.info(f"Workspace bucket: {bucket}")
+    logging.info(f"Copying files to: {dest_prefix}")
 
-    new_paths_1 = []
-    new_paths_2 = []
+    copy_dict_1 = CreateCopyDict(
+        source_files=file_list_1,
+        destination_path=dest_prefix,
+        preserve_structure=False
+    ).run()
+
+    copy_dict_2 = CreateCopyDict(
+        source_files=file_list_2,
+        destination_path=dest_prefix,
+        preserve_structure=False
+    ).run()
+
+    new_paths_1 = [line["full_destination_path"] for line in copy_dict_1]
+    new_paths_2 = [line["full_destination_path"] for line in copy_dict_2]
 
     gcp = GCPCloudFunctions()
 
-    for src1, src2 in zip(file_list_1, file_list_2):
-        dest1 = f"{dest_prefix}/{os.path.basename(src1)}"
-        dest2 = f"{dest_prefix}/{os.path.basename(src2)}"
+    gcp.multithread_copy_of_files_with_validation(
+        files_to_copy=copy_dict_1,
+        max_retries=ARG_DEFAULTS["max_retries"],
+        workers=ARG_DEFAULTS["multithread_workers"]
+    )
 
-        gcp.copy_cloud_file(src1, dest1)
-        gcp.copy_cloud_file(src2, dest2)
-
-        new_paths_1.append(dest1)
-        new_paths_2.append(dest2)
+    gcp.multithread_copy_of_files_with_validation(
+        files_to_copy=copy_dict_2,
+        max_retries=ARG_DEFAULTS["max_retries"],
+        workers=ARG_DEFAULTS["multithread_workers"]
+    )
 
     entity_col = f"entity:{args.table_name}_id"
     df = pd.DataFrame({
@@ -96,11 +111,10 @@ if __name__ == '__main__':
 
     # Optionally upload to Terra workspace data table
     if args.upload_tsv:
-        print("Uploading TSV to Terra...")
-        upload_entities_tsv(args.billing_project, args.workspace_name, tsv_path)
-        print("TSV uploaded.")
+        logging.info("Uploading TSV to Terra...")
+        terra.upload_metadata_to_workspace_table(tsv_path)
+        logging.info("TSV uploaded.")
     else:
-        print("Skipping TSV upload (use --upload-tsv to enable).")
+        logging.info("Skipping TSV upload (use --upload-tsv to enable).")
 
     print("Localization script completed.")
-
