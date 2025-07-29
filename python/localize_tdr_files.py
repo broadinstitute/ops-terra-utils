@@ -117,4 +117,4 @@ if __name__ == '__main__':
     else:
         logging.info("Skipping TSV upload (use --upload-tsv to enable).")
 
-    print("Localization script completed.")
+    logging.info("Localization script completed.")
