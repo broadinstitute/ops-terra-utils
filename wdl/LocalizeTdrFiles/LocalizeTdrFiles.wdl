@@ -2,17 +2,17 @@ version 1.0
 
 workflow LocalizeTdrFiles {
     input {
-		Array[String] input_data  #what should i name these??
-		Array[String] input_data_index
-		Array[String] input_entity_id
+		Array[String] primary_files  #what should i name these??
+		Array[String] secondary_files
+		Array[String] entity_ids
 		String workspace_bucket
 		String subdirectory_name
 		Boolean update_data_tables = true
 		String billing_project
 		String workspace_name
 		String data_table_name
-		String new_data_column_name
-		String new_data_index_column_name
+		String new_primary_column_name
+		String new_secondary_column_name
 
 		String? docker
 		Int? memory_gb
@@ -25,17 +25,17 @@ workflow LocalizeTdrFiles {
 
 	call LocalizeTdrFilesTask {
 		input:
-			data = input_data,
-			data_index = input_data_index,
-			entity_id = input_entity_id,
+			primary_files = primary_files,
+			secondary_files = secondary_files,
+			entity_ids = entity_ids,
 			workspace_bucket = workspace_bucket,
 			subdirectory_name = subdirectory_name,
 			update_data_tables = update_data_tables,
 			billing_project = billing_project,
 			workspace_name = workspace_name,
 			data_table_name = data_table_name,
-			new_data_column_name = new_data_column_name,
-			new_data_index_column_name = new_data_index_column_name,
+			new_primary_column_name = new_primary_column_name,
+			new_secondary_column_name = new_secondary_column_name,
 			docker_name = docker_name,
 			memory = memory,
 			disk = disk
@@ -44,37 +44,37 @@ workflow LocalizeTdrFiles {
 
 task LocalizeTdrFilesTask {
 	input {
-		Array[String] data  #what should i name these??
-		Array[String] data_index
-		Array[String] entity_id
+		Array[String] primary_files  #what should i name these??
+		Array[String] secondary_files
+		Array[String] entity_ids
 		String workspace_bucket
 		String subdirectory_name
 		Boolean update_data_tables = true
 		String billing_project
 		String workspace_name
 		String data_table_name
-		String new_data_column_name
-		String new_data_index_column_name
+		String new_primary_column_name
+		String new_secondary_column_name
 
 		String docker_name
 		String memory
 		String disk
 	}
 
-	File data_array_file = write_lines(data)
-	File data_index_array_file = write_lines(data_index)
-	File entity_ids_array_file = write_lines(entity_id)
+	File primary_array_file = write_lines(primary_files)
+	File secondary_array_file = write_lines(secondary_files)
+	File entity_ids_array_file = write_lines(entity_ids)
 
 	command <<<
 		python /etc/terra_utils/python/localize_tdr_files.py \
 		--billing_project ~{billing_project} \
 		--workspace_name "~{workspace_name}" \
-		--first_file_list ~{data_array_file} \
-		--second_file_list ~{data_index_array_file} \
+		--first_file_list ~{primary_array_file} \
+		--second_file_list ~{secondary_array_file} \
 		--entity_ids ~{entity_ids_array_file} \
 		--subdir ~{subdirectory_name} \
-		--first_column_name ~{new_data_column_name} \
-		--second_column_name ~{new_data_index_column_name} \
+		--first_column_name ~{new_primary_column_name} \
+		--second_column_name ~{new_secondary_column_name} \
 		--table_name ~{data_table_name} \
 		~{if update_data_tables then "--upload-tsv" else ""} \
 	>>>
