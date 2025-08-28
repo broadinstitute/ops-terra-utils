@@ -19,10 +19,15 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
+# Roles
 OWNER = "OWNER"
 WRITER = "WRITER"
 READER = "READER"
 NO_ACCESS = "NO ACCESS"
+
+# Time to wait for write permissions on workspace bucket in hours
+TOTAL_WAIT_TIME_HOURS = 2
+INTERVAL_WAIT_TIME_MINUTES = 20
 
 # Define platform-specific workspace description files
 PLATFORM_DESCRIPTION_FILES = {
@@ -690,8 +695,15 @@ if __name__ == '__main__':
         platform=platform
     ).run()
 
-    # Upload README file to workspace bucket
     upload_read_me_path = f"{workspace_bucket}/Uploads/README.txt"
+    # Wait for write permissions on workspace bucket
+    gcp_functions.wait_for_write_permission(
+        cloud_path=upload_read_me_path,
+        interval_wait_time_minutes=INTERVAL_WAIT_TIME_MINUTES,
+        max_wait_time_minutes=TOTAL_WAIT_TIME_HOURS * 60
+    )
+
+    # Upload README file to workspace bucket
     gcp_functions.write_to_gcp_file(cloud_path=upload_read_me_path, file_contents=UPLOAD_DIR_READ_ME_CONTENT)
 
     # Remove current user from workspace and dataset if not a resource owner

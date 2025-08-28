@@ -1,6 +1,3 @@
-import time
-from google.api_core.exceptions import Forbidden, GoogleAPICallError
-from google.cloud import storage
 from typing import Optional
 import logging
 from typing import Any
@@ -128,13 +125,14 @@ class CopyFilesToDestWorkspace:
             dest_bucket: str,
             workers: int,
             skip_check_if_already_copied: bool,
+            gcp_cloud_functions: GCPCloudFunctions,
             extensions_to_ignore: list[str] = [],
             batch_size: Optional[int] = None
     ):
         self.src_bucket = src_bucket
         self.dest_bucket = dest_bucket
         self.extensions_to_ignore = extensions_to_ignore
-        self.gcp_cloud_functions = GCPCloudFunctions()
+        self.gcp_cloud_functions = gcp_cloud_functions
         self.workers = workers
         self.batch_size = batch_size
         self.skip_check_if_already_copied = skip_check_if_already_copied
@@ -208,53 +206,6 @@ class UpdateWorkspaceAcls:
         self.dest_workspace.update_multiple_users_acl(acl_list=src_workspace_acls_list)
 
 
-def check_and_wait_for_permissions(bucket: str, total_hours: int) -> None:
-    """Checks if the account has write permissions for a given bucket. Retries every 30 minutes
-    for a total time of the user provided hours. Cannot wait for more than 5 hours total.
-
-        Args:
-            bucket (str): The name of the GCS bucket.
-            total_hours (int): The total number of hours to wait before exiting
-    """
-    client = storage.Client()
-    bucket = client.bucket(bucket)
-    # Temporary file name for testing write permission
-    test_blob_name = "permission_test_file.txt"
-    content = b"This is a test file to check write permissions."
-
-    wait_interval_in_minutes = 30
-    total_retries = int(total_hours * 60 / wait_interval_in_minutes)
-    wait_interval_in_seconds = wait_interval_in_minutes * 60
-
-    for attempt in range(total_retries):
-        attempt_number = attempt + 1
-        try:
-            # Try writing a temporary file to the bucket
-            blob = bucket.blob(test_blob_name)  # type: ignore[attr-defined]
-            blob.upload_from_string(content)
-            # Clean up the test file
-            blob.delete()
-            logging.info(f"Write permission confirmed on attempt {attempt_number}.")
-            return
-        except Forbidden:
-            logging.error(
-                f"Attempt {attempt_number}: No write permission. Retrying in {wait_interval_in_minutes} minutes..."
-            )
-        except GoogleAPICallError as e:
-            logging.error(
-                f"Attempt {attempt_number}: Error accessing bucket - {e}. Retrying in {wait_interval_in_minutes} "
-                f"minutes..."
-            )
-
-        # Wait before the next retry
-        if attempt < total_retries - 1:
-            time.sleep(wait_interval_in_seconds)
-        else:
-            # Exit after the final attempt
-            logging.error(f"Write permission not detected after {total_hours} hours. Exiting.")
-            raise PermissionError(f"Write permission to bucket '{bucket}' could not be confirmed.")
-
-
 if __name__ == '__main__':
     args = get_args()
     source_billing_project = args.source_billing_project
@@ -303,24 +254,24 @@ if __name__ == '__main__':
         attributes=src_attributes, auth_domain=src_auth_domain, continue_if_exists=allow_already_created
     )
 
+    dest_workspace_info = dest_workspace.get_workspace_info().json()
+    dest_bucket = dest_workspace_info["workspace"]["bucketName"]
+
+    # Use the external bucket if it is provided, otherwise use the destination workspace bucket
+    dest_bucket = external_bucket if external_bucket else dest_bucket
+
+    gcp_util = GCPCloudFunctions()
     if args.check_and_wait_for_permissions:
         total_hours = (
             args.max_permissions_wait_time
             if args.max_permissions_wait_time <= MAX_TIME_TO_CHECK_FOR_PERMISSIONS
             else MAX_TIME_TO_CHECK_FOR_PERMISSIONS
         )
-        logging.info(
-            f"Beginning write-permission check for destination bucket. Will run for a total"
-            f" of {total_hours} hours before exiting."
+        gcp_util.wait_for_write_permission(
+            cloud_path=f"gs://{dest_bucket}/",
+            interval_wait_time_minutes=30,
+            max_wait_time_minutes=total_hours * 60
         )
-        bucket_to_check = external_bucket if external_bucket else dest_workspace.get_workspace_bucket()
-        check_and_wait_for_permissions(bucket=bucket_to_check, total_hours=total_hours)
-
-    dest_workspace_info = dest_workspace.get_workspace_info().json()
-    dest_bucket = dest_workspace_info["workspace"]["bucketName"]
-
-    # Use the external bucket if it is provided, otherwise use the destination workspace bucket
-    dest_bucket = external_bucket if external_bucket else dest_bucket
 
     # Get source workspace metadata
     tsvs_to_upload = CreateEntityTsv(
@@ -340,7 +291,8 @@ if __name__ == '__main__':
         extensions_to_ignore=extensions_to_ignore,
         workers=workers,
         batch_size=batch_size,
-        skip_check_if_already_copied=skip_check_if_already_copied
+        skip_check_if_already_copied=skip_check_if_already_copied,
+        gcp_cloud_functions=gcp_util
     ).run()
 
     # Set the destination workspace ACLs
