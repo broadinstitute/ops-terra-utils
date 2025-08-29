@@ -8,6 +8,7 @@ workflow HardCloneTerraWorkspace {
 		String dest_workspace_name
 		Boolean allow_already_created
 		Boolean do_not_update_acls
+        String? google_project
 		Int? workers
 		String? extensions_to_ignore
 		String? docker
@@ -36,7 +37,8 @@ workflow HardCloneTerraWorkspace {
 			do_not_update_acls=do_not_update_acls,
 			check_and_wait_for_permissions=check_and_wait_for_permissions,
 			max_permissions_wait_time=max_permissions_wait_time,
-			skip_check_if_already_copied=skip_check_if_already_copied
+			skip_check_if_already_copied=skip_check_if_already_copied,
+            google_project=google_project
 	}
 }
 
@@ -56,6 +58,7 @@ task HardCloneTerraWorkspaceTask {
 		Boolean check_and_wait_for_permissions
 		Boolean skip_check_if_already_copied
 		Int? max_permissions_wait_time
+        String? google_project
 	}
 
 	command <<<
@@ -68,6 +71,7 @@ task HardCloneTerraWorkspaceTask {
 		~{"--workers " + workers} \
 		~{"--extensions_to_ignore " + extensions_to_ignore} \
 		~{"--batch_size " + batch_size} \
+        ~{"--google_project " + google_project} \
 		~{if do_not_update_acls then "--do_not_update_acls" else ""} \
 		~{if check_and_wait_for_permissions then "--check_and_wait_for_permissions" else ""} \
 		~{"--max_permissions_wait_time " + max_permissions_wait_time} \

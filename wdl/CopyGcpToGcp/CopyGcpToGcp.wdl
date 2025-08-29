@@ -4,6 +4,7 @@ workflow CopyGcpToGcp {
     input {
 		String destination_path
 		Boolean preserve_structure
+        String? google_project
 		String? source_bucket
 		String? source_fofn
         String? docker
@@ -18,7 +19,8 @@ workflow CopyGcpToGcp {
 			preserve_structure=preserve_structure,
 			source_bucket=source_bucket,
 			source_fofn=source_fofn,
-			docker_name=docker_name
+			docker_name=docker_name,
+            google_project=google_project
 	}
 }
 
@@ -28,6 +30,7 @@ task RunCopyGcpToGcp {
 		String docker_name
 		String? source_fofn
 		String? source_bucket
+        String? google_project
 		Boolean preserve_structure
 	}
 
@@ -36,6 +39,7 @@ task RunCopyGcpToGcp {
 		--destination_path ~{destination_path} \
 		~{"--source_fofn " + source_fofn} \
 		~{"--source_bucket " + source_bucket} \
+        ~{"--google_project " + google_project} \
 		~{if preserve_structure then "--preserve_structure" else ""}
 	>>>
 
