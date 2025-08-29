@@ -114,6 +114,8 @@ def get_args() -> Namespace:
                            help="Strategy for updating existing data in TDR")
     argparser.add_argument("--dragen_version", "-v", default=DRAGEN_VERSION,
                            help=f"Version of DRAGEN used for processing samples, defaults to {DRAGEN_VERSION}")
+    argparser.add_argument("--service_account_json", "-saj", type=str,
+                           help="Path to the service account JSON file. If not provided, will use the default credentials.")
     return argparser.parse_args()
 
 
@@ -132,8 +134,9 @@ if __name__ == "__main__":
     bulk_mode = args.bulk_mode
     update_strategy = args.update_strategy
     dragen_version = args.dragen_version
+    service_account_json = args.service_account_json
 
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
     terra_workspace = TerraWorkspace(
         request_util=request_util,

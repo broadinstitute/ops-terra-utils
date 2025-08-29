@@ -30,6 +30,8 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--tables_to_ignore", "-i", type=comma_separated_list,
                         help="Comma-separated list of table names to ignore")
     parser.add_argument("--table_prefix_to_ignore", "-p", type=str)
+    parser.add_argument("--service_account_json", "-saj", type=str,
+                        help="Path to the service account JSON file. If not provided, will use the default credentials.")
     return parser.parse_args()
 
 
@@ -193,9 +195,10 @@ if __name__ == '__main__':
     force_upload = args.force
     tables_to_ignore = args.tables_to_ignore
     table_prefix_to_ignore = args.table_prefix_to_ignore
+    service_account_json = args.service_account_json
 
     # Set up authentication and request utilities
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
 

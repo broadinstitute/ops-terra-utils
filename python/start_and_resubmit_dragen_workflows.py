@@ -66,6 +66,12 @@ def get_args() -> argparse.Namespace:
         default=MAX_RETRIES,
         help=f"Maximum number of retries for failed submissions. Default is {MAX_RETRIES}."
     )
+    parser.add_argument(
+        "--service_account_json",
+        "-saj",
+        type=str,
+        help="Path to the service account JSON file. If not provided, will use the default credentials."
+    )
     return parser.parse_args()
 
 
@@ -269,7 +275,7 @@ if __name__ == "__main__":
     gsc_output_bucket = args.output_bucket.strip(
         "gs://") if args.output_bucket.startswith("gs://") else args.output_bucket
 
-    token = Token()
+    token = Token(service_account_json=args.service_account_json)
     request_util = RunRequest(token=token)
     gcp_util = GCPCloudFunctions()
 

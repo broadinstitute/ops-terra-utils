@@ -22,6 +22,12 @@ def get_args() -> argparse.Namespace:
         help="Workflows to import into specified workspace. --workflow_list Workflow1 Workflow2 ...",
         nargs='+'
     )
+    parser.add_argument(
+        "--service_account_json",
+        "-saj",
+        type=str,
+        help="Path to the service account JSON file. If not provided, will use the default credentials."
+    )
     return parser.parse_args()
 
 
@@ -32,7 +38,8 @@ def workflow_already_in_workspace(workflow_name: str, workspace_workflows: list[
 
 if __name__ == '__main__':
     args = get_args()
-    auth_token = Token()
+    service_account_json = args.service_account_json
+    auth_token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=auth_token)
     workflows_to_import = args.workflow_list
     workspace = TerraWorkspace(billing_project=args.billing_project,

@@ -21,6 +21,8 @@ def get_args() -> Namespace:
                         required=True)
     parser.add_argument("--delete_files", "-df", help="Delete the files associated with the rows",
                         action="store_true")
+    parser.add_argument("--service_account_json", "-saj", type=str,
+                        help="Path to the service account JSON file. If not provided, will use the default credentials.")
     return parser.parse_args()
 
 
@@ -89,12 +91,13 @@ if __name__ == '__main__':
     ids_to_delete_file = args.ids_to_delete_file
     id_column_name = args.id_column_name
     delete_files = args.delete_files
+    service_account_json = args.service_account_json
 
     with open(ids_to_delete_file, 'r') as f:
         ids_to_delete = list(set(f.read().splitlines()))
     logging.info(f"Found {len(ids_to_delete)} ids in {ids_to_delete_file} to delete")
 
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
 

@@ -31,6 +31,8 @@ def get_args() -> Namespace:
                                    help="list of file extensions to include in \
                                    data loaded into the file metadata table,\
                                    all other file extensions wil be ignored")
+    parser.add_argument("--service_account_json", "-saj", type=str,
+                        help="Path to the service account JSON file. If not provided, will use the default credentials.")
     return parser.parse_args()
 
 
@@ -60,8 +62,9 @@ if __name__ == '__main__':
     strings_to_exclude = args.strings_to_exclude
     extension_exclude_list = args.extension_exclude_list
     extension_include_list = args.extension_include_list
+    service_account_json = args.service_account_json
 
-    auth_token = Token()
+    auth_token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=auth_token)
 
     workspace = TerraWorkspace(billing_project=billing_project,

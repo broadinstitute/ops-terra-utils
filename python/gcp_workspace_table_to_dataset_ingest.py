@@ -114,6 +114,12 @@ def get_args() -> argparse.Namespace:
         help="If used, will ignore schema mismatch between Terra and existing TDR tables and attempt to ingest anyway "
              "and force Terra data to match TDR schema",
     )
+    parser.add_argument(
+        "--service_account_json",
+        "-saj",
+        type=str,
+        help="Path to the service account JSON file. If not provided, will use the default credentials."
+    )
 
     return parser.parse_args()
 
@@ -136,9 +142,10 @@ if __name__ == "__main__":
     force_disparate_rows_to_string = args.force_disparate_rows_to_string
     trunc_and_reload = args.trunc_and_reload
     ignore_existing_schema_mismatch = args.ignore_existing_schema_mismatch
+    service_account_json = args.service_account_json
 
     # Initialize the Terra and TDR classes
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     terra_workspace = TerraWorkspace(
         billing_project=billing_project, workspace_name=workspace_name, request_util=request_util

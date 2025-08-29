@@ -18,6 +18,8 @@ def get_args() -> Namespace:
     parser = ArgumentParser(description="Delete files from datasets in bad state")
     parser.add_argument("-id", "--dataset_id", required=True)
     parser.add_argument("-l", "--file_query_limit", default=ARG_DEFAULTS['batch_size_to_list_files'], type=int)
+    parser.add_argument("--service_account_json", "-saj", type=str,
+                        help="Path to the service account JSON file. If not provided, will use the default credentials.")
     return parser.parse_args()
 
 
@@ -92,8 +94,9 @@ if __name__ == '__main__':
     args = get_args()
     dataset_id = args.dataset_id
     limit = args.file_query_limit
+    service_account_json = args.service_account_json
 
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token, max_retries=1, max_backoff_time=10)
     tdr = TDR(request_util=request_util)
 
