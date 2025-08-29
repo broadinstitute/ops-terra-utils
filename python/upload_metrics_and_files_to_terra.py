@@ -25,6 +25,8 @@ def get_args() -> Namespace:
                         help="If you want to flatten all file paths and put all files in one dir. Optional")
     parser.add_argument("--subdir", "-d", type=str, help="Subdirectory to upload files to. Optional")
     parser.add_argument("--id_column", "-i", type=str, help="Column name for the id column", required=True)
+    parser.add_argument("--service_account_json", "-saj", type=str,
+                        help="Path to the service account JSON file. If not provided, will use the default credentials.")
     return parser.parse_args()
 
 
@@ -152,8 +154,9 @@ if __name__ == '__main__':
     billing_project, workspace_name = args.billing_project, args.workspace_name
     metrics_tsv, skip_upload_column = args.metrics_tsv, args.skip_upload_column
     flatten_path, subdir = args.flatten_path, args.subdir
+    service_account_json = args.service_account_json
 
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
     # Create Terra object to interact with the Terra with the request_util object
     terra_workspace = TerraWorkspace(

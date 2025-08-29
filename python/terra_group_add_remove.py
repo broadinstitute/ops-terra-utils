@@ -22,6 +22,8 @@ def parse_args() -> Namespace:
     parser.add_argument("-u", "--user_email", type=str, required=True)
     parser.add_argument("-a", "--action", choices=[ADD, REMOVE], required=True)
     parser.add_argument("-r", "--role", choices=[MEMBER, ADMIN], required=True)
+    parser.add_argument("--service_account_json", "-saj", type=str,
+                        help="Path to the service account JSON file. If not provided, will use the default credentials.")
     return parser.parse_args()
 
 
@@ -31,8 +33,9 @@ if __name__ == '__main__':
     user_email = args.user_email
     action = args.action
     role = args.role
+    service_account_json = args.service_account_json
 
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
     terra_groups = TerraGroups(request_util=request_util)
 

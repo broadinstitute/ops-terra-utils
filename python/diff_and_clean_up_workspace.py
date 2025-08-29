@@ -42,6 +42,8 @@ def get_args() -> Namespace:
                              "If provided, will delete files from workspace")
     parser.add_argument("-g", "--gcp_project",
                         help="Optional GCP project to use. If requester pays is turned on will be needed")
+    parser.add_argument("--service_account_json", "-saj", type=str,
+                        help="Path to the service account JSON file. If not provided, will use the default credentials.")
     return parser.parse_args()
 
 
@@ -206,6 +208,7 @@ if __name__ == '__main__':
     cloud_directory = args.cloud_directory
     delete_from_workspace = args.delete_from_workspace
     gcp_project = args.gcp_project
+    service_account_json = args.service_account_json
 
     workspace_only_file_path = os.path.join(cloud_directory, WORKSPACE_ONLY_FILE_NAME)
     files_in_both_file_path = os.path.join(cloud_directory, FILE_IN_BOTH_FILE_NAME)
@@ -216,7 +219,7 @@ if __name__ == '__main__':
     file_paths_to_ignore = file_paths_to_ignore + newly_created_file_list \
         if file_paths_to_ignore else newly_created_file_list
 
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
     tdr_util = TDR(request_util=request_util)
     terra_workspace = TerraWorkspace(

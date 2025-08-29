@@ -21,6 +21,8 @@ def get_args() -> Namespace:
     parser.add_argument("--sample_set_append", "-sa", type=str, required=True)
     parser.add_argument("--max_per_sample_set", "-mps", type=int, default=2000)
     parser.add_argument("--upload", "-u", action='store_true')
+    parser.add_argument("--service_account_json", "-saj", type=str,
+                        help="Path to the service account JSON file. If not provided, will use the default credentials.")
     return parser.parse_args()
 
 
@@ -93,8 +95,9 @@ if __name__ == '__main__':
     sample_set_append: str = args.sample_set_append
     max_per_sample_set: int = args.max_per_sample_set
     upload_to_workspace: bool = args.upload
+    service_account_json: str = args.service_account_json
 
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
     terra_workspace = TerraWorkspace(
         request_util=request_util,

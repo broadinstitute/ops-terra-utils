@@ -95,6 +95,12 @@ def get_args() -> Namespace:
         action="store_true",
         help="Use this option if you only want to report what updates would be made without actually making them"
     )
+    parser.add_argument(
+        "--service_account_json",
+        "-saj",
+        type=str,
+        help="Path to the service account JSON file. If not provided, will use the default credentials."
+    )
     return parser.parse_args()
 
 
@@ -160,9 +166,10 @@ if __name__ == '__main__':
     temp_bucket = args.temp_bucket
     workers = args.workers
     report_updates_only = args.report_updates_only
+    service_account_json = args.service_account_json
 
     # Initialize TDR classes
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(
         token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)

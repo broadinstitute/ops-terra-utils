@@ -87,6 +87,12 @@ def get_args() -> Namespace:
         action="store_true",
         help="Use this option if you do not want to reingest files, only update the column values in the table"
     )
+    parser.add_argument(
+        "--service_account_json",
+        "-saj",
+        type=str,
+        help="Path to the service account JSON file. If not provided, will use the default credentials."
+    )
     return parser.parse_args()
 
 
@@ -193,9 +199,10 @@ if __name__ == '__main__':
     max_backoff_time = args.max_backoff_time
     report_updates_only = args.report_updates_only
     update_columns_only = args.update_columns_only
+    service_account_json = args.service_account_json
 
     # Initialize TDR classes
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(
         token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)

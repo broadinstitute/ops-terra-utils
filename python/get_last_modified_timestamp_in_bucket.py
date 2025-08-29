@@ -37,6 +37,12 @@ def parse_args() -> Namespace:
         required=True,
         help="Path to the output tsv file where metadata should be written"
     )
+    parser.add_argument(
+        "--service_account_json",
+        "-saj",
+        type=str,
+        help="Path to the service account JSON file. If not provided, will use the default credentials."
+    )
     return parser.parse_args()
 
 
@@ -68,11 +74,13 @@ def switch_gcloud_account(account_email: str) -> None:
 
 if __name__ == '__main__':
     args = parse_args()
+    service_account_json = args.service_account_json
+
     # set broad account
     logging.info("Setting Broad account")
     switch_gcloud_account(account_email=f"{get_user()}@broadinstitute.org")
 
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
     workspaces = Csv(file_path=args.input_tsv).create_list_of_dicts_from_tsv()
 

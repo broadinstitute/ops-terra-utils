@@ -49,6 +49,12 @@ def get_args() -> argparse.Namespace:
         action="store_true",
         help="If set, will print additional information during the download process"
     )
+    parser.add_argument(
+        "--service_account_json",
+        "-saj",
+        type=str,
+        help="Path to the service account JSON file. If not provided, will use the default credentials."
+    )
     return parser.parse_args()
 
 
@@ -61,11 +67,12 @@ if __name__ == '__main__':
     max_backoff_time = args.max_backoff_time
     max_retries = args.max_retries
     verbose = args.verbose
+    service_account_json = args.service_account_json
 
     if not (snapshot_id or dataset_id):
         raise Exception("Either snapshot id OR dataset id are required. Received neither")
 
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
     tdr = TDR(request_util=request_util)
 
