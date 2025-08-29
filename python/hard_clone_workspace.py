@@ -26,6 +26,7 @@ def get_args() -> Namespace:
     parser.add_argument('--source_workspace_name', "-sn", type=str, required=True)
     parser.add_argument('--dest_billing_project', "-db", type=str, required=True)
     parser.add_argument('--dest_workspace_name', "-dn", type=str, required=True)
+    parser.add_argument('--google_project', "-p", type=str)
     parser.add_argument('--external_bucket', "-eb", type=str,
                         help="gcp bucket if you want to store files in bucket outside of workspace gs://bucket/")
     parser.add_argument('--allow_already_created', "-a", action="store_true",
@@ -219,6 +220,7 @@ if __name__ == '__main__':
     do_not_update_acls = args.do_not_update_acls
     external_bucket = args.external_bucket
     skip_check_if_already_copied = args.skip_check_if_already_copied
+    google_project = args.google_project
 
     if external_bucket:
         if not external_bucket.startswith("gs://") or not external_bucket.endswith("/"):
@@ -260,7 +262,7 @@ if __name__ == '__main__':
     # Use the external bucket if it is provided, otherwise use the destination workspace bucket
     dest_bucket = external_bucket if external_bucket else dest_bucket
 
-    gcp_util = GCPCloudFunctions()
+    gcp_util = GCPCloudFunctions(project=google_project)
     if args.check_and_wait_for_permissions:
         total_hours = (
             args.max_permissions_wait_time

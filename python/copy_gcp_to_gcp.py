@@ -38,6 +38,7 @@ def get_args() -> Namespace:
         help="Use option if want to copy files listed in a file. Put one file per line. " +
              "File should exist in accessible GCP bucket"
     )
+    input_args.add_argument("--google_project", "-p", help="Google project if requester pays")
     return parser.parse_args()
 
 
@@ -98,6 +99,7 @@ if __name__ == '__main__':
         source_bucket = None
     source_fofn = args.source_fofn
     preserve_structure = args.preserve_structure
+    google_project = args.google_project
 
     if not destination_bucket.startswith("gs://"):
         logging.error("Destination path must start with gs://")
@@ -106,7 +108,7 @@ if __name__ == '__main__':
         logging.error("Source bucket must start with gs://")
         exit(1)
 
-    gcp = GCPCloudFunctions()
+    gcp = GCPCloudFunctions(project=google_project)
     if source_bucket:
         files_to_copy = [
             file_dict['path']
