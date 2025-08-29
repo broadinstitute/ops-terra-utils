@@ -48,6 +48,8 @@ def get_args() -> Namespace:
         safeguards (such as guaranteed rollbacks and potential recopying of files)
         and it also forces exclusive locking of the dataset (i.e. you can’t run multiple ingests at once)."""
     )
+    parser.add_argument("--service_account_json", "-saj", type=str,
+                        help="Path to the service account JSON file. If not provided, will use the default credentials.")
     return parser.parse_args()
 
 
@@ -170,8 +172,9 @@ if __name__ == "__main__":
     bulk_mode, ingest_batch_size, billing_profile = args.bulk_mode, args.ingest_batch_size, args.new_billing_profile
     new_dataset_name = args.new_dataset_name
     continue_if_exists = args.continue_if_exists
+    service_account_json = args.service_account_json
     # Initialize the Terra and TDR classes
-    token = Token()
+    token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
     tdr = TDR(request_util=request_util)
 
