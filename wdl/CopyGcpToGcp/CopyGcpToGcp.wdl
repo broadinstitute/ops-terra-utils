@@ -1,13 +1,13 @@
 version 1.0
 
 workflow CopyGcpToGcp {
-    input {
+	input {
 		String destination_path
 		Boolean preserve_structure
-        String? google_project
+		String? google_project
 		String? source_bucket
 		String? source_fofn
-        String? docker
+		String? docker
 	}
 
 	String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -20,7 +20,7 @@ workflow CopyGcpToGcp {
 			source_bucket=source_bucket,
 			source_fofn=source_fofn,
 			docker_name=docker_name,
-            google_project=google_project
+			google_project=google_project
 	}
 }
 
@@ -30,7 +30,7 @@ task RunCopyGcpToGcp {
 		String docker_name
 		String? source_fofn
 		String? source_bucket
-        String? google_project
+		String? google_project
 		Boolean preserve_structure
 	}
 
@@ -39,7 +39,7 @@ task RunCopyGcpToGcp {
 		--destination_path ~{destination_path} \
 		~{"--source_fofn " + source_fofn} \
 		~{"--source_bucket " + source_bucket} \
-        ~{"--google_project " + google_project} \
+		~{"--google_project " + google_project} \
 		~{if preserve_structure then "--preserve_structure" else ""}
 	>>>
 
