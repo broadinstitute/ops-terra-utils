@@ -44,13 +44,13 @@ def get_args() -> Namespace:
 class DeleteDatasetFilesById:
     """Class to delete files from a TDR dataset by their IDs, handling snapshots."""
 
-    def __init__(self, tdr: TDR, dataset_id: str, file_list: str, dry_run: bool = False):
+    def __init__(self, tdr: TDR, dataset_id: str, file_id_set: set[str], dry_run: bool = False):
         self.tdr = tdr
         self.dataset_id = dataset_id
         self.dry_run = dry_run
-        self.file_list = file_list
+        self.file_id_set = file_id_set
 
-    def delete_snapshots(self, file_ids: set[str]) -> None:
+    def _delete_snapshots(self) -> None:
         """Delete snapshots that reference any of the provided file IDs."""
         snapshots_resp = self.tdr.get_dataset_snapshots(dataset_id=self.dataset_id)
         snapshot_items = snapshots_resp.json().get('items', [])
@@ -68,7 +68,7 @@ class DeleteDatasetFilesById:
                 fd.get('fileId') for fd in snap_files if fd.get('fileId')
             }
             # Use set intersection to check for any matching file IDs
-            if snap_file_ids & file_ids:
+            if snap_file_ids & self.file_id_set:
                 snapshots_to_delete.append(snap_id)
         if snapshots_to_delete:
             logging.info(
@@ -89,30 +89,17 @@ class DeleteDatasetFilesById:
             logging.info("No snapshots reference the provided file ids")
 
     def delete_files_and_snapshots(self) -> None:
-        with open(self.file_list, 'r', encoding='utf-8') as f:
-            file_ids = {line.strip() for line in f if line.strip()}
-
-        if not file_ids:
-            logging.info("No file ids provided; nothing to delete")
-            return
-
-        logging.info(
-            "Found %d file ids in %s to delete",
-            len(file_ids),
-            self.file_list,
-        )
-
-        self.delete_snapshots(file_ids)
+        self._delete_snapshots()
 
         logging.info(
             "%sSubmitting delete request for %d files in dataset %s",
             "[Dry run] " if self.dry_run else "",
-            len(file_ids),
+            len(self.file_id_set),
             self.dataset_id,
         )
         if not self.dry_run:
             self.tdr.delete_files(
-                file_ids=list(file_ids),
+                file_ids=list(self.file_id_set),
                 dataset_id=self.dataset_id
             )
 
@@ -123,10 +110,22 @@ if __name__ == '__main__':
 
     token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
+    file_list = args.file_list
 
-    DeleteDatasetFilesById(
-        tdr=TDR(request_util=request_util),
-        dataset_id=args.dataset_id,
-        file_list=args.file_list,
-        dry_run=args.dry_run
-    ).delete_files_and_snapshots()
+    with open(file_list, 'r') as f:
+        file_ids = {line.strip() for line in f}
+
+    if not file_ids:
+        logging.info("No file ids provided; nothing to delete")
+    else:
+        logging.info(
+            "Found %d file ids in %s to delete",
+            len(file_ids),
+            file_list,
+        )
+        DeleteDatasetFilesById(
+            tdr=TDR(request_util=request_util),
+            dataset_id=args.dataset_id,
+            file_id_set=file_ids,
+            dry_run=args.dry_run
+        ).delete_files_and_snapshots()

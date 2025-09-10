@@ -5,6 +5,8 @@ from ops_utils.tdr_utils.tdr_api_utils import TDR
 from ops_utils.token_util import Token
 import logging
 
+from python.delete_datset_files_by_id import DeleteDatasetFilesById
+
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
@@ -114,9 +116,11 @@ if __name__ == '__main__':
         tdr.soft_delete_entries(dataset_id=dataset_id, table_name=table_name, datarepo_row_ids=tdr_rows_to_delete)
         if delete_files:
             if file_uuids:
-                tdr.delete_files(
-                    file_ids=list(file_uuids),
-                    dataset_id=dataset_id
-                )
+                DeleteDatasetFilesById(
+                    tdr=tdr,
+                    dataset_id=dataset_id,
+                    file_id_set=file_uuids,
+                    dry_run=False
+                ).delete_files_and_snapshots()
             else:
                 logging.info("No files to delete")
