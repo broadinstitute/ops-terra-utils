@@ -25,8 +25,8 @@ def get_args() -> Namespace:
                         action="store_true")
     parser.add_argument("--service_account_json", "-saj", type=str,
                         help="Path to the service account JSON file. If not provided, will use the default credentials.")
-    parser.add_argument("--dry_run","-n",
-                        action="store_true",help="Do not perform deletions; log actions that would be taken.")
+    parser.add_argument("--dry_run", "-n",
+                        action="store_true", help="Do not perform deletions; log actions that would be taken.")
     return parser.parse_args()
 
 
