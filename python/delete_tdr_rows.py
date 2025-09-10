@@ -25,6 +25,8 @@ def get_args() -> Namespace:
                         action="store_true")
     parser.add_argument("--service_account_json", "-saj", type=str,
                         help="Path to the service account JSON file. If not provided, will use the default credentials.")
+    parser.add_argument("--dry_run","-n",
+                        action="store_true",help="Do not perform deletions; log actions that would be taken.")
     return parser.parse_args()
 
 
@@ -113,14 +115,18 @@ if __name__ == '__main__':
     ).run()
 
     if tdr_rows_to_delete:
-        tdr.soft_delete_entries(dataset_id=dataset_id, table_name=table_name, datarepo_row_ids=tdr_rows_to_delete)
+        if args.dry_run:
+            logging.info(
+                f"Dry run: would delete {len(tdr_rows_to_delete)} rows from table {table_name} in dataset {dataset_id}")
+        else:
+            tdr.soft_delete_entries(dataset_id=dataset_id, table_name=table_name, datarepo_row_ids=tdr_rows_to_delete)
         if delete_files:
             if file_uuids:
                 DeleteDatasetFilesById(
                     tdr=tdr,
                     dataset_id=dataset_id,
                     file_id_set=file_uuids,
-                    dry_run=False
+                    dry_run=args.dry_run
                 ).delete_files_and_snapshots()
             else:
                 logging.info("No files to delete")
