@@ -3,7 +3,7 @@ from argparse import ArgumentParser, Namespace
 
 from ops_utils.request_util import RunRequest
 from ops_utils.tdr_utils.tdr_api_utils import TDR
-from ops_utils.tdr_utils.tdr_job_utils import MonitorTDRJob, SubmitAndMonitorMultipleJobs
+from ops_utils.tdr_utils.tdr_job_utils import MonitorTDRJob
 from ops_utils.token_util import Token
 
 logging.basicConfig(
@@ -111,13 +111,10 @@ class DeleteDatasetFilesById:
             self.dataset_id,
         )
         if not self.dry_run:
-            SubmitAndMonitorMultipleJobs(
-                tdr=self.tdr,
-                job_function=self.tdr.delete_file,
-                job_args_list=[(file_id, self.dataset_id) for file_id in file_ids],
-                batch_size=200,
-                check_interval=15
-            ).run()
+            self.tdr.delete_files(
+                file_ids=list(file_ids),
+                dataset_id=self.dataset_id
+            )
 
 
 if __name__ == '__main__':
