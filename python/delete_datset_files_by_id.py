@@ -10,6 +10,7 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
+
 def get_args() -> Namespace:
     """Parse CLI args for deleting dataset files and related snapshots."""
     parser = ArgumentParser(description="Delete dataset files by ID")
@@ -39,6 +40,7 @@ def get_args() -> Namespace:
     )
     return parser.parse_args()
 
+
 class DeleteDatasetFilesById:
     """Class to delete files from a TDR dataset by their IDs, handling snapshots."""
 
@@ -48,7 +50,7 @@ class DeleteDatasetFilesById:
         self.dry_run = dry_run
         self.file_list = file_list
 
-    def delete_snapshots(self, file_ids: set[str]):
+    def delete_snapshots(self, file_ids: set[str]) -> None:
         """Delete snapshots that reference any of the provided file IDs."""
         snapshots_resp = self.tdr.get_dataset_snapshots(dataset_id=self.dataset_id)
         snapshot_items = snapshots_resp.json().get('items', [])
