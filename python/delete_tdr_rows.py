@@ -5,7 +5,7 @@ from ops_utils.tdr_utils.tdr_api_utils import TDR
 from ops_utils.token_util import Token
 import logging
 
-from python.delete_datset_files_by_id import DeleteDatasetFilesById
+from delete_datset_files_by_id import DeleteDatasetFilesById
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
