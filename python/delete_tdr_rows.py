@@ -5,8 +5,6 @@ from ops_utils.tdr_utils.tdr_api_utils import TDR
 from ops_utils.token_util import Token
 import logging
 
-from delete_dataset_files_by_id import DeleteDatasetFilesById
-
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
@@ -103,7 +101,7 @@ if __name__ == '__main__':
 
     token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
-    tdr = TDR(request_util=request_util)
+    tdr = TDR(request_util=request_util, dry_run=args.dry_run)
 
     # Get the rows to delete and the file_uuids
     tdr_rows_to_delete, file_uuids = GetRowAndFileInfo(
@@ -119,12 +117,7 @@ if __name__ == '__main__':
         # again.
         if delete_files:
             if file_uuids:
-                DeleteDatasetFilesById(
-                    tdr=tdr,
-                    dataset_id=dataset_id,
-                    file_id_set=file_uuids,
-                    dry_run=args.dry_run
-                ).delete_files_and_snapshots()
+                tdr.delete_files_and_snapshots(dataset_id=dataset_id, file_ids=file_uuids)
             else:
                 logging.info("No files to delete")
         if args.dry_run:
