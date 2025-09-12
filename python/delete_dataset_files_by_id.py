@@ -72,10 +72,8 @@ class DeleteDatasetFilesById:
                 snapshots_to_delete.append(snap_id)
         if snapshots_to_delete:
             logging.info(
-                "%sDeleting %d snapshots that reference target files",
-                "[Dry run] " if self.dry_run else "",
-                len(snapshots_to_delete),
-            )
+                f"{"[Dry run] " if self.dry_run else ""}Deleting {len(snapshots_to_delete)} snapshots that reference "
+                f"target files")
             if not self.dry_run:
                 for snap_id in snapshots_to_delete:
                     job_id = self.tdr.delete_snapshot(snap_id).json()['id']
@@ -92,11 +90,8 @@ class DeleteDatasetFilesById:
         self._delete_snapshots()
 
         logging.info(
-            "%sSubmitting delete request for %d files in dataset %s",
-            "[Dry run] " if self.dry_run else "",
-            len(self.file_id_set),
-            self.dataset_id,
-        )
+            f"{"[Dry run] " if self.dry_run else ""}Submitting delete request for {len(self.file_id_set)} files in "
+            f"dataset {self.dataset_id}")
         if not self.dry_run:
             self.tdr.delete_files(
                 file_ids=list(self.file_id_set),
@@ -118,11 +113,8 @@ if __name__ == '__main__':
     if not file_ids:
         logging.info("No file ids provided; nothing to delete")
     else:
-        logging.info(
-            "Found %d file ids in %s to delete",
-            len(file_ids),
-            file_list,
-        )
+        logging.info(f"Found {len(file_ids)} file ids in {file_list} to delete")
+
         DeleteDatasetFilesById(
             tdr=TDR(request_util=request_util),
             dataset_id=args.dataset_id,
