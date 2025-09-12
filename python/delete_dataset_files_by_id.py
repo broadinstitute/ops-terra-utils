@@ -72,7 +72,7 @@ class DeleteDatasetFilesById:
                 snapshots_to_delete.append(snap_id)
         if snapshots_to_delete:
             logging.info(
-                f"{"[Dry run] " if self.dry_run else ""}Deleting {len(snapshots_to_delete)} snapshots that reference "
+                f"{'[Dry run] ' if self.dry_run else ''}Deleting {len(snapshots_to_delete)} snapshots that reference "
                 "target files")
             if not self.dry_run:
                 for snap_id in snapshots_to_delete:
@@ -90,7 +90,7 @@ class DeleteDatasetFilesById:
         self._delete_snapshots()
 
         logging.info(
-            f"{"[Dry run] " if self.dry_run else ""}Submitting delete request for {len(self.file_id_set)} files in "
+            f"{'[Dry run] ' if self.dry_run else ''}Submitting delete request for {len(self.file_id_set)} files in "
             f"dataset {self.dataset_id}")
         if not self.dry_run:
             self.tdr.delete_files(
