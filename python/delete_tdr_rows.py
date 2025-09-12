@@ -115,20 +115,20 @@ if __name__ == '__main__':
     ).run()
 
     if tdr_rows_to_delete:
+        # Delete files first. If something goes wrong, we need the rows to still be there so we get the file ids
+        # again.
+        if delete_files:
+            if file_uuids:
+                DeleteDatasetFilesById(
+                    tdr=tdr,
+                    dataset_id=dataset_id,
+                    file_id_set=file_uuids,
+                    dry_run=args.dry_run
+                ).delete_files_and_snapshots()
+            else:
+                logging.info("No files to delete")
         if args.dry_run:
             logging.info(
                 f"Dry run: would delete {len(tdr_rows_to_delete)} rows from table {table_name} in dataset {dataset_id}")
         else:
-            # Delete files first. If something goes wrong, we need the rows to still be there so we get the file ids
-            # again.
-            if delete_files:
-                if file_uuids:
-                    DeleteDatasetFilesById(
-                        tdr=tdr,
-                        dataset_id=dataset_id,
-                        file_id_set=file_uuids,
-                        dry_run=args.dry_run
-                    ).delete_files_and_snapshots()
-                else:
-                    logging.info("No files to delete")
             tdr.soft_delete_entries(dataset_id=dataset_id, table_name=table_name, datarepo_row_ids=tdr_rows_to_delete)

@@ -73,7 +73,7 @@ class DeleteDatasetFilesById:
         if snapshots_to_delete:
             logging.info(
                 f"{"[Dry run] " if self.dry_run else ""}Deleting {len(snapshots_to_delete)} snapshots that reference "
-                f"target files")
+                "target files")
             if not self.dry_run:
                 for snap_id in snapshots_to_delete:
                     job_id = self.tdr.delete_snapshot(snap_id).json()['id']
