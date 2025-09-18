@@ -23,6 +23,8 @@ def get_args() -> Namespace:
                         action="store_true")
     parser.add_argument("--service_account_json", "-saj", type=str,
                         help="Path to the service account JSON file. If not provided, will use the default credentials.")
+    parser.add_argument("--dry_run", "-n",
+                        action="store_true", help="Do not perform deletions; log actions that would be taken.")
     return parser.parse_args()
 
 
@@ -99,7 +101,7 @@ if __name__ == '__main__':
 
     token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=token)
-    tdr = TDR(request_util=request_util)
+    tdr = TDR(request_util=request_util, dry_run=args.dry_run)
 
     # Get the rows to delete and the file_uuids
     tdr_rows_to_delete, file_uuids = GetRowAndFileInfo(
@@ -111,12 +113,15 @@ if __name__ == '__main__':
     ).run()
 
     if tdr_rows_to_delete:
-        tdr.soft_delete_entries(dataset_id=dataset_id, table_name=table_name, datarepo_row_ids=tdr_rows_to_delete)
+        # Delete files first. If something goes wrong, we need the rows to still be there so we get the file ids
+        # again.
         if delete_files:
             if file_uuids:
-                tdr.delete_files(
-                    file_ids=list(file_uuids),
-                    dataset_id=dataset_id
-                )
+                tdr.delete_files_and_snapshots(dataset_id=dataset_id, file_ids=file_uuids)
             else:
                 logging.info("No files to delete")
+        if args.dry_run:
+            logging.info(
+                f"Dry run: would delete {len(tdr_rows_to_delete)} rows from table {table_name} in dataset {dataset_id}")
+        else:
+            tdr.soft_delete_entries(dataset_id=dataset_id, table_name=table_name, datarepo_row_ids=tdr_rows_to_delete)
