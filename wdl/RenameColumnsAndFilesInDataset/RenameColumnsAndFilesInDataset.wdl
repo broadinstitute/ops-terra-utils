@@ -13,11 +13,10 @@ workflow RenameColumnsAndFilesInDataset {
         String? docker
         String billing_project
         String workspace_name
-        Boolean? report_updates_only
+        Boolean report_updates_only
         Boolean? update_columns_only
     }
 
-    Boolean report_updates_only_bool = select_first([report_updates_only, true])
     Boolean update_columns_only_bool = select_first([update_columns_only, false])
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
@@ -33,7 +32,7 @@ workflow RenameColumnsAndFilesInDataset {
             docker_image = docker_image,
             billing_project = billing_project,
             workspace_name = workspace_name,
-            report_updates_only = report_updates_only_bool,
+            report_updates_only = report_updates_only,
             update_columns_only = update_columns_only_bool
     }
 }

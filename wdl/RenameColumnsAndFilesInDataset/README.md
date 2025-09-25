@@ -11,7 +11,7 @@ There is some prep needed before the WDL can be run.
 4. Make sure you are Custodian of dataset, member of TDR billing profile, and have write, computer, and share access on the workspace.
  ---
 ## Inputs Table:
-This workflow is designed to use `Run workflow(s) with inputs defined by data table` option.
+This workflow is designed to use `Run workflow with inputs defined by file paths` option.
 
 | Input Name                     | Description                                                                                | Type    | Required | Default                                                                                     |
 |--------------------------------|--------------------------------------------------------------------------------------------|---------|----------|---------------------------------------------------------------------------------------------|
@@ -21,7 +21,7 @@ This workflow is designed to use `Run workflow(s) with inputs defined by data ta
 | **table_name**                 | The name of the table within the dataset and Terra workspace.                              | String  | Yes      | N/A                                                                                         |
 | **billing_project**            | The billing project where table is. Will also be used for temp bucket to store files.      | String  | No       | N/A                                                                                         |
 | **workspace_name**             | The Terra workspace where table is. Will also be used for temp bucket to store files.      | String  | No       | N/A                                                                                         |
-| **report_updates_only**        | Set to true if just want to report how many rows and files will be updated.                | Boolean | No       | true                                                                                        |
+| **report_updates_only**        | Set to true if just want to report how many rows and files will be updated.                | Boolean | Yes      | N/A                                                                                         |
 | **update_columns_only**        | Set to true if just want to update `column_to_update` and not update files.                | Boolean | No       | false                                                                                       |
 | **max_retries**                | The maximum number of retries for a failed request. Optional.                              | Int     | No       | 5                                                                                           |
 | **max_backoff_time**           | The maximum backoff time, in seconds, for a failed request. Optional.                      | Int     | No       | 300                                                                                         |
