@@ -5,7 +5,7 @@ workflow GCPWorkspaceToDatasetIngest {
         String billing_project
         String workspace_name
         String dataset_id
-        String terra_tables
+        String? terra_tables
         String? update_strategy
         String? records_to_ingest
         Boolean bulk_mode
@@ -48,7 +48,7 @@ task IngestWorkspaceDataToDataset {
         String billing_project
         String workspace_name
         String dataset_id
-        String terra_tables
+        String? terra_tables
         String? update_strategy
         String? records_to_ingest
         Boolean bulk_mode
