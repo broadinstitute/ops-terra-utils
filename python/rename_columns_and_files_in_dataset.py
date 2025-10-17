@@ -135,12 +135,6 @@ class GetWorkspaceInfo:
     def run(self) -> tuple[list[dict], str]:
         terra_table_metrics = self.terra.get_gcp_workspace_metrics(entity_type=self.table_name)
         terra_bucket = f"gs://{self.terra.get_workspace_bucket()}/"
-        # Make sure dataset SA has permissions to bucket
-        GetPermissionsForWorkspaceIngest(
-            terra_workspace=self.terra,
-            dataset_info=self.dataset_info,
-            added_to_auth_domain=True
-        ).run()
         return terra_table_metrics, terra_bucket
 
 
@@ -233,6 +227,14 @@ if __name__ == '__main__':
         table_name=table_name,
         dataset_info=dataset_info
     ).run()
+
+    # Make sure dataset SA has permissions to bucket if not only reporting updates
+    if not report_updates_only:
+        GetPermissionsForWorkspaceIngest(
+            terra_workspace=terra,
+            dataset_info=dataset_info,
+            added_to_auth_domain=True
+        ).run()
 
     tdr_rows_to_update = GetMatchingRows(
         terra_metrics=terra_metrics,
