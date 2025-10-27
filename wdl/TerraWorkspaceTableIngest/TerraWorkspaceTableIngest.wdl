@@ -82,7 +82,7 @@ task IngestWorkspaceDataToDataset {
         ~{"--batch_size " + batch_size} \
         ~{if all_fields_non_required then "--all_fields_non_required" else ""} \
         ~{if force_disparate_rows_to_string then "--force_disparate_rows_to_string" else ""} \
-        ~{if trunc_and_reload then "--trunc_and_reload" else ""}
+        ~{if trunc_and_reload then "--trunc_and_reload" else ""} \
         ~{if ignore_existing_schema_mismatch then "--ignore_existing_schema_mismatch" else ""}
 
     >>>

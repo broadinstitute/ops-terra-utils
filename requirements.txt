@@ -21,3 +21,4 @@ humanfriendly
 responses
 gitpython
 git+https://github.com/broadinstitute/pyops-service-toolkit.git@v12.2.0#egg=pyops-service-toolkit
+git+https://github.com/broadinstitute/pyops-service-toolkit.git@8d2228cfb176e5ad17cc874372ae470a67b8797b#egg=pyops-service-toolkit
