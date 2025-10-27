@@ -153,14 +153,12 @@ if __name__ == "__main__":
     tdr = TDR(request_util=request_util)
 
     dataset_info = tdr.get_dataset_info(dataset_id=dataset_id).json()
-    """
     # Get permissions for workspace ingest
     GetPermissionsForWorkspaceIngest(
         terra_workspace=terra_workspace,
         dataset_info=dataset_info,
         added_to_auth_domain=True,
     ).run()
-    """
     # Get entity metrics for workspace
     entity_metrics = terra_workspace.get_workspace_entity_info().json()
 
@@ -212,7 +210,6 @@ if __name__ == "__main__":
                 "datePartitionOptions": None
             }
         }
-
         SetUpTDRTables(
             tdr=tdr,
             dataset_id=dataset_id,
@@ -221,7 +218,6 @@ if __name__ == "__main__":
             force_disparate_rows_to_string=force_disparate_rows_to_string,
             ignore_existing_schema_mismatch=ignore_existing_schema_mismatch
         ).run()
-        exit()
 
         if trunc_and_reload:
             logging.info(
