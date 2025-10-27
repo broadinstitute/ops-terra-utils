@@ -18,6 +18,7 @@ workflow GCPWorkspaceToDatasetIngest {
         String? docker
         Boolean force_disparate_rows_to_string = true
         Boolean trunc_and_reload
+        Boolean ignore_existing_schema_mismatch = false
     }
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -39,7 +40,8 @@ workflow GCPWorkspaceToDatasetIngest {
             check_existing_ingested_files = check_existing_ingested_files,
             all_fields_non_required = all_fields_non_required,
             force_disparate_rows_to_string = force_disparate_rows_to_string,
-            trunc_and_reload = trunc_and_reload
+            trunc_and_reload = trunc_and_reload,
+            ignore_existing_schema_mismatch = ignore_existing_schema_mismatch
     }
 }
 
@@ -61,6 +63,7 @@ task IngestWorkspaceDataToDataset {
         Int? batch_size
         Boolean force_disparate_rows_to_string
         Boolean trunc_and_reload
+        Boolean ignore_existing_schema_mismatch
     }
 
     command <<<
@@ -80,6 +83,7 @@ task IngestWorkspaceDataToDataset {
         ~{if all_fields_non_required then "--all_fields_non_required" else ""} \
         ~{if force_disparate_rows_to_string then "--force_disparate_rows_to_string" else ""} \
         ~{if trunc_and_reload then "--trunc_and_reload" else ""}
+        ~{if ignore_existing_schema_mismatch then "--ignore_existing_schema_mismatch" else ""}
 
     >>>
 
