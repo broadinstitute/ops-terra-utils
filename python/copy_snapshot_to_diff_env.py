@@ -111,12 +111,14 @@ class CreateAndSetUpDataset:
         ).run()
 
         # Add 'owners' emails to the dataset
-        for email in self.owner_emails:
-            self.new_tdr.add_user_to_dataset(
-                dataset_id=dest_dataset_id,
-                user=email,
-                policy="steward",
-            )
+        if self.owner_emails:
+            logging.info(f"Adding owners to dataset {dest_dataset_id}: {self.owner_emails}")
+            for email in self.owner_emails:
+                self.new_tdr.add_user_to_dataset(
+                    dataset_id=dest_dataset_id,
+                    user=email,
+                    policy="steward",
+                )
 
         return dest_dataset_id
 
@@ -369,16 +371,19 @@ if __name__ == '__main__':
                  f"has 'Storage Object Viewer' permissions to temp bucket {temp_bucket}")
     # Ingest the updated table contents into the dataset in new environment
     for table_name, table_contents in all_table_contents.items():
-        BatchIngest(
-            tdr=new_tdr,
-            ingest_metadata=table_contents,
-            target_table_name=table_name,
-            dataset_id=dest_tdr_id,
-            batch_size=INGEST_BATCH_SIZE,
-            bulk_mode=False,
-            update_strategy=INGEST_UPDATE_STRATEGY,
-            waiting_time_to_poll=INGEST_WAITING_TIME_TO_POLL
-        ).run()
+        if table_contents:
+            BatchIngest(
+                tdr=new_tdr,
+                ingest_metadata=table_contents,
+                target_table_name=table_name,
+                dataset_id=dest_tdr_id,
+                batch_size=INGEST_BATCH_SIZE,
+                bulk_mode=False,
+                update_strategy=INGEST_UPDATE_STRATEGY,
+                waiting_time_to_poll=INGEST_WAITING_TIME_TO_POLL
+            ).run()
+        else:
+            logging.info(f"Skipping {table_name} table ingest as there is no data to ingest")
 
     new_tdr.create_snapshot(
         # Use original snapshot name if dest_snapshot_name is not provided
