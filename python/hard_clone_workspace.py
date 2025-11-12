@@ -250,7 +250,6 @@ if __name__ == '__main__':
     # Get the source workspace info
     if terra_google_project_id:
         src_workspace_info = src_workspace.get_workspace_details(terra_google_project_id=terra_google_project_id).json()
-
     else:
         src_workspace_info = src_workspace.get_workspace_info().json()
 
