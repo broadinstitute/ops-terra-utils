@@ -27,6 +27,13 @@ def get_args() -> Namespace:
     parser.add_argument('--dest_billing_project', "-db", type=str, required=True)
     parser.add_argument('--dest_workspace_name', "-dn", type=str, required=True)
     parser.add_argument('--google_project', "-p", type=str)
+    parser.add_argument(
+        '--terra_google_project_id',
+        type=str,
+        required=False,
+        help="If the bucket linked to your source workspace has the requester pays setting turned on,"
+             " the Terra Google project ID to use is required."
+    )
     parser.add_argument('--external_bucket', "-eb", type=str,
                         help="gcp bucket if you want to store files in bucket outside of workspace gs://bucket/")
     parser.add_argument('--allow_already_created', "-a", action="store_true",
@@ -221,6 +228,7 @@ if __name__ == '__main__':
     external_bucket = args.external_bucket
     skip_check_if_already_copied = args.skip_check_if_already_copied
     google_project = args.google_project
+    terra_google_project_id = args.terra_google_project_id
 
     if external_bucket:
         if not external_bucket.startswith("gs://") or not external_bucket.endswith("/"):
@@ -240,7 +248,12 @@ if __name__ == '__main__':
     )
 
     # Get the source workspace info
-    src_workspace_info = src_workspace.get_workspace_info().json()
+    if terra_google_project_id:
+        src_workspace_info = src_workspace.get_workspace_details(terra_google_project_id=terra_google_project_id).json()
+
+    else:
+        src_workspace_info = src_workspace.get_workspace_info().json()
+
     src_auth_domain = src_workspace_info["workspace"]["authorizationDomain"]
     src_bucket = src_workspace_info["workspace"]["bucketName"]
 
