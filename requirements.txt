@@ -20,4 +20,4 @@ pyyaml
 humanfriendly
 responses
 gitpython
-git+https://github.com/broadinstitute/pyops-service-toolkit.git@12.3.0#egg=pyops-service-toolkit
+git+https://github.com/broadinstitute/pyops-service-toolkit.git@v12.3.0#egg=pyops-service-toolkit
