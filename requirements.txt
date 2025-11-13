@@ -20,5 +20,4 @@ pyyaml
 humanfriendly
 responses
 gitpython
-# TODO: Update this to be the correct tag once changes in pyops are released
-git+https://github.com/broadinstitute/pyops-service-toolkit.git@7fe13fbaeaabe587a7f44efbf383e5b50611f758#egg=pyops-service-toolkit
+git+https://github.com/broadinstitute/pyops-service-toolkit.git@12.3.0#egg=pyops-service-toolkit
