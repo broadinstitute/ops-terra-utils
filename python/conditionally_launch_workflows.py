@@ -1,6 +1,7 @@
 import argparse
 import logging
 from argparse import ArgumentParser
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -93,29 +94,23 @@ class FilterSubmissionsLaunchFailures:
         AND does not have any other submissions with the same user comment."""
         submissions_to_check = []
         terminal_statuses = {"Succeeded", "Failed"}
+        comment_counts = Counter(sub['userComment'] for sub in filtered_submissions)
+
         for sub in filtered_submissions:
             workflow_statuses = sub["workflowStatuses"]
             user_comment = sub["userComment"]
-            num_submissions_with_same_comment = len([s for s in filtered_submissions if s["userComment"] == user_comment])
+            num_submissions_with_same_comment = comment_counts[user_comment]
             # The only submissions eligible to be relaunched are ones that have ONLY succeeded and failed workflows, AND
             # if there is only one submission with that user comment (to avoid relaunching multiple times)
             if set(workflow_statuses.keys()) == terminal_statuses and num_submissions_with_same_comment == 1:
                 submissions_to_check.append(sub)
         return submissions_to_check
 
-    def _count_running_or_pending_workflows(self, filtered_submissions: list[dict]) -> int:
+    def _count_running_or_pending_workflows(self) -> int:
         """Count the number of running or pending workflows in the workspace."""
-        active_workflows_count = 0
-        submission_ids = [sub["submissionId"] for sub in filtered_submissions]
-        logging.info(f"Getting workflow statuses for {len(filtered_submissions)} submissions")
-        for submission_id in submission_ids:
-            submission_metadata = self.workspace.get_submission_status(submission_id=submission_id).json()
-            for workflow in submission_metadata["workflows"]:
-                workflow_status = workflow["status"]
-                if workflow_status in ["Running", "Submitted", "Queued"]:
-                    active_workflows_count += 1
-        logging.info(f"Found {active_workflows_count} active workflows for workflow '{self.workflow_name}'")
-        return active_workflows_count
+        workflow_submission_stats = self.workspace.get_workspace_submission_stats(
+            method_name=self.workflow_name, retrieve_running_ids=False)
+        return workflow_submission_stats.get("submitted") + workflow_submission_stats.get("queued") + workflow_submission_stats.get("running")
 
     def _find_non_submitted_entities(
             self, workspace_entity_metadata: list[dict], filtered_submissions: list[dict]
@@ -152,7 +147,7 @@ class FilterSubmissionsLaunchFailures:
                 self.workspace.retry_failed_submission(submission["submissionId"])
 
         # Conditionally launch the next sample set if there aren't too many running/pending workflows
-        active_workflows_count = self._count_running_or_pending_workflows(filtered_submissions=filtered_submissions)
+        active_workflows_count = self._count_running_or_pending_workflows()
         # Only launch new submissions if the number of active workflows is below the maximum threshold
         # AND the user has indicated to launch new submissions
         if active_workflows_count < ACTIVE_WORKFLOWS_MAXIMUM:
