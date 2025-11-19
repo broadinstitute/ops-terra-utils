@@ -10,6 +10,7 @@ from ops_utils.terra_util import TerraWorkspace
 from ops_utils.token_util import Token
 
 ACTIVE_WORKFLOWS_MAXIMUM = 40000
+DEFAULT_DAYS_BACK_TO_CHECK = 30
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
@@ -26,14 +27,23 @@ def get_args() -> argparse.Namespace:
         type=str,
         help="The entity type (table name) in Terra to check for submissions. By default, all entities in the table will be included."
     )
-    parser.add_argument("--days_back", required=True, type=int,
-                        help="How many days back to look for submissions", default=30)
+    parser.add_argument(
+        "--days_back",
+        required=True,
+        type=int,
+        help="How many days back to look for submissions", default=DEFAULT_DAYS_BACK_TO_CHECK
+    )
     parser.add_argument(
         "--entities_to_exclude",
         required=False,
         type=comma_separated_list,
         help="List of entity names to exclude.",
         default=[]
+    )
+    parser.add_argument(
+        "--launch_new_submissions",
+        action="store_true",
+        help="If indicated, will launch new workflows as needed. Otherwise, will not launch new submissions, only retry failed ones."
     )
     return parser.parse_args()
 
@@ -47,7 +57,8 @@ class FilterSubmissionsLaunchFailures:
             workspace_obj: TerraWorkspace,
             entity_type: str,
             entities_to_exclude: Optional[list[str]],
-            billing_project: str
+            billing_project: str,
+            launch_new_submissions: bool = False
     ):
         self.submissions = submissions
         self.workflow_name = workflow_name
@@ -56,6 +67,7 @@ class FilterSubmissionsLaunchFailures:
         self.entity_type = entity_type
         self.entities_to_exclude = entities_to_exclude
         self.billing_project = billing_project
+        self.launch_new_submissions = launch_new_submissions
 
     def _filter_submissions_by_workflow_name(self) -> list[dict]:
         """Filter submissions in the workspace by workflow name and date (number of days to look back)"""
@@ -65,12 +77,12 @@ class FilterSubmissionsLaunchFailures:
 
         date_filtered_submissions = []
         now = datetime.now(timezone.utc)
-        thirty_days_ago = now - timedelta(days=30)
+        days_back_to_check = now - timedelta(days=self.days_back)
         for sub in filtered_submissions:
             submission_date = sub["submissionDate"]
             # Parse ISO timestamp ending with Z (UTC)
             dt = datetime.fromisoformat(submission_date.replace("Z", "+00:00"))
-            if dt >= thirty_days_ago:
+            if dt >= days_back_to_check:
                 date_filtered_submissions.append(sub)
         logging.info(f"Found {len(date_filtered_submissions)} submissions for workflow '{self.workflow_name}'")
         return date_filtered_submissions
@@ -141,25 +153,36 @@ class FilterSubmissionsLaunchFailures:
 
         # Conditionally launch the next sample set if there aren't too many running/pending workflows
         active_workflows_count = self._count_running_or_pending_workflows(filtered_submissions=filtered_submissions)
+        # Only launch new submissions if the number of active workflows is below the maximum threshold
+        # AND the user has indicated to launch new submissions
         if active_workflows_count < ACTIVE_WORKFLOWS_MAXIMUM:
             logging.info("Active workflows below maximum threshold. Looking to launch next sample set.")
-            # Get all sample sets from workspace (minus ones to exclude) and launch the next set
-            workspace_entity_metadata = self.workspace.get_gcp_workspace_metrics(
-                entity_type=self.entity_type, remove_dicts=True)
-            entities_eligible_for_submission = self._find_non_submitted_entities(
-                workspace_entity_metadata=workspace_entity_metadata, filtered_submissions=filtered_submissions
-            )
-            expression = self.entity_type.replace("_set", "")
-            entity_name = entities_eligible_for_submission[0]
-            res = self.workspace.initiate_submission(
-                method_config_namespace=self.billing_project,
-                method_config_name=self.workflow_name,
-                entity_type=self.entity_type,
-                entity_name=entity_name,
-                expression=f"this.{expression}s",
-                user_comment=entity_name
-            )
-            logging.info(f"Launched new submission for entity: {entity_name}. Response: {res.status_code}")
+            if self.launch_new_submissions:
+                # Get all sample sets from workspace (minus ones to exclude) and launch the next set
+                workspace_entity_metadata = self.workspace.get_gcp_workspace_metrics(
+                    entity_type=self.entity_type, remove_dicts=True)
+                entities_eligible_for_submission = self._find_non_submitted_entities(
+                    workspace_entity_metadata=workspace_entity_metadata, filtered_submissions=filtered_submissions
+                )
+                if entities_eligible_for_submission:
+                    expression = self.entity_type.replace("_set", "")
+                    entity_name = entities_eligible_for_submission[0]
+                    res = self.workspace.initiate_submission(
+                        method_config_namespace=self.billing_project,
+                        method_config_name=self.workflow_name,
+                        entity_type=self.entity_type,
+                        entity_name=entity_name,
+                        expression=f"this.{expression}s",
+                        user_comment=entity_name
+                    )
+                    logging.info(f"Launched new submission for entity: {entity_name}. Response: {res.status_code}")
+                else:
+                    logging.info(
+                        "No eligible entities found to launch new submissions. It's possible all entities have already been launched")
+            else:
+                logging.info(
+                    "Active workflows below maximum threshold, but not launching new submissions as per user request. Run with the '--launch_new_submissions' flag to enable."
+                )
         else:
             logging.info("Active workflows above maximum threshold. Not launching new submissions at this time.")
 
@@ -183,4 +206,5 @@ if __name__ == '__main__':
         entity_type=args.entity_type,
         entities_to_exclude=args.entities_to_exclude,
         billing_project=args.billing_project,
+        launch_new_submissions=args.launch_new_submissions
     ).filter_and_launch_failed_submissions()
