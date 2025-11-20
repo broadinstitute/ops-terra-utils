@@ -94,7 +94,7 @@ class FilterSubmissionsLaunchFailures:
         AND does not have any other submissions with the same user comment."""
         submissions_to_check = []
         terminal_statuses = {"Succeeded", "Failed"}
-        comment_counts = Counter(sub['userComment'] for sub in filtered_submissions)
+        comment_counts = Counter(sub["userComment"] for sub in filtered_submissions)
 
         for sub in filtered_submissions:
             workflow_statuses = sub["workflowStatuses"]
@@ -144,7 +144,10 @@ class FilterSubmissionsLaunchFailures:
         logging.info(f"Found {len(submissions_to_relaunch)} submissions to re-launch")
         if submissions_to_relaunch:
             for submission in submissions_to_relaunch:
-                self.workspace.retry_failed_submission(submission["submissionId"])
+                res = self.workspace.retry_failed_submission(submission["submissionId"]).json()
+                # Update the new submission with the same user comment as the original submission
+                self.workspace.add_user_comment_to_submission(
+                    submission_id=res["submissionId"], user_comment=submission["userComment"])
 
         # Conditionally launch the next sample set if there aren't too many running/pending workflows
         active_workflows_count = self._count_running_or_pending_workflows()
