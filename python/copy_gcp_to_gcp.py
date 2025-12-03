@@ -26,6 +26,8 @@ def get_args() -> Namespace:
         action="store_true",
         help="Set this flag if you do not wish to flatten the structure of the files"
     )
+    parser.add_argument("--google_project", "-p", help="Google project if requester pays")
+
     input_args = parser.add_mutually_exclusive_group(required=True)
     input_args.add_argument(
         "--source_bucket",
@@ -38,7 +40,6 @@ def get_args() -> Namespace:
         help="Use option if want to copy files listed in a file. Put one file per line. " +
              "File should exist in accessible GCP bucket"
     )
-    input_args.add_argument("--google_project", "-p", help="Google project if requester pays")
     return parser.parse_args()
 
 
