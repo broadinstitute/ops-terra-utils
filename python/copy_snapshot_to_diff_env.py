@@ -269,7 +269,7 @@ def get_args() -> Namespace:
     parser = ArgumentParser(description="Get files that are not in the dataset metadata")
     parser.add_argument("--temp_bucket", "-b", required=True,
                         help="Include gs:// and last slash /. Should have the TDR prod or dev general service "
-                             "account added as well as service account/user running this script")
+                             "account added as well as service account/user running this script. Needs to be non-Terra bucket")
     parser.add_argument("--dataset_id", "-d", required=True)
     parser.add_argument("--orig_env", "-oe", required=True,
                         choices=['prod', 'dev'], help="Environment of the original dataset. Will copy to the other environment")
@@ -285,9 +285,11 @@ def get_args() -> Namespace:
                         help="comma separated list of emails to add to the workspace, dataset, and snapshot as owner/steward. If not provided, "
                              "will not add anybody.")
     parser.add_argument("--dest_dataset_name", type=str,
-                        help="Name for the destination dataset. Defaults to the original dataset name if not provided.")
+                        help=("Name for the destination dataset. If not provided, defaults to the original "
+                              "dataset name with orig_env replaced by new_env when present."))
     parser.add_argument("--dest_snapshot_name", type=str,
-                        help="Name for the new snapshot. Defaults to the original snapshot name if not provided.")
+                        help=("Name for the new snapshot. If not provided, defaults to the original snapshot name "
+                              "with the orig_env replaced by new_env when present."))
     parser.add_argument("--delete_intermediate_files", "-dm", action="store_true",)
     return parser.parse_args()
 
@@ -353,8 +355,11 @@ if __name__ == '__main__':
         verbose=verbose
     ).run()
 
-    # Use custom dataset name if provided, otherwise use the original name
-    final_dataset_name = dest_dataset_name if dest_dataset_name else orig_dataset_info['name']
+    # Determine default names when not provided: swap env substring in original names where present
+    final_dataset_name = dest_dataset_name \
+        if dest_dataset_name \
+        else orig_dataset_info['name'].replace(orig_env, new_env)
+
     # Create a new dataset in the new environment
     dest_tdr_id = CreateAndSetUpDataset(
         orig_dataset_info=orig_dataset_info,
@@ -385,9 +390,14 @@ if __name__ == '__main__':
         else:
             logging.info(f"Skipping {table_name} table ingest as there is no data to ingest")
 
+    # Determine default snapshot name when not provided: swap env substring in original snapshot name where present
+    final_snapshot_name = dest_snapshot_name \
+        if dest_snapshot_name \
+        else snapshot_info['name'].replace(orig_env, new_env)
+
     new_tdr.create_snapshot(
-        # Use original snapshot name if dest_snapshot_name is not provided
-        snapshot_name=dest_snapshot_name if dest_snapshot_name else snapshot_info['name'],
+        # Use transformed snapshot name if dest_snapshot_name is not provided
+        snapshot_name=final_snapshot_name,
         description=snapshot_info['description'],
         consent_code=snapshot_info['consentCode'],
         duos_id=snapshot_info.get('duosId'),
