@@ -101,8 +101,8 @@ class FilterSubmissionsLaunchFailures:
             user_comment = sub["userComment"]
             num_submissions_with_same_comment = comment_counts[user_comment]
             # The only submissions eligible to be relaunched are ones that have ONLY succeeded and failed workflows, AND
-            # if there is only one submission with that user comment (to avoid relaunching multiple times)
-            if set(workflow_statuses.keys()) == terminal_statuses and num_submissions_with_same_comment == 1:
+            # there are less than 3 submissions with that user comment (to avoid relaunching failed workflows repeatedly)
+            if set(workflow_statuses.keys()) == terminal_statuses and num_submissions_with_same_comment <= 3:
                 submissions_to_check.append(sub)
         return submissions_to_check
 
