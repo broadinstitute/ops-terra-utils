@@ -219,7 +219,7 @@ workflows:
 
   - name: SplitMultiSampleVcf
     subclass: WDL
-    primaryDescriptorPath: /wdl/SetUpStagingWorkspaceAndDataset/SetUpStagingWorkspaceAndDataset.wdl
-    readMePath: /wdl/SetUpStagingWorkspaceAndDataset/README.md
+    primaryDescriptorPath: /wdl/SplitMultiSampleVcf/SplitMultiSampleVcf.wdl
+    readMePath: /wdl/SplitMultiSampleVcf/README.md
     testParameterFiles:
-      - /wdl/SetUpStagingWorkspaceAndDataset/SetUpStagingWorkspaceAndDataset.wdl
+      - /wdl/SplitMultiSampleVcf/SplitMultiSampleVcf.wdl
