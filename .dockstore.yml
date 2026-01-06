@@ -216,3 +216,10 @@ workflows:
     readMePath: /wdl/CopySnapshotToDiffEnv/README.md
     testParameterFiles:
       - /wdl/CopySnapshotToDiffEnv/CopySnapshotToDiffEnv.wdl
+
+  - name: SplitMultiSampleVcf
+    subclass: WDL
+    primaryDescriptorPath: /wdl/SetUpStagingWorkspaceAndDataset/SetUpStagingWorkspaceAndDataset.wdl
+    readMePath: /wdl/SetUpStagingWorkspaceAndDataset/README.md
+    testParameterFiles:
+      - /wdl/SetUpStagingWorkspaceAndDataset/SetUpStagingWorkspaceAndDataset.wdl
