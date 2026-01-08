@@ -5,6 +5,7 @@ workflow SplitVcfWorkflow {
   input {
     File   multi_sample_vcf
     File   group_specs_file
+    Boolean copy_outputs_to_final_destination
     String bcftoolsDocker   = "us.gcr.io/broad-gotc-prod/imputation-bcf-vcf:1.0.7-1.10.2-0.1.16-1669908889"
   }
 
@@ -15,10 +16,18 @@ workflow SplitVcfWorkflow {
   scatter (group_spec in group_specs) {
     call ExtractGroup {
       input:
-          multi_sample_vcf = multi_sample_vcf
-        , prefix_          = group_spec.prefix
-        , group_samples    = group_spec.samples
-        , docker           = bcftoolsDocker
+          multi_sample_vcf = multi_sample_vcf,
+          prefix_          = group_spec.prefix,
+          group_samples    = group_spec.samples,
+          docker           = bcftoolsDocker
+    }
+    if (copy_outputs_to_final_destination) {
+      call CopyVcfToFinalDestination {
+        input:
+            output_vcf = ExtractGroup.group_vcf,
+            output_vcf_index = ExtractGroup.group_tbi,
+            destination_workspace_bucket = group_spec.destination_workspace_bucket
+      }
     }
   }
 
@@ -74,5 +83,26 @@ task ExtractGroup {
     cpuPlatform : "Intel Ice Lake"
     memory      : "16 GB"
     disks       : "local-disk 800 SSD"
+  }
+}
+
+task CopyVcfToFinalDestination {
+  input {
+    File output_vcf
+    File output_vcf_index
+    String destination_workspace_bucket
+  }
+
+  command <<<
+    DESTINATION_OUTPUT_DIRECTORY="gs://~{destination_workspace_bucket}/vcf_parsing_output/"
+
+    gsutil cp ~{output_vcf} $DESTINATION_OUTPUT_DIRECTORY
+    gsutil cp ~{output_vcf_index} $DESTINATION_OUTPUT_DIRECTORY
+
+    echo "Copied ~{output_vcf} and ~{output_vcf_index} to $DESTINATION_OUTPUT_DIRECTORY"
+  >>>
+
+  runtime {
+    docker: "gcr.io/google.com/cloudsdktool/cloud-sdk:305.0.0"
   }
 }
