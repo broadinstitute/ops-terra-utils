@@ -214,7 +214,7 @@ if __name__ == '__main__':
             extension_exclude_list=extension_exclude_list,
             extension_include_list=extension_include_list,
             gcp_util=gcp_util
-        ).run(min_rows_to_check_rows=200)
+        ).run()
         workspace_files.extend(external_file_metadata)
 
     write_entities_tsv(workspace_files)
