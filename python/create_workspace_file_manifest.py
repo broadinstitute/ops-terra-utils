@@ -148,7 +148,7 @@ class GetExternalFiles:
                         external_paths.add(uri)
         return sorted(external_paths)
 
-    def run(self, min_rows_to_check: int = MIN_ROWS_TO_CHECK_FOR_GS_PATH) -> list[str]:
+    def run(self, min_rows_to_check: int = MIN_ROWS_TO_CHECK_FOR_GS_PATH) -> list[dict]:
         """Collect external files referenced in any workspace entity table."""
         workspace_table_names = [
             table
@@ -170,7 +170,7 @@ class GetExternalFiles:
         )
         # Mark all as external files
         for meta in external_metadata:
-            meta['external_file'] = 'true'
+            meta['external_file'] = True
         logging.info(f"Retrieved metadata for {len(external_metadata)} external files.")
         return external_metadata
 
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     )
     # Mark all as internal files
     for file in workspace_files:
-        file['external_file'] = 'false'
+        file['external_file'] = False
     logging.info(f"Found {len(workspace_files)} files in workspace bucket after applying filters.")
     if include_external_files:
         external_file_metadata = GetExternalFiles(
