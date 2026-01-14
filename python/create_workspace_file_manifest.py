@@ -3,11 +3,10 @@ from ops_utils.gcp_utils import GCPCloudFunctions
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 from ops_utils import comma_separated_list
-import csv
 
+import csv
 import logging
 from argparse import ArgumentParser, Namespace
-
 from typing import Any
 
 logging.basicConfig(
