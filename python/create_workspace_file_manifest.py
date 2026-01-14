@@ -15,6 +15,7 @@ logging.basicConfig(
 )
 
 ENTITY_FILE_PATH = "entities.tsv"
+MIN_ROWS_TO_CHECK_ROWS = 200
 
 
 def get_args() -> Namespace:
@@ -106,7 +107,7 @@ class GetExternalFiles:
 
         return []
 
-    def _get_external_files_from_table_metrics(self, table: str, min_rows_to_check_rows: int = 200) -> list[str]:
+    def _get_external_files_from_table_metrics(self, table: str, min_rows_to_check_rows: int = MIN_ROWS_TO_CHECK_ROWS) -> list[str]:
         """Scan a Terra entity table for external gs:// paths.
 
         Rules per column:
