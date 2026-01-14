@@ -8,6 +8,7 @@ workflow CreateWorkspaceFileManifest {
         String? extension_include_list
         String? strings_to_exclude
         String? docker
+        Boolean include_external_files = false
     }
 
     String docker_name = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -20,7 +21,8 @@ workflow CreateWorkspaceFileManifest {
             extension_exclude_list=extension_exclude_list,
             extension_include_list=extension_include_list,
             strings_to_exclude=strings_to_exclude,
-            docker_image=docker_name
+            docker_image=docker_name,
+            include_external_files=include_external_files
     }
 }
 
@@ -32,6 +34,7 @@ task CreateManifest {
         String? extension_include_list
         String? strings_to_exclude
         String docker_image
+        Boolean include_external_files
     }
 
     command <<<
@@ -40,7 +43,8 @@ task CreateManifest {
         --billing_project  ~{billing_project} \
         ~{"--extension_exclude_list " + extension_exclude_list} \
         ~{"--extension_include_list " + extension_include_list} \
-        ~{"--strings_to_exclude " + strings_to_exclude}
+        ~{"--strings_to_exclude " + strings_to_exclude} \
+        ~{if include_external_files then "--include_external_files" else ""}
     >>>
 
     runtime {
