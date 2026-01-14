@@ -1,5 +1,3 @@
-import json
-
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.gcp_utils import GCPCloudFunctions
 from ops_utils.request_util import RunRequest
@@ -95,13 +93,13 @@ class GetExternalFiles:
                 return [value]
 
         if isinstance(value, (list, tuple, set)):
-            uris: list[str] = []
+            uris = []
             for item in value:
                 uris.extend(self._extract_gs_uris(item))
             return uris
 
         if isinstance(value, dict):
-            uris: list[str] = []
+            uris = []
             for v in value.values():
                 uris.extend(self._extract_gs_uris(v))
             return uris
