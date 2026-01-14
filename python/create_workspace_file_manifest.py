@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 
 ENTITY_FILE_PATH = "entities.tsv"
-MIN_ROWS_TO_CHECK_ROWS = 200
+MIN_ROWS_TO_CHECK_FOR_GS_PATH = 200
 
 
 def get_args() -> Namespace:
@@ -107,11 +107,11 @@ class GetExternalFiles:
 
         return []
 
-    def _get_external_files_from_table_metrics(self, table: str, min_rows_to_check_rows: int = MIN_ROWS_TO_CHECK_ROWS) -> list[str]:
+    def _get_external_files_from_table_metrics(self, table: str, min_rows_to_check: int) -> list[str]:
         """Scan a Terra entity table for external gs:// paths.
 
         Rules per column:
-          - Always scan at least `min_rows_to_check_rows` rows.
+          - Always scan at least `min_rows_to_check` rows.
           - If no gs:// paths are found within those rows, stop scanning that column.
           - If any gs:// paths are found within those rows, scan the entire column (all rows).
           - Collect any gs:// path that does NOT start with gs://{workspace_bucket}/.
@@ -127,7 +127,7 @@ class GetExternalFiles:
 
         external_paths: set[str] = set()
         total_rows = len(sample_metrics)
-        initial_scan_count = min(min_rows_to_check_rows, total_rows)
+        initial_scan_count = min(min_rows_to_check, total_rows)
 
         for col in columns:
             # Phase 1: scan first N rows
@@ -149,7 +149,7 @@ class GetExternalFiles:
                         external_paths.add(uri)
         return sorted(external_paths)
 
-    def run(self, min_rows_to_check_rows: int = 200) -> list[str]:
+    def run(self, min_rows_to_check: int = MIN_ROWS_TO_CHECK_FOR_GS_PATH) -> list[str]:
         """Collect external files referenced in any workspace entity table."""
         workspace_table_names = [
             table
@@ -162,7 +162,7 @@ class GetExternalFiles:
         for table_name in workspace_table_names:
             all_external.update(self._get_external_files_from_table_metrics(
                 table=table_name,
-                min_rows_to_check_rows=min_rows_to_check_rows
+                min_rows_to_check=min_rows_to_check
             ))
         logging.info(f"Found {len(all_external)} unique external gs:// paths in workspace tables. Checking gcp metadata.")
         external_metadata = self.gcp_util.load_blobs_from_full_paths_multithreaded(
