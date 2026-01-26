@@ -104,5 +104,6 @@ task CopyVcfToFinalDestination {
 
   runtime {
     docker: "gcr.io/google.com/cloudsdktool/cloud-sdk:305.0.0"
+    disks: "local-disk 200 SSD"
   }
 }
