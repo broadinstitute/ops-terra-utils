@@ -14,12 +14,16 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
+
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("")
     parser.add_argument("--source_workspace_name", required=True, type=str)
-    parser.add_argument("--sample_mapping_bucket", required=True, type=str, help="Bucket where the sample mapping csv is stored in GCS")
-    parser.add_argument("--sample_mapping_path", required=True, type=str, help="Path to where the sample mapping csv is stored in GCS")
-    parser.add_argument("--consent_code_workspace_mapping_map", required=False, type=str, help="Path to local consent code-to-workspace mapping csv")
+    parser.add_argument("--sample_mapping_bucket", required=True, type=str,
+                        help="Bucket where the sample mapping csv is stored in GCS")
+    parser.add_argument("--sample_mapping_path", required=True, type=str,
+                        help="Path to where the sample mapping csv is stored in GCS")
+    parser.add_argument("--consent_code_workspace_mapping_map", required=False, type=str,
+                        help="Path to local consent code-to-workspace mapping csv")
     return parser.parse_args()
 
 
@@ -81,7 +85,8 @@ class CreateMapping:
 
         for consent_code in consent_codes:
             samples = [s["subject_id"] for s in sample_workspace_mapping if s["consent_code"] == consent_code]
-            workspace_name = [s["destination_workspace_name"] for s in sample_workspace_mapping if s["consent_code"] == consent_code][0]
+            workspace_name = [s["destination_workspace_name"]
+                              for s in sample_workspace_mapping if s["consent_code"] == consent_code][0]
             destination_workspace_bucket = self.get_workspace_bucket(workspace_name=workspace_name)
             final_mapping_contents.append(
                 {
@@ -101,7 +106,8 @@ class CreateMapping:
 
     def run(self):
         sample_mapping_file_contents = self.read_csv_from_gcs()
-        sample_to_workspace_mapping = self.create_sample_mapping(sample_mapping_file_contents=sample_mapping_file_contents)
+        sample_to_workspace_mapping = self.create_sample_mapping(
+            sample_mapping_file_contents=sample_mapping_file_contents)
         self.construct_json(sample_workspace_mapping=sample_to_workspace_mapping)
 
 
