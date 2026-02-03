@@ -216,3 +216,10 @@ workflows:
     readMePath: /wdl/CopySnapshotToDiffEnv/README.md
     testParameterFiles:
       - /wdl/CopySnapshotToDiffEnv/CopySnapshotToDiffEnv.wdl
+
+  - name: SplitMultiSampleVcf
+    subclass: WDL
+    primaryDescriptorPath: /wdl/SplitMultiSampleVcf/SplitMultiSampleVcf.wdl
+    readMePath: /wdl/SplitMultiSampleVcf/README.md
+    testParameterFiles:
+      - /wdl/SplitMultiSampleVcf/SplitMultiSampleVcf.wdl
