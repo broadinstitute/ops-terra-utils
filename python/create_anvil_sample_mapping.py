@@ -10,8 +10,8 @@ from ops_utils.terra_util import TerraWorkspace
 from ops_utils.token_util import Token
 
 """
-Given a source workspace, a sample mapping csv (with subject IDs and consent codes), and a consent 
-code-to-workspace mapping csv, this script creates a JSON mapping file that can be used as input 
+Given a source workspace, a sample mapping csv (with subject IDs and consent codes), and a consent
+code-to-workspace mapping csv, this script creates a JSON mapping file that can be used as input
 to the Terra multisample VCF splitting workflow.
 """
 
@@ -34,14 +34,14 @@ def get_args() -> argparse.Namespace:
 
 
 class CreateMapping:
-    def __init__(self, source_workspace_name, bucket_name: str, blob_name: str, consent_code_mapping: list[dict], request_util: RunRequest):
+    def __init__(self, source_workspace_name: str, bucket_name: str, blob_name: str, consent_code_mapping: list[dict], request_util: RunRequest):
         self.source_workspace_name = source_workspace_name
         self.blob_name = blob_name
         self.bucket_name = bucket_name
         self.consent_code_mapping = consent_code_mapping
         self.request_util = request_util
 
-    def read_csv_from_gcs(self):
+    def read_csv_from_gcs(self) -> list[dict]:
         file_contents = []
         client = storage.Client()
         # Get the bucket + blob
@@ -59,7 +59,7 @@ class CreateMapping:
         logging.info("Successfully gathered sample-to-consent code mapping from GCS")
         return file_contents
 
-    def create_sample_mapping(self, sample_mapping_file_contents: list[dict]):
+    def create_sample_mapping(self, sample_mapping_file_contents: list[dict]) -> list[dict]:
         sample_mapping_records = []
         for row in sample_mapping_file_contents:
             subject_id = row["subject_id"]
@@ -84,7 +84,7 @@ class CreateMapping:
         )
         return workspace.get_workspace_bucket()
 
-    def construct_json(self, sample_workspace_mapping):
+    def construct_json(self, sample_workspace_mapping: list[dict]) -> None:
         final_mapping_contents = []
 
         consent_codes = set([c["consent_code"] for c in sample_workspace_mapping])
@@ -110,7 +110,7 @@ class CreateMapping:
             f"Created mapping JSON to be used as input to Terra multisample VCF splitting workflow. Located here: '{output_json_path}'"
         )
 
-    def run(self):
+    def run(self) -> None:
         sample_mapping_file_contents = self.read_csv_from_gcs()
         sample_to_workspace_mapping = self.create_sample_mapping(
             sample_mapping_file_contents=sample_mapping_file_contents)
