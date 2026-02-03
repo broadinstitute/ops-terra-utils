@@ -9,6 +9,12 @@ from ops_utils.request_util import RunRequest
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.token_util import Token
 
+"""
+Given a source workspace, a sample mapping csv (with subject IDs and consent codes), and a consent 
+code-to-workspace mapping csv, this script creates a JSON mapping file that can be used as input 
+to the Terra multisample VCF splitting workflow.
+"""
+
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
