@@ -27,7 +27,8 @@ class CopyPublicCloudReference:
             bwa_mem_tar_file_destination: Optional[str],
             star_readme: Optional[str],
             bwa_mem_readme: Optional[str],
-
+            mt_genes_file_location: Optional[str],
+            mt_genes_file_destination: Optional[str],
     ):
         self.chrom_sizes_file_location = chrom_sizes_file_location
         self.chrom_sizes_file_destination = chrom_sizes_file_destination
@@ -39,6 +40,8 @@ class CopyPublicCloudReference:
         self.bwa_mem_tar_file_destination = bwa_mem_tar_file_destination
         self.star_readme = star_readme
         self.bwa_mem_readme = bwa_mem_readme
+        self.mt_genes_file_location = mt_genes_file_location
+        self.mt_genes_file_destination = mt_genes_file_destination
 
         self.gcp = GCPCloudFunctions()
 
@@ -72,6 +75,10 @@ class CopyPublicCloudReference:
             {
                 "source": self.bwa_mem_readme,
                 "destination": self.bwa_mem_tar_file_destination,
+            },
+            {
+                "source": self.mt_genes_file_location,
+                "destination": self.mt_genes_file_destination,
             }
         ]
 
@@ -160,6 +167,18 @@ def get_args() -> argparse.Namespace:
         type=str,
         help="The path to the bra-mem tar file README file"
     )
+    parser.add_argument(
+        "--mt_genes_file_location",
+        required=False,
+        type=str,
+        help="The current cloud location for the mitochondrial genes file"
+    )
+    parser.add_argument(
+        "--mt_genes_file_destination",
+        required=False,
+        type=str,
+        help="The cloud destination for the mitochondrial genes file"
+    )
 
     known_args, _ = parser.parse_known_args()
     return known_args
@@ -178,4 +197,6 @@ if __name__ == '__main__':
         bwa_mem_tar_file_destination=args.bwa_mem_tar_file_destination,
         star_readme=args.star_readme,
         bwa_mem_readme=args.bwa_mem_readme,
+        mt_genes_file_location=args.mt_genes_file_location,
+        mt_genes_file_destination=args.mt_genes_file_destination,
     ).copy_files_to_public_bucket()
