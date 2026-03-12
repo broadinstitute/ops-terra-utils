@@ -47,7 +47,7 @@ task GenerateGvcfToSampleMapping {
 			tsv_file.write("sample_name" + "\t" + "gvcf_file_path" + "\n")
 
 			for i in range(len(file_paths)):
-			tsv_file.write(sample_names[i] + "\t" + file_paths[i] + "\n")
+				tsv_file.write(sample_names[i] + "\t" + file_paths[i] + "\n")
 
 		CODE
     >>>
