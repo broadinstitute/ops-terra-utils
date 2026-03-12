@@ -88,7 +88,6 @@ class CreateMapping:
         final_mapping_contents = []
 
         consent_codes = set([c["consent_code"] for c in sample_workspace_mapping])
-        print(f"CONSENT_CODES: {consent_codes}")
 
         for consent_code in consent_codes:
             samples = [s["subject_id"] for s in sample_workspace_mapping if s["consent_code"] == consent_code]
@@ -129,7 +128,6 @@ if __name__ == "__main__":
         for row in reader:
             if row["AnVIL Dataset Name"].startswith(args.source_workspace_name):
                 consent_code_mapping.append(row)
-    print(f'CONSENT_CODE_MAPPING: {len(consent_code_mapping)}')
 
     CreateMapping(
         source_workspace_name=args.source_workspace_name,
