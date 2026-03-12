@@ -21,13 +21,13 @@ def parse_args() -> Namespace:
 class CopyGvcfsAndCreateSampleMap:
     def __init__(self, gcp_cloud_functions_obj: GCPCloudFunctions, original_gvcf_mapping: str, output_sample_map: str) -> None:
         self.gcp_cloud_functions_obj = gcp_cloud_functions_obj
-        self.gvcf_path_to_sample_mapping_file = original_gvcf_mapping
+        self.original_gvcf_mapping = original_gvcf_mapping
         self.output_sample_map = output_sample_map
 
     def get_mapping_file_contents(self) -> list[dict]:
-        file_contents = self.gcp_cloud_functions_obj.read_file(self.gvcf_path_to_sample_mapping_file)
-        reader = csv.DictReader(StringIO(file_contents), delimiter="\t")
-        return list(reader)
+        with open(self.original_gvcf_mapping, "r") as original_gvcf_mapping:
+            reader = csv.DictReader(original_gvcf_mapping, delimiter="\t")
+            return list(reader)
 
     def copy_gvcfs_and_index_to_new_extension(self, gvcf_to_sample_mapping: list[dict]) -> list[dict]:
         new_gvcf_metadata = []
@@ -95,12 +95,11 @@ class CopyGvcfsAndCreateSampleMap:
 
 if __name__ == '__main__':
     args = parse_args()
-    gvcf_mapping = args.original_gvcf_mapping
 
     gcp_cloud_functions = GCPCloudFunctions()
 
     CopyGvcfsAndCreateSampleMap(
         gcp_cloud_functions_obj=gcp_cloud_functions,
-        original_gvcf_mapping=gvcf_mapping,
+        original_gvcf_mapping=args.original_gvcf_mapping,
         output_sample_map=args.output_sample_map
     ).run()
