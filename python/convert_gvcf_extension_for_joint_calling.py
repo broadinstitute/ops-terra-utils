@@ -52,7 +52,7 @@ class CopyGvcfsAndCreateSampleMap:
             original_index_path = f"{original_gvcf_path}.tbi"
             new_index_path = original_index_path.replace(".gvcf.gz.tbi", ".g.vcf.gz.tbi")
 
-            files_to_copy.append(
+            files_to_copy.extend(
                 [
                     {
                         "source_file": original_gvcf_path,
