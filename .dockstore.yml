@@ -223,3 +223,10 @@ workflows:
     readMePath: /wdl/SplitMultiSampleVcf/README.md
     testParameterFiles:
       - /wdl/SplitMultiSampleVcf/SplitMultiSampleVcf.wdl
+
+  - name: CopyGvcfWithNewExtension
+    subclass: WDL
+    primaryDescriptorPath: /wdl/CopyGvcfWithNewExtension/CopyGvcfWithNewExtension.wdl
+    readMePath: /wdl/CopyGvcfWithNewExtension/README.md
+    testParameterFiles:
+      - /wdl/CopyGvcfWithNewExtension/CopyGvcfWithNewExtension.wdl
