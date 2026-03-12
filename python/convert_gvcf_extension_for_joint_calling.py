@@ -59,7 +59,8 @@ class CopyGvcfsAndCreateSampleMap:
                         "full_destination_path": new_gvcf_path
                     },
                     {
-                        "source_file": original_index_path, "full_destination_path": new_index_path
+                        "source_file": original_index_path,
+                        "full_destination_path": new_index_path
                     }
                 ]
             )
