@@ -1,6 +1,5 @@
 import csv
 import logging
-from io import StringIO
 from argparse import Namespace, ArgumentParser
 
 from ops_utils.gcp_utils import GCPCloudFunctions
@@ -61,28 +60,8 @@ class CopyGvcfsAndCreateSampleMap:
             )
         return new_gvcf_metadata
 
-    @staticmethod
-    def prepare_tsv_content(metadata: list[dict]) -> str:
-        """Converts a list of dicts to a TSV string."""
-        if not metadata:
-            return ""
-
-        # Create an in-memory string buffer
-        output = StringIO()
-
-        # Use the keys from the first dictionary as the header
-        keys = metadata[0].keys()
-
-        # Initialize the DictWriter with a tab delimiter
-        dict_writer = csv.DictWriter(output, fieldnames=keys, delimiter="\t")
-        dict_writer.writerows(metadata)
-
-        return output.getvalue()
-
     def write_new_sample_map(self, new_gvcf_metadata: list[dict]) -> None:
-        #new_contents = self.prepare_tsv_content(metadata=new_gvcf_metadata)
         logging.info(f"Writing new sample map to {self.output_sample_map}")
-        #self.gcp_cloud_functions_obj.write_to_gcp_file(cloud_path=self.output_sample_map, file_contents=new_contents)
         with open(self.output_sample_map, "w") as output_sample_map:
             writer = csv.DictWriter(output_sample_map, delimiter="\t", fieldnames=["sample_alias", "gvcf_path"])
             writer.writerows(new_gvcf_metadata)
@@ -95,7 +74,6 @@ class CopyGvcfsAndCreateSampleMap:
 
 if __name__ == '__main__':
     args = parse_args()
-
     gcp_cloud_functions = GCPCloudFunctions()
 
     CopyGvcfsAndCreateSampleMap(
