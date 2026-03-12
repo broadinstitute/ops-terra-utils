@@ -1,3 +1,10 @@
+"""
+This script takes in a mapping of gvcf path to sample name, copies the gvcfs and their index files to new
+paths with the .g.vcf.gz extension, and outputs a new mapping file with the updated gvcf paths.
+This is necessary because the joint calling pipeline expects gvcfs to have the .g.vcf.gz extension,
+but many of our existing gvcfs have the .gvcf.gz extension.
+"""
+
 import csv
 import logging
 from argparse import Namespace, ArgumentParser

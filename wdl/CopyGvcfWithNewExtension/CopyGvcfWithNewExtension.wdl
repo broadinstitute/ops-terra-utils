@@ -23,6 +23,10 @@ workflow CopyGvcfWithNewExtension {
 			sample_name_map_output_location = sample_name_map + ".sample_map",
 			docker_name = docker_name
 	}
+
+	output {
+		File sample_map = CopyGvcfWithNewExtension.output_sample_map
+	}
 }
 
 task GenerateGvcfToSampleMapping {
