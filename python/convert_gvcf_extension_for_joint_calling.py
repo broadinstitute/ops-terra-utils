@@ -26,7 +26,7 @@ class CopyGvcfsAndCreateSampleMap:
 
     def get_mapping_file_contents(self) -> list[dict]:
         file_contents = self.gcp_cloud_functions_obj.read_file(self.gvcf_path_to_sample_mapping_file)
-        reader = csv.DictReader(StringIO(file_contents))
+        reader = csv.DictReader(StringIO(file_contents), delimiter="\t")
         return list(reader)
 
     def copy_gvcfs_and_index_to_new_extension(self, gvcf_to_sample_mapping: list[dict]) -> list[dict]:
@@ -80,9 +80,12 @@ class CopyGvcfsAndCreateSampleMap:
         return output.getvalue()
 
     def write_new_sample_map(self, new_gvcf_metadata: list[dict]) -> None:
-        new_contents = self.prepare_tsv_content(metadata=new_gvcf_metadata)
+        #new_contents = self.prepare_tsv_content(metadata=new_gvcf_metadata)
         logging.info(f"Writing new sample map to {self.output_sample_map}")
-        self.gcp_cloud_functions_obj.write_to_gcp_file(cloud_path=self.output_sample_map, file_contents=new_contents)
+        #self.gcp_cloud_functions_obj.write_to_gcp_file(cloud_path=self.output_sample_map, file_contents=new_contents)
+        with open(self.output_sample_map, "w") as output_sample_map:
+            writer = csv.DictWriter(output_sample_map, delimiter="\t", fieldnames=["sample_alias", "gvcf_path"])
+            writer.writerows(new_gvcf_metadata)
 
     def run(self) -> None:
         gvcf_to_sample_mapping = self.get_mapping_file_contents()

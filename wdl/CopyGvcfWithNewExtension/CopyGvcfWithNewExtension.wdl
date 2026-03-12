@@ -33,22 +33,23 @@ task GenerateGvcfToSampleMapping {
 	}
 
 	command <<<
-    set -oe pipefail
+		set -oe pipefail
+		python << CODE
 
-    python << CODE
-    file_paths = ['~{sep="','" gvcf_file_paths}']
-    sample_names = ['~{sep="','" sample_names}']
+		file_paths = ['~{sep="','" gvcf_file_paths}']
+		sample_names = ['~{sep="','" sample_names}']
 
-    if len(file_paths)!= len(sample_names):
-      print("Number of gvcf paths does not equal the number of sample names. Please check your inputs.")
-      exit(1)
+		if len(file_paths) != len(sample_names):
+			print("Number of gvcf paths does not equal the number of sample names. Please check your inputs.")
+			exit(1)
 
-    with open("sample_map_file.tsv", "w") as tsv_file:
-	  tsv_file.write("sample_name" + "\t" "gvcf_file_path" + "\n")
-      for i in range(len(file_paths)):
-        tsv_file.write(sample_names[i] + "\t" + file_paths[i] + "\n")
+		with open("sample_map_file.tsv", "w") as tsv_file:
+			tsv_file.write("sample_name" + "\t" + "gvcf_file_path" + "\n")
 
-    CODE
+			for i in range(len(file_paths)):
+			tsv_file.write(sample_names[i] + "\t" + file_paths[i] + "\n")
+
+		CODE
     >>>
 
 	output {
@@ -73,6 +74,10 @@ task CopyGvcfWithNewExtension {
 			--original_gvcf_mapping ~{sample_mapping} \
 			--output_sample_map ~{sample_name_map_output_location}
 	>>>
+
+	output {
+		File output_sample_map = sample_name_map_output_location
+	}
 
 	runtime {
 		docker: docker_name
