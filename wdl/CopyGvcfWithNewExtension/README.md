@@ -15,7 +15,7 @@ you'll need a `sample` table that contains (at the minimum) columns for the samp
 example, assume the headers for these columns are `sample_name` and `gvcf_path`. You can also have other columns in
 this table, but they won't be used in the workflow. Next, create a `sample_set` that contains a sample set name and
 all the samples that require gvcf renaming. Assuming you follow this naming convention, when configuring these workflow
-inputs, the `gvcf_file_paths` input will be defined as `this.samples.gvcf_file_path` and the `sample_names` will be
+inputs, the `gvcf_file_paths` input will be defined as `this.samples.gvcf_path` and the `sample_names` will be
 defined as `this.samples.sample_name`. Take note that though the table containing the sample metadata is called
 `sample`, the argument input is plural (`this.samples`). The `sample_name_map` is a string that will be used to name
 the output file that is generated.

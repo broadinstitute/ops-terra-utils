@@ -10,6 +10,7 @@ import logging
 from argparse import Namespace, ArgumentParser
 
 from ops_utils.gcp_utils import GCPCloudFunctions
+from ops_utils.csv_util import Csv
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -31,12 +32,13 @@ class CopyGvcfsAndCreateSampleMap:
         self.output_sample_map = output_sample_map
 
     def get_mapping_file_contents(self) -> list[dict]:
-        with open(self.original_gvcf_mapping, "r") as original_gvcf_mapping:
-            reader = csv.DictReader(original_gvcf_mapping, delimiter="\t")
-            return list(reader)
+        return Csv(
+            file_path=self.original_gvcf_mapping, delimiter="\t"
+        ).create_list_of_dicts_from_tsv()
 
     def copy_gvcfs_and_index_to_new_extension(self, gvcf_to_sample_mapping: list[dict]) -> list[dict]:
         new_gvcf_metadata = []
+        files_to_copy = []
         for gvcf_and_sample in gvcf_to_sample_mapping:
             sample_alias = gvcf_and_sample["sample_name"]
             original_gvcf_path = gvcf_and_sample["gvcf_file_path"]
@@ -46,18 +48,22 @@ class CopyGvcfsAndCreateSampleMap:
                     f"Stopping processing - {original_gvcf_path} does not end with .gvcf.gz. All input gvcfs must end with this extension")
                 exit()
 
-            # Copy gvcf paths to new extensions
             new_gvcf_path = original_gvcf_path.replace(".gvcf.gz", ".g.vcf.gz")
-            logging.info(f"Copying {original_gvcf_path} to {new_gvcf_path}")
-            self.gcp_cloud_functions_obj.copy_cloud_file(
-                src_cloud_path=original_gvcf_path, full_destination_path=new_gvcf_path)
-
-            # Copy index paths to new extensions
             original_index_path = f"{original_gvcf_path}.tbi"
             new_index_path = original_index_path.replace(".gvcf.gz.tbi", ".g.vcf.gz.tbi")
-            logging.info(f"Copying {original_index_path} to {new_index_path}")
-            self.gcp_cloud_functions_obj.copy_cloud_file(
-                src_cloud_path=original_index_path, full_destination_path=new_index_path)
+
+            files_to_copy.extend(
+                [
+                    {
+                        "source_file": original_gvcf_path,
+                        "full_destination_path": new_gvcf_path
+                    },
+                    {
+                        "source_file": original_index_path,
+                        "full_destination_path": new_index_path
+                    }
+                ]
+            )
 
             new_gvcf_metadata.append(
                 {
@@ -65,6 +71,8 @@ class CopyGvcfsAndCreateSampleMap:
                     "sample_alias": sample_alias,
                 }
             )
+
+        self.gcp_cloud_functions_obj.multithread_copy_of_files_with_validation(files_to_copy=files_to_copy)
         return new_gvcf_metadata
 
     def write_new_sample_map(self, new_gvcf_metadata: list[dict]) -> None:
