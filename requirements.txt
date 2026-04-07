@@ -17,7 +17,7 @@ pandas
 db-dtypes
 pydantic==2.9.1
 pyyaml
-humanfriendly
-responses
-gitpython
+humanfriendly==10.0
+responses==0.26.0
+gitpython==3.1.46
 git+https://github.com/broadinstitute/pyops-service-toolkit.git@v12.6.0#egg=pyops-service-toolkit
