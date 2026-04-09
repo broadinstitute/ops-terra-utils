@@ -230,3 +230,10 @@ workflows:
     readMePath: /wdl/CopyGvcfWithNewExtension/README.md
     testParameterFiles:
       - /wdl/CopyGvcfWithNewExtension/CopyGvcfWithNewExtension.wdl
+
+  - name: TestWDL
+    subclass: WDL
+    primaryDescriptorPath: /wdl/TestWDL/TestWDL.wdl
+    readMePath: /wdl/TestWDL/README.wdl
+    testParameterFiles:
+      - /wdl/TestWDL/TestWDL.wdl
