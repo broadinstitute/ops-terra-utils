@@ -8,6 +8,7 @@ workflow CreateWorkspaceFileManifest {
         String? extension_include_list
         String? strings_to_exclude
         String? docker
+        String? additional_external_paths
         Boolean include_external_files = false
     }
 
@@ -22,7 +23,8 @@ workflow CreateWorkspaceFileManifest {
             extension_include_list=extension_include_list,
             strings_to_exclude=strings_to_exclude,
             docker_image=docker_name,
-            include_external_files=include_external_files
+            include_external_files=include_external_files,
+            additional_external_paths=additional_external_paths
     }
 }
 
@@ -33,6 +35,7 @@ task CreateManifest {
         String? extension_exclude_list
         String? extension_include_list
         String? strings_to_exclude
+        String? additional_external_paths
         String docker_image
         Boolean include_external_files
     }
@@ -44,6 +47,7 @@ task CreateManifest {
         ~{"--extension_exclude_list " + extension_exclude_list} \
         ~{"--extension_include_list " + extension_include_list} \
         ~{"--strings_to_exclude " + strings_to_exclude} \
+        ~{"--additional_external_paths " + additional_external_paths} \
         ~{if include_external_files then "--include_external_files" else ""}
     >>>
 

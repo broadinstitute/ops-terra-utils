@@ -37,13 +37,16 @@ def get_args() -> Namespace:
                                    all other file extensions wil be ignored")
     parser.add_argument("--service_account_json", "-saj", type=str,
                         help="Path to the service account JSON file. If not provided, will use the default credentials.")
+    parser.add_argument("--additional_external_paths", "-aep", type=comma_separated_list,
+                        help="Comma-separated list of external GCS paths (buckets, directories, or individual files) "
+                             "to include in the manifest. Buckets and directories (ending with '/' or containing no "
+                             "object key) are listed recursively; individual file paths are loaded directly.")
     return parser.parse_args()
 
 
 def write_entities_tsv(file_dicts: list[dict]) -> None:
     headers = ['entity:file_metadata_id', 'file_path', 'file_name',
                'content_type', 'file_extension', 'size_in_bytes', 'md5_hash', 'external_file']
-    logging.info("writing file metadata to entities.tsv")
     with open(ENTITY_FILE_PATH, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=headers, delimiter='\t', quotechar='"', quoting=csv.QUOTE_ALL)
         writer.writeheader()
@@ -175,6 +178,52 @@ class GetExternalFiles:
         return external_metadata
 
 
+def get_files_from_additional_external_paths(
+        paths: list[str],
+        gcp_util: GCPCloudFunctions,
+        extension_exclude_list: list[str] = [],
+        extension_include_list: list[str] = []
+) -> list[dict]:
+    """Resolve a mixed list of GCS buckets, directories, and file paths into file metadata dicts.
+
+    Paths ending with '/' or containing no object key (bare bucket) are listed via
+    list_bucket_contents; all other paths are treated as individual files and loaded directly.
+    All returned dicts are marked external_file=True.
+    """
+    file_paths: list[str] = []
+    metadata: list[dict] = []
+
+    for path in paths:
+        # Strip gs:// and split into bucket + remainder
+        without_scheme = path.removeprefix("gs://")
+        parts = without_scheme.split("/", 1)
+        bucket = parts[0]
+        remainder = parts[1] if len(parts) > 1 else ""
+
+        is_directory = not remainder or remainder.endswith("/")
+        if is_directory:
+            prefix = remainder if remainder else None
+            logging.info(f"Listing external path as bucket/directory: gs://{bucket}/{prefix or ''}")
+            blobs = gcp_util.list_bucket_contents(
+                bucket_name=bucket,
+                prefix=prefix,
+                file_extensions_to_ignore=extension_exclude_list,
+                file_extensions_to_include=extension_include_list
+            )
+            metadata.extend(blobs)
+        else:
+            file_paths.append(path)
+
+    if file_paths:
+        logging.info(f"Loading {len(file_paths)} individual external file(s).")
+        loaded = gcp_util.load_blobs_from_full_paths_multithreaded(full_paths=file_paths)
+        metadata.extend(loaded)
+
+    for item in metadata:
+        item["external_file"] = True
+    return metadata
+
+
 if __name__ == '__main__':
     args = get_args()
     billing_project = args.billing_project
@@ -184,6 +233,11 @@ if __name__ == '__main__':
     extension_include_list = args.extension_include_list
     service_account_json = args.service_account_json
     include_external_files = args.include_external_files
+    additional_external_paths = args.additional_external_paths
+
+    for external_path in additional_external_paths:
+        if not external_path.startswith("gs://"):
+            raise Exception(f"Invalid external path: {external_path}. Must start with 'gs://'")
 
     auth_token = Token(service_account_json=service_account_json)
     request_util = RunRequest(token=auth_token)
@@ -216,6 +270,16 @@ if __name__ == '__main__':
             gcp_util=gcp_util
         ).run()
         workspace_files.extend(external_file_metadata)
+
+    if additional_external_paths:
+        additional_files = get_files_from_additional_external_paths(
+            paths=additional_external_paths,
+            gcp_util=gcp_util,
+            extension_exclude_list=extension_exclude_list or [],
+            extension_include_list=extension_include_list or []
+        )
+        logging.info(f"Found {len(additional_files)} files from additional external paths.")
+        workspace_files.extend(additional_files)
 
     write_entities_tsv(workspace_files)
     logging.info("Uploading metadata to workspace file_metadata table")
