@@ -265,6 +265,7 @@ class SetUpDataset:
             "experimentalSelfHosted": self.dataset_self_hosted,
             "dedicatedIngestServiceAccount": True,
             "experimentalPredictableFileIds": True,
+            "inheritSteward": True,
             "enableSecureMonitoring": True if self.controlled_access else False,
         }
         if self.phs_id:
@@ -538,7 +539,7 @@ class SetUpWorkflowConfig:
                             # When ingesting do not re-ingest records that already exist in the dataset
                             "filter_existing_ids": "true",
                             # When creating file inventory ignore submissions folder from terra workflows
-                            "strings_to_exclude": f'"{self.workspace_bucket}/submissions/"',
+                            "strings_to_exclude": f'"{self.workspace_bucket}/submissions/,{self.workspace_bucket}/Uploads/README.txt"',
                             # When creating any table make all fields nullable
                             "all_fields_non_required": "true",
                             "force_disparate_rows_to_string": "true",
