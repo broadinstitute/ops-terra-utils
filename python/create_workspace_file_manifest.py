@@ -38,9 +38,9 @@ def get_args() -> Namespace:
     parser.add_argument("--service_account_json", "-saj", type=str,
                         help="Path to the service account JSON file. If not provided, will use the default credentials.")
     parser.add_argument("--additional_external_paths", "-aep", type=comma_separated_list,
-                        help="Comma-separated list of external GCS paths (buckets, directories, or individual files) "
-                             "to include in the manifest. Buckets and directories (ending with '/' or containing no "
-                             "object key) are listed recursively; individual file paths are loaded directly.")
+                        default=[], help="Comma-separated list of external GCS paths (buckets, directories, or "
+                        "individual files) to include in the manifest. Buckets and directories (ending with '/' "
+                        "or containing no object key) are listed recursively; individual file paths are loaded directly.")
     return parser.parse_args()
 
 
