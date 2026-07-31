@@ -20,7 +20,7 @@ workflow run_liger_h5ad_batch {
     Boolean overwrite = false
     Int mem_gb = 16
     Int disk_gb = 50
-    String docker_image = "us-central1-docker.pkg.dev/operations-portal-427515/liger/geneset-extractors-liger:md_liger"
+    String docker_image = "us-central1-docker.pkg.dev/operations-portal-427515/liger/geneset-extractors-liger:latest"
   }
 
   call liger_batch {
