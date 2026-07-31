@@ -230,3 +230,10 @@ workflows:
     readMePath: /wdl/CopyGvcfWithNewExtension/README.md
     testParameterFiles:
       - /wdl/CopyGvcfWithNewExtension/CopyGvcfWithNewExtension.wdl
+
+  - name: RunLigerH5adBatch
+    subclass: WDL
+    primaryDescriptorPath: /wdl/RunLigerH5adBatch/RunLigerH5adBatch.wdl
+    readMePath: /wdl/RunLigerH5adBatch/README.md
+    testParameterFiles:
+      - /wdl/RunLigerH5adBatch/RunLigerH5adBatch.wdl
