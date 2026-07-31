@@ -73,7 +73,7 @@ task liger_batch {
       ln -s "$f" "input_root/$(basename "$f")"
     done
 
-    python /opt/dig-gene-set-extractors/LIGER/src/run_liger_h5ad_batch.py \
+    python /work/LIGER/src/run_liger_h5ad_batch.py \
       --input_root input_root \
       --out_root out_root \
       --dataset_column "~{dataset_column}" \
