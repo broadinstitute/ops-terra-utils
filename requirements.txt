@@ -1,7 +1,7 @@
 google-cloud-resource-manager
 wheel
 google-resumable-media
-google-cloud-storage==2.17.0
+google-cloud-storage
 google-auth==2.29.0
 google-auth-httplib2==0.2.0
 google-cloud-logging
