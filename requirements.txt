@@ -1,7 +1,7 @@
 google-cloud-resource-manager
 wheel
 google-resumable-media
-google-cloud-storage==2.17.0
+google-cloud-storage
 google-auth==2.29.0
 google-auth-httplib2==0.2.0
 google-cloud-logging
@@ -20,4 +20,4 @@ pyyaml
 humanfriendly==10.0
 responses==0.26.0
 gitpython==3.1.46
-git+https://github.com/broadinstitute/pyops-service-toolkit.git@v12.6.0#egg=pyops-service-toolkit
+git+https://github.com/broadinstitute/pyops-service-toolkit.git@70eb2144cecb5fde19b7df1d088a258a7539cd5a#egg=pyops-service-toolkit
