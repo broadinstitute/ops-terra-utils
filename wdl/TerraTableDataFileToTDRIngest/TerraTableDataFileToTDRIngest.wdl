@@ -6,7 +6,6 @@ workflow TerraTableDataFileToTDRIngest {
         String dataset_id
         String target_table_name
         String? primary_key
-        String? delimiter
         String? update_strategy
         String? records_to_ingest
         Boolean bulk_mode
@@ -30,7 +29,6 @@ workflow TerraTableDataFileToTDRIngest {
             dataset_id = dataset_id,
             target_table_name = target_table_name,
             primary_key = primary_key,
-            delimiter = delimiter,
             update_strategy = update_strategy,
             records_to_ingest = records_to_ingest,
             bulk_mode = bulk_mode,
@@ -53,7 +51,6 @@ task IngestTabularFileToDataset {
         String dataset_id
         String target_table_name
         String? primary_key
-        String? delimiter
         String? update_strategy
         String? records_to_ingest
         Boolean bulk_mode
@@ -75,7 +72,6 @@ task IngestTabularFileToDataset {
         --dataset_id ~{dataset_id} \
         --target_table_name ~{target_table_name} \
         ~{"--primary_key " + primary_key} \
-        ~{"--delimiter " + delimiter} \
         ~{"--update_strategy " + update_strategy} \
         ~{if bulk_mode then "--bulk_mode" else ""} \
         ~{"--max_retries " + max_retries} \

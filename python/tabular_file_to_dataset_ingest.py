@@ -46,13 +46,6 @@ def get_args() -> argparse.Namespace:
         help="Optional: name of the column to use as the TDR primary key. Defaults to the first column in the file"
     )
     parser.add_argument(
-        "--delimiter",
-        required=False,
-        choices=["tab", "comma"],
-        help="Optional: delimiter of the file. If not provided, will be inferred from the file extension "
-             "('.csv' is comma, anything else is tab)"
-    )
-    parser.add_argument(
         "--update_strategy",
         required=False,
         choices=["REPLACE", "APPEND", "UPDATE"],
@@ -217,10 +210,8 @@ if __name__ == "__main__":
     if not input_file.startswith("gs://"):
         raise ValueError(f"input_file must be a GCS path starting with 'gs://'. Got: {input_file}")
 
-    if args.delimiter:
-        delimiter = "," if args.delimiter == "comma" else "\t"
-    else:
-        delimiter = "," if input_file.lower().endswith(".csv") else "\t"
+    # Infer the delimiter from the file extension: '.csv' is comma-delimited, anything else is tab-delimited
+    delimiter = "," if input_file.lower().endswith(".csv") else "\t"
 
     # Initialize the TDR classes
     token = Token(service_account_json=service_account_json)
