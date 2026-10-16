@@ -170,22 +170,23 @@ def read_tabular_file(input_file: str, delimiter: str, primary_key: Optional[str
     if primary_key:
         if primary_key not in headers:
             raise ValueError(f"Primary key '{primary_key}' is not a column in {input_file}. Columns: {headers}")
+        primary_key_column = primary_key
     else:
-        primary_key = headers[0]
-        logging.info(f"No primary key provided. Using first column '{primary_key}'")
+        primary_key_column = headers[0]
+        logging.info(f"No primary key provided. Using first column '{primary_key_column}'")
 
     typed_rows = [{k: convert_value(v) for k, v in row.items()} for row in rows]
 
-    missing_keys = [i + 2 for i, row in enumerate(typed_rows) if row[primary_key] is None]
+    missing_keys = [i + 2 for i, row in enumerate(typed_rows) if row[primary_key_column] is None]
     if missing_keys:
         raise ValueError(
-            f"Primary key column '{primary_key}' is empty in {len(missing_keys)} row(s) "
+            f"Primary key column '{primary_key_column}' is empty in {len(missing_keys)} row(s) "
             f"(file line numbers, first 10: {missing_keys[:10]})"
         )
-    all_keys = [row[primary_key] for row in typed_rows]
+    all_keys = [row[primary_key_column] for row in typed_rows]
     if len(set(all_keys)) != len(all_keys):
-        raise ValueError(f"Primary key column '{primary_key}' contains duplicate values")
-    return typed_rows, primary_key
+        raise ValueError(f"Primary key column '{primary_key_column}' contains duplicate values")
+    return typed_rows, primary_key_column
 
 
 if __name__ == "__main__":
