@@ -211,8 +211,15 @@ if __name__ == "__main__":
     if not input_file.startswith("gs://"):
         raise ValueError(f"input_file must be a GCS path starting with 'gs://'. Got: {input_file}")
 
-    # Infer the delimiter from the file extension: '.csv' is comma-delimited, anything else is tab-delimited
-    delimiter = "," if input_file.lower().endswith(".csv") else "\t"
+    # Infer the delimiter from the file extension: '.csv' is comma-delimited and '.tsv' is tab-delimited
+    if input_file.lower().endswith(".csv"):
+        delimiter = ","
+    elif input_file.lower().endswith(".tsv"):
+        delimiter = "\t"
+    else:
+        raise ValueError(
+            f"input_file must end with '.csv' or '.tsv' so the delimiter can be determined. Got: {input_file}"
+        )
 
     # Initialize the TDR classes
     token = Token(service_account_json=service_account_json)

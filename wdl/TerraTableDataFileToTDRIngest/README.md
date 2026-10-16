@@ -7,7 +7,7 @@ This workflow processes **one file / one table per run**. Run it once per file t
 
 ## File requirements
 * The first row must be a header row. Headers must follow TDR rules (start with a letter, contain only letters, numbers and underscores, max 63 characters).
-* The delimiter is inferred from the file extension: `.csv` is comma-delimited, anything else (e.g. `.tsv`) is tab-delimited.
+* The delimiter is inferred from the file extension: `.csv` is comma-delimited and `.tsv` is tab-delimited. Any other extension causes the workflow to fail.
 * The primary key is the first column unless `primary_key` is provided. Primary key values must be non-empty and unique.
 * All values are read as text and converted to types for schema inference: empty values become null, whole numbers become integers, decimals become floats, `true`/`false` become booleans, everything else is a string. Values with leading zeros (e.g. `007`) stay strings. Columns with mixed types are an error unless `force_disparate_rows_to_string` is true (the default).
 * Values starting with `gs://` are treated as file references and the files will be ingested into TDR.
