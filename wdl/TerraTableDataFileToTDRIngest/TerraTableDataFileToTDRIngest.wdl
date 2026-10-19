@@ -23,8 +23,18 @@ workflow TerraTableDataFileToTDRIngest {
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
+    # Size the disk from the input file (read from the GCS path without localizing it) plus a 10% buffer, with a
+    # 10 GB minimum
+    File input_file_for_size = input_file
+    Int disk_size_gb = ceil(size(input_file_for_size, "GB") * 1.1) + 10
+    # The file is held in memory as a list of dicts and again as a dataframe for schema inference, which takes several
+    # times the file size in RAM. Use 8x the file size, with a 16 GB minimum
+    Int memory_gb = if ceil(size(input_file_for_size, "GB") * 8) > 16 then ceil(size(input_file_for_size, "GB") * 8) else 16
+
     call IngestTabularFileToDataset {
         input:
+            disk_size_gb = disk_size_gb,
+            memory_gb = memory_gb,
             input_file = input_file,
             dataset_id = dataset_id,
             target_table_name = target_table_name,
@@ -57,6 +67,8 @@ task IngestTabularFileToDataset {
         Int? max_retries
         Int? max_backoff_time
         String docker_image
+        Int disk_size_gb
+        Int memory_gb
         Boolean filter_existing_ids
         Boolean check_existing_ingested_files
         Boolean all_fields_non_required
@@ -88,7 +100,7 @@ task IngestTabularFileToDataset {
 
     runtime {
         docker: docker_image
-        memory: "16 GB"
-        disks: "local-disk 100 HDD"
+        memory: "~{memory_gb} GB"
+        disks: "local-disk ~{disk_size_gb} HDD"
     }
 }
