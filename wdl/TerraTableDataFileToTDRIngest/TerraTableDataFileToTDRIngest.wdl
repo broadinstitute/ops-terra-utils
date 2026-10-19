@@ -27,9 +27,10 @@ workflow TerraTableDataFileToTDRIngest {
     # 10 GB minimum
     File input_file_for_size = input_file
     Int disk_size_gb = ceil(size(input_file_for_size, "GB") * 1.1) + 10
-    # The file is held in memory as a list of dicts and again as a dataframe for schema inference, which takes several
-    # times the file size in RAM. Use 10x the file size, with a 16 GB minimum
-    Int memory_gb = if ceil(size(input_file_for_size, "GB") * 10) > 16 then ceil(size(input_file_for_size, "GB") *10) else 16
+    # The file is parsed into a list of dicts (one per row), converted into a second copy, and then loaded into a
+    # dataframe for schema inference. Python objects are far larger than the raw text (a 1.1 GiB csv exhausted 15 GiB
+    # while still being parsed), so use 50x the file size, with a 16 GB minimum
+    Int memory_gb = if ceil(size(input_file_for_size, "GB") * 50) > 16 then ceil(size(input_file_for_size, "GB") * 50) else 16
 
     call IngestTabularFileToDataset {
         input:
