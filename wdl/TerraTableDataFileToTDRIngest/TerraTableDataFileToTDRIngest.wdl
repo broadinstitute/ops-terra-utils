@@ -28,8 +28,8 @@ workflow TerraTableDataFileToTDRIngest {
     File input_file_for_size = input_file
     Int disk_size_gb = ceil(size(input_file_for_size, "GB") * 1.1) + 10
     # The file is held in memory as a list of dicts and again as a dataframe for schema inference, which takes several
-    # times the file size in RAM. Use 8x the file size, with a 16 GB minimum
-    Int memory_gb = if ceil(size(input_file_for_size, "GB") * 8) > 16 then ceil(size(input_file_for_size, "GB") * 8) else 16
+    # times the file size in RAM. Use 10x the file size, with a 16 GB minimum
+    Int memory_gb = if ceil(size(input_file_for_size, "GB") * 10) > 16 then ceil(size(input_file_for_size, "GB") *10) else 16
 
     call IngestTabularFileToDataset {
         input:
