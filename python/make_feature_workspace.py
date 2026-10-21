@@ -39,7 +39,6 @@ class UploadJsonAndSetPermissions:
 
     def run(self, file_contents_json: dict, file_name: str) -> None:
         full_cloud_path = os.path.join(f'gs://{self.bucket_name}/', file_name)
-        print(file_contents_json)
         logging.info(f"Uploading {file_name} to {full_cloud_path} and updating permissions")
         self.gcp_utils.write_to_gcp_file(
             cloud_path=full_cloud_path,
