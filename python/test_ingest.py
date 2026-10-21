@@ -88,7 +88,7 @@ class ListSourceFiles(IngestStep):
     name = "list_source_files"
 
     def run(self, ctx: IngestContext) -> None:
-        expected_files = []
+        expected_files: list[str] = []
         for location in ctx.source_locations:
             if location.endswith("/"):
                 bucket, prefix = _split_gs_uri(location)
