@@ -1,3 +1,7 @@
+# 1. Make sure feature-workspace-sa@operations-portal-427515.iam.gserviceaccount.com is an owner of the workspace you want to make featured
+# 2. Go to Cloud Run here https://console.cloud.google.com/run/jobs/details/us-central1/create-feature-workspace/executions?
+# 3. Use Execute with override with args python /etc/terra_utils/python/make_feature_workspace.py --workspace_name {workspace} --billing_project {billing_project} --env prod
+
 import logging
 import os.path
 from argparse import ArgumentParser, Namespace
@@ -35,6 +39,7 @@ class UploadJsonAndSetPermissions:
 
     def run(self, file_contents_json: dict, file_name: str) -> None:
         full_cloud_path = os.path.join(f'gs://{self.bucket_name}/', file_name)
+        print(file_contents_json)
         logging.info(f"Uploading {file_name} to {full_cloud_path} and updating permissions")
         self.gcp_utils.write_to_gcp_file(
             cloud_path=full_cloud_path,
