@@ -32,6 +32,81 @@ logging.basicConfig(
 NON_DUOS_FIELDS = {"phsId", "duosStudyId", "duosStudyName", "alreadyInDuos"}
 
 
+class DbGaPPublicationsToDuos:
+    """Find the publications linked to a dbGaP study and add any that are missing to the matching DUOS study."""
+
+    def __init__(self, duos: DUOS, skip_pubmed_metadata: bool, dry_run: bool):
+        self.duos = duos
+        self.skip_pubmed_metadata = skip_pubmed_metadata
+        self.dry_run = dry_run
+
+    def get_publications(self, phs_id: str) -> list[dict]:
+        """
+        Look up the publications dbGaP links to a study, and which of them are already in the matching DUOS study.
+
+        **Returns:**
+        - list[dict]: One entry per PMID, with PubMed metadata unless `skip_pubmed_metadata` is set. Empty if dbGaP
+            has no publications for the study, or if there is not exactly one matching DUOS study.
+        """
+        logging.info(f"Looking up dbGaP publications for {phs_id}")
+        full_accession, pmids = DbGaPStudy(phs_id).get_publication_pmids()
+        logging.info(f"Found {len(pmids)} publication(s) for {full_accession} in dbGaP")
+
+        if not pmids:
+            logging.info(f"No publications found for {full_accession}")
+            return []
+
+        duos_studies = self.duos.find_studies_by_phs_id(phs_id)
+        if not duos_studies:
+            logging.warning(f"No DUOS study found for PHS ID {phs_id}, skipping")
+            return []
+        if len(duos_studies) > 1:
+            matched_ids = ", ".join(str(study.get("studyId")) for study in duos_studies)
+            logging.error(
+                f"Found multiple DUOS studies for PHS ID {phs_id} (study IDs: {matched_ids}), skipping"
+            )
+            return []
+        duos_study = duos_studies[0]
+
+        duos_publications = self.duos.get_study_publications(duos_study["studyId"])
+        duos_pmids = {str(pub["pubmedId"]).strip() for pub in duos_publications if pub.get("pubmedId")}
+        logging.info(f"DUOS study {duos_study.get('studyId')} already has {len(duos_pmids)} publication(s) with a PMID")
+
+        publications = []
+        for pmid in pmids:
+            publication = {
+                "phsId": full_accession,
+                "duosStudyId": duos_study.get("studyId"),
+                "duosStudyName": duos_study.get("studyName"),
+                "pubmedId": pmid,
+                "alreadyInDuos": str(pmid) in duos_pmids,
+            }
+            if not self.skip_pubmed_metadata:
+                publication.update(get_pubmed_metadata(pmid))
+            publications.append(publication)
+        return publications
+
+    def add_missing_to_duos(self, publications: list[dict]) -> None:
+        """Add the publications from `get_publications` that are not already in their DUOS study."""
+        if self.skip_pubmed_metadata or not publications:
+            return
+        duos_study_id = publications[0]["duosStudyId"]
+        publications_to_add = [
+            {key: value for key, value in publication.items() if key not in NON_DUOS_FIELDS}
+            for publication in publications
+            if not publication["alreadyInDuos"]
+        ]
+        if not publications_to_add:
+            logging.info(f"All publications are already in DUOS study {duos_study_id}")
+        elif self.dry_run:
+            logging.info(
+                f"Dry run: would add {len(publications_to_add)} publication(s) to DUOS study "
+                f"{duos_study_id}: {[pub['pubmedId'] for pub in publications_to_add]}"
+            )
+        else:
+            self.duos.add_study_publications(duos_study_id, publications_to_add)
+
+
 def get_args() -> Namespace:
     parser = ArgumentParser(description="Look up publications linked to dbGaP studies for one or more PHS accessions")
     parser.add_argument(
@@ -64,67 +139,17 @@ if __name__ == '__main__':
     token = Token()
     request_util = RunRequest(token=token)
     duos = DUOS(request_util=request_util, env=args.env)
+    publisher = DbGaPPublicationsToDuos(
+        duos=duos, skip_pubmed_metadata=args.skip_pubmed_metadata, dry_run=args.dry_run
+    )
 
     results = []
     print("=" * 80)
     for phs_id in args.phs_ids:
-        logging.info(f"Looking up dbGaP publications for {phs_id}")
-        full_accession, pmids = DbGaPStudy(phs_id).get_publication_pmids()
-        logging.info(f"Found {len(pmids)} publication(s) for {full_accession} in dbGaP")
-
-        if not pmids:
-            logging.info(f"No publications found for {full_accession}")
-            continue
-
-        duos_studies = duos.find_studies_by_phs_id(phs_id)
-        if not duos_studies:
-            logging.warning(f"No DUOS study found for PHS ID {phs_id}, skipping")
-            continue
-        if len(duos_studies) > 1:
-            matched_ids = ", ".join(str(study.get("studyId")) for study in duos_studies)
-            logging.error(
-                f"Found multiple DUOS studies for PHS ID {phs_id} (study IDs: {matched_ids}), skipping"
-            )
-            continue
-        duos_study = duos_studies[0]
-
-        duos_publications = duos.get_study_publications(duos_study["studyId"])
-        duos_pmids = {str(pub["pubmedId"]).strip() for pub in duos_publications if pub.get("pubmedId")}
-        logging.info(f"DUOS study {duos_study.get('studyId')} already has {len(duos_pmids)} publication(s) with a PMID")
-
-        study_publications = []
-        for pmid in pmids:
-            publication = {
-                "phsId": full_accession,
-                "duosStudyId": duos_study.get("studyId"),
-                "duosStudyName": duos_study.get("studyName"),
-                "pubmedId": pmid,
-                "alreadyInDuos": str(pmid) in duos_pmids,
-            }
-            if not args.skip_pubmed_metadata:
-                publication.update(get_pubmed_metadata(pmid))
-            study_publications.append(publication)
-        results.extend(study_publications)
-
-        if args.skip_pubmed_metadata:
-            continue
-        publications_to_add = [
-            {key: value for key, value in publication.items() if key not in NON_DUOS_FIELDS}
-            for publication in study_publications
-            if not publication["alreadyInDuos"]
-        ]
-        if not publications_to_add:
-            logging.info(f"All publications are already in DUOS study {duos_study.get('studyId')}")
-        elif args.dry_run:
-            logging.info(
-                f"Dry run: would add {len(publications_to_add)} publication(s) to DUOS study "
-                f"{duos_study.get('studyId')}: {[pub['pubmedId'] for pub in publications_to_add]}"
-            )
-        else:
-            duos.add_study_publications(duos_study["studyId"], publications_to_add)
+        publications = publisher.get_publications(phs_id)
+        results.extend(publications)
+        publisher.add_missing_to_duos(publications)
         print("=" * 80)
 
     logging.info(f"Found {len(results)} publication(s) across {len(args.phs_ids)} PHS accession(s)")
-    with open(args.output_json, "w") as f:
-        json.dump(results, f, indent=2)
     logging.info(f"Wrote results to {args.output_json}")
