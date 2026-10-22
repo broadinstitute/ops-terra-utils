@@ -1,3 +1,7 @@
+# 1. Make sure feature-workspace-sa@operations-portal-427515.iam.gserviceaccount.com is an owner of the workspace you want to make featured
+# 2. Go to Cloud Run here https://console.cloud.google.com/run/jobs/details/us-central1/create-feature-workspace/executions?
+# 3. Use Execute with override with args python /etc/terra_utils/python/make_feature_workspace.py --workspace_name {workspace} --billing_project {billing_project} --env prod
+
 import logging
 import os.path
 from argparse import ArgumentParser, Namespace

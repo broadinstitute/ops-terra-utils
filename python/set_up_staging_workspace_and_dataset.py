@@ -265,7 +265,7 @@ class SetUpDataset:
             "experimentalSelfHosted": self.dataset_self_hosted,
             "dedicatedIngestServiceAccount": True,
             "experimentalPredictableFileIds": True,
-            "inheritSteward": True,
+            "inheritSteward": False,
             "enableSecureMonitoring": True if self.controlled_access else False,
         }
         if self.phs_id:
