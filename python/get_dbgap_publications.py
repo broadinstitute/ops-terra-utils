@@ -13,11 +13,10 @@ DUOS study is added to it. Results are written to a JSON file.
 Adding publications requires being an admin, the creator, or a data custodian of the DUOS study; otherwise DUOS
 responds with a 403. Use --dry_run to see what would be added without changing anything in DUOS.
 """
-import json
 import logging
 from argparse import ArgumentParser, Namespace
 
-from ops_utils.duos_util import DUOS
+from ops_utils.duos_utils.duos_util import DUOS
 from ops_utils.request_util import RunRequest
 from ops_utils.token_util import Token
 
@@ -152,4 +151,3 @@ if __name__ == '__main__':
         print("=" * 80)
 
     logging.info(f"Found {len(results)} publication(s) across {len(args.phs_ids)} PHS accession(s)")
-    logging.info(f"Wrote results to {args.output_json}")

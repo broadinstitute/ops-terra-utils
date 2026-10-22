@@ -44,6 +44,62 @@ python python/script_name.py --arg1 value --arg2 value
 docker run -v $(pwd):/app us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest python /app/script_name.py --arg1 value --arg2 value
 ```
 
+## Setting Up pyenv to Run Scripts Locally
+[pyenv](https://github.com/pyenv/pyenv) lets you keep a dedicated Python environment for this repo, so the packages the scripts need (including [pyops-service-toolkit](https://github.com/broadinstitute/pyops-service-toolkit), which provides `ops_utils`) don't clash with anything else on your machine. The Docker image uses Python 3.11.9, so use that locally too.
+
+### Install pyenv
+On macOS with [Homebrew](https://brew.sh):
+```bash
+brew install pyenv pyenv-virtualenv
+```
+Then add the following to your shell config (`~/.zshrc` for zsh, `~/.bashrc` for bash) and restart your terminal:
+```bash
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+```
+For other platforms, see the [pyenv installation instructions](https://github.com/pyenv/pyenv#installation).
+
+### Install Python
+```bash
+pyenv install 3.11.9
+```
+
+### Create and use a virtual environment
+Create the virtual environment (this one is named `py-ops`, but you can pick any name):
+```bash
+pyenv virtualenv 3.11.9 py-ops
+```
+List your Python versions and virtual environments:
+```bash
+pyenv versions
+```
+Activate it:
+```bash
+pyenv activate py-ops
+```
+Then install the repo's dependencies from the repo root:
+```bash
+pip install -r requirements.txt
+```
+You can now run scripts, for example `python python/script_name.py --arg1 value`.
+
+### Updating pyops
+`requirements.txt` pins a specific pyops version. Whenever something new is added to pyops that you want to use, bump the version in `requirements.txt` (the latest is in [pyops' VERSION.txt](https://github.com/broadinstitute/pyops-service-toolkit/blob/main/VERSION.txt)) and reinstall from inside the virtual environment:
+```bash
+# uninstall (use the package name, not the git URL)
+pip uninstall pyops-service-toolkit
+# install a specific version, e.g. v1.0.0
+pip install "git+https://github.com/broadinstitute/pyops-service-toolkit.git@v1.0.0#egg=pyops-service-toolkit"
+```
+
+To work against a local checkout of pyops instead (for example while developing a new pyops method), install it in editable mode so your changes are picked up without reinstalling:
+```bash
+pip install -e /path/to/pyops-service-toolkit
+```
+Re-running `pip install -r requirements.txt` replaces this with the pinned version.
+
 ## Pre-Commit
 *[pre-commit](https://pre-commit.com/#intro) is enabled on this repository*
 
