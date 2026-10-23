@@ -176,7 +176,7 @@ def get_pubmed_metadata(pmid: str) -> dict:
 
     return {
         "pubmedId": pmid,
-        "journal": _get_text(article, "Journal/Title"),
+        "journal": _get_text(article, "Journal/ISOAbbreviation") or _get_text(article, "Journal/Title"),
         "title": _get_text(article, "ArticleTitle"),
         "url": f"{PUBMED_ARTICLE_URL}/{pmid}/",
         "publishedDate": _get_published_date(article),
