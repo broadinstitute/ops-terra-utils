@@ -1,0 +1,10 @@
+{
+    "TerraTableDataFileToTDRIngest.input_file": "gs://bucket/path/to/table.tsv",
+    "TerraTableDataFileToTDRIngest.dataset_id": "String",
+    "TerraTableDataFileToTDRIngest.target_table_name": "String",
+    "TerraTableDataFileToTDRIngest.bulk_mode": "Boolean",
+    "TerraTableDataFileToTDRIngest.filter_existing_ids": "Boolean",
+    "TerraTableDataFileToTDRIngest.check_existing_ingested_files": "Boolean",
+    "TerraTableDataFileToTDRIngest.all_fields_non_required": "Boolean",
+    "TerraTableDataFileToTDRIngest.trunc_and_reload": "Boolean"
+}
