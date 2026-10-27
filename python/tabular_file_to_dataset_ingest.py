@@ -3,7 +3,7 @@ import logging
 import os
 import re
 import tempfile
-from typing import Any, Optional
+from typing import Any, Iterable, Iterator, Optional
 
 from ops_utils.csv_util import Csv
 from ops_utils.gcp_utils import GCPCloudFunctions
@@ -151,17 +151,18 @@ def convert_value(value: Optional[str]) -> Any:
     return value
 
 
-def read_tabular_file(input_file: str, delimiter: str, primary_key: Optional[str]) -> tuple[list[dict], str]:
-    """Download the file from GCS and return its rows (as typed dicts) along with the primary key column."""
+def download_file(input_file: str, local_dir: str) -> str:
+    """Download the file from GCS into the given directory and return the local path."""
     gcp = GCPCloudFunctions()
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        local_path = os.path.join(tmp_dir, "input_table")
-        logging.info(f"Downloading {input_file}")
-        gcp.load_blob_from_full_path(input_file).download_to_filename(local_path)
-        csv_util = Csv(file_path=local_path, delimiter=delimiter)
-        headers = list(csv_util.get_header_order_from_tsv() or [])
-        rows = csv_util.create_list_of_dicts_from_tsv()
+    local_path = os.path.join(local_dir, "input_table")
+    logging.info(f"Downloading {input_file}")
+    gcp.load_blob_from_full_path(input_file).download_to_filename(local_path)
+    return local_path
 
+
+def get_primary_key_column(csv_util: Csv, input_file: str, primary_key: Optional[str]) -> str:
+    """Validate the file's headers and return the name of the primary key column."""
+    headers = list(csv_util.get_header_order_from_tsv() or [])
     if not headers:
         raise ValueError(f"No header row found in {input_file}")
     # Reuse the same header rules as Terra tables, since TDR has the same column naming restrictions
@@ -170,23 +171,59 @@ def read_tabular_file(input_file: str, delimiter: str, primary_key: Optional[str
     if primary_key:
         if primary_key not in headers:
             raise ValueError(f"Primary key '{primary_key}' is not a column in {input_file}. Columns: {headers}")
-        primary_key_column = primary_key
-    else:
-        primary_key_column = headers[0]
-        logging.info(f"No primary key provided. Using first column '{primary_key_column}'")
+        return primary_key
+    primary_key_column = headers[0]
+    logging.info(f"No primary key provided. Using first column '{primary_key_column}'")
+    return primary_key_column
 
-    typed_rows = [{k: convert_value(v) for k, v in row.items()} for row in rows]
 
-    missing_keys = [i + 2 for i, row in enumerate(typed_rows) if row[primary_key_column] is None]
-    if missing_keys:
-        raise ValueError(
-            f"Primary key column '{primary_key_column}' is empty in {len(missing_keys)} row(s) "
-            f"(file line numbers, first 10: {missing_keys[:10]})"
-        )
-    all_keys = [row[primary_key_column] for row in typed_rows]
-    if len(set(all_keys)) != len(all_keys):
-        raise ValueError(f"Primary key column '{primary_key_column}' contains duplicate values")
-    return typed_rows, primary_key_column
+def iter_typed_rows(csv_util: Csv) -> Iterator[dict]:
+    """Lazily read the rows of the file one at a time as typed dicts. Each call reads the file from the start."""
+    for row in csv_util.iter_dicts_from_tsv():
+        yield {k: convert_value(v) for k, v in row.items()}
+
+
+def filter_to_records(
+        rows: Iterable[dict], primary_key_column: str, records_to_ingest: Optional[set]
+) -> Iterator[dict]:
+    """Lazily keep only the rows whose primary key is in records_to_ingest, or all rows if it is not provided."""
+    for row in rows:
+        if records_to_ingest is None or str(row[primary_key_column]) in records_to_ingest:
+            yield row
+
+
+class PrimaryKeyValidator:
+    """
+    Checks that the primary key is present and unique for every row as the rows are read.
+
+    Rows are passed through lazily so the check can be done at the same time as something else reads the file (e.g.
+    inferring the schema), without needing the whole file in memory. Only the set of primary keys is held in memory.
+    """
+
+    def __init__(self, primary_key_column: str):
+        self.primary_key_column = primary_key_column
+        self.row_count = 0
+        self._keys: set = set()
+        self._missing_key_lines: list[int] = []
+
+    def validate(self, rows: Iterable[dict]) -> Iterator[dict]:
+        """Yield each row, raising a ValueError if a duplicate primary key is found or once any are found missing."""
+        for row in rows:
+            self.row_count += 1
+            key = row[self.primary_key_column]
+            if key is None:
+                # file line number, accounting for the header row
+                self._missing_key_lines.append(self.row_count + 1)
+            elif key in self._keys:
+                raise ValueError(f"Primary key column '{self.primary_key_column}' contains duplicate values")
+            else:
+                self._keys.add(key)
+            yield row
+        if self._missing_key_lines:
+            raise ValueError(
+                f"Primary key column '{self.primary_key_column}' is empty in {len(self._missing_key_lines)} row(s) "
+                f"(file line numbers, first 10: {self._missing_key_lines[:10]})"
+            )
 
 
 if __name__ == "__main__":
@@ -233,78 +270,89 @@ if __name__ == "__main__":
         logging.warning("Dataset is not selfHosted. Cannot check if files have already been ingested and use UUIDs")
         check_if_files_already_ingested = False
 
-    # Read the file and validate it before touching the dataset
-    updated_metrics, primary_key_column_name = read_tabular_file(
-        input_file=input_file, delimiter=delimiter, primary_key=args.primary_key
-    )
-    logging.info(f"Got {len(updated_metrics)} rows")
-
-    # Use only specific records if provided
-    if records_to_ingest:
-        updated_metrics = [
-            metric for metric in updated_metrics if str(metric[primary_key_column_name]) in records_to_ingest
-        ]
-
-    table_info_dict = {
-        target_table_name: {
-            "table_name": target_table_name,
-            "primary_key": primary_key_column_name,
-            "ingest_metadata": updated_metrics,
-            "datePartitionOptions": None
-        }
-    }
-    SetUpTDRTables(
-        tdr=tdr,
-        dataset_id=dataset_id,
-        table_info_dict=table_info_dict,
-        all_fields_non_required=all_fields_non_required,
-        force_disparate_rows_to_string=force_disparate_rows_to_string,
-        ignore_existing_schema_mismatch=ignore_existing_schema_mismatch
-    ).run()
-
-    if trunc_and_reload:
-        logging.info(
-            f"Requested trunc and reload - all rows in table {target_table_name} in the target TDR dataset will be "
-            "soft-deleted if the table contains any data"
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        csv_util = Csv(file_path=download_file(input_file=input_file, local_dir=tmp_dir), delimiter=delimiter)
+        primary_key_column_name = get_primary_key_column(
+            csv_util=csv_util, input_file=input_file, primary_key=args.primary_key
         )
-        tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=target_table_name)
+        # A set is much faster to check than the list that was passed in
+        records_to_ingest_set = set(records_to_ingest) if records_to_ingest else None
 
-    if filter_existing_ids:
-        # Filter out sample ids that are already in the dataset
-        filtered_metrics = FilterOutSampleIdsAlreadyInDataset(
-            ingest_metrics=updated_metrics,
+        # The file can be millions of rows so it is never loaded all at once. It is read twice from disk instead: once
+        # to validate it and infer the schema (which needs to look at every row but only keeps a small summary of
+        # each column) and then again to ingest it into TDR one batch at a time. Both only hold a single row (or
+        # batch) in memory, so this does not need a large amount of memory no matter how big the file is.
+        validator = PrimaryKeyValidator(primary_key_column=primary_key_column_name)
+        table_info_dict = {
+            target_table_name: {
+                "table_name": target_table_name,
+                "primary_key": primary_key_column_name,
+                "ingest_metadata": filter_to_records(
+                    rows=validator.validate(iter_typed_rows(csv_util)),
+                    primary_key_column=primary_key_column_name,
+                    records_to_ingest=records_to_ingest_set
+                ),
+                "datePartitionOptions": None
+            }
+        }
+        SetUpTDRTables(
+            tdr=tdr,
             dataset_id=dataset_id,
+            table_info_dict=table_info_dict,
+            all_fields_non_required=all_fields_non_required,
+            force_disparate_rows_to_string=force_disparate_rows_to_string,
+            ignore_existing_schema_mismatch=ignore_existing_schema_mismatch
+        ).run()
+        logging.info(f"Got {validator.row_count} rows")
+        # Release all of the primary keys held for validation before the long running ingest starts
+        del validator
+
+        if trunc_and_reload:
+            logging.info(
+                f"Requested trunc and reload - all rows in table {target_table_name} in the target TDR dataset will "
+                "be soft-deleted if the table contains any data"
+            )
+            tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=target_table_name)
+
+        rows_to_ingest: Iterable[dict] = filter_to_records(
+            rows=iter_typed_rows(csv_util),
+            primary_key_column=primary_key_column_name,
+            records_to_ingest=records_to_ingest_set
+        )
+        if filter_existing_ids:
+            # Filter out sample ids that are already in the dataset
+            rows_to_ingest = FilterOutSampleIdsAlreadyInDataset(
+                ingest_metrics=rows_to_ingest,
+                dataset_id=dataset_id,
+                tdr=tdr,
+                target_table_name=target_table_name,
+                filter_entity_id=primary_key_column_name,
+            ).iter_filtered()
+
+        if check_if_files_already_ingested:
+            # Download and create a dictionary of file paths to UUIDs for ingest
+            file_uuids_dict = tdr.create_file_uuid_dict_for_ingest_for_experimental_self_hosted_dataset(
+                dataset_id=dataset_id)
+        else:
+            file_uuids_dict = None
+
+        # Only use this to make the file data match what TDR schema is set to if ignore_schema_mismatch is used
+        if ignore_existing_schema_mismatch:
+            tdr_table_schema_info = tdr.get_table_schema_info(dataset_id=dataset_id, table_name=target_table_name)
+        else:
+            tdr_table_schema_info = None
+
+        BatchIngest(
+            ingest_metadata=rows_to_ingest,
             tdr=tdr,
             target_table_name=target_table_name,
-            filter_entity_id=primary_key_column_name,
+            dataset_id=dataset_id,
+            batch_size=batch_size,
+            bulk_mode=bulk_mode,
+            update_strategy=update_strategy,
+            waiting_time_to_poll=ARG_DEFAULTS['waiting_time_to_poll'],
+            test_ingest=TEST_INGEST,
+            load_tag=f"{target_table_name}-{dataset_id}",
+            file_to_uuid_dict=file_uuids_dict,
+            schema_info=tdr_table_schema_info
         ).run()
-    else:
-        filtered_metrics = updated_metrics
-
-    if check_if_files_already_ingested:
-        # Download and create a dictionary of file paths to UUIDs for ingest
-        file_uuids_dict = tdr.create_file_uuid_dict_for_ingest_for_experimental_self_hosted_dataset(
-            dataset_id=dataset_id)
-    else:
-        file_uuids_dict = None
-
-    # Only use this to make the file data match what TDR schema is set to if ignore_schema_mismatch is used
-    if ignore_existing_schema_mismatch:
-        tdr_table_schema_info = tdr.get_table_schema_info(dataset_id=dataset_id, table_name=target_table_name)
-    else:
-        tdr_table_schema_info = None
-
-    BatchIngest(
-        ingest_metadata=filtered_metrics,
-        tdr=tdr,
-        target_table_name=target_table_name,
-        dataset_id=dataset_id,
-        batch_size=batch_size,
-        bulk_mode=bulk_mode,
-        update_strategy=update_strategy,
-        waiting_time_to_poll=ARG_DEFAULTS['waiting_time_to_poll'],
-        test_ingest=TEST_INGEST,
-        load_tag=f"{target_table_name}-{dataset_id}",
-        file_to_uuid_dict=file_uuids_dict,
-        schema_info=tdr_table_schema_info
-    ).run()

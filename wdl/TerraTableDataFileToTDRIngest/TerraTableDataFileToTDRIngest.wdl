@@ -19,6 +19,7 @@ workflow TerraTableDataFileToTDRIngest {
         Boolean force_disparate_rows_to_string = true
         Boolean trunc_and_reload
         Boolean ignore_existing_schema_mismatch = false
+        Int memory_gb = 4
     }
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -27,10 +28,6 @@ workflow TerraTableDataFileToTDRIngest {
     # 10 GB minimum
     File input_file_for_size = input_file
     Int disk_size_gb = ceil(size(input_file_for_size, "GB") * 1.1) + 10
-    # The file is parsed into a list of dicts (one per row), converted into a second copy, and then loaded into a
-    # dataframe for schema inference. Python objects are far larger than the raw text (a 1.1 GiB csv exhausted 15 GiB
-    # while still being parsed), so use 50x the file size, with a 16 GB minimum
-    Int memory_gb = if ceil(size(input_file_for_size, "GB") * 20) > 16 then ceil(size(input_file_for_size, "GB") * 20)else 16
 
     call IngestTabularFileToDataset {
         input:
