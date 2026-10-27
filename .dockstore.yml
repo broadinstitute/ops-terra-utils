@@ -14,6 +14,13 @@ workflows:
     testParameterFiles:
       - /wdl/TerraWorkspaceTableIngest/TerraWorkspaceTableIngest.wdl
 
+  - name: TerraTableDataFileToTDRIngest
+    subclass: WDL
+    primaryDescriptorPath: /wdl/TerraTableDataFileToTDRIngest/TerraTableDataFileToTDRIngest.wdl
+    readMePath: /wdl/TerraTableDataFileToTDRIngest/README.md
+    testParameterFiles:
+      - /wdl/TerraTableDataFileToTDRIngest/TerraTableDataFileToTDRIngest.wdl
+
   - name: ExportDataFromSnapshotToOutputBucket
     subclass: WDL
     primaryDescriptorPath: /wdl/ExportDataFromSnapshot/ExportDataFromSnapshot.wdl

@@ -19,5 +19,5 @@ pydantic==2.9.1
 pyyaml
 humanfriendly==10.0
 responses==0.26.0
-gitpython==3.1.62
-git+https://github.com/broadinstitute/pyops-service-toolkit.git@v12.21.1#egg=pyops-service-toolkit
+gitpython==3.2.1
+git+https://github.com/broadinstitute/pyops-service-toolkit.git@v12.22.0#egg=pyops-service-toolkit
