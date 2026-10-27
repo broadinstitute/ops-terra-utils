@@ -21,8 +21,10 @@ logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
 )
 
+
 def list_datasets(ingest_util: DataIngest) -> dict:
     return ingest_util.list_datasets().json()
+
 
 def create_dataset(
         ingest_util: DataIngest,
@@ -40,8 +42,10 @@ def create_dataset(
         storage=storage
     ).json()
 
+
 def get_dataset(ingest_util: DataIngest, dataset_id: str) -> dict:
     return ingest_util.get_dataset(dataset_id=dataset_id).json()
+
 
 def register_files(
         ingest_util: DataIngest,
@@ -53,8 +57,10 @@ def register_files(
             `path` is optional and defaults to the URI's object key when omitted."""
     return ingest_util.register_files(dataset_id=dataset_id, files=files).json()
 
+
 def list_files(ingest_util: DataIngest, dataset_id: str) -> dict:
     return ingest_util.list_files(dataset_id=dataset_id).json()
+
 
 if __name__ == '__main__':
     data_ingest_util = DataIngest()
