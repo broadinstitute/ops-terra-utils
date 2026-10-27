@@ -219,8 +219,6 @@ class Tester:
         with open(output_path, "w", newline="") as f:
             csv.DictWriter(f, fieldnames=TSV_FIELDS, delimiter="\t").writeheader()
 
-    # ------------------------------------------------------------------ reporting
-
     def _record(self, result: TaskResult) -> TaskResult:
         self.results.append(result)
         with open(self.output_path, "a", newline="") as f:
@@ -242,14 +240,22 @@ class Tester:
         c = self.ctx
         with open(f"{os.path.basename(self.output_path)}.state.json", "w") as f:
             json.dump({
-                "run_name": c.run_name, "dataset_id": c.dataset_id, "schema_id": c.schema_id,
-                "full_snapshot_id": c.full_snapshot_id, "query_snapshot_id": c.query_snapshot_id,
-                "storage_location": c.storage_location, "input_location": c.input_location,
-            }, f, indent=4)
+                "run_name": c.run_name,
+                "dataset_id": c.dataset_id,
+                "schema_id": c.schema_id,
+                "full_snapshot_id": c.full_snapshot_id,
+                "query_snapshot_id": c.query_snapshot_id,
+                "storage_location": c.storage_location,
+                "input_location": c.input_location,
+            },
+                f,
+                indent=4
+            )
 
-    def _summarize_calls(self, calls: list[dict]) -> tuple[str, str]:
+    @staticmethod
+    def _summarize_calls(calls: list[dict]) -> tuple[str, str]:
         """Request/response columns. Job-status polling is collapsed to just the final poll."""
-        is_poll = lambda call: call["method"] == "GET" and "/jobs/" in (call["uri"] or "")  # noqa: E731
+        def is_poll(call): return call["method"] == "GET" and "/jobs/" in (call["uri"] or "")  # noqa: E731
         main = [call for call in calls if not is_poll(call)]
         polls = [call for call in calls if is_poll(call)]
         request = [{k: call[k] for k in ("method", "uri", "params", "body") if call.get(k)} for call in main]
@@ -260,8 +266,6 @@ class Tester:
         if polls:
             response.append({"final_job_status": polls[-1].get("response") or polls[-1].get("error")})
         return json.dumps(request, default=str, sort_keys=True), json.dumps(response, default=str, sort_keys=True)
-
-    # ---------------------------------------------------------------------- tasks
 
     def skip(self, task: str, reason: str) -> TaskResult:
         return self._record(TaskResult(task=task, status=SKIPPED, notes=reason))
@@ -275,10 +279,16 @@ class Tester:
         except Exception as e:
             status, notes = ERROR, f"{type(e).__name__}: {e}"
         request, response = self._summarize_calls(self.recorder.drain())
-        return self._record(TaskResult(
-            task=task, status=status, request=request, response=response, notes=notes,
-            duration=time.time() - start,
-        ))
+        return self._record(
+            TaskResult(
+                task=task,
+                status=status,
+                request=request,
+                response=response,
+                notes=notes,
+                duration=time.time() - start,
+            )
+        )
 
     def wait(self, response: requests.Response) -> Any:
         return self.ctx.ingest.wait_for_job(response.json()["jobId"], poll_interval=self.ctx.poll_interval)
@@ -288,8 +298,6 @@ class Tester:
         if expected is None or actual is None:
             return True, f"{label}: expected={expected} actual={actual} (not comparable)"
         return expected == actual, f"{label}: expected={expected} actual={actual}"
-
-    # ---------------------------------------------------------------- input layout
 
     def _list(self, subdir: str) -> list[str]:
         bucket, prefix = _split_gs_uri(self.ctx.input_location.rstrip("/") + f"/{subdir}/")
@@ -302,8 +310,6 @@ class Tester:
         response = requests.get(url_or_path, timeout=600)
         response.raise_for_status()
         return response.content
-
-    # -------------------------------------------------------------------- the flow
 
     def create_dataset(self) -> bool:
         c = self.ctx
@@ -412,9 +418,12 @@ class Tester:
 
         def fn() -> tuple[str, str]:
             c.query_snapshot_id = self.wait(c.ingest.create_snapshot(
-                dataset_id=c.dataset_id, name=f"{c.run_name}_query", schema_id=c.schema_id,  # type: ignore[arg-type]
-                queries={first: f"SELECT * FROM {first}"},
-            ))["id"]
+                dataset_id=c.dataset_id,
+                name=f"{c.run_name}_query",
+                schema_id=c.schema_id,  # type: ignore[arg-type]
+                queries={first: f"SELECT * FROM {first}"},)
+            )["id"]
+
             problems, lines = [], []
             for table in c.tables:
                 expected = c.source_counts.get(table, 0) if table == first else 0
