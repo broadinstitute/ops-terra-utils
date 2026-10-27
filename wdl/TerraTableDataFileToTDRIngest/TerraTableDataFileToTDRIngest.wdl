@@ -19,6 +19,7 @@ workflow TerraTableDataFileToTDRIngest {
         Boolean force_disparate_rows_to_string = true
         Boolean trunc_and_reload
         Boolean ignore_existing_schema_mismatch = false
+        Int memory_gb = 4
     }
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
@@ -27,13 +28,6 @@ workflow TerraTableDataFileToTDRIngest {
     # 10 GB minimum
     File input_file_for_size = input_file
     Int disk_size_gb = ceil(size(input_file_for_size, "GB") * 1.1) + 10
-    # The file is never held in memory all at once. It is read a row at a time to infer the schema and then again to
-    # ingest it in batches. The only things kept for the whole run are the primary keys, used to check they are
-    # unique, and (if filter_existing_ids is used) the ids already in the dataset. In testing that came to about the
-    # size of the file for narrow rows (a 770 MB, 6 million row csv peaked at 1 GB), so use 2x the file size plus 4 GB
-    # of headroom, with an 8 GB minimum
-    Int memory_gb_from_file_size = ceil(size(input_file_for_size, "GB") * 2) + 4
-    Int memory_gb = if memory_gb_from_file_size > 8 then memory_gb_from_file_size else 8
 
     call IngestTabularFileToDataset {
         input:
