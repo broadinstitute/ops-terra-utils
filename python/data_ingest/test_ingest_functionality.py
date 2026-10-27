@@ -43,11 +43,10 @@ import json
 import logging
 import re
 import time
-import os
 import requests
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import PurePosixPath
+from pathlib import PurePosixPath, Path
 from typing import Any, Callable, Optional
 
 from ops_utils.gcp_utils import GCPCloudFunctions
@@ -226,8 +225,8 @@ class Tester:
                 {
                     "Task": result.task,
                     "Status": result.status,
-                    "Request": json.dumps(result.request),
-                    "Response": json.dumps(result.response),
+                    "Request": result.request,
+                    "Response": result.response,
                     "Results/Notes": result.notes,
                     "Duration (s)": f"{result.duration:.1f}",
                 }
@@ -238,7 +237,8 @@ class Tester:
 
     def _write_state(self) -> None:
         c = self.ctx
-        with open(f"{os.path.basename(self.output_path)}.state.json", "w") as f:
+        basename = Path(self.output_path).stem
+        with open(f"{basename}.state.json", "w") as f:
             json.dump({
                 "run_name": c.run_name,
                 "dataset_id": c.dataset_id,
@@ -253,18 +253,30 @@ class Tester:
             )
 
     @staticmethod
-    def _summarize_calls(calls: list[dict]) -> tuple[str, str]:
-        """Request/response columns. Job-status polling is collapsed to just the final poll."""
+    def _parse(payload: Any) -> Any:
+        """Bodies are captured as JSON strings; parse them so they nest as objects instead of escaped strings."""
+        if isinstance(payload, str):
+            try:
+                return json.loads(payload)
+            except ValueError:
+                return payload
+        return payload
+
+    @classmethod
+    def _summarize_calls(cls, calls: list[dict]) -> tuple[str, str]:
+        """Request/response columns as single-line JSON. Job-status polling is collapsed to just the final poll."""
         def is_poll(call): return call["method"] == "GET" and "/jobs/" in (call["uri"] or "")  # noqa: E731
         main = [call for call in calls if not is_poll(call)]
         polls = [call for call in calls if is_poll(call)]
-        request = [{k: call[k] for k in ("method", "uri", "params", "body") if call.get(k)} for call in main]
+        request = [
+            {k: cls._parse(call[k]) for k in ("method", "uri", "params", "body") if call.get(k)} for call in main
+        ]
         response = [
-            {"status_code": call.get("status_code"), "body": call.get("response") or call.get("error")}
+            {"status_code": call.get("status_code"), "body": cls._parse(call.get("response") or call.get("error"))}
             for call in main
         ]
         if polls:
-            response.append({"final_job_status": polls[-1].get("response") or polls[-1].get("error")})
+            response.append({"final_job_status": cls._parse(polls[-1].get("response") or polls[-1].get("error"))})
         return json.dumps(request, default=str, sort_keys=True), json.dumps(response, default=str, sort_keys=True)
 
     def skip(self, task: str, reason: str) -> TaskResult:
@@ -320,7 +332,7 @@ class Tester:
             c.dataset_id = self.wait(c.ingest.create_dataset(name=c.run_name, storage=storage))["id"]
             return PASS, f"Created dataset '{c.run_name}' ({c.dataset_id}) with storage {storage}"
 
-        return self.run("create_dataset", fn).status == PASS
+        return self.run(task="create_dataset", fn=fn).status == PASS
 
     def create_schema(self) -> bool:
         c = self.ctx
@@ -333,7 +345,7 @@ class Tester:
                 return FAIL, f"Schema {c.schema_id} created but no CREATE TABLE statements parsed from the DDL"
             return PASS, f"Created schema {c.schema_id}; tables parsed from DDL: {c.tables}"
 
-        return self.run("create_schema", fn).status == PASS
+        return self.run(task="create_schema", fn=fn).status == PASS
 
     def register_files(self) -> None:
         c = self.ctx
@@ -346,10 +358,10 @@ class Tester:
             files = [{"uri": p, "path": p.removeprefix(prefix)} for p in paths]
             self.wait(c.ingest.register_files(dataset_id=c.dataset_id, files=files))  # type: ignore[arg-type]
             registered = _find_list(c.ingest.list_files(c.dataset_id).json())  # type: ignore[arg-type]
-            ok, notes = self.compare("file count", len(files), len(registered))
+            ok, notes = self.compare(label="file count", expected=len(files), actual=len(registered))
             return (PASS if ok else FAIL), notes
 
-        self.run("register_files", fn)
+        self.run(task="register_files", fn=fn)
 
     def ingest_tabular(self) -> None:
         c = self.ctx
@@ -358,7 +370,7 @@ class Tester:
             self.skip("ingest_tabular", f"No files found under {c.input_location.rstrip('/')}/tabular_data/")
             return
         for path in paths:
-            self.run(f"ingest_tabular:{PurePosixPath(path).name}", lambda path=path: self._ingest_one(path))
+            self.run(task=f"ingest_tabular:{PurePosixPath(path).name}", fn=lambda path=path: self._ingest_one(path))
 
     def _ingest_one(self, path: str) -> tuple[str, str]:
         c = self.ctx
@@ -381,7 +393,8 @@ class Tester:
         ingested = _find_count(result)
         if ingested is not None:
             c.ingested_counts[table] = c.ingested_counts.get(table, 0) + ingested
-        ok, notes = self.compare("records (input file vs. reported ingested)", source_count, ingested)
+        ok, notes = self.compare(label="records (input file vs. reported ingested)",
+                                 expected=source_count, actual=ingested)
         if ingested is None:
             notes += "; job result did not report a record count, see the snapshot tasks for the verified count"
         return (PASS if ok else FAIL), notes
@@ -401,16 +414,17 @@ class Tester:
             snapshot_id = c.full_snapshot_id
             problems, lines = [], []
             for table in c.tables:
-                actual = self._snapshot_table_count(snapshot_id, table)  # type: ignore[arg-type]
+                actual = self._snapshot_table_count(snapshot_id=snapshot_id, table=table)  # type: ignore[arg-type]
                 c.full_snapshot_counts[table] = actual
-                ok, line = self.compare(f"{table} (source vs. snapshot)", c.source_counts.get(table, 0), actual)
+                ok, line = self.compare(label=f"{table} (source vs. snapshot)",
+                                        expected=c.source_counts.get(table, 0), actual=actual)
                 lines.append(line)
                 if not ok:
                     problems.append(table)
             notes = f"Snapshot {snapshot_id}. " + "; ".join(lines)
             return (FAIL if problems else PASS), notes + (f". MISMATCHED: {problems}" if problems else "")
 
-        return self.run("create_full_snapshot", fn).status != ERROR and c.full_snapshot_id is not None
+        return self.run(task="create_full_snapshot", fn=fn).status != ERROR and c.full_snapshot_id is not None
 
     def create_query_snapshot(self) -> None:
         c = self.ctx
@@ -427,16 +441,19 @@ class Tester:
             problems, lines = [], []
             for table in c.tables:
                 expected = c.source_counts.get(table, 0) if table == first else 0
-                actual = self._snapshot_table_count(c.query_snapshot_id, table)
-                ok, line = self.compare(f"{table} ({'source' if table == first else 'excluded, expected empty'})",
-                                        expected, actual)
+                actual = self._snapshot_table_count(snapshot_id=c.query_snapshot_id, table=table)
+                ok, line = self.compare(
+                    label=f"{table} ({'source' if table == first else 'excluded, expected empty'})",
+                    expected=expected,
+                    actual=actual
+                )
                 lines.append(line)
                 if not ok:
                     problems.append(table)
             notes = f"Snapshot {c.query_snapshot_id}. " + "; ".join(lines)
             return (FAIL if problems else PASS), notes + (f". MISMATCHED: {problems}" if problems else "")
 
-        self.run("create_query_snapshot", fn)
+        self.run(task="create_query_snapshot", fn=fn)
 
     def export_tables(self) -> None:
         c = self.ctx
@@ -449,11 +466,13 @@ class Tester:
                 actual = sum(count_records(self._download(url), ".csv") for url in urls)
                 c.export_counts[table] = actual
                 ok, notes = self.compare(
-                    "records (snapshot table vs. CSV export)", c.full_snapshot_counts.get(table), actual
+                    label="records (snapshot table vs. CSV export)",
+                    expected=c.full_snapshot_counts.get(table),
+                    actual=actual
                 )
                 return (PASS if ok else FAIL), notes
 
-            self.run(f"export_table_csv:{table}", fn)
+            self.run(task=f"export_table_csv:{table}", fn=fn)
 
     def export_snapshot_pfb(self) -> None:
         c = self.ctx
@@ -469,7 +488,7 @@ class Tester:
                     return FAIL, f"PFB signed URL returned HTTP {r.status_code}"
             return PASS, f"PFB export created and downloadable (HTTP 200, Content-Length={size})"
 
-        self.run("export_snapshot_pfb", fn)
+        self.run(task="export_snapshot_pfb", fn=fn)
 
     def cleanup(self) -> None:
         c = self.ctx
@@ -490,13 +509,18 @@ class Tester:
                 notes.append(f"deleted dataset {c.dataset_id}")
             return PASS, "; ".join(notes) + ". (Registered/source files in the buckets are not deleted.)"
 
-        self.run("cleanup", fn)
+        self.run(task="cleanup", fn=fn)
 
     def run_all(self) -> list[TaskResult]:
         c = self.ctx
         if not self.create_dataset():
-            for task in ("create_schema", "register_files", "ingest_tabular", "create_full_snapshot",
-                         "create_query_snapshot", "export_table_csv", "export_snapshot_pfb"):
+            for task in ("create_schema",
+                         "register_files",
+                         "ingest_tabular",
+                         "create_full_snapshot",
+                         "create_query_snapshot",
+                         "export_table_csv",
+                         "export_snapshot_pfb"):
                 self.skip(task=task, reason="Dataset creation failed")
             return self.results
 
