@@ -5,6 +5,7 @@ workflow ValidateStagingWorkspace {
         String billing_project
         String workspace_name
         Boolean check_external_buckets
+        String output_dir
         String? docker
         File? data_dictionary_file
         Int? memory_gb
@@ -18,47 +19,30 @@ workflow ValidateStagingWorkspace {
             billing_project = billing_project,
             workspace_name = workspace_name,
             check_external_buckets = check_external_buckets,
+            output_dir = output_dir_with_slash,
             data_dictionary_file = data_dictionary_file,
             docker_image = docker_image,
             memory_gb = select_first([memory_gb, 8]),
             disk_size_gb = select_first([disk_size_gb, 50])
     }
 
-    # Get the gs:// path of the summary statistics file and the directory all outputs were written to
-    String summary_statistics_path = ValidateStagingWorkspaceTask.summary_statistics
-    String summary_statistics_name = basename(summary_statistics_path)
-    String output_dir = sub(summary_statistics_path, summary_statistics_name, "")
+    # Make sure the output directory ends in a slash so files are copied into it
+    String output_dir_with_slash = sub(output_dir, "/+$", "") + "/"
 
-    # The report is written before the final location of the outputs is known so fill that in here
-    call FinalizeReport {
+    call CopyOutputs {
         input:
-            report = ValidateStagingWorkspaceTask.validation_report,
-            output_dir = output_dir,
-            docker_image = docker_image
-    }
-
-    if (defined(data_dictionary_file)) {
-        # Get the file directory of the data_dictionary_file as a string
-        String data_dictionary_string = select_first([data_dictionary_file, ""])
-        # Get the file name of the data_dictionary_file
-        String data_dictionary_file_name = basename(data_dictionary_string)
-        # Get the file directory of the data_dictionary_file by removing the file name
-        String data_dictionary_file_dir = sub(data_dictionary_string, data_dictionary_file_name, "")
-        call CopyOutputsToDataDictionaryDir {
-            input:
-                files_to_copy = flatten(
-                    [
-                        [ValidateStagingWorkspaceTask.summary_statistics, FinalizeReport.final_report],
-                        ValidateStagingWorkspaceTask.validation_detail_files
-                    ]
-                ),
-                data_dictionary_file_dir = data_dictionary_file_dir
-        }
+            files_to_copy = flatten(
+                [
+                    [ValidateStagingWorkspaceTask.summary_statistics, ValidateStagingWorkspaceTask.validation_report],
+                    ValidateStagingWorkspaceTask.validation_detail_files
+                ]
+            ),
+            output_dir = output_dir_with_slash
     }
 
     output {
         File summary_statistics = ValidateStagingWorkspaceTask.summary_statistics
-        File validation_report = FinalizeReport.final_report
+        File validation_report = ValidateStagingWorkspaceTask.validation_report
         Array[File] validation_detail_files = ValidateStagingWorkspaceTask.validation_detail_files
     }
 }
@@ -68,6 +52,7 @@ task ValidateStagingWorkspaceTask {
         String billing_project
         String workspace_name
         Boolean check_external_buckets
+        String output_dir
         File? data_dictionary_file
         String docker_image
         Int memory_gb
@@ -78,7 +63,7 @@ task ValidateStagingWorkspaceTask {
         python /etc/terra_utils/python/terra_summary_statistics.py \
         --billing_project ~{billing_project} \
         --workspace_name ~{workspace_name} \
-        --output_location '{{OUTPUT_DIR}}' \
+        --output_dir ~{output_dir} \
         ~{if check_external_buckets then "--check_external_buckets" else ""} \
         ~{"--data_dictionary_file " + data_dictionary_file}
     >>>
@@ -96,37 +81,14 @@ task ValidateStagingWorkspaceTask {
     }
 }
 
-task FinalizeReport {
-    input {
-        File report
-        String output_dir
-        String docker_image
-    }
-
-    String report_name = basename(report)
-
-    command <<<
-        sed 's|{{OUTPUT_DIR}}|~{output_dir}|g' ~{report} > ~{report_name}
-    >>>
-
-    output {
-        File final_report = report_name
-    }
-
-    runtime {
-        docker: docker_image
-    }
-}
-
-task CopyOutputsToDataDictionaryDir {
+task CopyOutputs {
     input {
         Array[File] files_to_copy
-        String data_dictionary_file_dir
+        String output_dir
     }
 
     command <<<
-        echo "Copying outputs to the same directory as the data dictionary file"
-        gcloud storage cp ~{sep=" " files_to_copy} ~{data_dictionary_file_dir}
+        gcloud storage cp ~{sep=" " files_to_copy} ~{output_dir}
     >>>
 
     runtime {

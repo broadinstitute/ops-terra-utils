@@ -20,6 +20,7 @@ Lists of the individual files behind each section (for example every file missin
 | **billing_project**      | billing project                                                                    | String | Yes      | N/A                                                                                         |
 | **workspace_name**       | workspace name.                                                                    | String | Yes      | N/A                                                                                         |
 | **check_external_buckets** | If true, check that files referenced in the tables that live in other buckets exist. Can be slow with many files, and buckets you do not have access to are reported as unable to check. If false, external buckets are only listed with reference counts. | Boolean | Yes | N/A |
+| **output_dir** | GCP directory (must start with `gs://`) the outputs are copied to. The validation report refers to the output files at this location. | String | Yes | N/A |
 | **data_dictionary_file** | File that can be used to validate expected matches what is found. More info below. | File   | No       | N/A                                                                                         |
 | **memory_gb**            | Memory for the task. Increase for very large workspaces/buckets.                   | Int    | No       | 8                                                                                           |
 | **disk_size_gb**         | Disk size for the task.                                                            | Int    | No       | 50                                                                                          |
@@ -65,4 +66,4 @@ Below are the possible data types that can be used in the data dictionary file a
 | **validation_report**  | Markdown report of the validation checks above. |
 | **validation_detail_files** | Tsvs listing the individual files behind each report section (sections with nothing to list do not get a file). |
 
-If a `data_dictionary_file` is provided, the outputs are also copied to the directory it is in.
+All outputs are also copied to `output_dir`.

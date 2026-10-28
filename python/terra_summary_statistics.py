@@ -42,8 +42,6 @@ INDEX_RULES: list[Tuple[str, str, list[str]]] = [
     ("CRAM", ".cram", [".crai"]),
     ("VCF", ".vcf.gz", [".tbi", ".csi"]),
 ]
-# Placeholder for the directory the outputs land in. The WDL replaces it with the real gs:// directory
-OUTPUT_LOCATION_PLACEHOLDER = "{{OUTPUT_DIR}}"
 
 INPUT_DT_TO_INFERRED_DTS = {
     "boolean": "boolean",
@@ -73,13 +71,16 @@ def get_args() -> Namespace:
              "actually exist. Can be slow with many files and requires access to those buckets."
     )
     parser.add_argument(
-        "--output_location",
+        "--output_dir",
+        "-o",
         type=str,
-        default="",
-        help="Directory the outputs will end up in. Used to point to the output files from the validation report. "
-             "If not provided, only the file names are used."
+        help="GCP directory (gs://) the output files will be copied to. Used to point to the output files from the "
+             "validation report. If not provided, only the file names are used."
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.output_dir and not args.output_dir.startswith(GCS_PREFIX):
+        parser.error(f"--output_dir must be a GCP path starting with {GCS_PREFIX}, got: {args.output_dir}")
+    return args
 
 
 class ParseInputDataDict:
@@ -637,7 +638,7 @@ class CreateValidationReport:
             workspace_bucket: str,
             output_prefix: str,
             date_string: str,
-            output_location: str,
+            output_dir: str,
             summary_stats_file: str,
             summary_stats_content: list[dict],
             results: dict
@@ -647,7 +648,7 @@ class CreateValidationReport:
         self.workspace_bucket = workspace_bucket
         self.output_prefix = output_prefix
         self.date_string = date_string
-        self.output_location = output_location
+        self.output_dir = output_dir
         self.summary_stats_file = summary_stats_file
         self.summary_stats_content = summary_stats_content
         self.results = results
@@ -664,7 +665,7 @@ class CreateValidationReport:
         return "\n".join(lines)
 
     def _output_path(self, file_name: str) -> str:
-        return f"{self.output_location}{file_name}"
+        return f"{self.output_dir}{file_name}"
 
     def _write_detail(self, name: str, rows: list[dict], headers: list[str]) -> Optional[str]:
         """Write a detail tsv (skipped if there is nothing to list) and return its path for the report"""
@@ -835,9 +836,9 @@ if __name__ == '__main__':
     billing_project = args.billing_project
     data_dictionary_file = args.data_dictionary_file
     check_external_buckets = args.check_external_buckets
-    output_location = args.output_location
-    if output_location and not output_location.endswith("/") and output_location != OUTPUT_LOCATION_PLACEHOLDER:
-        output_location += "/"
+    output_dir = args.output_dir
+    if output_dir and not output_dir.endswith("/"):
+        output_dir += "/"
 
     date_string = datetime.now().strftime("%Y%m%d")
     if data_dictionary_file:
@@ -902,7 +903,7 @@ if __name__ == '__main__':
         workspace_bucket=workspace_bucket,
         output_prefix=output_prefix,
         date_string=date_string,
-        output_location=output_location,
+        output_dir=output_dir,
         summary_stats_file=output_file,
         summary_stats_content=output_content,
         results=results
