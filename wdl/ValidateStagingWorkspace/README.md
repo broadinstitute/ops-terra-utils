@@ -60,10 +60,10 @@ Below are the possible data types that can be used in the data dictionary file a
 | fileref   | fileref  |
 
 ## Outputs Table:
-| Output Name            | Description                                |
-|------------------------|--------------------------------------------|
-| **summary_statistics** | Tsv with summary statistics for workspace. |
-| **validation_report**  | Markdown report of the validation checks above. |
-| **validation_detail_files** | Tsvs listing the individual files behind each report section (sections with nothing to list do not get a file). |
+All outputs are copied to `output_dir`, and the outputs below are the final `gs://` paths of the copied files.
 
-All outputs are also copied to `output_dir`.
+| Output Name                 | Description                                                                                                       |
+|-----------------------------|-------------------------------------------------------------------------------------------------------------------|
+| **summary_statistics**      | Path to tsv with summary statistics for workspace.                                                                |
+| **validation_report**       | Path to markdown report of the validation checks above.                                                           |
+| **validation_detail_files** | Paths to tsvs listing the individual files behind each report section (sections with nothing to list get no file). |

@@ -31,19 +31,16 @@ workflow ValidateStagingWorkspace {
 
     call CopyOutputs {
         input:
-            files_to_copy = flatten(
-                [
-                    [ValidateStagingWorkspaceTask.summary_statistics, ValidateStagingWorkspaceTask.validation_report],
-                    ValidateStagingWorkspaceTask.validation_detail_files
-                ]
-            ),
+            summary_statistics = ValidateStagingWorkspaceTask.summary_statistics,
+            validation_report = ValidateStagingWorkspaceTask.validation_report,
+            validation_detail_files = ValidateStagingWorkspaceTask.validation_detail_files,
             output_dir = output_dir_with_slash
     }
 
     output {
-        File summary_statistics = ValidateStagingWorkspaceTask.summary_statistics
-        File validation_report = ValidateStagingWorkspaceTask.validation_report
-        Array[File] validation_detail_files = ValidateStagingWorkspaceTask.validation_detail_files
+        String summary_statistics = CopyOutputs.summary_statistics_path
+        String validation_report = CopyOutputs.validation_report_path
+        Array[String] validation_detail_files = CopyOutputs.validation_detail_file_paths
     }
 }
 
@@ -83,13 +80,30 @@ task ValidateStagingWorkspaceTask {
 
 task CopyOutputs {
     input {
-        Array[File] files_to_copy
+        File summary_statistics
+        File validation_report
+        Array[File] validation_detail_files
         String output_dir
     }
 
     command <<<
-        gcloud storage cp ~{sep=" " files_to_copy} ~{output_dir}
+        set -e
+        gcloud storage cp ~{summary_statistics} ~{validation_report} ~{sep=" " validation_detail_files} ~{output_dir}
+
+        # Write the final location of each file so they can be used as outputs
+        echo "~{output_dir}$(basename ~{summary_statistics})" > summary_statistics_path.txt
+        echo "~{output_dir}$(basename ~{validation_report})" > validation_report_path.txt
+        touch validation_detail_file_paths.txt
+        for detail_file in ~{sep=" " validation_detail_files}; do
+            echo "~{output_dir}$(basename "$detail_file")" >> validation_detail_file_paths.txt
+        done
     >>>
+
+    output {
+        String summary_statistics_path = read_string("summary_statistics_path.txt")
+        String validation_report_path = read_string("validation_report_path.txt")
+        Array[String] validation_detail_file_paths = read_lines("validation_detail_file_paths.txt")
+    }
 
     runtime {
         docker: "google/cloud-sdk:latest"
