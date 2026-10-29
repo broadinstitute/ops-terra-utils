@@ -665,7 +665,8 @@ class CreateValidationReport:
             output_dir: str,
             summary_stats_file: str,
             summary_stats_content: list[dict],
-            results: dict
+            results: dict,
+            data_dictionary_file: Optional[str] = None
     ):
         self.workspace_name = workspace_name
         self.billing_project = billing_project
@@ -677,7 +678,7 @@ class CreateValidationReport:
         self.summary_stats_file = summary_stats_file
         self.summary_stats_content = summary_stats_content
         self.results = results
-        self.detail_files: list[Tuple[str, str]] = []
+        self.data_dictionary_file = data_dictionary_file
 
     @staticmethod
     def _pct(count: int, total: int) -> str:
@@ -698,30 +699,62 @@ class CreateValidationReport:
             return None
         file_name = f"{self.output_prefix}.validation_detail.{name}.{self.timestamp_string}.tsv"
         Csv(file_path=file_name).create_tsv_from_list_of_dicts(list_of_dicts=rows, header_list=headers)
-        self.detail_files.append((name, file_name))
         return self._output_path(file_name)
 
     def _detail_line(self, path: Optional[str]) -> str:
         return f"\n\nFull list: `{path}`" if path else ""
 
     def _summary_stats_section(self) -> list[str]:
-        flagged = [row for row in self.summary_stats_content if row['flagged']]
-        total = len(self.summary_stats_content)
-        by_table: Counter = Counter(row['table_name'] for row in flagged)
-        by_reason: Counter = Counter()
-        for row in flagged:
-            # Drop the allowed list of data types from the note so it is not split apart
-            notes = re.sub(r"\[.*?\]", "[...]", row['flag_notes'] or "")
-            by_reason.update(note.strip() for note in notes.split(", ") if note.strip())
+        content = self.summary_stats_content
+        has_dictionary = bool(self.data_dictionary_file)
+        # Rows, columns and file reference columns per table (in the order the tables were found)
+        tables: dict[str, dict] = {}
+        for row in content:
+            table = tables.setdefault(
+                row['table_name'], {'rows': row['record_count'], 'columns': 0, 'fileref_columns': 0, 'flagged': 0}
+            )
+            table['columns'] += 1
+            table['fileref_columns'] += row['inferred_data_type'] == 'fileref'
+            table['flagged'] += bool(row['flagged'])
+        total_columns = len(content)
+        flagged = [row for row in content if row['flagged']]
+        if has_dictionary:
+            dictionary_line = (
+                "Data dictionary provided: **Yes** "
+                f"(`{self._output_path(os.path.basename(str(self.data_dictionary_file)))}`)"
+            )
+            flagged_text = f"**{len(flagged)} of {total_columns}** ({self._pct(len(flagged), total_columns)})"
+        else:
+            dictionary_line = (
+                "Data dictionary provided: **No**. Columns were not validated against expected values, "
+                "so no columns are flagged."
+            )
+            flagged_text = NA
         section = [
             "## Table summary statistics",
             f"\nSummary statistics file: `{self._output_path(self.summary_stats_file)}`\n",
-            f"Columns flagged as needing attention: **{len(flagged)} of {total}** ({self._pct(len(flagged), total)})\n",
+            dictionary_line + "\n",
+            f"- Tables: **{len(tables)}**",
+            f"- Total rows: **{sum(t['rows'] for t in tables.values())}**",
+            f"- Total columns: **{total_columns}**",
+            f"- File reference columns: **{sum(t['fileref_columns'] for t in tables.values())}**",
+            f"- Columns flagged as needing attention: {flagged_text}\n",
+            self._table(
+                ["Table", "Rows", "Columns", "File reference columns", "Flagged columns"],
+                [
+                    [name, t['rows'], t['columns'], t['fileref_columns'], t['flagged'] if has_dictionary else NA]
+                    for name, t in tables.items()
+                ]
+            )
         ]
-        if flagged:
-            section.append(self._table(["Flag reason", "Columns"], [[k, v] for k, v in by_reason.most_common()]))
+        if has_dictionary and flagged:
+            by_reason: Counter = Counter()
+            for row in flagged:
+                # Drop the allowed list of data types from the note so it is not split apart
+                notes = re.sub(r"\[.*?\]", "[...]", row['flag_notes'] or "")
+                by_reason.update(note.strip() for note in notes.split(", ") if note.strip())
             section.append("")
-            section.append(self._table(["Table", "Flagged columns"], [[k, v] for k, v in by_table.most_common()]))
+            section.append(self._table(["Flag reason", "Columns"], [[k, v] for k, v in by_reason.most_common()]))
         return section
 
     def _md5_section(self) -> list[str]:
@@ -874,10 +907,6 @@ class CreateValidationReport:
             self._referenced_missing_section(),
             self._other_section(),
         ]
-        if self.detail_files:
-            sections.append(
-                ["## Detail files", "\n" + "\n".join(f"- {n}: `{self._output_path(f)}`" for n, f in self.detail_files)]
-            )
         report_file = f"{self.output_prefix}.validation_report.{self.timestamp_string}.md"
         with open(report_file, "w") as f:
             f.write("\n\n".join("\n".join(section) for section in sections) + "\n")
@@ -962,5 +991,6 @@ if __name__ == '__main__':
         output_dir=output_dir,
         summary_stats_file=output_file,
         summary_stats_content=output_content,
-        results=results
+        results=results,
+        data_dictionary_file=data_dictionary_file
     ).run()

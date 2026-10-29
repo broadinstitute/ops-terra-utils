@@ -2,7 +2,7 @@
 
 This WDL validates a staging workspace. It creates a tsv with summary statistics for the workspace tables (optionally checked against expected values from a data dictionary), and a markdown validation report covering the workspace bucket and the files referenced in the tables:
 
-- Path to the summary statistics file and an aggregate of the columns flagged as needing attention
+- Path to the summary statistics file, whether a data dictionary was provided (and the path to the copy of it), table, row and column counts (including file reference columns), and the columns flagged as needing attention
 - Count/percent of files with no MD5 in the GCS metadata
 - Count/percent of files without an index file: BAMs (`.bai`/`.csi`), CRAMs (`.crai`), VCFs and GVCFs (`.vcf.gz`, `.g.vcf.gz`, `.gvcf.gz`, `.vcf.bgz`; `.tbi`/`.csi`). An index can be named `<file>.bai` or `<file without extension>.bai`. Uncompressed `.vcf` files are not checked
 - Count/percent of files in the workspace bucket not referenced anywhere in the tables (this includes anything Terra writes to the bucket, such as `submissions/`)
@@ -65,4 +65,5 @@ All outputs are copied to `output_dir`, and the outputs below are the final `gs:
 |-----------------------------|-------------------------------------------------------------------------------------------------------------------|
 | **summary_statistics**      | Path to tsv with summary statistics for workspace.                                                                |
 | **validation_report**       | Path to markdown report of the validation checks above.                                                           |
+| **data_dictionary_file_path** | Path to the copy of the data dictionary file in `output_dir`. Empty if no data dictionary file was provided. |
 | **validation_detail_files** | Paths to tsvs listing the individual files behind each report section (sections with nothing to list get no file). |

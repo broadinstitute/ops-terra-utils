@@ -32,6 +32,7 @@ workflow ValidateStagingWorkspace {
             summary_statistics = ValidateStagingWorkspaceTask.summary_statistics,
             validation_report = ValidateStagingWorkspaceTask.validation_report,
             validation_detail_files = ValidateStagingWorkspaceTask.validation_detail_files,
+            data_dictionary_file = data_dictionary_file,
             output_dir = output_dir_with_slash
     }
 
@@ -39,6 +40,7 @@ workflow ValidateStagingWorkspace {
         String summary_statistics = CopyOutputs.summary_statistics_path
         String validation_report = CopyOutputs.validation_report_path
         Array[String] validation_detail_files = CopyOutputs.validation_detail_file_paths
+        String data_dictionary_file_path = CopyOutputs.data_dictionary_file_path
     }
 }
 
@@ -79,16 +81,22 @@ task CopyOutputs {
         File summary_statistics
         File validation_report
         Array[File] validation_detail_files
+        File? data_dictionary_file
         String output_dir
     }
 
     command <<<
         set -e
         gcloud storage cp ~{summary_statistics} ~{validation_report} ~{sep=" " validation_detail_files} ~{output_dir}
+        # Copy the data dictionary file (if provided) so it is saved alongside the outputs it was used for
+        ~{"gcloud storage cp " + data_dictionary_file + " " + output_dir}
 
         # Write the final location of each file so they can be used as outputs
         echo "~{output_dir}$(basename ~{summary_statistics})" > summary_statistics_path.txt
         echo "~{output_dir}$(basename ~{validation_report})" > validation_report_path.txt
+        # Empty if no data dictionary file was provided
+        touch data_dictionary_file_path.txt
+        ~{"echo " + output_dir + "$(basename " + data_dictionary_file + ") > data_dictionary_file_path.txt"}
         touch validation_detail_file_paths.txt
         for detail_file in ~{sep=" " validation_detail_files}; do
             echo "~{output_dir}$(basename "$detail_file")" >> validation_detail_file_paths.txt
@@ -99,6 +107,7 @@ task CopyOutputs {
         String summary_statistics_path = read_string("summary_statistics_path.txt")
         String validation_report_path = read_string("validation_report_path.txt")
         Array[String] validation_detail_file_paths = read_lines("validation_detail_file_paths.txt")
+        String data_dictionary_file_path = read_string("data_dictionary_file_path.txt")
     }
 
     runtime {
