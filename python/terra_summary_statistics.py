@@ -14,6 +14,8 @@ from ops_utils.tdr_utils.tdr_schema_utils import InferTDRSchema
 from ops_utils.terra_util import TerraWorkspace
 from ops_utils.csv_util import Csv
 from ops_utils.gcp_utils import GCPCloudFunctions
+from ops_utils.thread_pool_executor_util import MultiThreadedJobs
+from ops_utils.vars import ARG_DEFAULTS
 
 logging.basicConfig(
     format="%(levelname)s: %(asctime)s : %(message)s", level=logging.INFO
@@ -64,12 +66,6 @@ def get_args() -> Namespace:
         "-d", type=str,
         help=f"Input tsv to validate against what exists in the workspace. Headers should:  {INPUT_HEADERS}. "
              "Not required and if provided does not need every column filled out"
-    )
-    parser.add_argument(
-        "--check_external_buckets",
-        action="store_true",
-        help="Check that files referenced in the tables that live in buckets other than the workspace bucket "
-             "actually exist. Can be slow with many files and requires access to those buckets."
     )
     parser.add_argument(
         "--output_dir",
@@ -524,13 +520,11 @@ class ValidateBucketFiles:
             self,
             workspace_bucket: str,
             gcp: GCPCloudFunctions,
-            file_references: list[dict],
-            check_external_buckets: bool
+            file_references: list[dict]
     ):
         self.workspace_bucket = workspace_bucket
         self.gcp = gcp
         self.file_references = file_references
-        self.check_external_buckets = check_external_buckets
 
     @staticmethod
     def get_extension(path: str) -> str:
@@ -576,17 +570,40 @@ class ValidateBucketFiles:
             }
         return results
 
+    def _get_external_file_info(self, path: str) -> dict:
+        """Check whether a file exists and has an MD5 in its metadata, without downloading it"""
+        blob = self.gcp.load_blob_from_full_path(path)
+        # The blob is only reloaded with its metadata if it exists, so a missing size means the file was not found
+        exists = blob.size is not None
+        return {'path': path, 'exists': exists, 'has_md5': exists and bool(blob.md5_hash)}
+
     def _check_external_bucket(self, bucket: str, paths: list[str]) -> dict:
-        if not self.check_external_buckets:
-            return {'status': 'not checked', 'missing': []}
         try:
-            # Probe one file first so a bucket we cannot read fails fast instead of retrying on every file
+            # Probe one file first so a bucket we cannot access is skipped quickly instead of failing on every file.
+            # A file that does not exist returns False here, while no access raises an error
             self.gcp.check_file_exists(paths[0])
-            results = self.gcp.check_files_exist_multithreaded(full_paths=paths)
+            file_infos = MultiThreadedJobs().run_multi_threaded_job(
+                workers=ARG_DEFAULTS["multithread_workers"],  # type: ignore[arg-type]
+                function=self._get_external_file_info,
+                list_of_jobs_args_list=[[path] for path in paths],
+                collect_output=True,
+                max_retries=ARG_DEFAULTS["max_retries"],  # type: ignore[arg-type]
+                fail_on_error=True,
+                jobs_complete_for_logging=500
+            ) or []
         except Exception as e:
             logging.warning(f"Unable to check files in gs://{bucket}: {e}")
-            return {'status': f"unable to check: {str(e)[:200]}", 'missing': []}
-        return {'status': 'checked', 'missing': sorted(path for path, exists in results.items() if not exists)}
+            return {
+                'status': "unable to access (check permissions, or the files may not exist): "
+                          f"{str(e)[:200]}",
+                'missing': [],
+                'missing_md5': []
+            }
+        return {
+            'status': 'checked',
+            'missing': sorted(info['path'] for info in file_infos if not info['exists']),
+            'missing_md5': sorted(info['path'] for info in file_infos if info['exists'] and not info['has_md5'])
+        }
 
     def run(self) -> dict:
         inventory = self.gcp.list_bucket_contents(bucket_name=self.workspace_bucket)
@@ -740,16 +757,23 @@ class CreateValidationReport:
         total = len(self.results['inventory_paths'])
         orphans = self.results['not_referenced']
         sizes = {item['path']: item.get('size_in_bytes') or 0 for item in self.results['inventory']}
+        submissions_prefix = f"{GCS_PREFIX}{self.workspace_bucket}/submissions/"
+        in_submissions = {p for p in orphans if p.startswith(submissions_prefix)}
         path = self._write_detail(
             "files_not_referenced",
-            [{'path': p, 'size_in_bytes': sizes[p]} for p in orphans],
-            ['path', 'size_in_bytes']
+            [{'path': p, 'size_in_bytes': sizes[p], 'in_submissions': p in in_submissions} for p in orphans],
+            ['path', 'size_in_bytes', 'in_submissions']
         )
+        outside_submissions = len(orphans) - len(in_submissions)
         return [
             "## Bucket files not referenced in the tables",
             f"\n**{len(orphans)} of {total}** files in the workspace bucket ({self._pct(len(orphans), total)}) "
-            "are not referenced anywhere in the tabular data. Note this includes anything Terra writes to the bucket "
-            "such as `submissions/` outputs." + self._detail_line(path)
+            "are not referenced anywhere in the tabular data.\n",
+            f"Of the unreferenced files, **{len(in_submissions)} of {len(orphans)}** "
+            f"({self._pct(len(in_submissions), len(orphans))}) are in the `submissions/` directory, where Terra "
+            f"writes workflow outputs. The other **{outside_submissions}** "
+            f"({self._pct(outside_submissions, len(orphans))}) are elsewhere in the bucket."
+            + self._detail_line(path)
         ]
 
     def _distribution_section(self) -> list[str]:
@@ -774,15 +798,25 @@ class CreateValidationReport:
                 {'path': path, 'bucket_type': 'workspace', 'referenced_in': ", ".join(sorted(locations[path]))}
             )
         external_rows = []
+        missing_md5_rows = []
         for bucket, info in results['external'].items():
+            checked = info['status'] == 'checked'
             external_rows.append([
                 f"gs://{bucket}", info['referenced_count'], info['status'],
-                len(info['missing']) if info['status'] == 'checked' else NA
+                len(info['missing']) if checked else NA,
+                len(info['missing_md5']) if checked else NA
             ])
             missing_rows += [
                 {'path': p, 'bucket_type': 'external', 'referenced_in': ", ".join(sorted(locations[p]))}
                 for p in info['missing']
             ]
+            missing_md5_rows += [
+                {'path': p, 'bucket': bucket, 'referenced_in': ", ".join(sorted(locations[p]))}
+                for p in info['missing_md5']
+            ]
+        md5_path = self._write_detail(
+            "external_files_missing_md5", missing_md5_rows, ['path', 'bucket', 'referenced_in']
+        )
         path = self._write_detail("referenced_files_missing", missing_rows, ['path', 'bucket_type', 'referenced_in'])
         ws_total = results['workspace_ref_count']
         ws_missing = len(results['workspace_refs_missing'])
@@ -798,11 +832,21 @@ class CreateValidationReport:
         ]
         if external_rows:
             section.append(
-                self._table(["Bucket", "Unique files referenced", "Existence check", "Missing"], external_rows)
+                self._table(
+                    ["Bucket", "Unique files referenced", "Existence check", "Missing", "Missing MD5"], external_rows
+                )
+            )
+            section.append(
+                "\nThe TDR service account needs read access to each of these buckets for ingest. Missing MD5 is "
+                "the number of files that exist but have no MD5 in the GCS metadata, which also affects ingest."
             )
         else:
             section.append("No references to other buckets.")
-        return section + [self._detail_line(path)]
+        if path:
+            section.append(f"\nMissing files: `{path}`")
+        if md5_path:
+            section.append(f"\nExternal files missing an MD5: `{md5_path}`")
+        return section
 
     def _other_section(self) -> list[str]:
         zero_byte = self.results['zero_byte']
@@ -844,7 +888,6 @@ if __name__ == '__main__':
     workspace_name = args.workspace_name
     billing_project = args.billing_project
     data_dictionary_file = args.data_dictionary_file
-    check_external_buckets = args.check_external_buckets
     output_dir = args.output_dir
     if output_dir and not output_dir.endswith("/"):
         output_dir += "/"
@@ -902,8 +945,7 @@ if __name__ == '__main__':
     results = ValidateBucketFiles(
         workspace_bucket=workspace_bucket,
         gcp=GCPCloudFunctions(),
-        file_references=file_references,
-        check_external_buckets=check_external_buckets
+        file_references=file_references
     ).run()
 
     CreateValidationReport(

@@ -1,7 +1,6 @@
 {
     "ValidateStagingWorkspace.billing_project": "String",
     "ValidateStagingWorkspace.workspace_name": "String",
-    "ValidateStagingWorkspace.check_external_buckets": "Boolean",
     "ValidateStagingWorkspace.output_dir": "String",
     "ValidateStagingWorkspace.data_dictionary_file": "File (optional)"
 }

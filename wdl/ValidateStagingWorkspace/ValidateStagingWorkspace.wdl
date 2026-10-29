@@ -4,7 +4,6 @@ workflow ValidateStagingWorkspace {
     input {
         String billing_project
         String workspace_name
-        Boolean check_external_buckets
         String output_dir
         String? docker
         File? data_dictionary_file
@@ -18,7 +17,6 @@ workflow ValidateStagingWorkspace {
         input:
             billing_project = billing_project,
             workspace_name = workspace_name,
-            check_external_buckets = check_external_buckets,
             output_dir = output_dir_with_slash,
             data_dictionary_file = data_dictionary_file,
             docker_image = docker_image,
@@ -48,7 +46,6 @@ task ValidateStagingWorkspaceTask {
     input {
         String billing_project
         String workspace_name
-        Boolean check_external_buckets
         String output_dir
         File? data_dictionary_file
         String docker_image
@@ -61,7 +58,6 @@ task ValidateStagingWorkspaceTask {
         --billing_project ~{billing_project} \
         --workspace_name ~{workspace_name} \
         --output_dir ~{output_dir} \
-        ~{if check_external_buckets then "--check_external_buckets" else ""} \
         ~{"--data_dictionary_file " + data_dictionary_file}
     >>>
 
