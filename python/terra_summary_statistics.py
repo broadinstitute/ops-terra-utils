@@ -660,7 +660,8 @@ class CreateValidationReport:
             billing_project: str,
             workspace_bucket: str,
             output_prefix: str,
-            date_string: str,
+            timestamp_string: str,
+            run_time_display: str,
             output_dir: str,
             summary_stats_file: str,
             summary_stats_content: list[dict],
@@ -670,7 +671,8 @@ class CreateValidationReport:
         self.billing_project = billing_project
         self.workspace_bucket = workspace_bucket
         self.output_prefix = output_prefix
-        self.date_string = date_string
+        self.timestamp_string = timestamp_string
+        self.run_time_display = run_time_display
         self.output_dir = output_dir
         self.summary_stats_file = summary_stats_file
         self.summary_stats_content = summary_stats_content
@@ -694,7 +696,7 @@ class CreateValidationReport:
         """Write a detail tsv (skipped if there is nothing to list) and return its path for the report"""
         if not rows:
             return None
-        file_name = f"{self.output_prefix}.validation_detail.{name}.{self.date_string}.tsv"
+        file_name = f"{self.output_prefix}.validation_detail.{name}.{self.timestamp_string}.tsv"
         Csv(file_path=file_name).create_tsv_from_list_of_dicts(list_of_dicts=rows, header_list=headers)
         self.detail_files.append((name, file_name))
         return self._output_path(file_name)
@@ -861,7 +863,7 @@ class CreateValidationReport:
         sections = [
             [
                 f"# Staging workspace validation: {self.billing_project}/{self.workspace_name}",
-                f"\nWorkspace bucket: `gs://{self.workspace_bucket}`  \nReport date: {self.date_string}  \n"
+                f"\nWorkspace bucket: `gs://{self.workspace_bucket}`  \nReport generated: {self.run_time_display}  \n"
                 f"Files in bucket: {len(results['inventory'])}"
             ],
             self._summary_stats_section(),
@@ -876,7 +878,7 @@ class CreateValidationReport:
             sections.append(
                 ["## Detail files", "\n" + "\n".join(f"- {n}: `{self._output_path(f)}`" for n, f in self.detail_files)]
             )
-        report_file = f"{self.output_prefix}.validation_report.{self.date_string}.md"
+        report_file = f"{self.output_prefix}.validation_report.{self.timestamp_string}.md"
         with open(report_file, "w") as f:
             f.write("\n\n".join("\n".join(section) for section in sections) + "\n")
         logging.info(f"Created {report_file}")
@@ -892,7 +894,9 @@ if __name__ == '__main__':
     if output_dir and not output_dir.endswith("/"):
         output_dir += "/"
 
-    date_string = datetime.now().strftime("%Y%m%d")
+    # One timestamp shared by all output files so reruns do not overwrite each other
+    run_time = datetime.now()
+    timestamp_string = run_time.strftime("%Y%m%d_%H%M%S")
     if data_dictionary_file:
         data_dict_file_name = os.path.basename(data_dictionary_file).replace(".tsv", "")
         output_prefix = data_dict_file_name
@@ -912,7 +916,7 @@ if __name__ == '__main__':
         row_order = []
         data_dict_contents = []
 
-    output_file = f"{output_prefix}.summary_stats.{date_string}.tsv"
+    output_file = f"{output_prefix}.summary_stats.{timestamp_string}.tsv"
 
     # Parse the input data dictionary contents
     input_data = ParseInputDataDict(data_dict_contents=data_dict_contents).run()
@@ -953,7 +957,8 @@ if __name__ == '__main__':
         billing_project=billing_project,
         workspace_bucket=workspace_bucket,
         output_prefix=output_prefix,
-        date_string=date_string,
+        timestamp_string=timestamp_string,
+        run_time_display=run_time.strftime("%Y-%m-%d %H:%M:%S"),
         output_dir=output_dir,
         summary_stats_file=output_file,
         summary_stats_content=output_content,
