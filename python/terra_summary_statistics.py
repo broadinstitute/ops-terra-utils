@@ -35,12 +35,13 @@ GCS_PREFIX = "gs://"
 UNKNOWN_EXTENSION = "(none)"
 # Extensions that only mean something when combined with the one before them (e.g. .vcf.gz)
 COMPRESSION_EXTENSIONS = [".gz", ".bgz"]
-# (label, file extension, index suffixes that count as an index file). An index can either be the full
-# file name plus the suffix (sample.bam.bai) or the file name with its extension swapped (sample.bai)
-INDEX_RULES: list[Tuple[str, str, list[str]]] = [
-    ("BAM", ".bam", [".bai"]),
-    ("CRAM", ".cram", [".crai"]),
-    ("VCF", ".vcf.gz", [".tbi", ".csi"]),
+# (label, file extensions that should have an index, index suffixes that count as an index file).
+# An index can either be the full file name plus the suffix (sample.bam.bai) or the file name with its extension
+# swapped (sample.bai). Uncompressed vcfs are left out because they cannot be indexed with tabix
+INDEX_RULES: list[Tuple[str, list[str], list[str]]] = [
+    ("BAM", [".bam"], [".bai", ".csi"]),
+    ("CRAM", [".cram"], [".crai"]),
+    ("VCF/GVCF", [".vcf.gz", ".g.vcf.gz", ".gvcf.gz", ".vcf.bgz", ".g.vcf.bgz"], [".tbi", ".csi"]),
 ]
 
 INPUT_DT_TO_INFERRED_DTS = {
@@ -554,16 +555,21 @@ class ValidateBucketFiles:
     @staticmethod
     def _check_indexes(inventory_paths: set[str]) -> dict:
         results = {}
-        for label, extension, index_suffixes in INDEX_RULES:
-            data_files = sorted(path for path in inventory_paths if path.lower().endswith(extension))
+        for label, extensions, index_suffixes in INDEX_RULES:
+            data_files = {}
+            for path in inventory_paths:
+                # Use the longest matching extension so sample.g.vcf.gz is stripped back to sample
+                matching_extensions = [ext for ext in extensions if path.lower().endswith(ext)]
+                if matching_extensions:
+                    data_files[path] = max(matching_extensions, key=len)
             missing = []
-            for path in data_files:
+            for path, extension in sorted(data_files.items()):
                 candidates = [path + suffix for suffix in index_suffixes]
                 candidates += [path[:-len(extension)] + suffix for suffix in index_suffixes]
                 if not any(candidate in inventory_paths for candidate in candidates):
                     missing.append(path)
             results[label] = {
-                'extension': extension,
+                'extensions': extensions,
                 'index_extensions': index_suffixes,
                 'total': len(data_files),
                 'missing': missing
@@ -716,7 +722,9 @@ class CreateValidationReport:
         for label, info in self.results['indexes'].items():
             missing = info['missing']
             rows.append([
-                f"{label} (`{info['extension']}`)", ", ".join(f"`{e}`" for e in info['index_extensions']),
+                label,
+                ", ".join(f"`{e}`" for e in info['extensions']),
+                ", ".join(f"`{e}`" for e in info['index_extensions']),
                 info['total'], len(missing), self._pct(len(missing), info['total'])
             ])
             missing_rows += [{'file_type': label, 'path': p} for p in missing]
@@ -724,7 +732,7 @@ class CreateValidationReport:
         return [
             "## Files missing an index file",
             "\nAn index is accepted as `<file><index ext>` or `<file without ext><index ext>` in the workspace bucket.\n",
-            self._table(["File type", "Index extensions", "Files", "Missing index", "% missing"], rows)
+            self._table(["File type", "File extensions", "Index extensions", "Files", "Missing index", "% missing"], rows)
             + self._detail_line(path)
         ]
 
@@ -783,8 +791,9 @@ class CreateValidationReport:
             f"\nUnique file paths referenced: **{len(locations)}** ({results['total_references']} references, "
             f"{results['duplicate_references']} paths referenced more than once).\n",
             f"### Pointing at the workspace bucket (`gs://{self.workspace_bucket}`)\n",
-            f"**{ws_missing} of {ws_total}** referenced files ({self._pct(ws_missing, ws_total)}) were not found. "
-            "These are likely true errors.\n",
+            f"**{ws_missing} of {ws_total}** referenced files ({self._pct(ws_missing, ws_total)}) were not found."
+            + (" These files are referenced in the tables but do not exist in the bucket." if ws_missing else "")
+            + "\n",
             "### Pointing at other buckets\n",
         ]
         if external_rows:

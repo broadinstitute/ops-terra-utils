@@ -4,10 +4,10 @@ This WDL validates a staging workspace. It creates a tsv with summary statistics
 
 - Path to the summary statistics file and an aggregate of the columns flagged as needing attention
 - Count/percent of files with no MD5 in the GCS metadata
-- Count/percent of BAMs without a BAI, CRAMs without a CRAI, and `.vcf.gz` without a TBI (a CSI is also accepted). An index can be named `<file>.bai` or `<file without extension>.bai`
+- Count/percent of files without an index file: BAMs (`.bai`/`.csi`), CRAMs (`.crai`), VCFs and GVCFs (`.vcf.gz`, `.g.vcf.gz`, `.gvcf.gz`, `.vcf.bgz`; `.tbi`/`.csi`). An index can be named `<file>.bai` or `<file without extension>.bai`. Uncompressed `.vcf` files are not checked
 - Count/percent of files in the workspace bucket not referenced anywhere in the tables (this includes anything Terra writes to the bucket, such as `submissions/`)
 - Distribution of files in the workspace bucket by extension (count and total size)
-- Files referenced in the tables that are not found. References to the workspace bucket that are not found are likely true errors. References to other buckets are listed per bucket with the number of files referenced, and are only checked for existence if `check_external_buckets` is true
+- Files referenced in the tables that are not found. References to the workspace bucket that are not found do not exist in the bucket and are listed in a detail tsv. References to other buckets are listed per bucket with the number of files referenced, and are only checked for existence if `check_external_buckets` is true
 - Other: number of paths referenced more than once and number of zero-byte files
 
 Lists of the individual files behind each section (for example every file missing an MD5) are written to separate tsv files.
