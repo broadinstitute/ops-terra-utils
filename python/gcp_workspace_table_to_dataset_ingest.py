@@ -222,7 +222,7 @@ if __name__ == "__main__":
         if trunc_and_reload:
             logging.info(
                 "Requested trunc and reload - all tables in the target TDR dataset that correspond to Terra ingest "
-                "tables will be soft-deleted if they contain any adata"
+                "tables will be soft-deleted if they contain any data"
             )
             tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=target_table_name)
 
