@@ -385,10 +385,17 @@ class Tester:
         c.source_counts[table] = c.source_counts.get(table, 0) + source_count
         result = self.wait(c.ingest.ingest_tabular_data(
             dataset_id=c.dataset_id,  # type: ignore[arg-type]
-            sources=[{
-                "uri": path, "targetTable": table, "format": FORMATS[extension],
-                "schema": {"id": c.schema_id, "validateForeignKeys": c.validate_foreign_keys},
-            }],
+            sources=[
+                {
+                    "uri": path,
+                    "targetTable": table,
+                    "format": FORMATS[extension],
+                    "schema": {
+                        "id": c.schema_id,
+                        "validateForeignKeys": c.validate_foreign_keys
+                    },
+                }
+            ],
         ))
         ingested = _find_count(result)
         if ingested is not None:
