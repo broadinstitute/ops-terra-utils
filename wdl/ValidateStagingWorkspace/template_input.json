@@ -1,0 +1,6 @@
+{
+    "ValidateStagingWorkspace.billing_project": "String",
+    "ValidateStagingWorkspace.workspace_name": "String",
+    "ValidateStagingWorkspace.output_dir": "String",
+    "ValidateStagingWorkspace.data_dictionary_file": "File (optional)"
+}

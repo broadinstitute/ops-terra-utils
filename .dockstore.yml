@@ -119,12 +119,12 @@ workflows:
     testParameterFiles:
       - /wdl/RenameColumnsAndFilesInDataset/RenameColumnsAndFilesInDataset.wdl
 
-  - name: TerraSummaryStatistics
+  - name: ValidateStagingWorkspace
     subclass: WDL
-    primaryDescriptorPath: /wdl/TerraSummaryStatistics/TerraSummaryStatistics.wdl
-    readMePath: /wdl/TerraSummaryStatistics/README.md
+    primaryDescriptorPath: /wdl/ValidateStagingWorkspace/ValidateStagingWorkspace.wdl
+    readMePath: /wdl/ValidateStagingWorkspace/README.md
     testParameterFiles:
-      - /wdl/TerraSummaryStatistics/TerraSummaryStatistics.wdl
+      - /wdl/ValidateStagingWorkspace/ValidateStagingWorkspace.wdl
 
   - name: GenerateTdrSchemaJson
     subclass: WDL
