@@ -1,7 +1,7 @@
 {
-    "TerraTableDataFileToTDRIngest.input_file": "gs://bucket/path/to/table.tsv",
+    "TerraTableDataFileToTDRIngest.input_files": ["gs://bucket/path/to/table1.tsv", "gs://bucket/path/to/table2.tsv"],
     "TerraTableDataFileToTDRIngest.dataset_id": "String",
-    "TerraTableDataFileToTDRIngest.target_table_name": "String",
+    "TerraTableDataFileToTDRIngest.target_table_names": ["table1", "table2"],
     "TerraTableDataFileToTDRIngest.bulk_mode": "Boolean",
     "TerraTableDataFileToTDRIngest.filter_existing_ids": "Boolean",
     "TerraTableDataFileToTDRIngest.check_existing_ingested_files": "Boolean",

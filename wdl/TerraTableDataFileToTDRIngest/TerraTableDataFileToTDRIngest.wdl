@@ -2,10 +2,10 @@ version 1.0
 
 workflow TerraTableDataFileToTDRIngest {
     input {
-        String input_file
+        Array[String] input_files
         String dataset_id
-        String target_table_name
-        String? primary_key
+        Array[String] target_table_names
+        Array[String]? primary_keys
         String? update_strategy
         String? records_to_ingest
         Boolean bulk_mode
@@ -24,19 +24,19 @@ workflow TerraTableDataFileToTDRIngest {
 
     String docker_image = select_first([docker, "us-central1-docker.pkg.dev/operations-portal-427515/ops-toolbox/ops_terra_utils_slim:latest"])
 
-    # Size the disk from the input file (read from the GCS path without localizing it) plus a 10% buffer, with a
-    # 10 GB minimum
-    File input_file_for_size = input_file
-    Int disk_size_gb = ceil(size(input_file_for_size, "GB") * 1.1) + 10
+    # Size the disk from the input files (read from the GCS paths without localizing them) plus a 10% buffer, with a
+    # 10 GB minimum. The files are downloaded and ingested one at a time, but summing them is a safe upper bound
+    Array[File] input_files_for_size = input_files
+    Int disk_size_gb = ceil(size(input_files_for_size, "GB") * 1.1) + 10
 
     call IngestTabularFileToDataset {
         input:
             disk_size_gb = disk_size_gb,
             memory_gb = memory_gb,
-            input_file = input_file,
+            input_files = input_files,
             dataset_id = dataset_id,
-            target_table_name = target_table_name,
-            primary_key = primary_key,
+            target_table_names = target_table_names,
+            primary_keys = primary_keys,
             update_strategy = update_strategy,
             records_to_ingest = records_to_ingest,
             bulk_mode = bulk_mode,
@@ -55,10 +55,10 @@ workflow TerraTableDataFileToTDRIngest {
 
 task IngestTabularFileToDataset {
     input {
-        String input_file
+        Array[String] input_files
         String dataset_id
-        String target_table_name
-        String? primary_key
+        Array[String] target_table_names
+        Array[String]? primary_keys
         String? update_strategy
         String? records_to_ingest
         Boolean bulk_mode
@@ -78,10 +78,10 @@ task IngestTabularFileToDataset {
 
     command <<<
         python /etc/terra_utils/python/tabular_file_to_dataset_ingest.py \
-        --input_file "~{input_file}" \
+        --input_files "~{sep="," input_files}" \
         --dataset_id ~{dataset_id} \
-        --target_table_name ~{target_table_name} \
-        ~{"--primary_key " + primary_key} \
+        --target_table_names "~{sep="," target_table_names}" \
+        ~{if defined(primary_keys) then "--primary_keys '" else ""}~{sep="," primary_keys}~{if defined(primary_keys) then "'" else ""} \
         ~{"--update_strategy " + update_strategy} \
         ~{if bulk_mode then "--bulk_mode" else ""} \
         ~{"--max_retries " + max_retries} \
