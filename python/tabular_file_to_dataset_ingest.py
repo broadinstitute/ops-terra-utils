@@ -30,20 +30,27 @@ def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Ingest data from a tabular file (csv/tsv) in GCS into a table in an existing TDR dataset")
     parser.add_argument(
-        "--input_file",
+        "--input_files",
         required=True,
-        help="GCS path (gs://...) of the tsv or csv file to ingest. First column must be the primary key"
+        type=split_list,
+        help="Comma-separated GCS paths (gs://...) of the tsv or csv files to ingest. For each file, the first "
+             "column must be the primary key unless --primary_keys says otherwise"
     )
     parser.add_argument("--dataset_id", required=True)
     parser.add_argument(
-        "--target_table_name",
+        "--target_table_names",
         required=True,
-        help="Name of the table in the TDR dataset that the file's data will be ingested into"
+        type=split_list,
+        help="Comma-separated names of the tables in the TDR dataset to ingest into. Matched to --input_files by "
+             "position (the Nth table name is used for the Nth file), so there must be the same number of each"
     )
     parser.add_argument(
-        "--primary_key",
+        "--primary_keys",
         required=False,
-        help="Optional: name of the column to use as the TDR primary key. Defaults to the first column in the file"
+        type=split_list,
+        help="Optional: comma-separated names of the columns to use as the TDR primary keys. Matched to --input_files "
+             "by position. If provided there must be one entry per file; leave an entry empty (e.g. 'id,,sample_id') "
+             "to default that file to the first column in the file"
     )
     parser.add_argument(
         "--update_strategy",
@@ -226,58 +233,122 @@ class PrimaryKeyValidator:
             )
 
 
-if __name__ == "__main__":
-    args = get_args()
-    input_file = args.input_file
-    dataset_id = args.dataset_id
-    target_table_name = args.target_table_name
-    update_strategy = args.update_strategy
-    records_to_ingest = args.records_to_ingest
-    bulk_mode = args.bulk_mode
-    max_retries = args.max_retries
-    max_backoff_time = args.max_backoff_time
-    filter_existing_ids = args.filter_existing_ids
-    batch_size = args.batch_size
-    check_if_files_already_ingested = args.check_existing_ingested_files
-    all_fields_non_required = args.all_fields_non_required
-    force_disparate_rows_to_string = args.force_disparate_rows_to_string
-    trunc_and_reload = args.trunc_and_reload
-    ignore_existing_schema_mismatch = args.ignore_existing_schema_mismatch
-    service_account_json = args.service_account_json
+def split_list(value: str) -> list[str]:
+    """Split a comma-separated argument into a list, keeping empty entries so that positions are preserved."""
+    return [item.strip() for item in value.split(",")]
 
+
+def get_delimiter(input_file: str) -> str:
+    """Validate the GCS path and infer the delimiter from the file extension ('.csv' or '.tsv')."""
     if not input_file.startswith("gs://"):
         raise ValueError(f"input_file must be a GCS path starting with 'gs://'. Got: {input_file}")
-
-    # Infer the delimiter from the file extension: '.csv' is comma-delimited and '.tsv' is tab-delimited
     if input_file.lower().endswith(".csv"):
-        delimiter = ","
-    elif input_file.lower().endswith(".tsv"):
-        delimiter = "\t"
-    else:
+        return ","
+    if input_file.lower().endswith(".tsv"):
+        return "\t"
+    raise ValueError(
+        f"input_file must end with '.csv' or '.tsv' so the delimiter can be determined. Got: {input_file}"
+    )
+
+
+def build_ingest_tuples(
+        input_files: list[str], target_table_names: list[str], primary_keys: Optional[list[str]]
+) -> list[tuple[str, str, Optional[str]]]:
+    """Match up the files, table names and primary keys by position, validating all of them before any ingest."""
+    if len(input_files) != len(target_table_names):
         raise ValueError(
-            f"input_file must end with '.csv' or '.tsv' so the delimiter can be determined. Got: {input_file}"
+            f"Got {len(input_files)} input file(s) but {len(target_table_names)} target table name(s). "
+            "There must be one target table name per input file"
+        )
+    if primary_keys is None:
+        primary_keys = [""] * len(input_files)
+    elif len(primary_keys) != len(input_files):
+        raise ValueError(
+            f"Got {len(input_files)} input file(s) but {len(primary_keys)} primary key(s). If primary keys are "
+            "provided there must be one per input file (leave an entry empty to use the first column of that file)"
         )
 
-    # Initialize the TDR classes
-    token = Token(service_account_json=service_account_json)
-    request_util = RunRequest(token=token, max_retries=max_retries, max_backoff_time=max_backoff_time)
-    tdr = TDR(request_util=request_util)
-
-    dataset_info = tdr.get_dataset_info(dataset_id=dataset_id).json()
-
-    # Check if dataset is selfHosted. If it isn't then getting UUIDs for files will not work
-    if not dataset_info["selfHosted"] and check_if_files_already_ingested:
-        logging.warning("Dataset is not selfHosted. Cannot check if files have already been ingested and use UUIDs")
-        check_if_files_already_ingested = False
-
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        csv_util = Csv(file_path=download_file(input_file=input_file, local_dir=tmp_dir), delimiter=delimiter)
-        primary_key_column_name = get_primary_key_column(
-            csv_util=csv_util, input_file=input_file, primary_key=args.primary_key
+    for input_file, table_name in zip(input_files, target_table_names):
+        if not input_file:
+            raise ValueError("Empty entry found in input files")
+        if not table_name:
+            raise ValueError(f"Empty target table name for input file {input_file}")
+        get_delimiter(input_file)  # Fail now rather than after earlier tables have already been ingested
+    duplicates = {name for name in target_table_names if target_table_names.count(name) > 1}
+    if duplicates:
+        raise ValueError(
+            f"Each input file must have a unique target table name. Duplicates found: {sorted(duplicates)}"
         )
+    return [
+        (input_file, table_name, primary_key or None)
+        for input_file, table_name, primary_key in zip(input_files, target_table_names, primary_keys)
+    ]
+
+
+class IngestTabularFilesToTDR:
+    """
+    Ingest one or more tabular files (csv/tsv) from GCS into tables in an existing TDR dataset.
+
+    The files, target table names and (optional) primary keys are matched up by position. Each file is then validated,
+    has its TDR table schema created or checked, and is ingested, one at a time. Everything passed in is validated
+    before anything is downloaded or ingested.
+    """
+
+    def __init__(
+            self,
+            tdr: TDR,
+            dataset_id: str,
+            input_files: list[str],
+            target_table_names: list[str],
+            primary_keys: Optional[list[str]] = None,
+            update_strategy: str = ARG_DEFAULTS["update_strategy"],
+            records_to_ingest: Optional[list[str]] = None,
+            bulk_mode: bool = False,
+            filter_existing_ids: bool = False,
+            batch_size: int = ARG_DEFAULTS["batch_size"],
+            check_existing_ingested_files: bool = False,
+            all_fields_non_required: bool = False,
+            force_disparate_rows_to_string: bool = False,
+            trunc_and_reload: bool = False,
+            ignore_existing_schema_mismatch: bool = False,
+    ):
+        self.tdr = tdr
+        self.dataset_id = dataset_id
+        self.update_strategy = update_strategy
+        self.bulk_mode = bulk_mode
+        self.filter_existing_ids = filter_existing_ids
+        self.batch_size = batch_size
+        self.check_existing_ingested_files = check_existing_ingested_files
+        self.all_fields_non_required = all_fields_non_required
+        self.force_disparate_rows_to_string = force_disparate_rows_to_string
+        self.trunc_and_reload = trunc_and_reload
+        self.ignore_existing_schema_mismatch = ignore_existing_schema_mismatch
         # A set is much faster to check than the list that was passed in
-        records_to_ingest_set = set(records_to_ingest) if records_to_ingest else None
+        self.records_to_ingest_set = set(records_to_ingest) if records_to_ingest else None
+        # Match up files, table names and primary keys by position, validating all of them up front
+        self.ingest_tuples = build_ingest_tuples(
+            input_files=input_files, target_table_names=target_table_names, primary_keys=primary_keys
+        )
+        self.file_uuids_dict: Optional[dict] = None
 
+    def _set_up_file_uuids(self) -> None:
+        """Download the dictionary of file paths to UUIDs once, since it is the same for every table in the dataset."""
+        if not self.check_existing_ingested_files:
+            return
+        # If the dataset isn't selfHosted then getting UUIDs for files will not work
+        if not self.tdr.get_dataset_info(dataset_id=self.dataset_id).json()["selfHosted"]:
+            logging.warning(
+                "Dataset is not selfHosted. Cannot check if files have already been ingested and use UUIDs"
+            )
+            return
+        self.file_uuids_dict = self.tdr.create_file_uuid_dict_for_ingest_for_experimental_self_hosted_dataset(
+            dataset_id=self.dataset_id
+        )
+
+    def _validate_and_set_up_table(
+            self, csv_util: Csv, input_file: str, target_table_name: str, primary_key_column_name: str
+    ) -> None:
+        """Validate the file's primary keys while inferring its schema, then create/update the TDR table."""
         # The file can be millions of rows so it is never loaded all at once. It is read twice from disk instead: once
         # to validate it and infer the schema (which needs to look at every row but only keeps a small summary of
         # each column) and then again to ingest it into TDR one batch at a time. Both only hold a single row (or
@@ -290,69 +361,124 @@ if __name__ == "__main__":
                 "ingest_metadata": filter_to_records(
                     rows=validator.validate(iter_typed_rows(csv_util)),
                     primary_key_column=primary_key_column_name,
-                    records_to_ingest=records_to_ingest_set
+                    records_to_ingest=self.records_to_ingest_set
                 ),
                 "datePartitionOptions": None
             }
         }
         SetUpTDRTables(
-            tdr=tdr,
-            dataset_id=dataset_id,
+            tdr=self.tdr,
+            dataset_id=self.dataset_id,
             table_info_dict=table_info_dict,
-            all_fields_non_required=all_fields_non_required,
-            force_disparate_rows_to_string=force_disparate_rows_to_string,
-            ignore_existing_schema_mismatch=ignore_existing_schema_mismatch
+            all_fields_non_required=self.all_fields_non_required,
+            force_disparate_rows_to_string=self.force_disparate_rows_to_string,
+            ignore_existing_schema_mismatch=self.ignore_existing_schema_mismatch
         ).run()
-        logging.info(f"Got {validator.row_count} rows")
-        # Release all of the primary keys held for validation before the long running ingest starts
-        del validator
+        logging.info(f"Got {validator.row_count} rows in {input_file}")
 
-        if trunc_and_reload:
+    def _ingest_rows(self, csv_util: Csv, target_table_name: str, primary_key_column_name: str) -> None:
+        """Ingest the rows of the file into the (already set up) TDR table one batch at a time."""
+        if self.trunc_and_reload:
             logging.info(
                 f"Requested trunc and reload - all rows in table {target_table_name} in the target TDR dataset will "
                 "be soft-deleted if the table contains any data"
             )
-            tdr.soft_delete_all_table_entries(dataset_id=dataset_id, table_name=target_table_name)
+            self.tdr.soft_delete_all_table_entries(dataset_id=self.dataset_id, table_name=target_table_name)
 
         rows_to_ingest: Iterable[dict] = filter_to_records(
             rows=iter_typed_rows(csv_util),
             primary_key_column=primary_key_column_name,
-            records_to_ingest=records_to_ingest_set
+            records_to_ingest=self.records_to_ingest_set
         )
-        if filter_existing_ids:
+        if self.filter_existing_ids:
             # Filter out sample ids that are already in the dataset
             rows_to_ingest = FilterOutSampleIdsAlreadyInDataset(
                 ingest_metrics=rows_to_ingest,
-                dataset_id=dataset_id,
-                tdr=tdr,
+                dataset_id=self.dataset_id,
+                tdr=self.tdr,
                 target_table_name=target_table_name,
                 filter_entity_id=primary_key_column_name,
             ).iter_filtered()
 
-        if check_if_files_already_ingested:
-            # Download and create a dictionary of file paths to UUIDs for ingest
-            file_uuids_dict = tdr.create_file_uuid_dict_for_ingest_for_experimental_self_hosted_dataset(
-                dataset_id=dataset_id)
-        else:
-            file_uuids_dict = None
-
         # Only use this to make the file data match what TDR schema is set to if ignore_schema_mismatch is used
-        if ignore_existing_schema_mismatch:
-            tdr_table_schema_info = tdr.get_table_schema_info(dataset_id=dataset_id, table_name=target_table_name)
+        if self.ignore_existing_schema_mismatch:
+            tdr_table_schema_info = self.tdr.get_table_schema_info(
+                dataset_id=self.dataset_id, table_name=target_table_name
+            )
         else:
             tdr_table_schema_info = None
 
         BatchIngest(
             ingest_metadata=rows_to_ingest,
-            tdr=tdr,
+            tdr=self.tdr,
             target_table_name=target_table_name,
-            dataset_id=dataset_id,
-            batch_size=batch_size,
-            bulk_mode=bulk_mode,
-            update_strategy=update_strategy,
+            dataset_id=self.dataset_id,
+            batch_size=self.batch_size,
+            bulk_mode=self.bulk_mode,
+            update_strategy=self.update_strategy,
             waiting_time_to_poll=ARG_DEFAULTS['waiting_time_to_poll'],
             test_ingest=TEST_INGEST,
-            load_tag=f"{target_table_name}-{dataset_id}",
-            file_to_uuid_dict=file_uuids_dict,
+            load_tag=f"{target_table_name}-{self.dataset_id}",
+            file_to_uuid_dict=self.file_uuids_dict,
             schema_info=tdr_table_schema_info
         ).run()
+
+    def _ingest_one(self, input_file: str, target_table_name: str, primary_key: Optional[str]) -> None:
+        """Validate a single tabular file, set up its TDR table schema and ingest its rows into that table."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            csv_util = Csv(
+                file_path=download_file(input_file=input_file, local_dir=tmp_dir),
+                delimiter=get_delimiter(input_file)
+            )
+            primary_key_column_name = get_primary_key_column(
+                csv_util=csv_util, input_file=input_file, primary_key=primary_key
+            )
+            self._validate_and_set_up_table(
+                csv_util=csv_util,
+                input_file=input_file,
+                target_table_name=target_table_name,
+                primary_key_column_name=primary_key_column_name
+            )
+            self._ingest_rows(
+                csv_util=csv_util,
+                target_table_name=target_table_name,
+                primary_key_column_name=primary_key_column_name
+            )
+
+    def run(self) -> None:
+        """Ingest each file into its matching table, one at a time. Stops at the first failure."""
+        self._set_up_file_uuids()
+        total = len(self.ingest_tuples)
+        for i, (input_file, target_table_name, primary_key) in enumerate(self.ingest_tuples, start=1):
+            logging.info(f"Starting {i} of {total}: ingesting {input_file} into table {target_table_name}")
+            self._ingest_one(
+                input_file=input_file, target_table_name=target_table_name, primary_key=primary_key
+            )
+            logging.info(f"Finished {i} of {total}: {target_table_name}")
+
+
+if __name__ == "__main__":
+    args = get_args()
+
+    # Initialize the TDR classes
+    token = Token(service_account_json=args.service_account_json)
+    request_util = RunRequest(token=token, max_retries=args.max_retries, max_backoff_time=args.max_backoff_time)
+    tdr = TDR(request_util=request_util)
+
+    IngestTabularFilesToTDR(
+        tdr=tdr,
+        dataset_id=args.dataset_id,
+        input_files=args.input_files,
+        target_table_names=args.target_table_names,
+        primary_keys=args.primary_keys,
+        update_strategy=args.update_strategy,
+        records_to_ingest=args.records_to_ingest,
+        bulk_mode=args.bulk_mode,
+        filter_existing_ids=args.filter_existing_ids,
+        batch_size=args.batch_size,
+        check_existing_ingested_files=args.check_existing_ingested_files,
+        all_fields_non_required=args.all_fields_non_required,
+        force_disparate_rows_to_string=args.force_disparate_rows_to_string,
+        trunc_and_reload=args.trunc_and_reload,
+        ignore_existing_schema_mismatch=args.ignore_existing_schema_mismatch,
+    ).run()

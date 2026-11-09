@@ -45,6 +45,7 @@ import re
 import time
 import requests
 from dataclasses import dataclass, field
+from functools import partial
 from datetime import datetime
 from pathlib import PurePosixPath, Path
 from typing import Any, Callable, Optional
@@ -265,7 +266,9 @@ class Tester:
     @classmethod
     def _summarize_calls(cls, calls: list[dict]) -> tuple[str, str]:
         """Request/response columns as single-line JSON. Job-status polling is collapsed to just the final poll."""
-        def is_poll(call): return call["method"] == "GET" and "/jobs/" in (call["uri"] or "")  # noqa: E731
+        def is_poll(call: dict) -> bool:
+            return call["method"] == "GET" and "/jobs/" in (call["uri"] or "")
+
         main = [call for call in calls if not is_poll(call)]
         polls = [call for call in calls if is_poll(call)]
         request = [
@@ -338,8 +341,9 @@ class Tester:
         c = self.ctx
 
         def fn() -> tuple[str, str]:
-            c.ddl = c.gcp.read_file(c.schema_ddl_path)
-            c.tables = parse_tables(c.ddl)
+            ddl = c.gcp.read_file(c.schema_ddl_path)
+            c.ddl = ddl
+            c.tables = parse_tables(ddl)
             c.schema_id = c.ingest.create_schema_version(dataset_id=c.dataset_id, ddl=c.ddl).json()["id"]  # type: ignore[arg-type]  # noqa: E501
             if not c.tables:
                 return FAIL, f"Schema {c.schema_id} created but no CREATE TABLE statements parsed from the DDL"
@@ -370,7 +374,7 @@ class Tester:
             self.skip("ingest_tabular", f"No files found under {c.input_location.rstrip('/')}/tabular_data/")
             return
         for path in paths:
-            self.run(task=f"ingest_tabular:{PurePosixPath(path).name}", fn=lambda path=path: self._ingest_one(path))
+            self.run(task=f"ingest_tabular:{PurePosixPath(path).name}", fn=partial(self._ingest_one, path))
 
     def _ingest_one(self, path: str) -> tuple[str, str]:
         c = self.ctx
@@ -438,17 +442,18 @@ class Tester:
         first = c.tables[0]
 
         def fn() -> tuple[str, str]:
-            c.query_snapshot_id = self.wait(c.ingest.create_snapshot(
+            query_snapshot_id = self.wait(c.ingest.create_snapshot(
                 dataset_id=c.dataset_id,
                 name=f"{c.run_name}_query",
                 schema_id=c.schema_id,  # type: ignore[arg-type]
                 queries={first: f"SELECT * FROM {first}"},)
             )["id"]
+            c.query_snapshot_id = query_snapshot_id
 
             problems, lines = [], []
             for table in c.tables:
                 expected = c.source_counts.get(table, 0) if table == first else 0
-                actual = self._snapshot_table_count(snapshot_id=c.query_snapshot_id, table=table)
+                actual = self._snapshot_table_count(snapshot_id=query_snapshot_id, table=table)
                 ok, line = self.compare(
                     label=f"{table} ({'source' if table == first else 'excluded, expected empty'})",
                     expected=expected,
