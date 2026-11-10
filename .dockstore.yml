@@ -126,6 +126,13 @@ workflows:
     testParameterFiles:
       - /wdl/ValidateStagingWorkspace/ValidateStagingWorkspace.wdl
 
+  - name: ValidateAdeExport
+    subclass: WDL
+    primaryDescriptorPath: /wdl/ValidateAdeExport/ValidateAdeExport.wdl
+    readMePath: /wdl/ValidateAdeExport/README.md
+    testParameterFiles:
+      - /wdl/ValidateAdeExport/ValidateAdeExport.wdl
+
   - name: GenerateTdrSchemaJson
     subclass: WDL
     primaryDescriptorPath: /wdl/GetTdrSchemaJson/GetTdrSchemaJson.wdl
