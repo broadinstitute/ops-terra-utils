@@ -20,4 +20,4 @@ pyyaml
 humanfriendly==10.0
 responses==0.26.0
 gitpython==3.2.1
-git+https://github.com/broadinstitute/pyops-service-toolkit.git@v12.22.0#egg=pyops-service-toolkit
+git+https://github.com/broadinstitute/pyops-service-toolkit.git@44eb32a35f1d10ee7e2480e03e70eff68497d277#egg=pyops-service-toolkit
