@@ -1,0 +1,7 @@
+{
+    "ValidateAdeExport.snapshot_id": "String",
+    "ValidateAdeExport.billing_project": "String",
+    "ValidateAdeExport.azul_token": "File",
+    "ValidateAdeExport.allow_controlled_access": "Boolean (optional, default: false)",
+    "ValidateAdeExport.keep_workspace": "Boolean (optional, default: false)"
+}
